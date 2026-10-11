@@ -76,8 +76,9 @@ for (const file of [
   'src/app/features/login/pages/login.page.html',
 ]) {
   const text = readFileSync(join(root, file), 'utf8');
-  if (!text.includes('assets/icons/icon-192.png'))
-    problems.push(`${file}: falta o logo (assets/icons/icon-192.png)`);
+  for (const logo of ['logo-on-light', 'logo-on-dark'])
+    if (!text.includes(`assets/brand/${logo}.png`))
+      problems.push(`${file}: falta o logo (assets/brand/${logo}.png)`);
 }
 for (const icon of [
   'icon-32',

@@ -1,74 +1,152 @@
-// Gera os mestres da marca a partir da arte do dono (1254x1254, quadrado arredondado branco sobre fundo branco).
-// Recorta o interior do quadrado (sem a sombra externa) e produz: any (cantos arredondados transparentes),
-// maskable (tela 1024 com a arte na zona segura), apple (quadrado cheio) e badge (silhueta branca).
+// Gera os mestres da marca a partir das duas artes do dono (recibo com barras verdes, PNG com fundo transparente):
+//  - recibo-escuro.png  (recibo escuro)  -> para fundo claro: logo da interface no tema claro e o recibo dos ícones;
+//  - recibo-branco.png (recibo branco)  -> para fundo escuro: logo da interface no tema escuro.
+// Limpa pontinhos soltos do alfa, recorta, e produz: logos da interface (src/assets/brand), e os mestres dos ícones
+// (logo-any, logo-maskable, logo-apple, logo-badge) que `npm run icons` redimensiona.
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 
-const SRC = 'source.png';
-const CX = 627,
-  CY = 622,
-  CROP = 800;
-const left = CX - CROP / 2,
-  top = CY - CROP / 2;
 mkdirSync('out', { recursive: true });
 
-const crop = sharp(SRC).extract({ left, top, width: CROP, height: CROP });
-const cropBuf = await crop.png().toBuffer();
+/** Zera o alfa de componentes conexos pequenos (poeira da remoção de fundo) e recorta no conteúdo. */
+async function clean(file) {
+  const { data, info } = await sharp(file)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const W = info.width,
+    H = info.height;
+  const label = new Int32Array(W * H);
+  const sizes = [0];
+  let next = 0;
+  const stack = [];
+  for (let s = 0; s < W * H; s++) {
+    if (label[s] || data[s * 4 + 3] <= 12) continue;
+    next++;
+    let count = 0;
+    stack.push(s);
+    label[s] = next;
+    while (stack.length) {
+      const p = stack.pop();
+      count++;
+      const x = p % W,
+        y = (p / W) | 0;
+      for (const [dx, dy] of [
+        [1, 0],
+        [-1, 0],
+        [0, 1],
+        [0, -1],
+        [1, 1],
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+      ]) {
+        const nx = x + dx,
+          ny = y + dy;
+        if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+        const q = ny * W + nx;
+        if (!label[q] && data[q * 4 + 3] > 12) {
+          label[q] = next;
+          stack.push(q);
+        }
+      }
+    }
+    sizes.push(count);
+  }
+  const big = Math.max(...sizes);
+  let minx = W,
+    miny = H,
+    maxx = 0,
+    maxy = 0;
+  for (let i = 0; i < W * H; i++) {
+    const keep = label[i] && sizes[label[i]] > big * 0.01;
+    if (!keep) {
+      data[i * 4 + 3] = 0;
+      continue;
+    }
+    const x = i % W,
+      y = (i / W) | 0;
+    if (x < minx) minx = x;
+    if (x > maxx) maxx = x;
+    if (y < miny) miny = y;
+    if (y > maxy) maxy = y;
+  }
+  const buf = await sharp(data, { raw: { width: W, height: H, channels: 4 } })
+    .png()
+    .toBuffer();
+  const w = maxx - minx + 1,
+    h = maxy - miny + 1;
+  console.log(file, 'componentes', next, 'maior', big, 'recorte', w + 'x' + h);
+  return sharp(buf).extract({ left: minx, top: miny, width: w, height: h }).png().toBuffer();
+}
 
-// 1) any: cantos arredondados (22,37% = proporção do iOS)
-const r = Math.round(CROP * 0.2237);
-const roundMask = Buffer.from(
-  `<svg width="${CROP}" height="${CROP}"><rect width="${CROP}" height="${CROP}" rx="${r}" ry="${r}" fill="#fff"/></svg>`,
+const dark = await clean('recibo-escuro.png');
+const white = await clean('recibo-branco.png');
+
+// Logos da interface (altura 256, transparente): escuro sobre fundo claro, branco sobre fundo escuro.
+await sharp(dark)
+  .resize({ height: 256 })
+  .png({ compressionLevel: 9 })
+  .toFile('out/logo-on-light.png');
+await sharp(white)
+  .resize({ height: 256 })
+  .png({ compressionLevel: 9 })
+  .toFile('out/logo-on-dark.png');
+
+// Ladrilho dos ícones: gradiente claro (mesma família do canvas claro) com o recibo escuro centralizado.
+const T = 1024;
+const tileSvg = Buffer.from(
+  `<svg width="${T}" height="${T}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e7f3"/></linearGradient></defs><rect width="${T}" height="${T}" fill="url(#g)"/></svg>`,
 );
-await sharp(cropBuf)
+async function tile(scale) {
+  const art = await sharp(dark)
+    .resize({ height: Math.round(T * scale) })
+    .png()
+    .toBuffer();
+  const { width: aw, height: ah } = await sharp(art).metadata();
+  return sharp(tileSvg)
+    .composite([{ input: art, left: Math.round((T - aw) / 2), top: Math.round((T - ah) / 2) }])
+    .png()
+    .toBuffer();
+}
+const anyTile = await tile(0.62);
+const r = Math.round(T * 0.2237);
+const roundMask = Buffer.from(
+  `<svg width="${T}" height="${T}"><rect width="${T}" height="${T}" rx="${r}" ry="${r}" fill="#fff"/></svg>`,
+);
+await sharp(anyTile)
   .ensureAlpha()
   .composite([{ input: roundMask, blend: 'dest-in' }])
   .png()
   .toFile('out/logo-any.png');
-
-// cor da superfície: média da borda do recorte
-const { data, info } = await sharp(cropBuf).raw().toBuffer({ resolveWithObject: true });
-let sum = [0, 0, 0],
-  n = 0;
-for (let i = 0; i < CROP; i++)
-  for (const [x, y] of [
-    [i, 2],
-    [i, CROP - 3],
-    [2, i],
-    [CROP - 3, i],
-  ]) {
-    for (let c = 0; c < 3; c++) sum[c] += data[(y * CROP + x) * info.channels + c];
-    n++;
-  }
-const bg = sum.map((s) => Math.round(s / n));
-console.log('superfície', bg);
-
-// 2) maskable: tela 1024; a arte (recorte de 800) fica no centro e a borda é prolongada ("copy"), sem emenda visível
-const CANVAS = 1024,
-  PAD = (CANVAS - CROP) / 2;
-await sharp(cropBuf)
-  .extend({ top: PAD, bottom: PAD, left: PAD, right: PAD, extendWith: 'copy' })
+await sharp(await tile(0.5))
   .png()
   .toFile('out/logo-maskable.png');
+await sharp(anyTile).flatten({ background: '#ffffff' }).png().toFile('out/logo-apple.png');
 
-// 3) apple: quadrado cheio, sem transparência (o iOS arredonda)
-await sharp(cropBuf)
-  .flatten({ background: { r: bg[0], g: bg[1], b: bg[2] } })
-  .png()
-  .toFile('out/logo-apple.png');
-
-// 4) badge: silhueta branca (barra de status do Android, monocromática). Alfa = quão mais escuro que a superfície.
-const out = Buffer.alloc(CROP * CROP * 4);
-for (let i = 0; i < CROP * CROP; i++) {
-  const lum =
-    0.2126 * data[i * info.channels] +
-    0.7152 * data[i * info.channels + 1] +
-    0.0722 * data[i * info.channels + 2];
-  const a = Math.max(0, Math.min(1, (214 - lum) / 40));
-  out[i * 4] = out[i * 4 + 1] = out[i * 4 + 2] = 255;
-  out[i * 4 + 3] = Math.round(a * 255);
+// Badge do Android: silhueta branca (o alfa do próprio recibo), com folga de 10%.
+const { data, info } = await sharp(dark).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+for (let i = 0; i < info.width * info.height; i++) {
+  data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255;
 }
-await sharp(out, { raw: { width: CROP, height: CROP, channels: 4 } })
+const sil = await sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } })
+  .png()
+  .toBuffer();
+const side = 256,
+  inner = 2 * Math.round(side * 0.4);
+const silSmall = await sharp(sil)
+  .resize({
+    width: inner,
+    height: inner,
+    fit: 'contain',
+    background: { r: 0, g: 0, b: 0, alpha: 0 },
+  })
+  .png()
+  .toBuffer();
+await sharp({
+  create: { width: side, height: side, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+})
+  .composite([{ input: silSmall, left: (side - inner) / 2, top: (side - inner) / 2 }])
   .png()
   .toFile('out/logo-badge.png');
 console.log('ok');
