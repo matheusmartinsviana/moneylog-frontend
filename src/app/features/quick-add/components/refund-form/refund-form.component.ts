@@ -35,20 +35,11 @@ import type {
 } from '~/modules/transactions/core/types/transaction-input';
 import { formatIsoDate, todayIso } from '~/util/date';
 
-/** A despesa original já escolhida (na edição vem de `refundOf`). */
 export interface RefundOrigin {
   readonly id: string;
   readonly description: string;
 }
 
-/**
- * Formulário de reembolso (presentational): valor → descrição (opcional) → despesa original
- * (opcional, busca por descrição) → categoria → conta (só `CASH`) → data. Com a original escolhida, a
- * categoria vem dela e **fica travada** (o domínio exige a mesma categoria, A19). A busca é de quem
- * usa: o formulário emite o texto (`originSearch`) e recebe os resultados (`originResults`). Com cartões
- * ativos (`cards`), oferece "Receber em" **conta ou cartão** (segmentado, nunca os dois, T70 CA4): no
- * cartão o reembolso vira crédito na fatura, e o corpo leva `cardId` sem `accountId`.
- */
 @Component({
   selector: 'app-refund-form',
   imports: [
@@ -69,15 +60,12 @@ export class RefundFormComponent extends TransactionFormBase {
   private readonly i18n = inject(I18nService);
 
   readonly accounts = input.required<readonly Account[]>();
-  /** Cartões ativos; vazio esconde a escolha "conta ou cartão". */
   readonly cards = input<readonly Card[]>([]);
   readonly defaultCardId = input<string | null>(null);
   readonly categories = input.required<readonly Category[]>();
   readonly initial = input<RefundInput | null>(null);
-  /** A despesa original da edição (id e descrição de `refundOf`). */
   readonly initialOrigin = input<RefundOrigin | null>(null);
   readonly defaultAccountId = input<string | null>(null);
-  /** `null`: nada buscado; lista (talvez vazia): resultado da última busca. */
   readonly originResults = input<readonly Transaction[] | null>(null);
   readonly originSearching = input(false);
 
@@ -99,7 +87,6 @@ export class RefundFormComponent extends TransactionFormBase {
   });
 
   protected readonly origin = signal<RefundOrigin | null>(null);
-  /** Para onde vai o reembolso: conta (padrão) ou crédito no cartão. */
   protected readonly target = signal<'account' | 'card'>('account');
   protected readonly showTarget = computed(
     () => this.cards().length > 0 && this.initial() === null,
@@ -174,7 +161,6 @@ export class RefundFormComponent extends TransactionFormBase {
     return formatIsoDate(transaction.date, HTML_LANG[this.i18n.language()]);
   }
 
-  /** Escolhe a despesa original: a categoria vem dela e fica travada. */
   protected choose(transaction: Transaction): void {
     this.setOrigin({ id: transaction.id, description: transaction.description });
     if (transaction.category) this.form.controls.categoryId.setValue(transaction.category.id);
@@ -194,7 +180,6 @@ export class RefundFormComponent extends TransactionFormBase {
       date: value.date ?? todayIso(),
       description: value.description.trim() || this.defaultDescription(),
       notes: this.initial()?.notes ?? null,
-      // Conta **ou** cartão, nunca os dois.
       accountId: onCard ? null : (value.accountId ?? ''),
       cardId: onCard ? (value.cardId ?? '') : null,
       categoryId: value.categoryId ?? '',

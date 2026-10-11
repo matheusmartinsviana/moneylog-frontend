@@ -1,36 +1,22 @@
 import { HttpErrorResponse } from '@angular/common/http';
 
-/**
- * Erro de campo de um `VALIDATION_FAILED` (`Problem.errors[]` do contrato). O front traduz pelo
- * `code`; `message` vem do backend só para diagnóstico e não é exibida (FE 05).
- */
 export interface FieldProblem {
-  /** Caminho do campo na requisição (`amount`, `categoryId`...). */
   readonly field: string;
   readonly code: string;
   readonly message: string;
 }
 
-/** Falha de uma chamada à API em forma tipada: o core nunca vê `HttpErrorResponse`. */
 export interface Problem {
-  /** Status HTTP; `0` quando não houve resposta (rede, offline, CORS). */
   readonly status: number;
-  /** `code` estável do contrato (`ACCOUNT_ARCHIVED`...); `NETWORK` para status 0. */
   readonly code: string;
   readonly fieldErrors: readonly FieldProblem[];
-  /** Mesmo valor do header `X-Trace-Id`, para suporte (nunca para decisão de tela). */
   readonly traceId: string | null;
-  /** `Retry-After` (segundos) quando o backend limita as tentativas (429). */
   readonly retryAfterSeconds: number | null;
-  /** `detail` do corpo, só para extrair a linha/causa de `IMPORT_APPLY_FAILED`; nunca é exibido. */
   readonly detail?: string | null;
-  /** `IMPORT_APPLY_FAILED` (contrato 2.10.0): posição (1 = primeira) da linha que falhou. */
   readonly position?: number | null;
-  /** `IMPORT_APPLY_FAILED` (contrato 2.10.0): `code` aberto da recusa da linha. */
   readonly cause?: string | null;
 }
 
-/** Erro lançável com o `Problem` dentro, para as facades de requisições repassarem ao core. */
 export class ProblemError extends Error {
   constructor(readonly problem: Problem) {
     super(`API ${problem.status} ${problem.code}`);
@@ -40,7 +26,6 @@ export class ProblemError extends Error {
 
 export const NETWORK_CODE = 'NETWORK';
 
-/** `code` assumido quando a resposta não traz um `Problem` (proxy, gateway, HTML de erro). */
 const FALLBACK_CODE: Readonly<Record<number, string>> = {
   400: 'VALIDATION_FAILED',
   401: 'UNAUTHENTICATED',
@@ -70,10 +55,6 @@ function toRetryAfter(header: string | null): number | null {
   return Number.parseInt(header.trim(), 10);
 }
 
-/**
- * `HttpErrorResponse` → `Problem` (RFC 9457 do contrato). Erro de rede (`status 0`) vira
- * `NETWORK`; corpo sem `code` cai num `code` padrão por status. Nunca lança.
- */
 export function toProblem(error: unknown): Problem {
   if (!(error instanceof HttpErrorResponse)) {
     return {
@@ -117,7 +98,6 @@ export function toProblem(error: unknown): Problem {
   };
 }
 
-/** Extrai o `Problem` de um erro lançado pela infra; qualquer outra coisa vira falha de rede. */
 export function problemOf(error: unknown): Problem {
   return error instanceof ProblemError ? error.problem : toProblem(error);
 }

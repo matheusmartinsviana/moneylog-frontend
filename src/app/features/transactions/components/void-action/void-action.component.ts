@@ -16,20 +16,12 @@ import { problemMessage } from '~/app/common/i18n/problem-message';
 import type { VoidBlockedBy } from '~/modules/transactions/core/types/transaction-enums';
 import type { Problem } from '~/util/api/problem';
 
-/** Falhas de estorno que repetem o motivo de `voidBlockedBy` (S-88, S-89, S-122). */
 const BLOCKED_BY_CODE: Readonly<Record<string, VoidBlockedBy>> = {
   ACCOUNT_ARCHIVED: 'ACCOUNT_ARCHIVED',
   TRANSACTION_HAS_ACTIVE_REFUNDS: 'HAS_ACTIVE_REFUNDS',
   TRANSACTION_IN_CLOSED_INVOICE: 'TRANSACTION_IN_CLOSED_INVOICE',
 };
 
-/**
- * Ação "Estornar" (presentational). Com `voidable`, abre o diálogo com motivo obrigatório e emite o
- * motivo; sem `voidable`, fica desabilitada com o texto de `voidBlockedBy` (traduzido por `code`,
- * nunca por mensagem do backend; `TRANSACTION_IN_CLOSED_INVOICE` explica que o caminho é cancelar as
- * parcelas restantes). Os `422` equivalentes mostram o mesmo texto. Sem `voidBlockedBy`
- * (ex.: já estornada), não mostra nada.
- */
 @Component({
   selector: 'app-void-action',
   imports: [ConfirmDialogComponent],
@@ -95,9 +87,7 @@ export class VoidActionComponent {
   readonly voidable = input.required<boolean>();
   readonly blockedBy = input<VoidBlockedBy | null>(null);
   readonly busy = input(false);
-  /** Falha do último estorno. */
   readonly problem = input<Problem | null>(null);
-  /** Motivo confirmado no diálogo. */
   readonly voided = output<string>();
 
   protected readonly open = signal(false);
@@ -117,8 +107,6 @@ export class VoidActionComponent {
   });
 
   constructor() {
-    // Uma falha fecha o diálogo e mostra o motivo; o que foi digitado some com ele (um novo estorno
-    // pede o motivo de novo).
     effect(() => {
       if (this.problem()) untracked(() => this.open.set(false));
     });

@@ -7,7 +7,6 @@
   gap: var(--space-4);
 }
 
-/* Fechamento e vencimento lado a lado quando cabe; empilhados no celular estreito. */
 .form__days {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));

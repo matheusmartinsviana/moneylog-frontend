@@ -10,7 +10,6 @@ import { RouterLink } from '@angular/router';
 
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/** As telas de Planejamento (links, como as abas de Cartões): recorrências, pendentes, resumo, projeções. */
 @Component({
   selector: 'app-planning-nav',
   imports: [RouterLink],
@@ -21,10 +20,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
       min-width: 0;
     }
 
-    /*
-     * Oito abas não cabem numa linha de celular: ficam em UMA linha que rola na horizontal dentro da pílula (regra
-     * global de .tabs, com sombra nas pontas) e a aba ativa é trazida para a vista ao abrir a tela.
-     */
     .tabs {
       max-width: 100%;
     }

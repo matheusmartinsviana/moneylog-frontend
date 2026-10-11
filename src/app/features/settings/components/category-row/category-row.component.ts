@@ -16,15 +16,8 @@ import { TextFieldComponent } from '~/app/common/components/forms/text-field/tex
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { Category } from '~/modules/categories/core/types/category';
 
-/** Máximo de caracteres do nome (contrato: `Category.name` até 60). */
 export const CATEGORY_NAME_MAX = 60;
 
-/**
- * Uma categoria na lista, com renomear inline (Enter salva, Esc cancela), arquivar e desarquivar.
- * Presentational: quem usa controla `editing` e reage aos eventos. Não existe ação de excluir
- * (S-70: nenhuma categoria é apagada). `serverCode` leva o erro do backend (ex.:
- * `CATEGORY_NAME_TAKEN`) para o campo de renomear.
- */
 @Component({
   selector: 'li[app-category-row]',
   imports: [ReactiveFormsModule, TextFieldComponent],
@@ -43,9 +36,7 @@ export class CategoryRowComponent {
   protected readonly t = inject(I18nService).t;
 
   readonly category = input.required<Category>();
-  /** Esta linha está em modo de renomear? (controlado por quem usa) */
   readonly editing = input(false);
-  /** `code` do erro do backend para o nome (ex.: `CATEGORY_NAME_TAKEN`). */
   readonly serverCode = input<string | null>(null);
   readonly busy = input(false);
 
@@ -95,7 +86,6 @@ export class CategoryRowComponent {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    // Só no modo renomear; Enter nos botões da linha continua sendo o clique deles.
     if (!this.editing()) return;
     if (event.key === 'Enter' && (event.target as HTMLElement).tagName === 'INPUT') {
       event.preventDefault();

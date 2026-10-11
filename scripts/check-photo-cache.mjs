@@ -1,18 +1,9 @@
 #!/usr/bin/env node
-/**
- * Guarda de privacidade das fotos (ADR-018, T263): o service worker NUNCA pode guardar `/v1/**` nem fotos.
- * Foto de meta é dado pessoal e a rota de conteúdo é autenticada (`Cache-Control: no-store`); um cache do
- * `ngsw` deixaria bytes no dispositivo depois do logout. Falha se o `ngsw-config.json`:
- *  - declarar `dataGroups` (é por onde a API seria cacheada);
- *  - tiver `assetGroups` cujos `resources.files/urls` casem `/v1`, `photos` ou `/api`, ou usem um curinga que
- *    cubra tudo (`/**`, `/**` sem extensão) e, portanto, também a API.
- */
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const DEFAULT_CONFIG = new URL('../ngsw-config.json', import.meta.url);
 
-/** @param {unknown} config @returns {string[]} */
 export function findPhotoCacheProblems(config) {
   const problems = [];
   if (typeof config !== 'object' || config === null) return ['ngsw-config.json inválido'];

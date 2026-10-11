@@ -6,10 +6,6 @@ import type {
 
 const zero = () => ({ amount: '0.00', currency: 'BRL' as const });
 
-/**
- * Ambiente mock (S-67): sem movimentações. Mesmo formato bruto da API; passam pelo mesmo mapper da
- * resposta real.
- */
 export const EMPTY_TRANSACTION_SLICE: TransactionSliceResponse = {
   items: [],
   hasNext: false,
@@ -22,7 +18,6 @@ export const EMPTY_ENTRY_SLICE: EntrySliceResponse = {
   totals: { total: zero(), byCategory: [] },
 };
 
-/** A movimentação recém-criada, como o backend a devolveria (o mock não persiste nada). */
 export function mockCreatedTransaction(
   body: Pick<TransactionResponse, 'amount' | 'date' | 'description' | 'notes'> & {
     type: TransactionResponse['type'];

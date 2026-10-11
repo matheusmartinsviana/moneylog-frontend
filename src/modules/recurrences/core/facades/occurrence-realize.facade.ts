@@ -13,13 +13,11 @@ import { Problem, problemOf } from '~/util/api/problem';
 interface Attempt {
   readonly recurrenceId: string;
   readonly date: string;
-  /** Valor digitado; `null` = o do modelo. */
   readonly amount: string | null;
   readonly payment: RealizePayment | null;
   readonly key: string;
 }
 
-/** Falha em que repetir o mesmo envio é seguro e útil: sem resposta (rede), erro do servidor ou `CONFLICT`. */
 export function isRetryableRealize(problem: Problem | null): boolean {
   return (
     problem !== null &&
@@ -27,13 +25,6 @@ export function isRetryableRealize(problem: Problem | null): boolean {
   );
 }
 
-/**
- * Facade de "Realizar ocorrência" (T88). A `Idempotency-Key` é gerada **por tentativa** e reutilizada no
- * `retry()` depois de uma falha ambígua (rede, 5xx, `409 CONFLICT`); um envio novo com os mesmos dados da
- * tentativa pendente reaproveita a chave (inclusive depois de fechar e reabrir a folha). `exhaustMap`:
- * clique duplo = uma requisição. A resposta (a movimentação criada, com a fatura alvo no cartão) é a
- * fonte da verdade e sai em `realized$`. Escopo de componente.
- */
 @Injectable()
 export class OccurrenceRealizeFacade {
   private readonly gateway = inject(RecurrencesGateway);
@@ -75,13 +66,11 @@ export class OccurrenceRealizeFacade {
       )
       .subscribe((problem) => {
         this.savingState.set(false);
-        // Só uma falha ambígua deixa a tentativa pendente (o servidor pode ter gravado).
         if (!isRetryableRealize(problem)) this.last = null;
         this.problemState.set(problem);
       });
   }
 
-  /** Novo envio; reaproveita a chave da tentativa pendente se os dados são os mesmos. */
   realize(
     recurrenceId: string,
     date: string,
@@ -107,15 +96,10 @@ export class OccurrenceRealizeFacade {
     this.attempts.next(attempt);
   }
 
-  /** "Tentar de novo": o mesmo comando com a **mesma** chave. */
   retry(): void {
     if (this.last) this.attempts.next(this.last);
   }
 
-  /**
-   * A folha (re)abriu para a ocorrência: uma falha ambígua da **mesma** ocorrência continua pendente (com
-   * o aviso e o "tentar de novo"); qualquer outra é descartada.
-   */
   reopen(recurrenceId: string, date: string): void {
     if (
       this.last?.recurrenceId === recurrenceId &&

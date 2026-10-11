@@ -2,7 +2,6 @@ import { expense } from '../support/api';
 
 import { cy, cyText, expect, fillAmount, fmt, open, pick, resetDatabase, test } from './fixtures';
 
-/** T44: contas (editar, arquivar, conta arquivada) e categorias (criar, renomear, arquivar) com o backend real. */
 test.beforeEach(() => resetDatabase());
 
 test('contas: estado vazio, editar nome, saldo inicial travado depois de movimentar', async ({
@@ -31,7 +30,6 @@ test('contas: estado vazio, editar nome, saldo inicial travado depois de movimen
   await expect(cy(page, `account-edit-${acc.id}`)).toHaveText('Carteira');
   await expect(cy(page, `account-institution-${acc.id}`)).toHaveText('Casa');
 
-  // Sem movimentações o saldo inicial é editável; a edição reflete no saldo atual.
   await cy(page, `account-edit-button-${acc.id}`).click();
   await expect(cy(page, 'account-form')).toBeVisible();
   await expect(cy(page, 'account-opening-locked')).toHaveCount(0);
@@ -43,7 +41,6 @@ test('contas: estado vazio, editar nome, saldo inicial travado depois de movimen
   await expect(cy(page, `account-edit-${acc.id}`)).toHaveText('Carteira nova');
   expect(await cyText(page, `account-balance-${acc.id}`)).toContain(fmt('80.00'));
 
-  // Depois de uma movimentação, o saldo inicial fica travado (ACCOUNT_OPENING_LOCKED).
   const food = await api.categoryId('Alimentação');
   await api.txOk(expense({ amount: '5.00', accountId: acc.id, categoryId: food }));
   await open(page, `/accounts/${acc.id}/edit`);
@@ -77,7 +74,6 @@ test('conta com saldo não arquiva; zerada arquiva, some dos formulários e a mo
       description: 'antes de arquivar',
     }),
   );
-  // Zera a conta devolvendo o valor: ajuste de +1,00.
   await api.txOk({
     type: 'ADJUSTMENT',
     amount: '1.00',
@@ -99,7 +95,6 @@ test('conta com saldo não arquiva; zerada arquiva, some dos formulários e a mo
   expect(refused.body.code).toBe('ACCOUNT_WITH_BALANCE_CANNOT_BE_ARCHIVED');
   await evidence(page, 'e2e-32-contas-arquivar-bloqueado');
 
-  // Arquiva a zerada pela tela.
   await expect(cy(page, `account-archive-${zero.id}`)).toBeEnabled();
   await cy(page, `account-archive-${zero.id}`).click();
   await cy(page, 'confirm-dialog-confirm').click();
@@ -109,14 +104,12 @@ test('conta com saldo não arquiva; zerada arquiva, some dos formulários e a mo
   await expect(cy(page, `account-unarchive-${zero.id}`)).toBeVisible();
   await evidence(page, 'e2e-33-contas-arquivadas');
 
-  // Conta arquivada não é oferecida no /quick-add; o Início segue contando "hasAccounts".
   await open(page, '/quick-add?mode=pix');
   await cy(page, 'entry-account').click();
   await expect(
     cy(page, 'entry-account-listbox').getByRole('option', { name: 'Zerada', exact: true }),
   ).toHaveCount(0);
 
-  // A movimentação da conta arquivada fica somente leitura: sem edição, estorno bloqueado.
   await open(page, `/transactions/${tx.id}`);
   const detail = (await api.get(`/v1/transactions/${tx.id}`)).body;
   expect(detail.editable).toBe(false);
@@ -131,7 +124,6 @@ test('conta com saldo não arquiva; zerada arquiva, some dos formulários e a mo
   expect(v.status).toBe(422);
   expect(v.body.code).toBe('ACCOUNT_ARCHIVED');
 
-  // Desarquiva pela tela e volta a valer.
   await open(page, '/accounts?status=ARCHIVED');
   await cy(page, `account-unarchive-${zero.id}`).click();
   await expect(cy(page, `account-row-${zero.id}`)).toHaveCount(0);
@@ -153,7 +145,6 @@ test('categorias: criar, nome repetido, renomear, arquivar (some do /quick-add) 
   await expect(page).toHaveURL(/\/settings\/categories/);
   await expect(cy(page, 'categories-list')).toBeVisible();
 
-  // Criar.
   await cy(page, 'categories-add').click();
   await cy(page, 'category-new-name').fill('Pets');
   await cy(page, 'categories-create-save').click();
@@ -163,7 +154,6 @@ test('categorias: criar, nome repetido, renomear, arquivar (some do /quick-add) 
   await expect(cy(page, `category-name-${created.id}`)).toHaveText('Pets');
   await evidence(page, 'e2e-34-categorias-criada');
 
-  // Nome repetido: 409 CATEGORY_NAME_TAKEN, nada duplicado.
   net.allow(409);
   await cy(page, 'categories-add').click();
   await cy(page, 'category-new-name').fill('pets');
@@ -172,19 +162,16 @@ test('categorias: criar, nome repetido, renomear, arquivar (some do /quick-add) 
   expect((await net.body('POST', '/v1/categories')).code).toBe('CATEGORY_NAME_TAKEN');
   await cy(page, 'categories-create-cancel').click();
 
-  // Renomear.
   await cy(page, `category-rename-${created.id}`).click();
   await cy(page, `category-rename-input-${created.id}`).fill('Animais');
   await cy(page, `category-rename-save-${created.id}`).click();
   await expect(cy(page, `category-name-${created.id}`)).toHaveText('Animais');
   expect((await net.body('PUT', `/v1/categories/${created.id}`)).name).toBe('Animais');
 
-  // Aba de receitas existe e lista as de sistema.
   await cy(page, 'categories-tab-income').click();
   await expect(cy(page, 'categories-list')).toContainText('Salário');
   await cy(page, 'categories-tab-expense').click();
 
-  // Arquivar: some das ativas e do /quick-add.
   await cy(page, `category-archive-${created.id}`).click();
   await cy(page, 'confirm-dialog-confirm').click();
   await expect(cy(page, `category-rename-${created.id}`)).toHaveCount(0);
@@ -197,7 +184,6 @@ test('categorias: criar, nome repetido, renomear, arquivar (some do /quick-add) 
     cy(page, 'entry-category-listbox').getByRole('option', { name: 'Alimentação' }),
   ).toHaveCount(1);
 
-  // Desarquivar volta a oferecer.
   await open(page, '/settings/categories');
   await cy(page, 'categories-archived-toggle').click();
   await cy(page, `category-unarchive-${created.id}`).click();
@@ -206,7 +192,6 @@ test('categorias: criar, nome repetido, renomear, arquivar (some do /quick-add) 
   await cy(page, 'entry-category').click();
   await expect(cy(page, `entry-category-option-${created.id}`)).toHaveCount(1);
 
-  // Despesa em categoria arquivada é recusada pelo domínio (CATEGORY_ARCHIVED).
   await api.ok(api.call('POST', `/v1/categories/${created.id}/archive`));
   const acc = (await api.get('/v1/accounts?pageSize=50')).body.items[0];
   net.allow(422);

@@ -11,11 +11,6 @@ import { AiSettingsCardComponent } from '~/app/features/ai/components/ai-setting
 import { AiStatusCardComponent } from '~/app/features/ai/components/ai-status-card/ai-status-card.component';
 import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
 
-/**
- * `/ai`: o estado **verdadeiro** da IA (`GET /v1/ai/status`), o pedido de análises com consentimento, o
- * histórico, a preferência da mensagem diária e a política de privacidade. **Nenhum campo de chave**: ela
- * só existe no ambiente do servidor e nunca passa por esta tela.
- */
 @Component({
   selector: 'app-ai-page',
   imports: [

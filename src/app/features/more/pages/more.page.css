@@ -16,7 +16,6 @@
   letter-spacing: 0.02em;
 }
 
-/* Grade de 2 colunas (3 em tela larga): cada destino é um bloco próprio, a página encurta e quase não rola. */
 .more-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -85,5 +84,5 @@
 }
 
 .more-list__chevron {
-  display: none; /* na grade, o bloco inteiro já é o alvo */
+  display: none;
 }

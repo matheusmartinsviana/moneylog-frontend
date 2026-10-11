@@ -57,7 +57,6 @@ describe('GoalPhotosRequestsFacade', () => {
     const body = req.request.body as FormData;
     expect(body).toBeInstanceOf(FormData);
     expect((body.get('file') as File).name).toBe('carro.jpg');
-    // O Content-Type multipart (com boundary) é do navegador: o app não o fixa.
     expect(req.request.headers.has('Content-Type')).toBe(false);
     req.event({ type: HttpEventType.UploadProgress, loaded: 50, total: 100 });
     req.flush(PHOTO, { status: 201, statusText: 'Created' });

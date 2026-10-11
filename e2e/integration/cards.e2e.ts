@@ -14,17 +14,10 @@ import {
   test,
 } from './fixtures';
 
-/**
- * Etapa 3 com o backend real (T72, parte do front): criar cartão → compra parcelada com a prévia do
- * backend → ver a fatura → pagar a fatura em duas vezes → os mesmos números no cartão, na fatura, na
- * lista de cartões, no Início e na API. O teste só compara o que a tela mostra com o que a API devolveu;
- * nunca recalcula (as somas do backend são conferidas pelos testes do backend).
- */
 test.describe.configure({ mode: 'serial' });
 
 test.beforeEach(() => resetDatabase());
 
-/** Fechamento que nunca cai no dia de hoje (compra no dia do fechamento vai para a fatura seguinte, S-12). */
 function closingDayAwayFromToday(): number {
   const day = Number(todayInSaoPaulo().slice(8, 10));
   return ((day + 9) % 28) + 1;
@@ -42,7 +35,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   const nubank = await api.createAccount({ name: 'Nubank', openingBalance: '20000.00' });
   await signIn(page);
 
-  // 1. Cria o cartão pela tela.
   await open(page, '/cards/new');
   await cy(page, 'card-name').fill('Roxinho');
   await cy(page, 'card-institution').fill('Nubank');
@@ -60,7 +52,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   await expect(cy(page, 'card-header')).toBeVisible();
   expect(await cyText(page, 'card-available')).toBe(fmt('10000.00'));
 
-  // 2. Compra 1.200,00 em 6x pelo /quick-add (Crédito), com a prévia do backend.
   await open(page, `/quick-add?mode=credit&cardId=${card.id}`);
   await expect(cy(page, 'credit-form')).toBeVisible();
   await expect(cy(page, 'entry-card')).toContainText('Roxinho');
@@ -93,7 +84,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   }
   expect(created.account).toBeNull();
 
-  // 3. Tela do cartão: números iguais aos da API.
   await open(page, `/cards/${card.id}`);
   await expect(cy(page, 'card-header')).toBeVisible();
   const apiCard = await net.body('GET', `/v1/cards/${card.id}`);
@@ -104,14 +94,12 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   );
   await evidence(page, 'e2e-03-cartao');
 
-  // 3b. Parcelas futuras: total do backend.
   await cy(page, 'card-tabs-tab-future').click();
   const future = await net.body('GET', `/v1/cards/${card.id}/future-installments`);
   expect(await cyText(page, 'future-total')).toContain(fmt(future.total.amount));
   expect(future.total.amount).toBe(apiCard.committedFuture.amount);
   await cy(page, 'card-tabs-tab-invoices').click();
 
-  // 4. Fatura da 1ª parcela: itens e valores da API.
   const firstInvoiceId = created.installments[0].invoiceId as string;
   await cy(page, `invoice-open-${firstInvoiceId}`).click();
   await expect(page).toHaveURL(new RegExp(`/cards/${card.id}/invoices/${firstInvoiceId}$`));
@@ -125,7 +113,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   );
   await evidence(page, 'e2e-04-fatura');
 
-  // 5. Pagamento parcial (100,00) pela folha, com a prévia do backend.
   await cy(page, 'invoice-pay').click();
   await expect(cy(page, 'pay-sheet-panel')).toBeVisible();
   await expect(cy(page, 'pay-account')).toContainText('Nubank');
@@ -145,7 +132,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   expect(await cyText(page, 'invoice-paid')).toBe(fmt('100.00'));
   expect(await cyText(page, 'invoice-outstanding')).toBe(fmt(afterFirst.outstanding.amount));
 
-  // 6. Paga o restante (o valor sugerido é o outstanding recebido).
   await cy(page, 'invoice-pay').click();
   await expect(cy(page, 'pay-amount')).toHaveValue(
     fmt(afterFirst.outstanding.amount).replace('R$ ', ''),
@@ -161,7 +147,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   expect(await cyText(page, 'invoice-paid')).toBe(fmt(invoice.paid.amount));
   await expect(cy(page, 'invoice-payments')).toBeVisible();
 
-  // 7. Cartão, lista e Início concordam com a API depois dos pagamentos.
   await open(page, `/cards/${card.id}`);
   const finalCard = await net.body('GET', `/v1/cards/${card.id}`);
   expect(await cyText(page, 'card-available')).toBe(fmt(finalCard.availableLimit.amount));
@@ -196,7 +181,6 @@ test('criar cartão, comprar em 6x, ver a fatura, pagar em duas vezes: os mesmos
   );
   await evidence(page, 'e2e-07-inicio-com-cartao');
 
-  // 8. A conta do pagamento perdeu exatamente o que a API diz.
   await open(page, '/accounts');
   const accounts = await net.body('GET', '/v1/accounts');
   const acc = accounts.items.find((a: any) => a.id === nubank.id);
@@ -241,7 +225,6 @@ test('a mesma Idempotency-Key no pagamento não paga duas vezes (rede que cai na
   await signIn(page);
   await open(page, `/cards/${card.id}/invoices/${invoiceId}`);
 
-  // O backend processa o pagamento, mas a resposta se perde: o "tentar de novo" reenvia a mesma chave.
   net.dropNextResponse('POST', /\/v1\/invoices\/[^/]+\/payments$/);
   await cy(page, 'invoice-pay').click();
   await cy(page, 'pay-amount').fill('50,00');
@@ -295,7 +278,6 @@ test('resposta perdida, fechar e reabrir a folha e pagar de novo: uma só Idempo
   await signIn(page);
   await open(page, `/cards/${card.id}/invoices/${invoiceId}`);
 
-  // O backend grava o pagamento, mas a resposta se perde: o usuário fecha a folha, reabre e paga de novo.
   net.dropNextResponse('POST', /\/v1\/invoices\/[^/]+\/payments$/);
   await cy(page, 'invoice-pay').click();
   await cy(page, 'pay-submit').click();

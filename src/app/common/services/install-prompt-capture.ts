@@ -1,7 +1,6 @@
 let captured: Event | null = null;
 let listening = false;
 
-/** Guarda o `beforeinstallprompt` assim que o shell abre, antes de o serviço do PWA carregar. */
 export function captureInstallPrompt(win: Window | null): void {
   if (listening || !win) return;
   listening = true;
@@ -11,7 +10,6 @@ export function captureInstallPrompt(win: Window | null): void {
   });
 }
 
-/** Entrega (uma vez) o evento guardado. */
 export function takeCapturedInstallPrompt(): Event | null {
   const event = captured;
   captured = null;

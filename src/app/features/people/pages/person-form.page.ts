@@ -29,17 +29,10 @@ import { EntityChanges } from '~/app/common/services/entity-changes';
 import { ToastService } from '~/app/common/services/toast.service';
 import { PersonFormFacade } from '~/modules/people/core/facades/person-form.facade';
 
-/** Códigos de regra que o backend atribui a um campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   PERSON_NAME_REQUIRED: 'name',
 };
 
-/**
- * Criar (`/people/new`) e editar (`/people/:id/edit`) uma pessoa (T84). Valida só para UX; a regra é do
- * backend e o erro dele preenche o campo. Homônimo é aviso, não bloqueio (S-138): o backend diz se já há
- * alguém com o nome (300 ms). Salvar usa a pessoa devolvida e leva à tela dela; `409 VERSION_CONFLICT`
- * recarrega a versão nova.
- */
 @Component({
   selector: 'app-person-form-page',
   imports: [
@@ -56,7 +49,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   styleUrl: './person-form.page.css',
 })
 export class PersonFormPage {
-  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
   protected readonly skeleton: readonly FormSkeletonPiece[] = ['field', 'field-hint'];
 
   private readonly router = inject(Router);
@@ -65,7 +57,6 @@ export class PersonFormPage {
   protected readonly t = inject(I18nService).t;
   protected readonly facade = inject(PersonFormFacade);
 
-  /** `:id` da rota; ausente em `/people/new`. */
   readonly id = input<string>();
 
   protected readonly editing = computed(() => this.id() !== undefined);
@@ -79,7 +70,6 @@ export class PersonFormPage {
     notes: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(2000)] }),
   });
 
-  /** Alterações digitadas e não salvas: fechar pede confirmação. */
   protected readonly dirty = dirtySignal(this.form);
 
   private readonly fieldHandled = signal(false);
@@ -100,7 +90,6 @@ export class PersonFormPage {
       const id = this.id();
       if (id !== undefined) untracked(() => this.facade.load(id));
     });
-    // A cada versão carregada (inclusive depois de um conflito) repõe o formulário.
     effect(() => {
       const person = this.person();
       if (!person) return;
@@ -115,7 +104,6 @@ export class PersonFormPage {
         this.fieldHandled.set(false);
         return;
       }
-      // Conflito de versão: nada é recarregado sozinho (o digitado fica); o usuário escolhe recarregar.
       untracked(() => this.fieldHandled.set(applyProblemToForm(this.form, problem, CODE_TO_FIELD)));
     });
     this.facade.saved$.pipe(takeUntilDestroyed()).subscribe((person) => {
@@ -130,12 +118,10 @@ export class PersonFormPage {
     });
   }
 
-  /** Para onde o modal volta: a lista (criar) ou a página de origem (editar). */
   private backUrl(): string[] {
     return this.editing() ? ['/people', this.id() as string] : ['/people'];
   }
 
-  /** Fechar sem salvar (já confirmado, se havia alterações). */
   protected close(): void {
     void this.router.navigate(this.backUrl());
   }
@@ -157,7 +143,6 @@ export class PersonFormPage {
     this.facade.save({ kind: 'create', input });
   }
 
-  /** Conflito de versão: o usuário escolheu a versão mais recente (o digitado é substituído). */
   protected reloadLatest(): void {
     const id = this.id();
     if (id === undefined) return;

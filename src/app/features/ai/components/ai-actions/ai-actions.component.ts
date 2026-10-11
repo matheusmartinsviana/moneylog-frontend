@@ -5,10 +5,6 @@ import { AiAskDialogComponent } from '~/app/features/ai/components/ai-ask-dialog
 import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
 import type { AiRunnablePurpose } from '~/modules/ai/core/types/ai';
 
-/**
- * Pedidos de análise (resumo do mês e insights): habilitados só com a IA ligada e o provedor estável; sem isso
- * o botão fica desabilitado com a razão à vista. Cada pedido abre o diálogo de consentimento. Smart.
- */
 @Component({
   selector: 'app-ai-actions',
   imports: [AiAskDialogComponent],

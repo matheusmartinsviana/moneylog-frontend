@@ -4,10 +4,6 @@ import { ConfirmDialogComponent } from '~/app/common/components/confirm-dialog/c
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { PwaService } from '~/app/common/services/pwa.service';
 
-/**
- * Avisos do PWA no topo do shell: sem conexão (honesto: escritas exigem rede), nova versão
- * (atualizar pede confirmação, pois recarrega a tela) e convite de instalação (dispensável).
- */
 @Component({
   selector: 'app-pwa-notices',
   imports: [ConfirmDialogComponent],

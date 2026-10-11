@@ -8,11 +8,6 @@ import { LimitMeterComponent } from '~/app/features/cards/components/limit-meter
 import type { Card } from '~/modules/cards/core/types/card';
 import { formatMoney, isPositive } from '~/util/money';
 
-/**
- * Resumo do cartão (T65 CA1, presentational): limite, disponível, crédito, **total comprometido** (fatura
- * corrente + fechadas) e, **separado**, o que já foi comprometido em compras futuras. Os dois números
- * são os do backend e nunca se somam na tela (PR 01, regra 1); a nota explica a diferença.
- */
 @Component({
   selector: 'app-card-header',
   imports: [MoneyComponent, LimitMeterComponent, ClosingBadgeComponent],
@@ -105,7 +100,6 @@ export class CardHeaderComponent {
   protected readonly t = inject(I18nService).t;
 
   readonly card = input.required<Card>();
-  /** Pede o modal "Confirmar fechamento" (a tela dona abre). */
   readonly confirmClosing = output<void>();
 
   protected readonly hasCredit = computed(() => isPositive(this.card().creditBalance));

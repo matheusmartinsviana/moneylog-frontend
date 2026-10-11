@@ -2,11 +2,6 @@ import { addDays } from '~/demo/demo-dates';
 import { commitments, dashboardView } from '~/demo/demo-views';
 import { demoId, money, ratio, type S, type World } from '~/demo/demo-world';
 
-/**
- * Etapa 7 no modo demonstração: lotes de importação (com linhas classificadas), notificações, lembretes,
- * configurações, push (desligado) e a mensagem diária, no formato do contrato. Aqui há aritmética porque este
- * arquivo simula o backend; no app real o front não soma nada. Só entra no build `demo`.
- */
 type Line = S['ImportLine'];
 type Batch = S['ImportBatch'];
 
@@ -226,8 +221,6 @@ export function importBatches(w: World): DemoBatch[] {
     make(3, 'account', 'APPLIED', appliedLines, 38),
   ];
 }
-
-// ---------- Notificações ----------
 
 export function notificationList(w: World): S['Notification'][] {
   const invoice = w.invoices.find((i) => i.status !== 'PAID' && i.total - i.paid > 0);

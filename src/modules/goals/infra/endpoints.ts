@@ -1,4 +1,3 @@
-/** Endpoints de metas, num lugar só (FE 05). Contrato: tag Goals. */
 export const GOALS_ENDPOINTS = {
   collection: '/v1/goals',
   item: (id: string) => `/v1/goals/${encodeURIComponent(id)}`,
@@ -24,7 +23,6 @@ export const GOALS_ENDPOINTS = {
 
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 
-/** Fontes de leitura do valor atual de uma medida (ADR-016): as mesmas das telas de dívidas, Início e custos fixos. */
 export const METRIC_SOURCES = {
   debts: '/v1/debts/overview',
   dashboard: '/v1/dashboard/summary',

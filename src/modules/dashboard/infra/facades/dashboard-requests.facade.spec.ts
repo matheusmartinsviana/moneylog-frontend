@@ -35,7 +35,6 @@ function setup(useMocks: boolean) {
   };
 }
 
-/** Resposta da API com valores distintos em cada campo, para pegar troca de campo no mapeamento. */
 function summaryResponse(): DashboardSummaryResponse {
   let n = 0;
   const m = (): MoneyResponse => ({ amount: `${++n}.00`, currency: 'BRL' });
@@ -99,7 +98,6 @@ describe('DashboardRequestsFacade', () => {
       const summary = await firstValueFrom(gateway.getSummary());
       const upcoming = await firstValueFrom(gateway.getUpcoming());
 
-      // O mock vazio não traz a variação do saldo (campo opcional do contrato): o mapper a normaliza para null.
       expect(summary).toEqual({
         ...EMPTY_DASHBOARD_SUMMARY,
         balances: { ...EMPTY_DASHBOARD_SUMMARY.balances, inAccountsChange: null },
@@ -135,7 +133,6 @@ describe('DashboardRequestsFacade', () => {
       expect(req.request.method).toBe('GET');
       req.flush(response);
 
-      // `inAccountsChange` é opcional no contrato 2.6.0: ausente vira null (sem chip na tela).
       expect(await result).toEqual({
         ...response,
         balances: { ...response.balances, inAccountsChange: null },
@@ -181,7 +178,6 @@ describe('DashboardRequestsFacade', () => {
 
     it('Dado item sem bucket, quando peço os próximos, então normaliza o bucket ausente para null', async () => {
       const { gateway, http } = setup(false);
-      // O contrato torna `bucket` opcional/nullable: o item sem data pode omiti-lo.
       const response: UpcomingResponse = {
         items: [
           {

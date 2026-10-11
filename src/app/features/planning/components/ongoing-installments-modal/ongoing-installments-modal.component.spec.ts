@@ -58,7 +58,6 @@ describe('OngoingInstallmentsModalComponent', () => {
 
   it('Dado parcela 150,00, total 10 e faltam 8, então a prévia é a do servidor (sem somar no front)', async () => {
     const { gateway } = await setup();
-    // Resposta do servidor deliberadamente diferente de 8 × 150: a tela mostra o que veio.
     gateway.previewResult = (await import('rxjs')).of(
       anOngoingPreview({ remaining: { amount: '1199.99', currency: 'BRL' } }),
     );

@@ -306,7 +306,6 @@ describe('MarkdownEditorComponent', () => {
       expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
       expect(control.value).toBe('ver [[mac');
       expect(area).toHaveFocus();
-      // O Esc da lista não arma o "Esc, Tab": o próximo Tab ainda recua.
       await userEvent.keyboard('{Tab}');
       expect(area).toHaveFocus();
     });

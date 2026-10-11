@@ -61,7 +61,6 @@ describe('SettleSheetComponent', () => {
     await fixture.whenStable();
     expect(screen.getByTestId('settle-account')).toHaveTextContent('Nubank');
 
-    // Já há uma conta escolhida: uma lista nova não troca a escolha.
     await rerender({ inputs: { accounts: [WALLET, NUBANK] }, partialUpdate: true });
     await fixture.whenStable();
     expect(screen.getByTestId('settle-account')).toHaveTextContent('Nubank');

@@ -11,11 +11,6 @@ import { emptySearchResults } from '~/modules/search/mock-data/empty-search';
 import { ProblemError, toProblem } from '~/util/api/problem';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 
-/**
- * Facade de requisições da busca global (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS` ligado
- * não sai requisição: responde sem resultados (ou o JSON que o E2E deixou em
- * `window.__MONEYLOG_MOCK_RESPONSES__['/v1/search']`).
- */
 @Injectable({ providedIn: 'root' })
 export class SearchRequestsFacade extends SearchGateway {
   private readonly http = inject(HttpClient);

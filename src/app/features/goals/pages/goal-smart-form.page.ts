@@ -33,19 +33,12 @@ import {
   type GoalMetric,
 } from '~/modules/goals/core/types/goal';
 
-/** Regras do servidor que pertencem a um campo (as demais viram aviso geral). */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   GOAL_METRIC_TARGET_EQUALS_BASELINE: 'target',
   AMOUNT_ABOVE_LIMIT: 'target',
   GOAL_NAME_TOO_LONG: 'name',
 };
 
-/**
- * Nova meta inteligente (`/goals/new-smart`, em modal sobre a lista): escolhe a medida, mostra o valor de
- * hoje (lido do servidor, nunca calculado aqui), pede o alvo (aceita 0,00), o prazo e um nome opcional.
- * Sem prazo, só um aviso gentil ("meta sem prazo fica no longo prazo"): não bloqueia. A direção (reduzir ou
- * aumentar) é derivada pelo servidor. Erros: alvo igual ao valor de hoje no campo; meta repetida no aviso.
- */
 @Component({
   selector: 'app-goal-smart-form-page',
   imports: [
@@ -86,7 +79,6 @@ export class GoalSmartFormPage {
   private readonly deadline = toSignal(this.form.controls.deadline.valueChanges, {
     initialValue: null,
   });
-  /** Aviso gentil (não bloqueia): sem prazo a meta fica em Longo prazo. */
   protected readonly showNoDeadline = computed(() => !this.deadline());
 
   private readonly fieldHandled = signal(false);

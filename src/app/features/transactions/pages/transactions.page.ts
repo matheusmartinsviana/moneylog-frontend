@@ -37,10 +37,6 @@ import {
 } from '~/modules/transactions/core/types/list-filters';
 import { todayIso } from '~/util/date';
 
-/**
- * Movimentações (smart): duas visões (Registros e Por competência), filtros espelhados na URL,
- * totais **do backend** e "carregar mais". Fala só com facades de negócio (FE 01); nada é somado.
- */
 @Component({
   selector: 'app-transactions-page',
   imports: [
@@ -69,7 +65,6 @@ export class TransactionsPage {
   protected readonly t = inject(I18nService).t;
   protected readonly list = inject(TransactionsListFacade);
 
-  /** Há um detalhe aberto (rota filha `:id`): painel no desktop, página no celular. */
   protected readonly detailOpen = signal(false);
   protected readonly accountOptions = signal<readonly FilterOption[]>([]);
   protected readonly categoryOptions = signal<readonly FilterOption[]>([]);
@@ -94,11 +89,9 @@ export class TransactionsPage {
   });
 
   constructor() {
-    // URL → filtros (primeira carga, F5, voltar/avançar).
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       this.list.apply(filtersFromQuery((key) => params.get(key), todayIso()));
     });
-    // Filtros → URL (só o que difere do padrão; a busca com debounce também passa por aqui).
     effect(() => {
       const query = filtersToQuery(this.filters(), todayIso());
       untracked(() => {
@@ -115,7 +108,6 @@ export class TransactionsPage {
       });
     });
 
-    // Opções dos filtros (contas e categorias, inclusive arquivadas: o histórico as usa).
     forkJoin({
       accounts: this.accountsFacade.loadAll(),
       expense: this.categoriesFacade.list('EXPENSE', true),
@@ -142,7 +134,6 @@ export class TransactionsPage {
     this.list.patch(changes);
   }
 
-  /** A linha de consumo de uma dívida leva à dívida (ela não tem movimentação). */
   protected openDebt(id: string): void {
     void this.router.navigate(['/debts', id]);
   }

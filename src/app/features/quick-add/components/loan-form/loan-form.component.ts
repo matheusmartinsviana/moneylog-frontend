@@ -25,11 +25,6 @@ import type { TransactionInput } from '~/modules/transactions/core/types/transac
 import { todayIso } from '~/util/date';
 import type { PersonRef } from '~/util/debt';
 
-/**
- * "Dinheiro emprestado" (presentational, T85): pessoa (existente ou nova, criada antes, S-138) → valor →
- * conta → data → previsão (opcional) → descrição. Emite um `LOAN_GIVEN` com `newDebt`: o dinheiro sai da
- * conta e vira uma dívida a receber, sem despesa. Nenhum valor é calculado aqui; o `impact` volta do backend.
- */
 @Component({
   selector: 'app-loan-form',
   imports: [
@@ -50,10 +45,8 @@ export class LoanFormComponent extends TransactionFormBase {
   readonly people = input.required<readonly PersonRef[]>();
   readonly createPerson = input<((name: string) => Observable<PersonRef>) | null>(null);
   readonly defaultAccountId = input<string | null>(null);
-  /** `?personId=` da URL: a pessoa já escolhida (o botão "Emprestar" da tela dela). */
   readonly defaultPersonId = input<string | null>(null);
 
-  /** `?amount=&description=&date=` (vindo do aviso do Pix): só campos vazios. */
   readonly prefill = input<{
     amount: string | null;
     description: string | null;

@@ -23,7 +23,6 @@
 </ng-template>
 
 <ng-template #results>
-  <!-- O foco fica no campo (aria-activedescendant): apertar o mouse numa opção não pode tirá-lo de lá. -->
   <div class="gs__results" data-cy="global-search-panel" (mousedown)="$event.preventDefault()">
     @switch (status()) {
       @case ('idle') {

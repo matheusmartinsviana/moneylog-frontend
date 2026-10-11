@@ -4,16 +4,9 @@ import { DEMO_PHOTO_HEIGHT, DEMO_PHOTO_WIDTH, demoPhotoId } from '~/demo/demo-ph
 import { accRef, dashboardView, recurrenceSummary } from '~/demo/demo-views';
 import { money, ratio, type GoalDef, type S, type World } from '~/demo/demo-world';
 
-/**
- * Metas do modo demonstração (dados SINTÉTICOS). Este código só existe no build `demo`: ele **simula o
- * servidor**, que calcula valor atual, progresso, estágio, plano e consistência (ADR-016). O app real não
- * faz nenhuma destas contas.
- */
-
 const cents = (m: S['Money']): number => Math.round(Number(m.amount) * 100);
 const ts = (iso: string) => `${iso}T12:00:00Z`;
 
-/** Meses-calendário de `from` a `to` (`YYYY-MM`), ambos inclusive. */
 function monthsInclusive(from: string, to: string): number {
   return (
     (Number(to.slice(0, 4)) - Number(from.slice(0, 4))) * 12 +
@@ -23,7 +16,6 @@ function monthsInclusive(from: string, to: string): number {
   );
 }
 
-/** Valor atual de uma medida, da mesma fonte das telas (dívidas, painel, custos fixos). */
 export function metricValue(w: World, metric: S['GoalMetric']): number {
   switch (metric) {
     case 'TOTAL_DEBT':
@@ -50,7 +42,6 @@ export function goalView(w: World, g: GoalDef): S['Goal'] {
   const baseline = g.baseline ?? 0;
   const decrease = isMetric && g.target < baseline;
 
-  // Atingida e progresso (0..1, monotônico).
   const reached = isMetric
     ? decrease
       ? current <= g.target
@@ -69,7 +60,6 @@ export function goalView(w: World, g: GoalDef): S['Goal'] {
     remaining = Math.max(g.target - saved, 0);
   }
 
-  // Plano automático: linha reta do ponto de partida ao alvo até o mês do prazo.
   const thisMonth = w.today.slice(0, 7);
   const monthsLeft = g.deadline
     ? Math.max(monthsInclusive(thisMonth, g.deadline.slice(0, 7)), 0)
@@ -77,7 +67,6 @@ export function goalView(w: World, g: GoalDef): S['Goal'] {
   const hasPace = g.deadline !== null && monthsLeft !== null && monthsLeft > 0;
   const requiredPace = hasPace ? (reached ? 0 : Math.ceil(remaining / monthsLeft!)) : null;
 
-  // Consistência: esperado no fim de cada mês x instantâneo; só meses fechados contam.
   const start = g.startMonth ?? null;
   const total = start && g.deadline ? monthsInclusive(start, g.deadline.slice(0, 7)) : 0;
   const expectedAt = (index: number): number =>

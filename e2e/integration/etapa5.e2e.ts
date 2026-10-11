@@ -5,20 +5,12 @@ import { todayInSaoPaulo } from '../support/api';
 
 import { cy, cyText, expect, fmt, norm, open, pick, resetDatabase, test } from './fixtures';
 
-/**
- * Etapa 5 com o backend real (T99 a T104 do front): metas com reserva lógica, `reserved` e `available` no
- * Início, resumo mensal, projeções e exportação. O teste só **compara a tela com a API**: o
- * front não calcula percentuais, saldos, reservas nem projeções. A reserva não pode mudar o saldo da conta.
- * **Escrito, não executado pelo dev-frontend** (o backend da Etapa 5 estava sendo recompilado): a QA roda
- * `npm run e2e:integration` com o backend estável.
- */
 test.describe.configure({ mode: 'serial' });
 
 test.beforeEach(() => resetDatabase());
 
 const MONTH = (): string => todayInSaoPaulo().slice(0, 7);
 
-/** Fechamento que nunca cai no dia de hoje (compra no dia do fechamento vai para a fatura seguinte, S-12). */
 function closingDayAwayFromToday(): number {
   const day = Number(todayInSaoPaulo().slice(8, 10));
   return ((day + 9) % 28) + 1;
@@ -50,7 +42,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   const before = await api.get(`/v1/accounts/${nubank.id}`);
   await signIn(page);
 
-  // 1. Cria a meta pela tela.
   await open(page, '/goals/new');
   await cy(page, 'goal-name').fill('Reserva de emergência');
   await cy(page, 'goal-target').fill('20.000,00');
@@ -63,7 +54,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   expect(created.current.amount).toBe('0.00');
   expect(created.progress).toBe('0.0000');
 
-  // 2. Reserva 8.500,00 na Nubank pela folha: o corpo leva o valor positivo e a Idempotency-Key.
   await cy(page, 'goal-reserve').click();
   await expect(cy(page, 'reserve-not-money')).toBeVisible();
   await pick(page, 'reserve-account', 'Nubank');
@@ -76,7 +66,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   expect((reserve?.requestBody as any).amount).toBe('8500.00');
   const goal = await net.body('POST', `/v1/goals/${created.id}/reservations`);
 
-  // 3. A tela mostra o que a API calculou: 42,5%, atual, falta (nenhuma conta no front).
   expect(goal.current.amount).toBe('8500.00');
   expect(await cyText(page, 'goal-percent')).toBe('42,5%');
   expect(await cyText(page, 'goal-current')).toBe(fmt(goal.current.amount));
@@ -84,14 +73,12 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   expect(await cyText(page, 'goal-target')).toBe(fmt('20000.00'));
   await expect(cy(page, 'goal-reservations').locator('li')).toHaveCount(1);
 
-  // 4. O saldo da conta NÃO mudou (reserva lógica) e nenhuma movimentação nasceu.
   const after = await api.get(`/v1/accounts/${nubank.id}`);
   expect(after.body.currentBalance.amount).toBe(before.body.currentBalance.amount);
   expect(after.body.reservedAmount.amount).toBe('8500.00');
   const transactions = await api.get('/v1/transactions');
   expect(transactions.body.items).toHaveLength(0);
 
-  // 5. O Início mostra reservado e disponível exatamente como a API.
   await open(page, '/planning/overview');
   await expect(cy(page, 'home-legacy')).toBeVisible();
   const summary = await net.body('GET', '/v1/dashboard/summary');
@@ -100,7 +87,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   expect(await cyText(page, 'home-available')).toBe(fmt(summary.balances.available.amount));
   await expect(cy(page, 'home-reserved-goals')).toBeVisible();
 
-  // 6. Libera 2.000,00 pela chave "Liberar": o corpo leva o valor negativo e o atual cai.
   await open(page, `/goals/${created.id}`);
   await cy(page, 'goal-release').click();
   await pick(page, 'reserve-account', 'Nubank');
@@ -116,7 +102,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   expect(await cyText(page, 'goal-percent')).toBe('32,5%');
   await expect(cy(page, 'goal-reservations').locator('li')).toHaveCount(2);
 
-  // 7. O resumo do mês: cada número é o da API.
   await open(page, `/planning/summary/${MONTH()}`);
   const monthly = await net.body('GET', `/v1/summaries/${MONTH()}`);
   expect(await cyText(page, 'summary-income')).toContain(fmt(monthly.income.amount));
@@ -127,7 +112,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
   await expect(cy(page, 'summary-analyze')).toHaveCount(0);
   await expect(cy(page, 'summary-analyze-note')).toBeVisible();
 
-  // 8. Projeções: rotuladas como projeção; a série e as premissas são as da API; a reserva não é saída.
   await open(page, '/planning/projections');
   await expect(cy(page, 'projection-banner-title')).toHaveText('Projeção, não certeza.');
   const projection = await net.body('GET', '/v1/projections');
@@ -144,7 +128,6 @@ test('jornada: criar a meta → reservar 8.500,00 → ver reservado e disponíve
     fmt(projection.goals.reserved.amount),
   );
 
-  // 9. Exportar o CSV: download autenticado (Blob), nome do Content-Disposition, sem token na URL.
   await open(page, '/settings');
   await cy(page, 'export-csv-action').click();
   const downloading = page.waitForEvent('download');
@@ -173,7 +156,6 @@ test('resposta perdida ao reservar: "tentar de novo" reenvia a MESMA Idempotency
   await signIn(page);
   await open(page, `/goals/${goal.id}`);
 
-  // O backend processa a reserva, mas a resposta se perde na volta.
   net.dropNextResponse('POST', /\/v1\/goals\/[^/]+\/reservations$/);
   await cy(page, 'goal-reserve').click();
   await pick(page, 'reserve-account', 'Nubank');
@@ -346,7 +328,6 @@ test('resumo × Início × lista concordam no mês; o maior gasto abre a movimen
   expect(norm(await cyText(page, 'summary-net'))).toContain(homeNet.replace(/^[^R−]*/, ''));
   expect(await cyText(page, 'summary-savings-text')).toMatch(/%$/);
 
-  // O maior gasto abre a movimentação.
   await cy(page, 'summary-largest-expense-link').click();
   await expect(page).toHaveURL(/\/transactions\/[0-9a-f-]{36}/);
 });
@@ -394,7 +375,6 @@ test('exportar: a compra em 6x aparece uma vez no CSV, e o backup baixa como JSO
   expect(csv).toContain('1200,00');
 
   await cy(page, 'export-backup-action').click();
-  // O "Arquivo pronto" do CSV continua na tela até o backup chegar: espera o nome do backup.
   await expect(cy(page, 'export-ready-name')).toContainText('moneylog-backup');
   const backupDownload = page.waitForEvent('download');
   await cy(page, 'export-save').click();
@@ -480,7 +460,6 @@ test('teclado e 375 px: reservar uma meta só pelo teclado', async ({ page, api,
   expect(await cyText(page, 'goal-current')).toBe(fmt('300.00'));
 });
 
-/** `YYYY-MM-DD` de hoje (São Paulo) mais `days`, só calendário (sem horário). */
 function inDays(days: number): string {
   const [y, m, d] = todayInSaoPaulo().split('-').map(Number);
   return new Date(Date.UTC(y!, m! - 1, d! + days)).toISOString().slice(0, 10);

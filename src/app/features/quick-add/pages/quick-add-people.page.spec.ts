@@ -529,7 +529,6 @@ describe('QuickAddPage: pessoas e dívidas (Etapa 4)', () => {
       expect(field('received-amount')).toHaveAccessibleDescription(/R\$\s200,00/);
       await userEvent.clear(field('received-amount'));
       await userEvent.type(field('received-amount'), '100,00');
-      // O backend, depois da devolução, devolve o saldo novo da dívida.
       stub.debts = stub.debts.map((d) =>
         d.id === 'debt-1' ? { ...d, outstanding: brl('100.00') } : d,
       );
@@ -801,7 +800,6 @@ describe('QuickAddPage: pessoas e dívidas (Etapa 4)', () => {
     it('Dado uma dívida "Me devem" criada aqui, então ela aparece em "Receber" sem recarregar a página', async () => {
       const debts = new DebtsGatewayStub();
       const { fixture } = await setup({ url: '/quick-add?mode=received', debts });
-      // "Receber" já carregou (lista vazia); agora crio uma dívida "Me devem" no outro modo.
       await pickMode('debt');
       await screen.findByTestId('debt-form');
       await userEvent.type(field('debt-principal'), '80,00');
@@ -867,7 +865,6 @@ describe('QuickAddPage: pessoas e dívidas (Etapa 4)', () => {
 
       expect(people.queries).toHaveLength(1);
       expect(screen.getByTestId('entry-share-0')).toBeInTheDocument();
-      // O front não mostra "seu gasto", total das partes nem o que sobra: só o que foi digitado.
       expect(screen.queryByText(/seu gasto|sobra|resto/i)).not.toBeInTheDocument();
     });
 
@@ -938,7 +935,6 @@ describe('QuickAddPage: pessoas e dívidas (Etapa 4)', () => {
         pt.errors.codes['SHARES_EXCEED_AMOUNT']!,
       );
       expect(screen.queryByTestId('form-error')).not.toBeInTheDocument();
-      // O que foi digitado continua lá.
       expect(amountOf(0).value).toBe('250,00');
     });
 

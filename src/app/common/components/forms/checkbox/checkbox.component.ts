@@ -4,10 +4,6 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { FieldControl } from '~/app/common/components/forms/field-control';
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 
-/**
- * Caixa de seleção própria (padrão checkbox do APG): um `button role="checkbox"` com `aria-checked`,
- * rótulo clicável, Espaço alterna. O valor do controle é `boolean`. Presentational.
- */
 @Component({
   selector: 'app-checkbox',
   imports: [IconComponent],

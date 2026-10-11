@@ -4,10 +4,6 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 
-/**
- * Selo "de terceiro" (presentational): ícone + texto, nunca só cor. Com o nome da pessoa responsável
- * quando se sabe ("De terceiro: Ana").
- */
 @Component({
   selector: 'app-third-party-badge',
   imports: [IconComponent],

@@ -21,9 +21,7 @@ import { readStorage, removeStorage, writeStorage } from '~/util/safe-storage';
 export const PUSH_SUBSCRIPTION_KEY = 'moneylog.pushSubscriptionId';
 
 export type PushStatus =
-  /** Lendo a configuração do servidor e o estado do dispositivo. */
   | 'loading'
-  /** O servidor não tem push ativado (`push.enabled=false`, 404 ou 501): a central segue funcionando. */
   | 'server-off'
   | 'unsupported'
   | 'ios-needs-install'
@@ -32,11 +30,6 @@ export type PushStatus =
   | 'subscribed'
   | 'error';
 
-/**
- * Facade do opt-in de push. Decide o que mostrar a partir de **fatos** (config do servidor, capacidade e
- * permissão do dispositivo). Só `enable()` pede permissão e deve ser chamada por um gesto do usuário.
- * A assinatura é enviada ao backend; o id devolvido fica guardado para o `DELETE`. Escopo de componente.
- */
 @Injectable()
 export class PushFacade {
   private readonly gateway = inject(NotificationsGateway);
@@ -137,7 +130,6 @@ export class PushFacade {
       try {
         await lastValueFrom(this.gateway.unsubscribePush(id), { defaultValue: undefined });
       } catch (error) {
-        // 404: o servidor já não conhece a assinatura; segue desativando no dispositivo.
         if (problemOf(error).status !== 404) throw error;
       }
     }

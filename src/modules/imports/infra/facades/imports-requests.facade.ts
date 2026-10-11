@@ -55,7 +55,6 @@ function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então nenhum lote existe. */
 function notFound(): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -67,11 +66,6 @@ function notFound(): Observable<never> {
   return throwError(() => new ProblemError(problem));
 }
 
-/**
- * Facade de requisições de importação: o único lugar com HTTP do módulo. O upload é `multipart/form-data`
- * (o navegador define o `Content-Type` com o boundary) e emite o progresso; `Idempotency-Key` no envio e
- * no aplicar. Com `API_MOCKS` ligado não faz requisição.
- */
 @Injectable({ providedIn: 'root' })
 export class ImportsRequestsFacade extends ImportsGateway {
   private readonly http = inject(HttpClient);
@@ -190,7 +184,6 @@ export class ImportsRequestsFacade extends ImportsGateway {
       map(toMapping),
       catchError((error: unknown) => {
         const problem = toProblem(error);
-        // Sem mapeamento salvo (404) não é erro: a tela começa com o padrão.
         return problem.status === 404 ? of(null) : fail(error);
       }),
     );

@@ -66,7 +66,6 @@ describe('NoteEditorFacade', () => {
     expect(facade.problem()?.code).toBe('VERSION_CONFLICT');
     expect(facade.conflict()?.remote.version).toBe(7);
     expect(facade.conflict()?.during).toBe('save');
-    // o texto local não é tocado: o baseline e a nota continuam os de antes
     expect(facade.baseline()).toBe(aNote().body);
     expect(facade.note()?.version).toBe(3);
     expect(gateway.updates).toHaveLength(1);
@@ -141,7 +140,6 @@ describe('NoteEditorFacade', () => {
       });
       expect(facade.conflict()).toBeNull();
       expect(facade.note()?.path).toBe('novo/caminho.md');
-      // nenhum salvar do corpo foi enviado: a edição de outra aba nunca é sobrescrita
       expect(gateway.updates).toEqual([]);
     });
 

@@ -43,14 +43,12 @@ export function aProblem(
 export const failWith = (status: number, code: string, fieldErrors: Problem['fieldErrors'] = []) =>
   throwError(() => new ProblemError(aProblem(status, code, fieldErrors)));
 
-/** Porta falsa de contas: guarda as chamadas e devolve o que o teste configurar. */
 export class AccountsGatewayStub extends AccountsGateway {
   accounts: Account[] = [];
   readonly queries: AccountsQuery[] = [];
   readonly calls: string[] = [];
   readonly created: AccountInput[] = [];
   next: Observable<Account> | null = null;
-  /** Resultado do `get` (separado de `next`, que vale para as escritas). */
   getResult: Observable<Account> | null = null;
   listError: Observable<never> | null = null;
 

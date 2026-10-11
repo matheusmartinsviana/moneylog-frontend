@@ -1,5 +1,3 @@
-/* Reset mínimo e base do documento. Cores só por token (tokens.css). */
-
 *,
 *::before,
 *::after {
@@ -7,7 +5,6 @@
 }
 
 html {
-  /* Barras de rolagem finas e discretas em todo o app (herdado); a rolagem continua possível. */
   scrollbar-width: thin;
   scrollbar-color: var(--color-control-border) transparent;
   -webkit-text-size-adjust: 100%;
@@ -22,7 +19,6 @@ body {
   flex-direction: column;
   min-height: 100dvh;
   background-color: var(--color-canvas);
-  /* Halo azul difuso no topo do canvas (DS 03): decorativo, só por token; nenhum texto crítico depende dele. */
   background-image: var(--gradient-glow-top);
   background-repeat: no-repeat;
   background-size: 100% 36rem;
@@ -37,22 +33,16 @@ app-root {
   min-height: 0;
 }
 
-/* Página "sucinta" (`data-fit-page`, ver `src/styles/README.md`): a tela é exatamente a altura da viewport. */
 body:has([data-fit-page]) {
   height: 100dvh;
 }
 
-/*
- * Paisagem de celular (altura < 500 px): a tela não comporta "caber sem rolar"; a página volta a rolar normalmente
- * (o conteúdo não fica preso numa janela de ~130 px). Mesmo corte do trilho lateral (altura mínima de 600 px).
- */
 @media (orientation: landscape) and (max-height: 500px) {
   body:has([data-fit-page]) {
     height: auto;
   }
 }
 
-/* O host da rota que contém uma página "sucinta" reparte a altura que sobra na janela (sem altura fixa em px). */
 .shell__content > :has(> [data-fit-page]) {
   display: flex;
   flex: 1 1 auto;
@@ -60,7 +50,6 @@ body:has([data-fit-page]) {
   min-height: 0;
 }
 
-/* Listras finas das referências no topo do canvas, esmaecendo para baixo (o vidro tem o que refratar). */
 body::before {
   content: '';
   position: absolute;
@@ -127,11 +116,6 @@ a {
   box-shadow: var(--focus-ring);
 }
 
-/*
- * Foco por mouse/toque não desenha anel (`data-input` vem de `input-modality.ts`): o anel é de quem usa o teclado.
- * Campos de texto mantêm o anel (o foco neles é o próprio feedback). Contêineres focados por script
- * (`tabindex="-1"`: painel do modal, `<main>`, títulos) nunca mostram anel; itens com foco móvel por seta mantêm.
- */
 html[data-input='pointer'] {
   --focus-ring: 0 0 0 0 transparent;
 }
@@ -147,11 +131,6 @@ main[tabindex='-1']:focus-visible,
   --focus-ring: 0 0 0 0 transparent;
 }
 
-/*
- * Alto contraste do Windows (`forced-colors`): o `box-shadow` do anel de foco é descartado, então o foco
- * ganha um `outline` de cor de sistema (BUG-QA-06a). `!important` porque vários componentes escrevem
- * `outline: none` junto do `box-shadow` do foco; o seletor global cobre todos de uma vez.
- */
 @media (forced-colors: active) {
   :focus-visible {
     outline: 2px solid Highlight !important;
@@ -175,13 +154,11 @@ main[tabindex='-1']:focus-visible,
   }
 }
 
-/* O botão "revelar senha" do Edge/Safari é um controle nativo: a UI não o mostra. */
 input::-ms-reveal,
 input::-ms-clear {
   display: none;
 }
 
-/* Sem destaque de toque cinza do iOS nos controles próprios. */
 button,
 [role='combobox'],
 [role='option'] {

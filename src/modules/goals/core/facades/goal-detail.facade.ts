@@ -24,26 +24,18 @@ export type GoalDetailState =
 
 type GoalAction = 'archive' | 'unarchive' | 'baseline';
 
-/** Escritas do plano declarado; o `done$` do plano avisa a página para o aviso de sucesso. */
 export type GoalPlanChange = 'note' | 'add' | 'update' | 'remove' | 'check-in';
 
-/** O código que o backend devolve quando a meta já está no estado pedido (`baseline` pode repetir). */
 const ALREADY_DONE: Readonly<Partial<Record<GoalAction, string>>> = {
   archive: 'GOAL_ALREADY_ARCHIVED',
   unarchive: 'GOAL_NOT_ARCHIVED',
 };
 
-/**
- * Facade do detalhe da meta: carrega pelo id (o `switchMap` cancela a anterior), arquiva e desarquiva
- * (`exhaustMap`, a meta da resposta vira o estado) e recebe a meta devolvida por uma reserva (`apply`).
- * Nada é calculado aqui: reservas, `current` e `progress` vêm do backend. Escopo de componente.
- */
 @Injectable()
 export class GoalDetailFacade {
   private readonly gateway = inject(GoalsGateway);
   private readonly loads = new Subject<string>();
   private readonly actions = new Subject<{ kind: GoalAction; id: string }>();
-  /** Plano declarado: em fila (`concatMap`), porque a ordem dos check-ins e edições importa. */
   private readonly planCommands = new Subject<{
     kind: GoalPlanChange;
     run: () => Observable<Goal>;
@@ -52,7 +44,6 @@ export class GoalDetailFacade {
   private readonly planBusyState = signal(false);
   private readonly planProblemState = signal<Problem | null>(null);
   private readonly doneEvents = new Subject<{ kind: GoalAction; goal: Goal }>();
-  /** Destaque da Home: `exhaustMap` (um pedido por vez); a meta da resposta vira o estado. */
   private readonly featuredCommands = new Subject<{ id: string; featured: boolean }>();
   private readonly featuredDoneEvents = new Subject<Goal>();
   private readonly featuredBusyState = signal(false);
@@ -71,17 +62,13 @@ export class GoalDetailFacade {
     return state.status === 'error' ? state.problem : null;
   });
   readonly busy = this.busyState.asReadonly();
-  /** Falha do último arquivar/desarquivar. */
   readonly problem = this.problemState.asReadonly();
-  /** Há uma escrita do plano (nota, ação ou check-in) em andamento. */
   readonly planBusy = this.planBusyState.asReadonly();
-  /** Falha da última escrita do plano (`GOAL_ACTION_LIMIT`, `GOAL_CHECKIN_PERIOD_INVALID`...). */
   readonly planProblem = this.planProblemState.asReadonly();
   readonly planDone$ = this.planDoneEvents.asObservable();
   readonly done$ = this.doneEvents.asObservable();
   readonly featuredBusy = this.featuredBusyState.asReadonly();
   readonly featuredProblem = this.featuredProblemState.asReadonly();
-  /** A meta devolvida depois de marcar ou desmarcar o destaque. */
   readonly featuredDone$ = this.featuredDoneEvents.asObservable();
 
   constructor() {
@@ -119,8 +106,6 @@ export class GoalDetailFacade {
             map(() => null),
             catchError((error: unknown) => {
               const problem = problemOf(error);
-              // Já está no estado pedido (um clique anterior deu certo e a resposta se perdeu): é sucesso
-              // silencioso; só relê a meta, sem aviso nem falha (FE-S-172).
               if (ALREADY_DONE[kind] !== undefined && problem.code === ALREADY_DONE[kind]) {
                 return this.gateway.get(id).pipe(
                   tap((goal) => this.apply(goal)),
@@ -150,7 +135,6 @@ export class GoalDetailFacade {
               this.featuredDoneEvents.next(goal);
             }),
             map(() => null),
-            // Falha: o servidor é a fonte da verdade; relê a meta e mostra o motivo.
             catchError((error: unknown) => {
               const problem = problemOf(error);
               return this.gateway.get(id).pipe(
@@ -179,8 +163,6 @@ export class GoalDetailFacade {
               this.planDoneEvents.next(kind);
             }),
             map(() => null),
-            // Falha: o servidor é a fonte da verdade; relê a meta (a ação pode ter mudado em outro lugar)
-            // e mostra o motivo.
             catchError((error: unknown) => {
               const problem = problemOf(error);
               const id = this.goal()?.id;
@@ -213,25 +195,18 @@ export class GoalDetailFacade {
     this.actions.next({ kind: 'unarchive', id });
   }
 
-  /** "Cadastrei tudo" (ou re-ancorar): o servidor fixa o total atual; a meta da resposta vira o estado. */
   baseline(id: string): void {
     this.actions.next({ kind: 'baseline', id });
   }
 
-  /** Marca ou desmarca a meta como destaque da Home (só uma por vez: marcar move a anterior). */
   setFeatured(id: string, featured: boolean): void {
     this.featuredCommands.next({ id, featured });
   }
 
-  /** A meta devolvida pelo backend (reserva, arquivar...) vira o estado: nada é chutado. */
   apply(goal: Goal): void {
     this.current.set({ status: 'ready', goal });
   }
 
-  /**
-   * Salva o texto do plano. O `PUT` apaga o que não vai, então reenvia os valores atuais da meta
-   * (nome, alvo, prazo, prioridade, descrição) e troca só o `planNote`.
-   */
   savePlanNote(note: string): void {
     const goal = this.goal();
     if (!goal) return;
@@ -278,7 +253,6 @@ export class GoalDetailFacade {
     }
   }
 
-  /** Marca (`done`) ou desmarca o período de uma ação; idempotente no servidor. */
   checkIn(actionId: string, period: string, done: boolean): void {
     const id = this.goal()?.id;
     if (id !== undefined) {

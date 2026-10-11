@@ -19,7 +19,6 @@ import {
 
 describe('cards-response.mapper', () => {
   it('Dado um cartão, então copia os campos do backend sem recalcular nada e o dinheiro continua string', () => {
-    // Os números não "fecham" de propósito: limite − disponível ≠ comprometidos. O front não corrige.
     const response = aCardResponse({
       limit: brl('10000.00'),
       availableLimit: brl('1.00'),

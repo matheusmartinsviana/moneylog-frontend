@@ -9,13 +9,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * T38, T40 e T41 no ambiente mock (sem backend: nenhuma conta, nenhuma movimentação). Os fluxos com
- * dados (salvar, estornar, editar) são dos testes de componente e do projeto `integration` (T44).
- * Aqui: o `/quick-add` sem conta, o atalho `?mode=` e o detalhe `/transactions/:id` como painel
- * (desktop) e como página (celular).
- */
-
 test.describe('/quick-add sem contas', () => {
   for (const mode of ['', '?mode=pix', '?mode=debit', '?mode=refund', '?mode=investment']) {
     test(`mostra o estado vazio com "Adicionar conta" habilitado (${mode || 'padrão'})`, async ({
@@ -68,7 +61,6 @@ test.describe('detalhe /transactions/:id', () => {
     await expect(panel).toBeVisible();
     await expect(page.locator('[data-cy="detail-title"]')).toBeFocused();
     await expect(page.locator('[data-cy="empty-state-title"]').first()).toBeVisible();
-    // Painel encostado na borda direita, sobre a lista (que continua na página).
     const position = await panel.evaluate((el) => getComputedStyle(el.parentElement!).position);
     expect(position).toBe('fixed');
     await expect(page.locator('[data-cy="page-title"]')).toBeVisible();

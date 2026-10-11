@@ -3,10 +3,6 @@ import { expense } from '../support/api';
 
 import { cy, cyText, expect, fillAmount, fmt, open, pick, resetDatabase, test } from './fixtures';
 
-/**
- * T44: os modos do `/quick-add` contra o backend real (transferência, aplicação/resgate, ajuste,
- * reembolso) e a idempotência do salvar. Cada número da tela é conferido contra a API.
- */
 test.describe.configure({ mode: 'serial' });
 test.beforeEach(() => resetDatabase());
 
@@ -34,7 +30,6 @@ test('transferência entre contas CASH: saldos mudam, impacto líquido zero no c
   await save(page);
   const created = await net.body('POST', '/v1/transactions');
   expect(created.type).toBe('TRANSFER');
-  // impacto da API: -200 em uma conta, +200 na outra, líquido 0
   expect(created.impact).toBeTruthy();
 
   const s = (await api.get('/v1/dashboard/summary')).body;
@@ -60,7 +55,6 @@ test('transferência entre contas CASH: saldos mudam, impacto líquido zero no c
   await expect(cy(page, 'impact-panel')).toBeVisible();
   await evidence(page, 'e2e-10-detalhe-transferencia-impacto');
 
-  // Mesma conta nos dois lados: a tela nem oferece a origem como destino; a API recusa (422).
   await open(page, '/quick-add?mode=transfer');
   await pick(page, 'entry-from', 'Nubank');
   await cy(page, 'entry-to').click();
@@ -163,7 +157,6 @@ test('ajuste: corrige o saldo sem virar despesa; rendimento só em conta de inve
   );
   expect(acc.currentBalance.amount).toBe('475.00');
 
-  // Rendimento em conta CASH: a tela desabilita a opção (com a dica) e a API recusa (422).
   await open(page, '/quick-add?mode=adjustment');
   await pick(page, 'entry-account', 'Conta');
   await expect(cy(page, 'entry-kind-YIELD')).toHaveAttribute('aria-disabled', 'true');
@@ -202,13 +195,11 @@ test('reembolso: teto da despesa, categoria travada, editar e estornar com reemb
   );
   await signIn(page);
 
-  // Reembolso de 30,00 vinculado à despesa.
   await open(page, '/quick-add?mode=refund');
   await fillAmount(page, '30,00');
   await cy(page, 'entry-original-search').fill('jantar');
   await cy(page, `entry-original-option-${orig.id}`).click();
   await expect(cy(page, 'entry-original-chosen')).toHaveText('jantar');
-  // A categoria fica travada na da despesa de origem.
   await expect(cy(page, 'entry-category')).toContainText('Alimentação');
   await expect(cy(page, 'entry-category')).toHaveAttribute('aria-disabled', 'true');
   await pick(page, 'entry-account', 'Conta');
@@ -222,7 +213,6 @@ test('reembolso: teto da despesa, categoria travada, editar e estornar com reemb
   expect(s.month.refunds.amount).toBe('30.00');
   expect(s.month.consumption.amount).toBe('70.00');
 
-  // Teto: sobram 70,00; 80,00 é recusado (422 REFUND_EXCEEDS_ORIGINAL) e nada é gravado.
   net.allow(422);
   await open(page, '/quick-add?mode=refund');
   await fillAmount(page, '80,00');
@@ -241,7 +231,6 @@ test('reembolso: teto da despesa, categoria travada, editar e estornar com reemb
   expect(s.month.refunds.amount).toBe('100.00');
   expect(s.month.consumption.amount).toBe('0.00');
 
-  // Início e competência batem: consumo 0,00; a visão por competência traz o reembolso negativo.
   await open(page, '/planning/overview');
   expect(await cyText(page, 'home-month-refunds')).toBe(fmt('100.00'));
   expect(await cyText(page, 'home-month-consumption')).toBe(fmt('0.00'));
@@ -252,7 +241,6 @@ test('reembolso: teto da despesa, categoria travada, editar e estornar com reemb
   expect(entries.totals.total.amount).toBe('0.00');
   expect(entries.items.some((e: any) => e.amount.amount.startsWith('-'))).toBe(true);
 
-  // Categoria travada na edição da despesa de origem (422 REFUND_CATEGORY_LOCKED).
   await open(page, `/transactions/${orig.id}/edit`);
   await expect(cy(page, 'transaction-edit')).toBeVisible();
   await pick(page, 'entry-category', 'Lazer');
@@ -264,7 +252,6 @@ test('reembolso: teto da despesa, categoria travada, editar e estornar com reemb
   await evidence(page, 'e2e-14-edicao-categoria-travada');
   void other;
 
-  // Estorno da despesa bloqueado enquanto há reembolso ativo: botão com o motivo, e a API recusa.
   await open(page, `/transactions/${orig.id}`);
   await expect(cy(page, 'void-blocked')).toBeVisible();
   await expect(cy(page, 'void-open')).toHaveAttribute('aria-disabled', 'true');
@@ -276,7 +263,6 @@ test('reembolso: teto da despesa, categoria travada, editar e estornar com reemb
   expect(detail.voidable).toBe(false);
   expect(detail.voidBlockedBy).toBe('HAS_ACTIVE_REFUNDS');
 
-  // Estorna os reembolsos pela tela; depois a despesa pode ser estornada.
   const refunds = (await api.get('/v1/transactions?type=REFUND&pageSize=50')).body.items;
   for (const r of refunds) {
     await open(page, `/transactions/${r.id}`);
@@ -326,7 +312,6 @@ test('editar: o valor novo aparece no Início e na lista; versão desatualizada 
   expect(await cyText(page, `transaction-amount-${tx.id}`)).toContain(fmt('120.50'));
   expect(await cyText(page, 'totals-footer-out')).toBe(fmt('120.50'));
 
-  // 409: abro a edição, outra "aba" (API) altera a movimentação, e o salvar da tela conflita.
   net.allow(409);
   await open(page, `/transactions/${tx.id}/edit`);
   await expect(cy(page, 'entry-amount')).toHaveValue(/120,50/);
@@ -349,7 +334,6 @@ test('editar: o valor novo aparece no Início e na lista; versão desatualizada 
   const conflict = await net.body('PUT', `/v1/transactions/${tx.id}`);
   expect(conflict.code).toBe('VERSION_CONFLICT');
   await evidence(page, 'e2e-16-edicao-conflito-de-versao');
-  // Nada foi sobrescrito: continua o valor da outra aba.
   expect((await api.get(`/v1/transactions/${tx.id}`)).body.amount.amount).toBe('130.00');
 });
 
@@ -363,7 +347,6 @@ test('idempotência: clique duplo cria uma só; resposta perdida + reenvio devol
   await signIn(page);
   net.duplicateOk = ['/v1/transactions'];
 
-  // 1. Clique duplo no salvar.
   await open(page, '/quick-add?mode=pix');
   await fillAmount(page, '10,00');
   await cy(page, 'entry-description').fill('café');
@@ -375,9 +358,8 @@ test('idempotência: clique duplo cria uma só; resposta perdida + reenvio devol
   expect(items).toHaveLength(1);
   expect(net.find('POST', '/v1/transactions').length).toBeLessThanOrEqual(2);
   const keys = net.find('POST', '/v1/transactions').map((c) => c.idempotencyKey);
-  expect(keys.every((k) => k && k === keys[0])).toBe(true); // 1 ou 2 envios, sempre a mesma chave
+  expect(keys.every((k) => k && k === keys[0])).toBe(true);
 
-  // 2. O backend grava, mas a resposta se perde. O reenvio ("Tentar de novo") usa a mesma chave.
   await open(page, '/quick-add?mode=pix');
   await fillAmount(page, '20,00');
   await cy(page, 'entry-description').fill('lanche');
@@ -387,15 +369,15 @@ test('idempotência: clique duplo cria uma só; resposta perdida + reenvio devol
   await expect(page.locator('[data-cy="form-error"], [aria-invalid="true"]').first()).toBeVisible();
   await expect(cy(page, 'form-retry')).toBeVisible();
   items = (await api.get('/v1/transactions?pageSize=50')).body.items;
-  expect(items).toHaveLength(2); // o backend já gravou
+  expect(items).toHaveLength(2);
   await cy(page, 'form-retry').click();
   await expect(cy(page, 'toast-info')).toBeVisible();
   items = (await api.get('/v1/transactions?pageSize=50')).body.items;
-  expect(items).toHaveLength(2); // o reenvio não duplicou
+  expect(items).toHaveLength(2);
   const attempts = net.find('POST', '/v1/transactions').slice(-2);
   expect(attempts).toHaveLength(2);
   expect(attempts[0]!.idempotencyKey).toBeTruthy();
-  expect(attempts[1]!.idempotencyKey).toBe(attempts[0]!.idempotencyKey); // reenvio com a mesma chave
+  expect(attempts[1]!.idempotencyKey).toBe(attempts[0]!.idempotencyKey);
   expect(attempts[0]!.dropped).toBe(true);
   expect(attempts[1]!.status).toBe(201);
   expect((attempts[1]!.responseBody as any).id).toBe(

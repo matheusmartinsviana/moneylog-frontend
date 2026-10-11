@@ -1,6 +1,5 @@
 import { formatMoney, isNegative, TYPOGRAPHIC_MINUS } from '~/util/money';
 
-/** O Intl usa espaço não separável entre símbolo e número; normaliza para comparar. */
 const plain = (value: string) => value.replace(/\u00a0/g, ' ');
 
 describe('formatMoney', () => {

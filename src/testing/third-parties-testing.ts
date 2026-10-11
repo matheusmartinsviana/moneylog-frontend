@@ -11,7 +11,6 @@ import type {
 } from '~/modules/third-parties/core/types/third-party';
 import { brl } from '~/testing/accounts-testing';
 
-/** Dados sintéticos: uma pessoa com uma despesa marcada (parcialmente reembolsada) e um empréstimo. */
 export function aReceivables(
   overrides: Partial<ThirdPartyReceivables> = {},
 ): ThirdPartyReceivables {
@@ -85,7 +84,6 @@ export function anEmptyReceivables(): ThirdPartyReceivables {
   });
 }
 
-/** Porta falsa: guarda as chamadas e devolve o que o teste configurar. */
 export class ThirdPartiesGatewayStub extends ThirdPartiesGateway {
   receivables$: Observable<ThirdPartyReceivables> | null = null;
   mark$: Observable<ThirdPartyExpense> | null = null;

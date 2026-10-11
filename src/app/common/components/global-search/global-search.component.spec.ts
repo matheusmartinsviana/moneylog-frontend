@@ -65,7 +65,6 @@ describe('GlobalSearchComponent', () => {
       expect(within(list).getByText(title)).toBeInTheDocument();
     }
     expect(within(list).getAllByRole('option')).toHaveLength(5);
-    // Valor do backend, só formatado; nenhum total ou soma.
     expect(text(screen.getByTestId('global-search-option-transactions'))).toContain('R$ 87,30');
     expect(text(list)).not.toMatch(/total|soma/i);
     expect(field()).toHaveAttribute('aria-expanded', 'true');
@@ -216,7 +215,6 @@ describe('GlobalSearchComponent', () => {
     await setup();
     await search('mercado');
 
-    // Cada teste cria a sua região viva no body (as de testes anteriores ficam para trás): vale qualquer uma.
     await waitFor(() =>
       expect(
         Array.from(document.querySelectorAll('[data-cy="live-announcer"]')).map((el) =>
@@ -233,7 +231,6 @@ describe('GlobalSearchComponent', () => {
 
       await userEvent.keyboard('/');
       expect(field()).toHaveFocus();
-      // Dentro do próprio campo a barra é um caractere comum.
       await userEvent.keyboard('a/b');
       expect(field()).toHaveValue('a/b');
 

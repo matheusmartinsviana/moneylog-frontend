@@ -27,7 +27,6 @@ import { ThirdPartyReceiptFacade } from '~/modules/third-parties/core/facades/th
 import { THIRD_PARTY_CURRENCY } from '~/modules/third-parties/core/types/third-party';
 import { todayIso } from '~/util/date';
 
-/** Uma pessoa e as despesas marcadas dela às quais o recebimento pode se ligar. */
 export interface ReceiptPersonOption {
   readonly id: string;
   readonly name: string;
@@ -43,11 +42,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   TRANSACTION_AMOUNT_NOT_POSITIVE: 'amount',
 };
 
-/**
- * "Registrar recebimento" (modal): dinheiro que a pessoa já enviou e que **já está no saldo**. Nada é
- * lançado em conta, renda ou consumo; com despesa marcada, reduz o pendente dela, sem ela aparece como
- * "origem a confirmar". Usa o `ThirdPartyReceiptFacade` (`exhaustMap` + `Idempotency-Key`).
- */
 @Component({
   selector: 'app-third-party-receipt-modal',
   imports: [
@@ -162,13 +156,11 @@ export class ThirdPartyReceiptModalComponent implements OnInit {
   protected readonly facade = inject(ThirdPartyReceiptFacade);
   protected readonly currency = THIRD_PARTY_CURRENCY;
 
-  /** Quem pode receber (do `third-party-receivables` já carregado). */
   readonly people = input.required<readonly ReceiptPersonOption[]>();
   readonly presetPersonId = input<string | null>(null);
   readonly presetTransactionId = input<string | null>(null);
 
   readonly closed = output<void>();
-  /** Registrado (resposta do backend): quem usa relê o a-receber e avisa. */
   readonly recorded = output<void>();
 
   protected readonly form = new FormGroup({

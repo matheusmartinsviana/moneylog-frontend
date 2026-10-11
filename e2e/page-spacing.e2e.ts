@@ -1,10 +1,5 @@
 import { expect, test, waitForApp } from './support';
 
-/**
- * Espaçamento uniforme (ritmo único de página): em 375, 768, 1280 e 1440 px, o primeiro bloco de conteúdo
- * (`h1` e `[data-cy=page-content]`) de toda rota principal começa e termina nas mesmas bordas, e o cabeçalho do
- * workspace usa a mesma borda esquerda e direita. Tolerância de 1 px (arredondamento de subpixel).
- */
 const ROUTES = [
   '/',
   '/transactions',
@@ -42,7 +37,6 @@ for (const width of WIDTHS) {
       );
       boxes[route] = { left: content!.x, right: content!.x + content!.width };
       if (!header) {
-        // A primeira peça do cabeçalho (busca ou saudação) começa na mesma borda do conteúdo.
         const first = await page
           .locator('[data-cy="workspace-header"] > :first-child')
           .first()

@@ -11,7 +11,6 @@ import {
 
 import { Revealer } from '~/app/common/motion/reveal-engine';
 
-/** Entrada de um único elemento (ao aparecer na viewport, uma vez). `appReveal="2"` = posição na cascata. */
 @Directive({ selector: '[appReveal]' })
 export class MotionRevealDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;

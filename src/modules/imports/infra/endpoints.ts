@@ -1,4 +1,3 @@
-/** Endpoints de importação (Etapa 7). Contrato: tag Imports. */
 export const IMPORTS_ENDPOINTS = {
   collection: '/v1/imports',
   item: (id: string) => `/v1/imports/${encodeURIComponent(id)}`,

@@ -1,12 +1,5 @@
 import type { Problem } from '~/util/api/problem';
 
-/**
- * Chave de idempotência (UUID v4) do `POST /v1/transactions` (S-72, S-87): uma por **tentativa de
- * envio**. Quem chama a guarda e a reenvia no "tentar de novo" depois de um erro de rede.
- *
- * `crypto.randomUUID` só existe em contexto seguro; em `http://<IP da LAN>` (dev no celular) cai
- * para `getRandomValues`, que existe em qualquer contexto.
- */
 export function newIdempotencyKey(): string {
   if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   const bytes = crypto.getRandomValues(new Uint8Array(16));
@@ -22,7 +15,6 @@ export function newIdempotencyKey(): string {
   ].join('-');
 }
 
-/** Falha em que o servidor pode ter gravado: sem resposta (rede), 5xx ou `CONFLICT` (trava ocupada). */
 export function isAmbiguousFailure(problem: Problem | null): boolean {
   return (
     problem !== null &&
@@ -30,12 +22,6 @@ export function isAmbiguousFailure(problem: Problem | null): boolean {
   );
 }
 
-/**
- * Guarda a chave de idempotência de uma criação: uma chave por tentativa, **reaproveitada** quando a
- * tentativa anterior falhou de forma ambígua e a entrada é a mesma (o backend devolve o que já gravou
- * em vez de duplicar); entrada diferente gera chave nova. Uso: `key = begin(input)`; ao terminar,
- * `succeeded()` ou `failed(problem)`.
- */
 export class IdempotencyTracker<T> {
   private pending: { readonly fingerprint: string; readonly key: string } | null = null;
   private current: { readonly fingerprint: string; readonly key: string } | null = null;

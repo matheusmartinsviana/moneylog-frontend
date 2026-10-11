@@ -34,10 +34,6 @@ const NOT_FOUND: Problem = {
   retryAfterSeconds: null,
 };
 
-/**
- * Facade de requisições de categorias (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS`
- * ligado, responde com lista vazia e não faz requisição.
- */
 @Injectable({ providedIn: 'root' })
 export class CategoriesRequestsFacade extends CategoriesGateway {
   private readonly http = inject(HttpClient);

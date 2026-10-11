@@ -9,12 +9,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * Etapa 3 no ambiente mock (sem backend: nenhum cartão). Os fluxos com dados (compra parcelada, fatura,
- * pagamento) são dos testes de componente e do projeto `integration` (`cards.e2e.ts` em `integration/`).
- * Aqui: estados vazios, o formulário do cartão, "Crédito" habilitado e o layout em 375 px.
- */
-
 test.describe('/cards sem cartões', () => {
   test('mostra o estado vazio com "Adicionar cartão" habilitado e leva ao formulário', async ({
     page,

@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 import { ChipComponent } from '~/app/common/components/chip/chip.component';
 import type { TagCount } from '~/modules/notes/core/types/note';
 
-/** Filtro por tag (alternável, uma por vez) com a contagem do backend. `role="group"` com rótulo. */
 @Component({
   selector: 'app-tag-chips',
   imports: [ChipComponent],

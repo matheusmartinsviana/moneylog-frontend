@@ -12,12 +12,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { GoalPhotoImageFacade } from '~/modules/goals/core/facades/goal-photo-image.facade';
 import type { GoalPhotoVariant } from '~/modules/goals/core/types/goal';
 
-/**
- * Uma foto de meta (ADR-018). O `<img>` não envia o Bearer, então os bytes vêm pelo `HttpClient` como `Blob`
- * (facade) e viram um `blob:` URL em cache de memória, revogado pelo cache quando ninguém mais usa. Tamanho
- * fixo pelo contêiner (sem salto de layout): o pai define largura/altura; a imagem cobre (`object-fit`).
- * Carregando: esqueleto; falha: aviso com "tentar de novo". Presentational (a facade é de escopo de componente).
- */
 @Component({
   selector: 'app-goal-photo',
   providers: [GoalPhotoImageFacade],
@@ -116,12 +110,9 @@ export class GoalPhotoComponent {
   readonly goalId = input.required<string>();
   readonly photoId = input.required<string>();
   readonly variant = input<GoalPhotoVariant>('thumb');
-  /** Texto alternativo (descritivo, ex.: "Foto 1 de 3 da meta Carro"). */
   readonly alt = input.required<string>();
-  /** Dimensões intrínsecas (do contrato), só para reservar espaço e evitar salto de layout. */
   readonly width = input<number>();
   readonly height = input<number>();
-  /** Foto principal da tela (`eager`); as demais carregam sob demanda (`lazy`). */
   readonly eager = input(false);
   readonly cy = input('goal-photo');
 

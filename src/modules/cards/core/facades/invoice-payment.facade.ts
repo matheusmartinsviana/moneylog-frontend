@@ -23,7 +23,6 @@ interface PreviewKey {
   readonly amount: string;
 }
 
-/** Falha em que repetir o mesmo envio é seguro e útil: sem resposta (rede) ou erro do servidor. */
 export function isRetryablePayment(problem: Problem | null): boolean {
   return (
     problem !== null &&
@@ -31,16 +30,6 @@ export function isRetryablePayment(problem: Problem | null): boolean {
   );
 }
 
-/**
- * Facade do pagamento de fatura (T68). O envio gera a `Idempotency-Key` **por tentativa** e a reutiliza
- * no `retry()` depois de um erro de rede; um envio novo gera chave nova (como T35 CA1), exceto se a
- * tentativa anterior ficou pendente por falha ambígua com os mesmos dados (aí reaproveita a chave, mesmo
- * depois de fechar e reabrir a folha). `exhaustMap`:
- * clique duplo = uma requisição. A resposta (a fatura atualizada) é emitida em `paid$` e é a fonte da
- * verdade. A prévia (`kind`, `outstandingAfter`, `creditCarryAfter`) vem do backend com espera de
- * 300 ms e é só informativa: um erro nela não impede o pagamento. Nenhuma subtração no front.
- * Escopo de componente.
- */
 @Injectable()
 export class InvoicePaymentFacade {
   private readonly gateway = inject(CardsGateway);
@@ -56,7 +45,6 @@ export class InvoicePaymentFacade {
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly canRetry = computed(() => isRetryablePayment(this.problemState()));
-  /** Emite a fatura devolvida pela API quando o pagamento dá certo. */
   readonly paid$ = this.paidEvents.asObservable();
 
   readonly previewState = this.preview.state;
@@ -82,18 +70,11 @@ export class InvoicePaymentFacade {
       )
       .subscribe((problem) => {
         this.savingState.set(false);
-        // Só uma falha ambígua (rede, 5xx, CONFLICT) deixa a tentativa pendente: o servidor pode ter
-        // gravado. Uma recusa definitiva (4xx) libera a chave.
         if (!isRetryablePayment(problem)) this.last = null;
         this.problemState.set(problem);
       });
   }
 
-  /**
-   * Novo envio. Se a tentativa anterior ficou pendente por falha ambígua (resposta perdida) e a fatura
-   * e os dados são os mesmos, reaproveita a **mesma** chave (o backend devolve o pagamento já feito em
-   * vez de gravar outro); com dados diferentes ou depois de um sucesso, a chave é nova.
-   */
   pay(invoiceId: string, input: InvoicePaymentInput): void {
     const pending = this.last;
     const same =
@@ -111,22 +92,16 @@ export class InvoicePaymentFacade {
     this.attempts.next(attempt);
   }
 
-  /** "Tentar de novo" depois de um erro de rede: o mesmo comando com a **mesma** chave. */
   retry(): void {
     if (this.last) this.attempts.next(this.last);
   }
 
-  /**
-   * A folha (re)abriu para `invoiceId`. Uma falha ambígua da **mesma** fatura continua pendente (com o
-   * aviso e o "tentar de novo"): fechar e reabrir não zera a chave. Qualquer outra falha é descartada.
-   */
   reopen(invoiceId: string): void {
     if (this.last?.invoiceId === invoiceId && isRetryablePayment(this.problemState())) return;
     this.last = null;
     this.problemState.set(null);
   }
 
-  /** Valor digitado; `null` (vazio ou inválido) limpa a prévia sem pedir nada. */
   requestPreview(invoiceId: string, amount: string | null): void {
     this.preview.request(amount === null ? null : { invoiceId, amount });
   }

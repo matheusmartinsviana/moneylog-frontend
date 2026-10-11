@@ -7,13 +7,6 @@ import type { Note, NoteInput } from '~/modules/notes/core/types/note';
 import { IdempotencyTracker } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Facade de criar nota (nova nota, "Nova nota vinculada", "Criar nota" de um link pendente).
- * `exhaustMap`: clique duplo = uma requisição. `Idempotency-Key` por tentativa, **reutilizada** quando a
- * anterior falhou de forma ambígua (rede, 5xx, `CONFLICT`) e a entrada é a mesma. A **nota da resposta** é o
- * resultado (id e versão vêm do backend). Falhas chegam tipadas (`NOTE_PATH_TAKEN`, `NOTE_PATH_INVALID`,
- * `NOTE_LIMIT_REACHED`, `NOTE_LINK_TARGET_NOT_FOUND`...). Escopo de componente.
- */
 @Injectable()
 export class NoteCreateFacade {
   private readonly gateway = inject(NotesGateway);

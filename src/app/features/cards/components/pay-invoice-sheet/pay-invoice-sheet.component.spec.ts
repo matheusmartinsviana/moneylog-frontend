@@ -98,7 +98,6 @@ describe('PayInvoiceSheetComponent', () => {
 
     it('Dado o valor digitado, então espera 300 ms, pede a prévia só da última digitação e mostra PARTIAL com os números recebidos', async () => {
       const gateway = new CardsGatewayStub();
-      // Não bate com a conta de propósito: 1.283,00 − 500,00 seria 783,00.
       gateway.paymentPreview$ = of(
         aPaymentPreview({ kind: 'PARTIAL', outstandingAfter: brl('777.77') }),
       );

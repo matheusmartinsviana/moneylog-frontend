@@ -9,7 +9,6 @@ import { pt } from '~/app/common/i18n/translations/pt';
 
 export const TRANSLATIONS: Readonly<Record<Language, AppI18n>> = { pt, en, es };
 
-/** i18n pronto e síncrono para testes de componente (sem chunks dinâmicos). */
 export function provideI18nTesting(language: Language = 'pt'): Provider[] {
   return [
     { provide: INITIAL_I18N_STATE, useValue: { language, translations: TRANSLATIONS[language] } },

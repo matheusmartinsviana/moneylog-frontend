@@ -9,11 +9,6 @@ import type { Commitment } from '~/modules/commitments/core/types/commitment';
 import { formatIsoDate } from '~/util/date';
 import { formatRatio } from '~/util/ratio';
 
-/**
- * Um compromisso acompanhado na lista (presentational). Tudo vem do backend: no empréstimo de terceiro
- * só o informado (parcelas pagas/total, valor pago), **sem saldo**; no projeto, pago, saldo nominal e
- * progresso. Nada é somado aqui.
- */
 @Component({
   selector: 'li[app-commitment-row]',
   imports: [RouterLink, MoneyComponent],
@@ -73,7 +68,7 @@ import { formatRatio } from '~/util/ratio';
   `,
   styles: `
     :host {
-      position: relative; /* contém o link esticado (cartão inteiro clicável) */
+      position: relative;
       display: grid;
       gap: var(--space-3);
       padding: var(--space-4);

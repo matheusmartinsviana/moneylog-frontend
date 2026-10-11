@@ -15,7 +15,6 @@ export type ImportsListState =
 const LOADING: ImportsListState = { status: 'loading' };
 const RECENT = 20;
 
-/** Lotes de importação recentes (do mais novo ao mais antigo). Escopo de componente. */
 @Injectable()
 export class ImportsListFacade {
   private readonly gateway = inject(ImportsGateway);

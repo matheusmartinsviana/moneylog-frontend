@@ -8,11 +8,6 @@ import type { Invoice } from '~/modules/cards/core/types/invoice';
 import { formatIsoDate } from '~/util/date';
 import { isPositive } from '~/util/money';
 
-/**
- * Totais da fatura (T66, presentational): total, crédito da fatura anterior (`carryIn`), pago,
- * `outstanding`, fechamento, vencimento e situação, **como o backend os calculou** (nada é somado nem
- * subtraído aqui). "Crédito para a próxima fatura" só aparece com `creditCarry > 0`.
- */
 @Component({
   selector: 'app-invoice-totals',
   imports: [MoneyComponent, InvoiceStatusComponent],

@@ -27,15 +27,12 @@ import { formatIsoDate } from '~/util/date';
 import { formatMoney } from '~/util/money';
 import { SEARCH_TERM_MAX_LENGTH } from '~/util/search-term';
 
-/** Uma linha do painel: o que mostrar e para onde ir. */
 interface SearchOption {
   readonly domId: string;
   readonly group: SearchGroup;
   readonly title: string;
   readonly meta: string;
-  /** Valor do backend, só formatado (movimentações). */
   readonly amount: string | null;
-  /** Texto puro (notas): exibido por interpolação, nunca como Markdown nem HTML. */
   readonly snippet: string | null;
   readonly archived: boolean;
   readonly commands: readonly string[];
@@ -50,14 +47,6 @@ interface SearchSection {
 
 let nextUid = 0;
 
-/**
- * Busca global do cabeçalho (T209): campo próprio (`TextField`, nunca `type="search"`) com o padrão WAI-ARIA de
- * combobox + listbox. Digitar pede `GET /v1/search` (espera 300 ms, cancela a anterior) e o painel agrupa
- * Movimentações, Contas, Categorias, Cartões e Notas **como o backend devolveu** (sem total nem soma). O
- * `snippet` da nota é **texto puro** interpolado (o Angular o escapa). Setas e `Enter` navegam e abrem, `Esc` fecha
- * e devolve o foco, `/` foca a busca fora de campos de texto. Em tela compacta (≤ 640 px) vira um botão de lupa que
- * abre uma folha. Erros 400, 429 e de rede têm mensagem e "tentar de novo"; a região viva anuncia a contagem.
- */
 @Component({
   selector: 'app-global-search',
   imports: [
@@ -91,7 +80,6 @@ export class GlobalSearchComponent {
   protected readonly maxLength = SEARCH_TERM_MAX_LENGTH;
 
   protected readonly control = new FormControl('', { nonNullable: true });
-  /** Painel aberto (campo com foco e texto); `false` depois de `Esc`, de escolher ou de sair do campo. */
   protected readonly open = signal(false);
   protected readonly sheetOpen = signal(false);
   protected readonly active = signal(-1);
@@ -180,7 +168,6 @@ export class GlobalSearchComponent {
     }).filter((section) => section.options.length > 0);
   });
 
-  /** As opções na ordem em que aparecem (as setas andam por esta lista). */
   protected readonly options = computed(() =>
     this.sections().flatMap((section) => section.options),
   );
@@ -197,7 +184,6 @@ export class GlobalSearchComponent {
     return state.status === 'empty' ? interpolate(this.t().search.empty, { q: state.q }) : null;
   });
 
-  /** A lista de resultados está visível (o combobox está "expandido"). */
   protected readonly expanded = computed(
     () => (this.open() || this.sheetOpen()) && this.facade.state().status !== 'idle',
   );
@@ -212,7 +198,6 @@ export class GlobalSearchComponent {
       this.active.set(-1);
     });
 
-    // Resultado novo: a opção ativa volta ao começo e a região viva anuncia a contagem (ou o vazio/erro).
     effect(() => {
       const state = this.facade.state();
       untracked(() => {
@@ -231,7 +216,6 @@ export class GlobalSearchComponent {
       });
     });
 
-    // Mantém a opção ativa à vista dentro do painel que rola.
     effect(() => {
       const id = this.activeId();
       if (id === null) return;
@@ -278,7 +262,6 @@ export class GlobalSearchComponent {
     }
   }
 
-  /** Fecha o painel e mantém (ou devolve) o foco no campo. */
   protected close(): void {
     this.open.set(false);
     this.active.set(-1);
@@ -302,7 +285,6 @@ export class GlobalSearchComponent {
     this.active.set(-1);
   }
 
-  /** Atalho `/`: foca a busca, exceto quando o foco já está num campo de texto (ou há um modal aberto). */
   protected onDocumentKeydown(event: KeyboardEvent): void {
     if (
       event.key !== '/' ||
@@ -318,7 +300,6 @@ export class GlobalSearchComponent {
     else this.focusField();
   }
 
-  /** Toque ou clique fora do campo e do painel fecha o painel. */
   protected onDocumentPointerdown(event: PointerEvent): void {
     if (!this.open()) return;
     const target = event.target;
@@ -327,7 +308,6 @@ export class GlobalSearchComponent {
     this.active.set(-1);
   }
 
-  /** O foco saiu do campo e do painel (Tab): fecha. */
   protected onFocusOut(event: FocusEvent): void {
     const next = event.relatedTarget;
     if (next instanceof Node && this.host.nativeElement.contains(next)) return;
@@ -345,7 +325,6 @@ export class GlobalSearchComponent {
   }
 }
 
-/** Campo em que digitar `/` deve inserir a barra, não focar a busca. */
 function isTextEntry(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   if (target.isContentEditable) return true;

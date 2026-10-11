@@ -21,7 +21,6 @@ export type ShareGroup = FormGroup<{
   amount: FormControl<string | null>;
 }>;
 
-/** Uma linha vazia da divisão: pessoa e valor (o valor é o que a pessoa deve, digitado). */
 export function newShareGroup(): ShareGroup {
   return new FormGroup({
     personId: new FormControl<string | null>(null),
@@ -29,16 +28,8 @@ export function newShareGroup(): ShareGroup {
   });
 }
 
-/** Máximo de partes que o contrato aceita por despesa. */
 export const MAX_SHARES = 20;
 
-/**
- * "Dividir com alguém" (presentational, T86): as partes da despesa, uma por pessoa, com o valor que cada
- * uma deve **digitado**: o front não calcula a divisão, nem o que sobra para o usuário, nem os centavos
- * (o backend valida Σ partes < valor, `SHARES_EXCEED_AMOUNT`, e devolve o `impact` depois de salvar).
- * O erro de regra do backend aparece aqui, ligado ao grupo. Adicionar e remover uma parte têm rótulos
- * ("Remover parte de João") e o foco vai para a parte nova ou para "Adicionar parte".
- */
 @Component({
   selector: 'app-shares-field',
   imports: [ReactiveFormsModule, MoneyInputComponent, PersonFieldComponent],
@@ -56,11 +47,9 @@ export class SharesFieldComponent {
   readonly createPerson = input<((name: string) => Observable<PersonRef>) | null>(null);
   readonly currency = input('BRL');
 
-  /** O conjunto de partes acompanha o `FormArray` (linhas novas, removidas e erros de regra). */
   private readonly snapshot = toSignal(
     toObservable(this.array).pipe(
       switchMap((array) =>
-        // Um objeto novo a cada emissão: o signal não o descarta por ser o mesmo `FormArray`.
         merge(of(null), array.valueChanges, array.statusChanges).pipe(map(() => ({ array }))),
       ),
     ),

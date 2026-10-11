@@ -10,11 +10,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import type { CategorySpendingState } from '~/modules/reports/core/facades/category-spending.facade';
 
-/**
- * "Where your money goes" (DS 02, T205): as maiores categorias do mês, com `amount`, `share` e "Outras" **do
- * backend** (o front não normaliza os `share` nem subtrai nada) e o total do consumo no cabeçalho, igual ao
- * `month.consumption` do KPI de gasto. Cada categoria leva às movimentações dela na competência. Presentational.
- */
 @Component({
   selector: 'app-category-spending',
   imports: [SectionContainerComponent, BarListComponent, MoneyComponent],
@@ -67,7 +62,6 @@ export class CategorySpendingComponent {
   protected readonly t = inject(I18nService).t;
 
   readonly state = input.required<CategorySpendingState>();
-  /** Competência `YYYY-MM` do relatório (a mesma do KPI de gasto): vai para o filtro das movimentações. */
   readonly month = input.required<string>();
   readonly retry = output<void>();
 

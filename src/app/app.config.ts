@@ -39,27 +39,18 @@ import { provideSearch } from '~/modules/search/infra/search.providers';
 import { provideTransactions } from '~/modules/transactions/infra/transactions.providers';
 import { API_MOCKS } from '~/util/api-mocks';
 
-/**
- * Bootstrap: providers globais. É também o único arquivo de `src/app` autorizado a ligar
- * portas do core às implementações da infra (S-31, exceção no .dependency-cruiser.cjs).
- */
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(
       routes,
       withComponentInputBinding(),
-      // Troca de página com cross-fade só no <main> (`.m-page`), sem animar o primeiro carregamento. Com movimento
-      // desligado no início (preferência do sistema ou `data-motion="off"`) a transição nem é criada: pular uma
-      // transição já criada faz o Angular logar o `AbortError` no console em desenvolvimento.
-      // Abrir/fechar um modal por rota (`MODAL_ROUTE`) não é troca de página: sem transição, a página de trás não pisca.
       ...(motionEnabled()
         ? [
             withViewTransitions({
               skipInitialTransition: true,
               onViewTransitionCreated: ({ transition, from, to }) => {
                 if (!isModalNavigation(from, to)) return;
-                // Pular rejeita `ready` com `AbortError` (esperado): sem o `catch` vira erro não tratado no console.
                 transition.ready.catch(() => undefined);
                 transition.skipTransition();
               },
@@ -70,12 +61,9 @@ export const appConfig: ApplicationConfig = {
     { provide: TitleStrategy, useExisting: I18nTitleStrategy },
     provideI18n(),
     provideTheme(),
-    // Ordem importa: o tratamento de 401 envolve o Bearer, para a repetição levar o token novo (T33).
     provideHttpClient(withFetch(), withInterceptors([unauthorizedInterceptor, authInterceptor])),
-    // Modo demonstração: vazio no real e no mock; o build `demo` troca por um backend de exemplo.
     provideDemoMode(),
     { provide: API_MOCKS, useValue: environment.apiMocks },
-    // S-31: única ligação porta (core) → implementação (infra), aqui no bootstrap.
     provideAuth(),
     provideAccounts(),
     provideCards(),
@@ -85,7 +73,6 @@ export const appConfig: ApplicationConfig = {
     provideSessionEndHooks(),
     provideAi(),
     provideSearch(),
-    // Restaura a sessão pelo cookie de refresh antes de ativar as rotas (T33 CA5). Nunca lança.
     provideAppInitializer(() => trackInputModality(inject(DOCUMENT))),
     provideRouteScroll(),
     provideAppInitializer(() => inject(SessionFacade).restore()),

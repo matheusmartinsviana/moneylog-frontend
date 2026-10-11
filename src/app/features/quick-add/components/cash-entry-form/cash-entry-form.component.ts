@@ -42,12 +42,6 @@ import type {
 import { nextMonthOf, todayIso } from '~/util/date';
 import type { PersonRef } from '~/util/debt';
 
-/**
- * Formulário de despesa e de receita (presentational): valor → descrição → categoria → conta → data
- * (→ método, quando o modo não o fixa: Pix e Débito fixam). `accounts` já chega só com contas `CASH`
- * ativas e `categories` só com as do `kind` do tipo (A19, S-91); quem usa decide. Serve ao
- * `/quick-add` e à edição (`initial`).
- */
 @Component({
   selector: 'app-cash-entry-form',
   imports: [
@@ -70,21 +64,17 @@ export class CashEntryFormComponent extends TransactionFormBase {
   readonly type = input.required<'EXPENSE' | 'INCOME'>();
   readonly accounts = input.required<readonly Account[]>();
   readonly categories = input.required<readonly Category[]>();
-  /** Método fixo do modo (Pix, Débito); `null` mostra o seletor. */
   readonly fixedMethod = input<PaymentMethod | null>(null);
   readonly initial = input<ExpenseInput | IncomeInput | null>(null);
   readonly defaultAccountId = input<string | null>(null);
-  /** Valor e descrição que vieram do Quick Capture do Início (`/quick-add?amount=&description=`), só na criação. */
   readonly prefill = input<{
     amount: string | null;
     description: string | null;
     date?: string | null;
   } | null>(null);
-  /** "Dividir com alguém" só na criação de uma despesa (T86): as partes não se editam depois (S-137). */
   readonly allowSplit = input(false);
   readonly people = input<readonly PersonRef[]>([]);
   readonly createPerson = input<((name: string) => Observable<PersonRef>) | null>(null);
-  /** O usuário ligou "Dividir com alguém": quem usa carrega as pessoas se ainda não tem. */
   readonly peopleNeeded = output<void>();
 
   protected readonly currency = ACCOUNT_CURRENCY;
@@ -98,7 +88,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
     personId: new FormControl<string | null>(null),
     accountId: new FormControl<string | null>(null),
     date: new FormControl<string | null>(todayIso()),
-    /** Só receita (ADR-017): vazio = o mês da data. */
     incomeCompetence: new FormControl<string | null>(null),
     method: new FormControl<string | null>(null),
     shares: new FormArray<ShareGroup>([]),
@@ -106,7 +95,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
   private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), {
     initialValue: null,
   });
-  /** Pix novo: o interruptor "É um empréstimo para uma pessoa" grava `LOAN_GIVEN` no lugar do Pix. */
   protected readonly showLoanSwitch = computed(
     () => this.fixedMethod() === 'PIX' && this.initial() === null && this.type() === 'EXPENSE',
   );
@@ -140,7 +128,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
 
   constructor() {
     super();
-    // Conta padrão (a última usada ou a única compatível), só enquanto o campo está vazio.
     effect(() => {
       const accountId = this.defaultAccountId();
       untracked(() => {
@@ -150,14 +137,12 @@ export class CashEntryFormComponent extends TransactionFormBase {
         }
       });
     });
-    // Ligou o empréstimo: pede as pessoas; a pessoa passa a ser obrigatória e a descrição, opcional.
     this.loan.valueChanges.subscribe((on) => {
       const { personId, categoryId } = this.form.controls;
       if (on) {
         this.peopleNeeded.emit();
         this.split.setValue(false);
         categoryId.reset(null);
-        // A categoria não se aplica ao empréstimo (o campo some): desabilitada, não bloqueia o salvar.
         categoryId.disable({ emitEvent: false });
       } else {
         personId.reset(null);
@@ -166,7 +151,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
       personId.setValidators(on ? [Validators.required] : []);
       personId.updateValueAndValidity();
     });
-    // Ligou a divisão: pede as pessoas e abre a primeira parte; desligou: descarta as partes.
     this.split.valueChanges.subscribe((on) => {
       const shares = this.form.controls.shares;
       if (on) {
@@ -176,7 +160,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
         shares.clear();
       }
     });
-    // Pré-preenchimento vindo do Quick Capture: só campos vazios, e nunca na edição.
     effect(() => {
       const prefill = this.prefill();
       if (!prefill || this.initial() !== null) return;
@@ -187,7 +170,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
           description.setValue(prefill.description);
       });
     });
-    // Edição: o valor inicial (e cada versão nova, depois de um conflito) repõe o formulário.
     effect(() => {
       const initial = this.initial();
       if (!initial) return;
@@ -208,7 +190,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
 
   protected build(): TransactionInput {
     const value = this.form.getRawValue();
-    // A divisão leva só o que foi digitado: quanto cada pessoa deve (nada é calculado, S-137).
     const shares = this.splitting()
       ? value.shares.map((share) => ({
           amount: share.amount ?? '',
@@ -237,12 +218,10 @@ export class CashEntryFormComponent extends TransactionFormBase {
       notes: this.initial()?.notes ?? null,
       accountId: value.accountId ?? '',
       categoryId: value.categoryId ?? '',
-      // Pix/débito levam o método fixo; na despesa/receita genérica sem escolha, omite (o servidor usa OTHER).
       ...((this.fixedMethod() ?? value.method)
         ? { method: (this.fixedMethod() ?? value.method) as PaymentMethod }
         : {}),
       ...(shares.length > 0 && this.type() === 'EXPENSE' ? { shares } : {}),
-      // No PUT, ausente limpa a competência no servidor: reenviamos o valor atual (só se difere do mês da data).
       ...(this.type() === 'INCOME' &&
       value.incomeCompetence &&
       value.incomeCompetence !== (value.date ?? todayIso()).slice(0, 7)
@@ -251,7 +230,6 @@ export class CashEntryFormComponent extends TransactionFormBase {
     } as TransactionInput;
   }
 
-  /** Atalho de um toque: a renda pertence ao mês seguinte ao da data. */
   protected useNextMonth(): void {
     const date = this.form.controls.date.value ?? todayIso();
     this.form.controls.incomeCompetence.setValue(nextMonthOf(date));

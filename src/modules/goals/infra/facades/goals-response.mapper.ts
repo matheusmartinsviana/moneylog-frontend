@@ -20,7 +20,6 @@ import type {
 } from '~/modules/goals/infra/responses/goal.response';
 import type { Money } from '~/util/money';
 
-/** Resposta → tipos do core. Só copia campos: nenhum valor é somado nem convertido para `number`. */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,
@@ -70,7 +69,6 @@ export function toPhoto(response: GoalPhotoResponse): GoalPhoto {
 }
 
 export function toGoal(response: GoalResponse): Goal {
-  // Resposta de servidor antigo (sem os campos de fotos): o tipo gerado os exige, o runtime pode não trazer.
   const legacy: Partial<Pick<GoalResponse, 'featured' | 'coverPhotoId' | 'photos'>> = response;
   return {
     id: response.id,
@@ -106,7 +104,6 @@ export function toGoal(response: GoalResponse): Goal {
     streak: response.streak,
     consistencyRate: response.consistencyRate,
     version: response.version,
-    // Respostas antigas (sem os campos de fotos) viram "sem destaque e sem fotos".
     featured: legacy.featured ?? false,
     coverPhotoId: legacy.coverPhotoId ?? null,
     photos: (legacy.photos ?? []).map(toPhoto),
@@ -148,10 +145,6 @@ export function toCreateRequest(input: GoalInput): GoalCreateRequest {
   };
 }
 
-/**
- * `PUT`: o que não vai é apagado (nome em `METRIC`, `planNote`, `deadline`), então tudo vai explícito.
- * `name` e `target` só são omitidos quando vazios (nome opcional em `METRIC`; alvo ausente mantém o atual).
- */
 export function toUpdateRequest(input: GoalUpdate): GoalUpdateRequest {
   const name = input.name.trim();
   const planNote = input.planNote?.trim() ?? '';
@@ -170,7 +163,6 @@ export function toActionRequest(input: GoalActionInput): GoalActionRequest {
   return { title: input.title.trim(), frequency: input.frequency };
 }
 
-/** Liberar manda o valor **negativo** no corpo: o usuário digita o valor positivo (S-147). */
 export function toReservationRequest(input: ReservationInput): GoalReservationRequest {
   const note = input.note?.trim() ?? '';
   return {

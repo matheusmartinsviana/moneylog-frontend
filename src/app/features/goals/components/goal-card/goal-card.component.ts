@@ -13,12 +13,6 @@ import { formatIsoDate } from '~/util/date';
 import { formatMoney } from '~/util/money';
 import { formatRatio, ratioForBar } from '~/util/ratio';
 
-/**
- * Uma meta na lista (presentational). **Nada é calculado aqui**: o valor atual, o alvo, a razão de
- * progresso (`progress`), o que falta (`remaining`) e a estimativa mensal (`monthlyNeeded`) vêm do backend;
- * a tela só formata. A estimativa leva o rótulo "Estimativa" e o aviso de reserva descoberta é texto, nunca
- * só cor.
- */
 @Component({
   selector: 'li[app-goal-card]',
   imports: [RouterLink, MoneyComponent, ProgressBarComponent, GoalStageBadgeComponent],
@@ -35,7 +29,6 @@ export class GoalCardComponent {
 
   private readonly locale = computed(() => HTML_LANG[this.i18n.language()]);
   protected readonly name = computed(() => goalName(this.goal(), this.t().goals));
-  /** Meta de medida arquivada não calcula: `current` vem nulo e a barra não aparece. */
   protected readonly notCalculated = computed(() => this.goal().current === null);
   protected readonly bar = computed(() => ratioForBar(this.goal().progress));
   protected readonly percent = computed(() => formatRatio(this.goal().progress, this.locale()));

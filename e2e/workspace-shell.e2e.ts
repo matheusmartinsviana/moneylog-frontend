@@ -11,12 +11,6 @@ import {
 } from './support';
 import { homeResponses } from './support/home-fixtures';
 
-/**
- * Casca do workspace (DS 02, fatia A: T191 a T195, ADR-011): janela flutuante só a partir de 1024 px, página
- * que rola (sem rolagem interna), sidebar em grupos, cabeçalho com ações rápidas, microinterações e
- * movimento reduzido. As capturas de evidência estão em `evidence-redesign.e2e.ts`.
- */
-
 const px = (value: string) => Number.parseFloat(value);
 
 const MAIN_ITEMS = [
@@ -277,8 +271,6 @@ test.describe('microinterações e movimento reduzido', () => {
   test('a classe .row-hover destaca o fundo no hover com o mouse (elemento real no DOM, folha de estilo real)', async ({
     page,
   }) => {
-    // O mock não traz movimentações para listar: o item é montado na página com a classe que
-    // `transaction-list-item` usa (conferida em `transactions.page.spec.ts`), e o efeito vem da folha global de verdade.
     await page.goto('/cards');
     await waitForApp(page);
     await page.evaluate(() => {
@@ -331,7 +323,6 @@ test.describe('microinterações e movimento reduzido', () => {
         style.getPropertyValue(name).trim(),
       );
     });
-    // O build de produção minifica `180ms` para `.18s`: compara em milissegundos.
     const ms = durations.map((d) => (d.endsWith('ms') ? px(d) : px(d) * 1000));
     expect(ms).toEqual([160, 240, 300]);
     const transition = await page

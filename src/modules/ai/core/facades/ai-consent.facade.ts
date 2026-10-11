@@ -14,18 +14,12 @@ export type ConsentState =
   | { readonly step: 'done'; readonly analysis: AiAnalysis }
   | { readonly step: 'error'; readonly problem: Problem };
 
-/** Erros em que a prévia não serve mais: é preciso gerar outra e pedir o consentimento de novo. */
 const REDO_PREVIEW = new Set([
   'AI_PREVIEW_EXPIRED',
   'AI_PREVIEW_MISMATCH',
   'AI_PREVIEW_ALREADY_USED',
 ]);
 
-/**
- * Fluxo prévia, consentimento, resultado. Nada vai à IA sem o usuário ver o `redactedPayload` e aprovar. A
- * `Idempotency-Key` nasce com a prévia e é reutilizada no "tentar de novo" da mesma prévia (nunca gera uma
- * segunda análise); uma prévia nova traz uma chave nova. Escopo de componente.
- */
 @Injectable()
 export class AiConsentFacade {
   private readonly gateway = inject(AiGateway);
@@ -86,12 +80,10 @@ export class AiConsentFacade {
     this.starts.next(request);
   }
 
-  /** O usuário aprovou exatamente o que viu na prévia. */
   approve(): void {
     this.approvals.next();
   }
 
-  /** Refaz a prévia do último pedido (prévia expirada, divergente ou já usada; ou erro ao montar). */
   redo(): void {
     if (this.lastRequest !== null) this.start(this.lastRequest);
   }

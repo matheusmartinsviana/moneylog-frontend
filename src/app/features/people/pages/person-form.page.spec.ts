@@ -178,7 +178,6 @@ describe('PersonFormPage', () => {
       fixture.detectChanges();
 
       expect(screen.getByTestId('person-form-conflict')).toHaveTextContent(pt.people.form.conflict);
-      // Nada recarregou sozinho: o texto digitado continua e o backend foi lido só uma vez.
       expect(input('person-name').value).toBe('João Pedro');
       expect(gateway.calls.filter((call) => call === 'get:p1')).toHaveLength(1);
     });

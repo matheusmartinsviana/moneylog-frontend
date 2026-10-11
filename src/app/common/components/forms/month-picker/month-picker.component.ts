@@ -23,10 +23,6 @@ import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { formatCompetence, todayIso } from '~/util/date';
 
-/**
- * Seletor de mês/competência próprio: o valor do controle é `YYYY-MM` (ou `null`). Abre uma grade de
- * meses em popover (desktop) ou folha inferior (celular), com navegação de ano.
- */
 @Component({
   selector: 'app-month-picker',
   imports: [FieldErrorComponent, IconComponent, OverlayPanelComponent, MonthGridComponent],
@@ -177,16 +173,13 @@ export class MonthPickerComponent extends FieldControl<string | null> implements
   private readonly ngInjector = inject(Injector);
   protected readonly t = this.i18n.t;
 
-  /** Menor mês (`YYYY-MM`). */
   readonly min = input<string>();
-  /** Maior mês (`YYYY-MM`). */
   readonly max = input<string>();
   readonly mandatory = input(true);
 
   protected readonly value = signal<string | null>(null);
   protected readonly open = signal(false);
   protected readonly valueId = computed(() => `${this.controlId()}-value`);
-  /** Relido a cada abertura (o PWA pode atravessar a virada do mês). */
   protected readonly currentMonth = signal(todayIso().slice(0, 7));
   protected readonly effectiveMin = computed(() => this.min() ?? '2000-01');
   protected readonly effectiveMax = computed(() => this.max() ?? '2100-12');
@@ -227,7 +220,6 @@ export class MonthPickerComponent extends FieldControl<string | null> implements
     if (value === null) return this.mandatory() ? { required: true } : null;
     const min = this.effectiveMin();
     const max = this.effectiveMax();
-    // Meses `YYYY-MM` comparam como texto.
     if (value < min) return { monthMin: { min } };
     if (value > max) return { monthMax: { max } };
     return null;

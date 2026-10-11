@@ -12,11 +12,6 @@ function readText(blob: Blob): Promise<string> {
   });
 }
 
-/**
- * Falha de uma requisição com `responseType: 'blob'` → `Problem`. Nesse modo o corpo do erro (o JSON do
- * RFC 9457) chega como `Blob`: lê o texto e entrega ao `toProblem`, para o `code` não se perder. Qualquer
- * corpo que não seja JSON cai no código padrão do status. Nunca lança.
- */
 export async function problemFromBlobError(error: unknown): Promise<Problem> {
   if (!(error instanceof HttpErrorResponse) || !(error.error instanceof Blob)) {
     return toProblem(error);

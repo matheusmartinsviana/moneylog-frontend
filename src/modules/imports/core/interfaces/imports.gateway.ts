@@ -16,11 +16,6 @@ import type {
 } from '~/modules/imports/core/types/import';
 import type { Slice } from '~/util/api/slice';
 
-/**
- * Porta da importação de extrato. Falha com `ProblemError` (`IMPORT_TOO_LARGE`, `IMPORT_PARSE_FAILED`,
- * `IMPORT_LINES_REQUIRE_DECISION`...). O upload emite progresso e termina com o lote; cancelar é
- * cancelar a inscrição (a requisição é abortada).
- */
 export abstract class ImportsGateway {
   abstract upload(input: ImportUploadInput, idempotencyKey: string): Observable<ImportUploadEvent>;
   abstract list(query: {
@@ -37,9 +32,7 @@ export abstract class ImportsGateway {
     action: Exclude<ImportAction, 'FORCE' | 'REOPEN'>,
   ): Observable<ImportBulkResult>;
   abstract apply(id: string, idempotencyKey: string): Observable<ImportApplied>;
-  /** Descarta um lote em revisão (204). */
   abstract discard(id: string): Observable<void>;
   abstract undo(id: string, reason: string | null): Observable<ImportUndone>;
-  /** Mapeamento salvo da conta/cartão; `null` quando não há. */
   abstract savedMapping(sourceId: string): Observable<ImportMapping | null>;
 }

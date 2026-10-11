@@ -1,11 +1,5 @@
 import type { components } from '../../src/util/api/schema.gen';
 
-/**
- * Respostas **fiéis ao contrato 2.6.0** para o Início nos E2E de `mock` e `prod` (sem backend): tipadas pelos
- * schemas gerados de `contracts/openapi.yaml`, então uma mudança de contrato quebra o `tsc` daqui. O teste as deixa
- * em `window.__MONEYLOG_MOCK_RESPONSES__` (as facades em modo mock leem a chave do endpoint) e depois **compara a
- * tela com o JSON**: o front não soma nada, então o que aparece tem de ser o que está aqui.
- */
 type S = components['schemas'];
 
 const brl = (amount: string): S['Money'] => ({ amount, currency: 'BRL' });
@@ -19,7 +13,6 @@ export const TX_TODAY = '11111111-1111-4111-8111-111111111111';
 export const TX_YESTERDAY = '11111111-1111-4111-8111-222222222222';
 export const NOTE_ID = '55555555-5555-4555-8555-555555555555';
 
-/** O consumo do mês: o KPI de gasto, o total de "Where your money goes" e o resumo mensal dizem o mesmo número. */
 export const CONSUMPTION = '1620.50';
 
 export function dashboardSummary(
@@ -98,7 +91,6 @@ export const upcoming: S['Upcoming'] = {
   overdueTruncated: false,
 };
 
-/** Mês encerrado (`partial: false`): as variações são tendência de verdade. */
 export function monthlySummary(overrides: Partial<S['MonthlySummary']> = {}): S['MonthlySummary'] {
   return {
     competence: '2026-10',
@@ -135,7 +127,6 @@ export function monthlySummary(overrides: Partial<S['MonthlySummary']> = {}): S[
   };
 }
 
-/** Mês em andamento no dia 10: o "−80%" compara um mês pela metade com o anterior inteiro (R5). */
 export function partialMonthlySummary(): S['MonthlySummary'] {
   const base = monthlySummary({ partial: true });
   return {
@@ -301,7 +292,6 @@ const day = (
   net: brl(net),
 });
 
-/** 7 dias: o dia 09 tem `expenses` negativo (reembolso) e o de hoje é parcial, como o exemplo do contrato. */
 export const incomeExpensesD7: S['IncomeExpenseSeries'] = {
   period: 'D7',
   from: '2026-10-04',
@@ -410,8 +400,6 @@ export const searchResults: S['SearchResults'] = {
   truncated: [],
 };
 
-/** O mapa chave do endpoint → JSON bruto que as facades em modo mock leem. */
-/** `GET /v1/insights`: um insight de categoria que subiu (a frase é montada pelo front a partir de `key` e `params`). */
 export const insights: S['InsightSlice'] = {
   hasNext: false,
   items: [

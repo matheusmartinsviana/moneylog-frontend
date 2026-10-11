@@ -19,11 +19,6 @@ export type CategoriesManageState =
 
 const LOADING: CategoriesManageState = { status: 'loading' };
 
-/**
- * Estado da tela Configurações → Categorias (aba Despesa/Receita, ativas e arquivadas). Lê pela
- * `CategoriesFacade` (com cache) e, depois de cada mutação, atualiza a lista **a partir do recurso da
- * resposta**, sem chutar. Escopo de componente.
- */
 @Injectable()
 export class CategoriesManageFacade {
   private readonly categories = inject(CategoriesFacade);
@@ -86,7 +81,6 @@ export class CategoriesManageFacade {
     return this.categories.unarchive(id).pipe(tap((saved) => this.upsert(saved)));
   }
 
-  /** Coloca o recurso da resposta na lista (substitui pelo `id` ou acrescenta) e mantém a ordem por nome. */
   private upsert(category: Category): void {
     if (category.kind !== this.kind) return;
     const state = this.current();

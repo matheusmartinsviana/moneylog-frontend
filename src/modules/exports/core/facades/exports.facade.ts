@@ -13,12 +13,6 @@ import { Problem, problemOf } from '~/util/api/problem';
 type Command =
   { readonly kind: 'csv'; readonly query: TransactionsExportQuery } | { readonly kind: 'backup' };
 
-/**
- * Facade da exportação (CSV de movimentações e backup JSON). `exhaustMap`: com um download em curso o clique
- * seguinte é ignorado (sem clique duplo, sem dois arquivos). O arquivo sai em `file$` para a tela entregar
- * ao navegador; falha vira `problem` (com "tentar de novo": `retry()` repete o último comando). Exportar é
- * leitura: não há `Idempotency-Key`. Escopo de componente.
- */
 @Injectable()
 export class ExportsFacade {
   private readonly gateway = inject(ExportsGateway);
@@ -34,10 +28,8 @@ export class ExportsFacade {
   } | null>(null);
   private last: Command | null = null;
 
-  /** Qual exportação está em andamento (`null` = nenhuma). */
   readonly running = this.runningState.asReadonly();
   readonly busy = computed(() => this.runningState() !== null);
-  /** Falha da última exportação, com o tipo para a tela mostrar no lugar certo. */
   readonly failure = this.problemState.asReadonly();
   readonly file$ = this.fileEvents.asObservable();
 
@@ -70,7 +62,6 @@ export class ExportsFacade {
     this.dispatch({ kind: 'backup' });
   }
 
-  /** "Tentar de novo": repete o último comando. */
   retry(): void {
     if (this.last) this.commands.next(this.last);
   }

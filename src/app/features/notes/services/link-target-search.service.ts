@@ -16,7 +16,6 @@ import { formatCompetence, formatIsoDate } from '~/util/date';
 import { counterpartyName } from '~/util/debt-name';
 import { formatMoney } from '~/util/money';
 
-/** Um registro que o seletor oferece para vincular (rótulo e dica já legíveis). */
 export interface LinkCandidate {
   readonly type: 'TRANSACTION' | 'GOAL' | 'PERSON' | 'DEBT' | 'CARD' | 'INVOICE';
   readonly id: string;
@@ -28,12 +27,6 @@ const RESULT_LIMIT = 10;
 
 const fold = (text: string): string => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 
-/**
- * Busca os registros que uma nota pode vincular, **através das portas de cada módulo** (a página injeta; os
- * módulos continuam sem importar uns aos outros). Só lê: nada daqui grava nem calcula valor. O que é filtrado
- * "por nome" é o que o backend ainda não filtra (metas, dívidas, cartões): lista curta, filtro no cliente.
- * Escopo de componente.
- */
 @Injectable()
 export class LinkTargetSearchService {
   private readonly i18n = inject(I18nService);
@@ -52,12 +45,7 @@ export class LinkTargetSearchService {
     switch (type) {
       case 'TRANSACTION':
         return this.transactions
-          .list(
-            // Sem período (o relógio do aparelho não decide nada): só a busca por texto, entre as ativas.
-            { ...defaultFilters('2026-01-01'), from: null, to: null, q },
-            1,
-            RESULT_LIMIT,
-          )
+          .list({ ...defaultFilters('2026-01-01'), from: null, to: null, q }, 1, RESULT_LIMIT)
           .pipe(
             map((slice) =>
               slice.items.map((item) => ({
@@ -119,7 +107,6 @@ export class LinkTargetSearchService {
     }
   }
 
-  /** Cartões ativos (para vincular o cartão ou para escolher de qual cartão é a fatura). */
   cardOptions(
     term: string,
     type: 'CARD' | 'INVOICE' = 'CARD',
@@ -139,7 +126,6 @@ export class LinkTargetSearchService {
     );
   }
 
-  /** Faturas de um cartão, as mais recentes primeiro. */
   invoices(cardId: string): Observable<readonly LinkCandidate[]> {
     return this.cards.listInvoices(cardId, { page: 1, pageSize: 24 }).pipe(
       map((slice) =>

@@ -8,11 +8,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { Installment } from '~/modules/transactions/core/types/transaction';
 import { formatCompetenceShort, formatIsoDate } from '~/util/date';
 
-/**
- * Parcelas de uma compra no cartão (T70 CA2, presentational): número, situação (Pendente, Paga, Atrasada,
- * Cancelada, em texto), valor, a fatura (referência e vencimento, com link) e `lateEntry` com a explicação
- * visível. Os valores e a situação são os do backend; a parcela cancelada fica riscada e continua listada.
- */
 @Component({
   selector: 'app-installments-list',
   imports: [RouterLink, MoneyComponent],
@@ -153,7 +148,6 @@ export class InstallmentsListComponent {
   protected readonly t = this.i18n.t;
 
   readonly installments = input.required<readonly Installment[]>();
-  /** O cartão da compra: liga cada parcela à tela da fatura dela. */
   readonly cardId = input<string | null>(null);
 
   protected readonly rows = computed(() => {

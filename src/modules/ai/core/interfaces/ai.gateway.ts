@@ -11,7 +11,6 @@ import type {
 } from '~/modules/ai/core/types/ai';
 import type { Slice } from '~/util/api/slice';
 
-/** Porta de IA. Falha com `ProblemError`. */
 export abstract class AiGateway {
   abstract status(): Observable<AiStatus>;
   abstract createPreview(request: AiPreviewRequest): Observable<AiPreview>;

@@ -2,14 +2,6 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
 
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 
-/**
- * Chip (DS 01): rótulo curto em forma de pílula. Três formas:
- * - **alternável** (`pressed` definido): `<button aria-pressed>`; um filtro que liga e desliga (tag da lista);
- * - **removível** (`removeLabel` definido): o texto e um botão "Remover ..." com nome acessível próprio;
- * - **estático** (nenhum dos dois): só informa (tag de uma nota).
- * `count` opcional em números tabulares. O estado nunca é só cor: o alternável ligado também ganha o traço
- * de borda mais forte e o `aria-pressed`. Presentational.
- */
 @Component({
   selector: 'app-chip',
   imports: [IconComponent],
@@ -142,10 +134,8 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
 })
 export class ChipComponent {
   readonly label = input.required<string>();
-  /** Definido = alternável (`aria-pressed`). */
   readonly pressed = input<boolean | null>(null);
   readonly count = input<number | null>(null);
-  /** Definido = removível; é o nome acessível do botão ("Remover filtro: Alimentação"). */
   readonly removeLabel = input<string>();
   readonly cy = input('chip');
 

@@ -57,7 +57,6 @@ describe('note-path', () => {
     expect(utf8Length('é')).toBe(2);
     expect(isTooLarge('a'.repeat(200 * 1024))).toBe(false);
     expect(isTooLarge('a'.repeat(200 * 1024 + 1))).toBe(true);
-    // 150.000 caracteres de 2 bytes passam do limite de 204.800 bytes
     expect(isTooLarge('é'.repeat(150_000))).toBe(true);
   });
 

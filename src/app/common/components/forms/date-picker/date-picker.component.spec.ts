@@ -145,7 +145,6 @@ describe('DatePickerComponent', () => {
 
     await userEvent.click(screen.getByTestId('date-calendar'));
     await userEvent.click(screen.getByTestId('date-cal-prev'));
-    // 2026-01 é o primeiro mês permitido; 2025-12 não tem como entrar.
     for (let i = 0; i < 12; i++) {
       const prev = screen.getByTestId('date-cal-prev');
       if ((prev as HTMLButtonElement).disabled) break;

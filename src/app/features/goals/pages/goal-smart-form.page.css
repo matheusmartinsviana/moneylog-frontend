@@ -14,7 +14,6 @@
   font-size: var(--text-sm);
 }
 
-/* Aviso gentil: texto em tom de atenção, sem bloquear o envio. */
 .form__warning {
   margin: 0;
   padding: var(--space-3);

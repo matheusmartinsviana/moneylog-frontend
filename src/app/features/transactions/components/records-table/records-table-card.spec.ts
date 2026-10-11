@@ -38,7 +38,6 @@ describe('Lista de movimentações com cartão (T70 CA1)', () => {
     expect(text(screen.getByTestId('transaction-amount-tx-card'))).toBe('R$ 1.200,00');
     expect(row).toHaveTextContent('Compra no cartão');
     expect(row).toHaveTextContent('Roxinho');
-    // Sem efeito no caixa: nenhum sinal de entrada ou saída na linha.
     expect(text(screen.getByTestId('transaction-amount-tx-card'))).not.toMatch(/^[+−]/);
   });
 

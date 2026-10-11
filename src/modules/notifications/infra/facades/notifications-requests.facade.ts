@@ -47,7 +47,6 @@ function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: nada existe no "banco". */
 function notFound(): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -59,10 +58,6 @@ function notFound(): Observable<never> {
   return throwError(() => new ProblemError(problem));
 }
 
-/**
- * Facade de requisições de notificações: o único lugar com HTTP do módulo. Com `API_MOCKS` ligado, responde
- * vazio e não faz requisição.
- */
 @Injectable({ providedIn: 'root' })
 export class NotificationsRequestsFacade extends NotificationsGateway {
   private readonly http = inject(HttpClient);

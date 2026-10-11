@@ -1,11 +1,6 @@
 import { addDays, addMonths, addMonthsKey, dateIn } from '~/demo/demo-dates';
 import type { components } from '~/util/api/schema.gen';
 
-/**
- * Mundo fictício do modo demonstração: contas, cartão, movimentações dos últimos seis meses, dívidas,
- * recorrências, metas e notas, **coerentes entre si**. Aqui há aritmética de centavos porque este arquivo
- * simula o backend; no app real o front não soma nada financeiro. Só entra no build `demo`.
- */
 export type S = components['schemas'];
 
 export function money(cents: number): S['Money'] {
@@ -17,7 +12,6 @@ export function money(cents: number): S['Money'] {
   };
 }
 
-/** Razão com 4 casas (`HALF_UP`), como o backend devolveria. */
 export function ratio(num: number, den: number): string {
   if (den === 0) return '0.0000';
   const sign = num < 0 !== den < 0 ? '-' : '';
@@ -82,7 +76,6 @@ export interface Rec {
   invoiceId: string | null;
   recurrenceId: string | null;
   notes: string | null;
-  /** Receita cuja renda pertence a outro mês (`YYYY-MM`, ADR-017); o caixa fica na data. */
   incomeCompetence?: string | null;
 }
 
@@ -91,7 +84,6 @@ export interface InstallmentDef {
   number: number;
   total: number;
   cents: number;
-  /** Data de consumo da parcela (compra + n-1 meses). */
   date: string;
   competence: string;
   invoiceRef: string;
@@ -153,7 +145,6 @@ export interface RecurrenceDef {
   startDate: string;
 }
 
-/** Ação do plano declarado de uma meta (demo). `doneIn`: períodos com check-in. */
 export interface GoalActionDef {
   id: string;
   title: string;
@@ -163,20 +154,15 @@ export interface GoalActionDef {
 
 export interface GoalDef {
   id: string;
-  /** Nulo em meta de medida sem nome (a tela mostra o rótulo gerado). */
   name: string | null;
   target: number;
-  /** Meta de medida (`METRIC`): a medida, o valor de partida e o mês de criação. */
   metric?: S['GoalMetric'];
   baseline?: number;
   startMonth?: string;
-  /** Valor da medida no fim de cada mês fechado desde `startMonth` (instantâneos). */
   history?: number[];
   planNote?: string | null;
   actions?: GoalActionDef[];
-  /** Meta de sonho em destaque na Home (só uma). */
   featured?: boolean;
-  /** Quantidade de fotos SINTÉTICAS (geradas por código em `demo-photos.ts`; nenhum binário versionado). */
   photos?: number;
   deadline: string | null;
   priority: S['GoalPriority'];
@@ -420,7 +406,6 @@ export function buildWorld(today: string): World {
         categoryId: cat(CAT.freelance),
         accountId: checking,
         method: 'PIX',
-        // Adiantamento (sintético): caiu neste mês, mas é a renda do mês seguinte.
         ...(off === -1 ? { incomeCompetence: addMonthsKey(key, 1) } : {}),
       });
     }
@@ -520,7 +505,6 @@ export function buildWorld(today: string): World {
       accountId: checking,
       counterId: savings,
     });
-    // Compras no cartão (parceladas ou não).
     add({
       type: 'CARD_PURCHASE',
       cents: 60_000,
@@ -557,7 +541,6 @@ export function buildWorld(today: string): World {
     installments: 12,
   });
 
-  // Parcelas e faturas (fechamento dia 25, vencimento dia 5 do mês seguinte).
   const installments: InstallmentDef[] = [];
   for (const rec of recs.filter((r) => r.type === 'CARD_PURCHASE')) {
     const base = Math.floor(rec.cents / rec.installments);
@@ -621,7 +604,6 @@ export function buildWorld(today: string): World {
     };
   });
 
-  // Pessoas e dívidas.
   const people: PersonDef[] = [
     { id: demoId('person', 1), name: 'Carlos', notes: 'Colega de trabalho' },
     { id: demoId('person', 2), name: 'Ana', notes: null },
@@ -831,7 +813,6 @@ export function buildWorld(today: string): World {
     },
   ];
 
-  // Consumo (competência): gastos pagos na conta + parcelas do cartão.
   const consumption: ConsumptionEntry[] = [];
   for (const rec of recs) {
     if (rec.type === 'EXPENSE' && rec.categoryId) {
@@ -877,7 +858,6 @@ export function buildWorld(today: string): World {
   };
 }
 
-/** Efeito de uma movimentação no saldo de uma conta (centavos). */
 export function accountEffect(rec: Rec, accountId: string): number {
   const own = rec.accountId === accountId;
   switch (rec.type) {

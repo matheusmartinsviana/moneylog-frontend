@@ -67,7 +67,6 @@ export function aProblem(status: number, code: string): Problem {
   return { status, code, fieldErrors: [], traceId: null, retryAfterSeconds: null };
 }
 
-/** Porta falsa de notificações: guarda as chamadas e devolve o que o teste configurar. */
 export class NotificationsGatewayStub extends NotificationsGateway {
   notifications: AppNotification[] = [];
   reminderList: Reminder[] = [];
@@ -182,7 +181,6 @@ export class NotificationsGatewayStub extends NotificationsGateway {
   }
 }
 
-/** Dispositivo falso (`PushManager`/`Notification`): o teste escolhe a capacidade e a permissão. */
 export class PushDeviceFake extends PushDevice {
   capabilityValue: PushCapability = 'supported';
   permissionValue: PushPermission = 'default';

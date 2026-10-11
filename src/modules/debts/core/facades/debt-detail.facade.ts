@@ -34,13 +34,6 @@ interface Load {
   readonly silent: boolean;
 }
 
-/**
- * Facade da tela da dívida (FE 01): a dívida com as quitações e as flags `cancelable`/`voidable`/
- * `voidBlockedBy` do backend. Perdoar, estornar o registro e editar usam `exhaustMap` (clique duplo =
- * uma requisição) e **substituem a dívida pela resposta** (nada de chutar o estado). Em falha
- * (`DEBT_HAS_SETTLEMENTS`, `DEBT_CLOSED`...) recarrega do backend sem piscar, porque o estado real
- * pode ter mudado. `refresh` recarrega depois de uma quitação feita noutro formulário. Escopo de componente.
- */
 @Injectable()
 export class DebtDetailFacade {
   private readonly gateway = inject(DebtsGateway);
@@ -54,16 +47,13 @@ export class DebtDetailFacade {
   private readonly problemState = signal<Problem | null>(null);
 
   readonly state = this.current.asReadonly();
-  /** Uma recarga silenciosa falhou: a tela continua com o último dado bom, mais este aviso. */
   readonly refreshProblem = this.refreshProblemState.asReadonly();
   readonly debt = computed(() => {
     const state = this.current();
     return state.status === 'ready' ? state.debt : null;
   });
   readonly busy = this.busyState.asReadonly();
-  /** Falha da última ação (perdoar, estornar, editar). */
   readonly problem = this.problemState.asReadonly();
-  /** Emite a dívida devolvida pela API quando a ação dá certo. */
   readonly done$ = this.doneEvents.asObservable();
 
   constructor() {
@@ -75,7 +65,6 @@ export class DebtDetailFacade {
             silent ? (source) => source : startWith<DebtDetailState>({ status: 'loading' }),
             catchError((error: unknown) => {
               const problem = problemOf(error);
-              // Recarga em segundo plano que falha: a tela que já está pronta continua (com um aviso).
               if (silent && problem.status !== 404 && this.current().status === 'ready') {
                 this.refreshProblemState.set(problem);
                 return EMPTY;
@@ -105,7 +94,6 @@ export class DebtDetailFacade {
             }),
             map(() => null),
             catchError((error: unknown) => {
-              // O estado real pode ter mudado (outra quitação, outro aparelho): recarrega do backend.
               this.refresh(action.id);
               return of(problemOf(error));
             }),
@@ -124,23 +112,19 @@ export class DebtDetailFacade {
     this.loads.next({ id, silent: false });
   }
 
-  /** Recarrega do backend sem voltar ao esqueleto (depois de quitar, estornar uma quitação, etc.). */
   refresh(id: string): void {
     this.lastId = id;
     this.loads.next({ id, silent: true });
   }
 
-  /** "Tentar de novo" do aviso de recarga que falhou. */
   retryRefresh(): void {
     if (this.lastId !== null) this.loads.next({ id: this.lastId, silent: true });
   }
 
-  /** Perdoa o saldo restante (motivo obrigatório; não pode ser desfeito). */
   cancel(id: string, reason: string): void {
     this.actions.next({ kind: 'cancel', id, reason });
   }
 
-  /** Estorna o registro (só dívida sem movimentação e sem quitações). */
   void(id: string, reason: string): void {
     this.actions.next({ kind: 'void', id, reason });
   }

@@ -10,7 +10,6 @@ const routes: Routes = [
     path: '',
     providers: QUICK_ADD_PROVIDERS,
     children: [
-      // Na rota primária (`/quick-add?...`) o guard a converte em `<origem>(modal:quick-add)`; na auxiliar abre o modal.
       {
         path: '',
         component: QuickAddPage,

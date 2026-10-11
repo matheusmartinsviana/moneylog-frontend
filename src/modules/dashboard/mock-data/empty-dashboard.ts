@@ -1,9 +1,3 @@
-/**
- * Dados de apoio da Etapa 1 (sem backend): o dashboard de quem ainda não cadastrou nenhuma conta.
- * Têm o formato bruto da API (arquitetura §4.4) e passam pelo mesmo mapeamento da resposta real.
- * Saem quando a Etapa 2 ligar `GET /v1/dashboard/*`.
- */
-
 import type {
   DashboardSummaryResponse,
   MoneyResponse,
@@ -12,7 +6,6 @@ import type {
 
 const zero = (): MoneyResponse => ({ amount: '0.00', currency: 'BRL' });
 
-/** Data fixa: o mock não lê o relógio do aparelho. */
 const AS_OF = '2026-10-10';
 
 export const EMPTY_DASHBOARD_SUMMARY: DashboardSummaryResponse = {

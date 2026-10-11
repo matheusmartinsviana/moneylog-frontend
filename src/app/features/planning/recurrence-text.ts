@@ -2,7 +2,6 @@ import type { AppI18n } from '~/app/common/i18n/i18n';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import type { IntervalUnit } from '~/modules/recurrences/core/types/recurrence';
 
-/** "Todo mês" / "A cada 2 semanas": a frequência da recorrência em texto. */
 export function frequencyText(
   recurrence: {
     readonly frequency: string;

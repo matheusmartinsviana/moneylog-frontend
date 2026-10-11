@@ -1,11 +1,5 @@
-/**
- * Aritmética de calendário por dias civis (FE-S-115): datas são strings `YYYY-MM-DD`/`YYYY-MM`.
- * `Date.UTC` só calcula dia da semana e transbordo de mês, nunca guarda valor: o resultado não
- * depende do fuso do aparelho.
- */
 import type { Language } from '~/app/common/i18n/i18n';
 
-/** Limites de data aceitos pelo backend (contrato). */
 export const MIN_DATE = '2000-01-01';
 export const MAX_DATE = '2100-12-31';
 
@@ -20,7 +14,6 @@ export interface Civil {
 const ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 function utc(y: number, m: number, d: number): Date {
-  // `Date.UTC` trata anos 0 a 99 como 1900+; `setUTCFullYear` não.
   const date = new Date(0);
   date.setUTCFullYear(y, m - 1, d);
   return date;
@@ -38,7 +31,6 @@ export function daysInMonth(y: number, m: number): number {
   return utc(y, m + 1, 0).getUTCDate();
 }
 
-/** Data civil de `YYYY-MM-DD`; `null` se não existir no calendário (31/02). */
 export function parseIso(iso: string): Civil | null {
   const match = ISO.exec(iso);
   if (!match) return null;
@@ -46,7 +38,6 @@ export function parseIso(iso: string): Civil | null {
   return m >= 1 && m <= 12 && d >= 1 && d <= daysInMonth(y, m) ? { y, m, d } : null;
 }
 
-/** Dia da semana (0 = domingo). */
 export function weekday(iso: string): number {
   const c = parseIso(iso);
   return c ? utc(c.y, c.m, c.d).getUTCDay() : 0;
@@ -59,7 +50,6 @@ export function addDays(iso: string, days: number): string {
   return toIso(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate());
 }
 
-/** Soma meses mantendo o dia, ou o último dia do mês de destino (31/01 + 1 = 28/02). */
 export function addMonths(iso: string, months: number): string {
   const c = parseIso(iso);
   if (!c) return iso;
@@ -73,7 +63,6 @@ export function clampIso(iso: string, min: string, max: string): string {
   return iso < min ? min : iso > max ? max : iso;
 }
 
-/** 6 semanas × 7 dias do mês `YYYY-MM`; dias de fora do mês vêm como `null`. */
 export function monthGrid(month: string, weekStart: 0 | 1): (string | null)[][] {
   const y = Number(month.slice(0, 4));
   const m = Number(month.slice(5, 7));
@@ -87,17 +76,14 @@ export function monthGrid(month: string, weekStart: 0 | 1): (string | null)[][] 
   return Array.from({ length: 6 }, (_, row) => cells.slice(row * 7, row * 7 + 7));
 }
 
-/** Ordem dos campos digitados: mês primeiro só em inglês (FE-S-117). */
 export function dateOrder(language: Language): DateOrder {
   return language === 'en' ? 'mdy' : 'dmy';
 }
 
-/** Semana começa no domingo (pt, en) ou na segunda (es) (FE-S-117). */
 export function weekStart(language: Language): 0 | 1 {
   return language === 'es' ? 1 : 0;
 }
 
-/** Aplica a máscara `dd/mm/aaaa` (ou `mm/dd/aaaa`) aos dígitos digitados. */
 export function maskDigits(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 8);
   if (d.length <= 2) return d;
@@ -113,7 +99,6 @@ export function formatMasked(iso: string, order: DateOrder): string {
     : `${pad(c.d)}/${pad(c.m)}/${pad(c.y, 4)}`;
 }
 
-/** `dd/mm/aaaa` completo e real → `YYYY-MM-DD`; qualquer outra coisa → `null`. */
 export function parseMasked(text: string, order: DateOrder): string | null {
   const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
   if (!match) return null;
@@ -125,7 +110,6 @@ export function parseMasked(text: string, order: DateOrder): string | null {
   return parseIso(iso) ? iso : null;
 }
 
-/** Mês `YYYY-MM` somado de `months` (negativo volta). */
 export function addMonthsToMonth(month: string, months: number): string {
   return addMonths(`${month}-01`, months).slice(0, 7);
 }

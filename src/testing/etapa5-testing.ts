@@ -13,7 +13,6 @@ import { brl } from '~/testing/accounts-testing';
 
 const r = (amount: string) => ({ amount, currency: 'BRL' as const });
 
-/** O cenário de T95: outubro/2026 (mês corrente, parcial) com o setembro de comparação. */
 export function aSummary(overrides: Partial<MonthlySummary> = {}): MonthlySummary {
   return {
     competence: '2026-10',
@@ -104,7 +103,6 @@ export class MonthlySummaryGatewayStub extends MonthlySummaryGateway {
   readonly months: string[] = [];
   result: ((month: string) => Observable<MonthlySummary>) | null = null;
 
-  /** O resumo padrão do mês (sem passar pelo `result`). */
   resultOf(month: string): Observable<MonthlySummary> {
     return of(aSummary({ competence: month }));
   }
@@ -121,7 +119,6 @@ export function provideMonthlySummaryStub(
   return [{ provide: MonthlySummaryGateway, useValue: stub }];
 }
 
-/** O cenário de T96 (M6): nov/26 a abr/27, com a meta de 8.500,00 só como informação. */
 export function aProjection(overrides: Partial<Projection> = {}): Projection {
   return {
     isProjection: true,
@@ -200,7 +197,6 @@ export class ProjectionsGatewayStub extends ProjectionsGateway {
   readonly queries: ProjectionQuery[] = [];
   result: ((query: ProjectionQuery) => Observable<Projection>) | null = null;
 
-  /** Uma projeção pronta do horizonte (com série e tendência opcionais). */
   fast(
     horizon: Projection['horizon'],
     series?: Projection['series'],

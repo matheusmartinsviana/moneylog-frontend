@@ -4,7 +4,6 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { Toast, ToastAction } from '~/app/common/services/toast.service';
 
-/** Um aviso (presentational): texto, tom e o botão de fechar. */
 @Component({
   selector: 'app-toast',
   imports: [IconComponent],

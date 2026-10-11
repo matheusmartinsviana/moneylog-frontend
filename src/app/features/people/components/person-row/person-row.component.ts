@@ -8,11 +8,6 @@ import { balanceText, openDebtsText } from '~/app/features/people/person-balance
 import type { Person } from '~/modules/people/core/types/person';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Uma pessoa na lista (card no celular, linha de tabela no desktop). Presentational: a frase do saldo
- * vem de `direction` e `net` do backend (a cor só reforça o texto, DS 00), a próxima cobrança é a
- * `nextDueDate` dele. Arquivar e desarquivar só emitem o pedido.
- */
 @Component({
   selector: 'li[app-person-row]',
   imports: [RouterLink],

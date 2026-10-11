@@ -27,17 +27,13 @@ import { Problem, problemOf } from '~/util/api/problem';
 import { todayIso } from '~/util/date';
 import { cleanSearchTerm } from '~/util/search-term';
 
-/** Linhas por página (S-71). */
 export const LIST_PAGE_SIZE = 50;
-/** Espera entre a última tecla da busca e a requisição. */
 export const SEARCH_DEBOUNCE_MS = 300;
 
-/** O que a lista exibe. `totals` é sempre o da **última resposta**: nunca somado no front. */
 export interface ListData {
   readonly view: ListFilters['view'];
   readonly records: readonly Transaction[];
   readonly entries: readonly Entry[];
-  /** Consumo de dívidas sem movimentação (S-137): completo, fora da paginação e já dentro de `entryTotals`. */
   readonly debtItems: readonly DebtEntry[];
   readonly recordTotals: TransactionTotals | null;
   readonly entryTotals: EntryTotals | null;
@@ -53,17 +49,6 @@ export type ListState =
 
 const LOADING: ListState = { status: 'loading' };
 
-/**
- * Facade da lista de movimentações (duas visões, filtros, "carregar mais"). Regras (T35):
- * - os filtros são a fonte de verdade do que se vê; a tela os espelha na URL (`filtersToQuery`);
- * - trocar de filtro **cancela** a requisição anterior (`switchMap`) e a busca por texto espera
- *   300 ms (`debounceTime`) antes de pedir;
- * - "carregar mais" pede a página seguinte e **anexa** os itens; os `totals` exibidos são os da
- *   última resposta, nunca somados;
- * - criar, editar ou estornar (`TransactionsEvents`) recarrega do backend.
- *
- * Escopo de componente (`providers: [TransactionsListFacade]`).
- */
 @Injectable()
 export class TransactionsListFacade {
   private readonly gateway = inject(TransactionsGateway);
@@ -76,7 +61,6 @@ export class TransactionsListFacade {
   private readonly loadingMoreState = signal(false);
   private readonly loadMoreFailedState = signal(false);
   private started = false;
-  /** Muda a cada recarga: resposta de "carregar mais" de uma geração antiga é descartada. */
   private generation = 0;
 
   readonly filters = this.filterState.asReadonly();
@@ -92,7 +76,6 @@ export class TransactionsListFacade {
     return state.status === 'ready' ? state.data : null;
   });
   readonly loadingMore = this.loadingMoreState.asReadonly();
-  /** A última tentativa de "carregar mais" falhou (a lista já exibida continua). */
   readonly loadMoreFailed = this.loadMoreFailedState.asReadonly();
 
   constructor() {
@@ -127,10 +110,6 @@ export class TransactionsListFacade {
     this.events.changes$.pipe(takeUntilDestroyed()).subscribe(() => this.reload());
   }
 
-  /**
-   * Aplica os filtros (vindos da URL ou de um controle) e recarrega. A primeira chamada sempre
-   * carrega; as seguintes só quando algo mudou.
-   */
   apply(filters: ListFilters): void {
     const changed = !filtersEqual(this.filterState(), filters, todayIso());
     this.filterState.set(filters);
@@ -144,17 +123,14 @@ export class TransactionsListFacade {
     this.apply({ ...this.filterState(), ...changes });
   }
 
-  /** Volta aos padrões de S-71, mantendo a visão atual. */
   clearFilters(): void {
     this.apply({ ...defaultFilters(todayIso()), view: this.filterState().view });
   }
 
-  /** Digitou na busca: espera 300 ms parado e então filtra (a requisição anterior é cancelada). */
   search(text: string): void {
     this.searches.next(cleanSearchTerm(text));
   }
 
-  /** Recarrega do backend com os filtros atuais ("tentar de novo" e depois de uma mudança). */
   reload(): void {
     if (!this.started) return;
     this.reloads.next(this.filterState());

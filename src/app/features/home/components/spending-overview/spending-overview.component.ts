@@ -21,16 +21,8 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { SpendingOverviewState } from '~/modules/reports/core/facades/spending-overview.facade';
 import type { ReportPeriod } from '~/modules/reports/core/types/reports';
 
-/** Períodos do gráfico compacto do Início (o de 3 meses fica de fora; o contrato continua aceitando). */
 const HOME_PERIODS = ['D7', 'D30', 'M12'] as const satisfies readonly ReportPeriod[];
 
-/**
- * Gráfico compacto de entradas e saídas do Início (DS 02, T204; tela sucinta): 7 dias, 30 dias e 12 meses, sem
- * descrição nem totais (o resumo do mês já está nos indicadores). Ocupa a altura que o painel recebe, sem px
- * fixos. Desenha **o que o backend devolveu** (`points[]`): o front só converte valores em coordenadas. Os
- * estados carregando, vazio e erro (com tentar de novo) são do cartão; trocar o período é do pai (que cancela o
- * pedido anterior). Presentational.
- */
 @Component({
   selector: 'app-spending-overview',
   imports: [
@@ -84,7 +76,6 @@ const HOME_PERIODS = ['D7', 'D30', 'M12'] as const satisfies readonly ReportPeri
             <p class="so__basis" data-cy="home-overview-hint">{{ hint }}</p>
           }
           @if (chart(); as view) {
-            <!-- O gráfico (SVG próprio) é um chunk à parte: o Início abre sem esperar o código do desenho (T200). -->
             @defer (on immediate) {
               <app-line-chart
                 [label]="t().dashboard.overview.title"
@@ -129,7 +120,6 @@ export class SpendingOverviewComponent {
     });
   });
 
-  /** Dia e semana = dinheiro que entrou (`DATE`); mês = renda do mês (`COMPETENCE`). O rótulo é do backend. */
   protected readonly basisHint = computed(() => {
     const state = this.state();
     return state.status === 'ready' ? this.t().dashboard.overview.basis[state.data.basis] : null;

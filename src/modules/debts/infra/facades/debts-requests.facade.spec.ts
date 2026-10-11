@@ -69,7 +69,6 @@ describe('DebtsRequestsFacade', () => {
 
       const slice = await result;
       expect(slice.items[0]).toMatchObject({ status: 'PARTIALLY_SETTLED', cancelable: true });
-      // Os valores são as strings da API (nada é recalculado).
       expect(slice.items[0]?.outstanding.amount).toBe('200.00');
     });
 

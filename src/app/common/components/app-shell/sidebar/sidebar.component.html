@@ -1,5 +1,4 @@
 <div class="sidebar" data-cy="sidebar">
-  <!-- Marca, "Novo registro", seções e rodapé ficam dentro do único landmark da sidebar (axe `region`). -->
   <nav class="sidebar__nav" [attr.aria-label]="t().shell.primaryNavigation">
     <div class="sidebar__top">
       <a class="sidebar__link sidebar__brand" routerLink="/" data-cy="sidebar-brand">
@@ -25,7 +24,6 @@
       </a>
     </div>
     <div #scroll class="sidebar__scroll" data-cy="sidebar-scroll">
-      <!-- Posição calculada em tempo de execução (item ativo): não cabe em classe CSS. -->
       <!-- eslint-disable-next-line @angular-eslint/template/no-inline-styles -->
       <span
         class="sidebar__indicator"
@@ -90,7 +88,6 @@
         </li>
       </ul>
     </div>
-    <!-- Rodapé fixo: Configurações e Sair nunca saem da tela. -->
     <div class="sidebar__footer">
       <a
         class="sidebar__link"

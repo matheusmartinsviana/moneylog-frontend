@@ -1,5 +1,3 @@
-/* Utilitários globais pequenos e estáveis. */
-
 .visually-hidden {
   position: absolute !important;
   width: 1px !important;
@@ -19,13 +17,6 @@
   box-shadow: var(--shadow-1);
 }
 
-/*
- * Vidro (DS 03, "liquid glass"). Base = SÓLIDO (Safari, sem `backdrop-filter`, `prefers-reduced-transparency`):
- * o contraste do texto é conferido contra `surface`. Com `<html data-glass>` (`blur` ou `refract`, definido em
- * `glass-support.ts`) a superfície vira translúcida com desfoque. Só para superfícies grandes e poucas por tela
- * (sidebar em trilho, modais/sheets/menus, 1 a 2 cartões de destaque); nunca em listas. Refração real (SVG)
- * só nas lentes pequenas (`.glass-lens` + `appLiquidGlass`).
- */
 .glass {
   border: var(--border-width) solid var(--glass-border);
   background-color: var(--glass-solid);
@@ -62,7 +53,6 @@ html[data-glass] .glass--strong {
   }
 }
 
-/* Lente pequena: sólida por padrão; com `data-glass` ganha película de luz + desfoque barato (ou refração via diretiva). */
 .glass-lens {
   box-shadow: var(--glass-lens-glow);
 }
@@ -79,20 +69,14 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Painel em destaque (gráfico, saldo): o mesmo cartão com o halo azul por baixo (token). */
 .surface--glow {
   background-image: var(--gradient-panel-glow);
 }
 
-/* Vidro com halo: película de luz no topo + halo azul embaixo (gráfico e painéis de destaque). */
 .glass--halo {
   background-image: var(--glass-sheen), var(--gradient-panel-glow);
 }
 
-/*
- * Botão de ícone quadrado arredondado (DS 03): borda sutil; o ativo (`is-active`, `aria-current`,
- * `aria-pressed`) é preenchido no acento com o ícone escuro. O nome acessível vai em `aria-label`.
- */
 .icon-button {
   position: relative;
   display: inline-flex;
@@ -128,7 +112,6 @@ html[data-glass] .glass-lens {
   color: var(--color-on-accent);
 }
 
-/* Chip de ação em pílula ("Novo registro", "Configurações"): texto sempre presente. */
 .pill {
   display: inline-flex;
   align-items: center;
@@ -166,7 +149,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Estado em pílula ("Concluído", "Estornada"): cor + texto, nunca só cor. */
 .status {
   display: inline-flex;
   align-items: center;
@@ -199,7 +181,6 @@ html[data-glass] .glass-lens {
   color: var(--color-risk);
 }
 
-/* Glifo/inicial em quadrado arredondado (linhas de lista). Decorativo: o nome está em texto ao lado. */
 .glyph {
   display: inline-flex;
   flex: none;
@@ -216,14 +197,12 @@ html[data-glass] .glass-lens {
   text-transform: uppercase;
 }
 
-/* Linha de lista como cartão escuro (DS 03): um degrau abaixo do painel, valor à direita. */
 .row-card {
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-control);
   background-color: var(--color-surface-inset);
 }
 
-/* Campo de busca arredondado com ícone à esquerda (o ícone é um elemento filho `.search__icon`). */
 .search {
   position: relative;
   display: block;
@@ -245,10 +224,6 @@ html[data-glass] .glass-lens {
   border-radius: var(--radius-pill);
 }
 
-/*
- * Busca: borda suave como a dos cartões (decisão do dono). O campo continua identificável sem ela (WCAG 1.4.11):
- * ícone de lupa, placeholder em 4,5:1 e preenchimento `surface-inset`. Foco visível discreto no acento.
- */
 .search .input:focus-visible {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px var(--color-accent-soft);
@@ -258,10 +233,6 @@ html[data-glass] .glass-lens {
   border-color: var(--color-risk);
 }
 
-/*
- * Cartão interativo (DS 02): sobe até 2px e ganha sombra no hover, só em aparelho com mouse e com
- * movimento permitido. Em toque não há hover; com `prefers-reduced-motion` não há `transform`.
- */
 .lift {
   transition:
     transform var(--duration-base) var(--ease-standard),
@@ -280,7 +251,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Linha de lista que destaca suave no hover (DS 02: "linhas de transação destacam suavemente"). */
 .row-hover {
   transition: background-color var(--duration-fast) var(--ease-standard);
 }
@@ -291,7 +261,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Controles: botões calmos, cantos de 12px. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -317,7 +286,6 @@ html[data-glass] .glass-lens {
   background-color: var(--color-hover-soft);
 }
 
-/* Pressão sutil (DS 02). Só com movimento permitido: `prefers-reduced-motion` não aplica `transform`. */
 @media (prefers-reduced-motion: no-preference) {
   .button:active:not(:disabled, [aria-disabled='true']) {
     transform: scale(0.98);
@@ -336,14 +304,12 @@ html[data-glass] .glass-lens {
   opacity: 0.92;
 }
 
-/* Botão secundário em tinta de acento (ações rápidas do cabeçalho). */
 .button--soft {
   border-color: transparent;
   background-color: var(--color-accent-soft);
   color: var(--color-accent);
 }
 
-/* Cor sólida (par conferido por `check-contrast`): `opacity` derrubava o contraste do texto no hover. */
 .button--soft:hover:not(:disabled, [aria-disabled='true']) {
   border-color: transparent;
   background-color: var(--color-hover-soft);
@@ -372,10 +338,6 @@ html[data-glass] .glass-lens {
   font-size: var(--text-xs);
 }
 
-/*
- * Caixa de texto dos campos de formulário (T32). Fonte de 16px no campo: abaixo disso o Safari do
- * iPhone dá zoom na página ao focar.
- */
 .input {
   width: 100%;
   min-height: 2.75rem;
@@ -390,7 +352,6 @@ html[data-glass] .glass-lens {
     box-shadow var(--duration-fast) var(--ease-standard);
 }
 
-/* Onde se digita no toque o campo precisa de 16px (abaixo disso o Safari do iPhone dá zoom ao focar). */
 @media (pointer: coarse) {
   input.input,
   textarea.input {
@@ -427,10 +388,6 @@ html[data-glass] .glass-lens {
     var(--focus-ring);
 }
 
-/*
- * Ledger: lista de valores no estilo planilha (DS 00 §5): rótulo à esquerda, valor tabular à
- * direita, divisores sutis e linha de total. Uso: <dl class="ledger"><div class="ledger__row">…
- */
 .ledger {
   display: grid;
   margin: 0;
@@ -484,19 +441,13 @@ html[data-glass] .glass-lens {
   font-size: var(--text-md);
 }
 
-/* Valor negativo ou em risco: cor discreta e sempre acompanhada de texto ou sinal (DS 00 §3). */
 .is-negative {
   color: var(--color-risk);
 }
 
-/* Abas de filtro (links com `aria-current`), usadas nas listas (contas, categorias, movimentações). */
-/*
- * O contêiner tem a largura da soma das abas (`fit-content`), nunca a da tela. Se não couberem, a barra rola na
- * horizontal DENTRO dela (sem barra de rolagem) e uma sombra nas pontas avisa que há mais (`--scroll-shadow-x`).
- */
 .tabs {
   display: flex;
-  flex: none; /* nunca encolhe na altura numa coluna flex (aba ativa cortada) */
+  flex: none;
   width: fit-content;
   max-width: 100%;
   gap: var(--space-1);
@@ -548,7 +499,6 @@ html[data-glass] .glass-lens {
   color: var(--color-on-accent);
 }
 
-/* Sem medida do indicador deslizante, o próprio item é preenchido. */
 .tabs:not([data-ind-on]) .tab[aria-current='page'],
 .tabs:not([data-ind-on]) .tab[aria-selected='true'],
 .tabs:not([data-ind-on]) .tab[aria-pressed='true'] {
@@ -580,7 +530,6 @@ html[data-glass] .glass-lens {
   transition: transform var(--duration-base) var(--ease-emphasized);
 }
 
-/* Aviso inline de erro de formulário ou ação (sempre com texto, nunca só cor). */
 .banner {
   padding: var(--space-3) var(--space-4);
   border: var(--border-width) solid var(--color-risk);
@@ -589,10 +538,6 @@ html[data-glass] .glass-lens {
   font-size: var(--text-sm);
 }
 
-/*
- * Esqueleto de carregamento (`.sk`): bloco neutro com um brilho (`--gradient-shimmer`) que o atravessa.
- * Só `transform` anima; sem movimento (preferência do sistema ou `data-motion="off"`) fica estático.
- */
 .sk,
 .list-skeleton__row {
   position: relative;
@@ -601,7 +546,6 @@ html[data-glass] .glass-lens {
   background-color: var(--skeleton-bg);
 }
 
-/* Brilho largo (o dobro do bloco) e lento: baixo contraste, nunca pisca. */
 .sk::after,
 .list-skeleton__row::after {
   content: '';
@@ -625,7 +569,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Esqueleto de listas. */
 .list-skeleton {
   display: grid;
   gap: var(--space-2);
@@ -636,7 +579,6 @@ html[data-glass] .glass-lens {
   border-radius: var(--radius-control);
 }
 
-/* Cabeçalho de página no celular com 2+ ações: os botões dividem a linha (ver `page-layout.component.ts`). */
 @media (width < 40rem) {
   .page__header:has(.page__actions .button ~ .button) .page__actions > .button,
   .page__header:has(.page__actions .button ~ .button) .page__actions > .actions {
@@ -650,7 +592,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Tooltip próprio (appTooltip): criado no `body`, fora de qualquer componente. */
 .tooltip {
   position: fixed;
   z-index: var(--z-tooltip);
@@ -682,7 +623,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Alvos de toque de pelo menos 44 px no celular e em ponteiro grosso (revisão de UX, FE-S-116). */
 @media (width <= 640px), (pointer: coarse) {
   .button,
   .tab,
@@ -691,11 +631,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/*
- * Alvo de toque ampliado SEM mudar o visual (auditoria mobile): `.hit` estende a área clicável de um link ou botão
- * pequeno até 44 px com um pseudo-elemento invisível; `.hit-link` (link de texto, 44 px de altura útil). Em tela
- * compacta ou ponteiro grosso. O foco continua no próprio elemento.
- */
 .hit {
   position: relative;
 }
@@ -712,10 +647,6 @@ html[data-glass] .glass-lens {
   }
 }
 
-/*
- * Cartão inteiro clicável: o link principal do cartão (`.stretched-link`) estende a área até o cartão (`.row-card` ou
- * outro com `position: relative`), sem mudar o visual nem duplicar links (um alvo só, nome acessível no link).
- */
 .stretched-link::after {
   content: '';
   position: absolute;
@@ -723,11 +654,6 @@ html[data-glass] .glass-lens {
   border-radius: inherit;
 }
 
-/*
- * Rodapé de ações fixo (auditoria mobile): em folhas e diálogos com rolagem interna o botão de salvar e o cancelar ficam
- * sempre visíveis no fim do painel, com a área segura (a do painel) e um fundo que cobre o que rola por baixo. O último
- * filho do `<form>` que contém o botão de envio vira o rodapé; formulários sem `<form>` seguem como antes.
- */
 .panel--scroll .panel__body form > :last-child:has(button[type='submit']) {
   position: sticky;
   bottom: 0;
@@ -738,12 +664,6 @@ html[data-glass] .glass-lens {
   background-color: var(--color-surface);
 }
 
-/*
- * Página "sucinta" (`app-page-layout fit`): o conteúdo vira uma pilha que enche a altura da janela. O que vem antes
- * (abas, filtros, resumo) fica fixo e a lista principal (`.fit-scroll`) rola DENTRO do próprio painel, com a barra
- * fina do app; a página não rola (src/styles/README.md). `position: relative` contém os elementos só para leitores
- * de tela de dentro, que senão aumentariam a altura da página.
- */
 .fit-stack {
   display: flex;
   flex-direction: column;

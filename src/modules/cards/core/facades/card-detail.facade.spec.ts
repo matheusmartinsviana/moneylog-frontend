@@ -118,7 +118,6 @@ describe('CardDetailFacade', () => {
     gateway.getResult = NEVER as never;
 
     facade.refresh('card-1');
-    // Enquanto espera, o cartão anterior continua na tela.
     expect(facade.card()?.availableLimit?.amount).toBe('7717.00');
 
     gateway.getResult = null;

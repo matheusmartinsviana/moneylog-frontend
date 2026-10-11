@@ -39,7 +39,6 @@ import {
   type CommitmentKind,
 } from '~/modules/commitments/core/types/commitment';
 
-/** Máximo de itens do cronograma (contrato). */
 const MAX_ITEMS = 120;
 
 function itemGroup() {
@@ -56,12 +55,6 @@ function itemGroup() {
   });
 }
 
-/**
- * Novo compromisso acompanhado (modal sobre a lista). O tipo decide os campos: empréstimo de terceiro
- * (parcelas pagas/total, valor pago, próximo vencimento: só o que o usuário sabe, sem saldo) ou projeto de
- * longo prazo (cronograma de itens). Total, pago, saldo e progresso são calculados pelo servidor. Salvar usa
- * `exhaustMap` e `Idempotency-Key`; erros 422 (`COMMITMENT_INVALID`) vão para os campos ou para o aviso.
- */
 @Component({
   selector: 'app-commitment-form-page',
   imports: [
@@ -130,7 +123,6 @@ export class CommitmentFormPage {
   });
 
   constructor() {
-    // Só os campos do tipo escolhido participam da validação.
     effect(() => {
       const project = this.isProject();
       untracked(() => {
@@ -162,7 +154,6 @@ export class CommitmentFormPage {
   protected addItem(): void {
     if (this.items.length >= MAX_ITEMS) return;
     const group = itemGroup();
-    // "Já pago" liga o campo da data de pagamento.
     group.controls.paid.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((paid) => {
       if (paid) group.controls.paidOn.enable({ emitEvent: false });
       else {

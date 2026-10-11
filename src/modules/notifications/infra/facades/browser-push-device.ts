@@ -8,7 +8,6 @@ import {
 } from '~/modules/notifications/core/interfaces/push-device';
 import type { PushSubscriptionInput } from '~/modules/notifications/core/types/notification';
 
-/** Chave VAPID (base64url) → bytes, o formato que `pushManager.subscribe` exige. */
 export function urlBase64ToBytes(value: string): Uint8Array<ArrayBuffer> {
   const padded = value.padEnd(value.length + ((4 - (value.length % 4)) % 4), '=');
   const raw = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
@@ -23,7 +22,6 @@ function toBase64Url(buffer: ArrayBuffer | null): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-/** Push do navegador de verdade (service worker + `PushManager` + `Notification`). */
 @Injectable({ providedIn: 'root' })
 export class BrowserPushDevice extends PushDevice {
   private readonly win = inject(DOCUMENT).defaultView;
@@ -84,7 +82,6 @@ export class BrowserPushDevice extends PushDevice {
     await subscription?.unsubscribe();
   }
 
-  /** O worker não lê `localStorage`: o idioma da interface vai por mensagem (o texto do push sai no idioma certo). */
   private syncLanguage(registration: ServiceWorkerRegistration | null): void {
     const language = this.win?.document.documentElement.lang.slice(0, 2);
     if (language) registration?.active?.postMessage({ type: 'LANGUAGE', language });

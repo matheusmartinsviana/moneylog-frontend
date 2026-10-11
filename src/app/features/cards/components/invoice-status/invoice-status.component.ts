@@ -3,10 +3,6 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { InvoiceStatus } from '~/modules/cards/core/types/invoice';
 
-/**
- * Situação da fatura como chip **com texto** (Aberta, Fechada, Paga, Atrasada, Futura): a cor só
- * reforça, nunca é a única pista (DS 00 §3). O `status` é o que o backend derivou (S-37).
- */
 @Component({
   selector: 'app-invoice-status',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -42,11 +42,6 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 const MIN_MONTH = '2000-01';
 const MAX_MONTH = '2100-12';
 
-/**
- * Dinheiro a receber de terceiros (smart): por pessoa, o combinado, o recebido e o pendente, e o bloco
- * "gasto bruto x terceiros x líquido do mês" **como o servidor devolve**. Fica separado de patrimônio, renda
- * e despesas pessoais; o front não soma nem recalcula nada. O seletor de mês pede ao servidor.
- */
 @Component({
   selector: 'app-third-parties-page',
   imports: [
@@ -75,7 +70,6 @@ export class ThirdPartiesPage implements OnInit {
   protected readonly receipts = inject(ThirdPartyReceiptFacade);
   private readonly toast = inject(ToastService);
   protected readonly receiptOpen = signal(false);
-  /** Recebimento que o usuário pediu para remover (aguardando a confirmação). */
   protected readonly pendingRemove = signal<string | null>(null);
   protected readonly removeError = computed(() => {
     const problem = this.receipts.problem();
@@ -113,7 +107,6 @@ export class ThirdPartiesPage implements OnInit {
   });
 
   constructor() {
-    // O mês que o servidor devolveu é o que o seletor mostra (o padrão é o mês atual dele).
     effect(() => {
       const competence = this.receivables.data()?.month.competence ?? null;
       untracked(() => {
@@ -122,7 +115,6 @@ export class ThirdPartiesPage implements OnInit {
         }
       });
     });
-    // Falha ao remover: fecha a confirmação e mostra o aviso na página (a lista segue como estava).
     effect(() => {
       if (this.receipts.problem() !== null) untracked(() => this.pendingRemove.set(null));
     });
@@ -146,7 +138,6 @@ export class ThirdPartiesPage implements OnInit {
     this.receivables.load(null);
   }
 
-  /** Registrado no modal: relê o a-receber do backend (nada é ajustado no front). */
   protected afterRecorded(): void {
     this.receiptOpen.set(false);
     this.toast.show(this.t().thirdParties.receipts.toast.recorded);
@@ -190,7 +181,6 @@ export class ThirdPartiesPage implements OnInit {
         });
   }
 
-  /** Para onde o item leva: a dívida ou a movimentação marcada (o recebimento a confirmar não tem destino). */
   protected link(item: ThirdPartyItem): readonly string[] | null {
     if (item.source === 'DEBT') return ['/debts', item.refId];
     return item.source === 'EXPENSE' ? ['/transactions', item.refId] : null;

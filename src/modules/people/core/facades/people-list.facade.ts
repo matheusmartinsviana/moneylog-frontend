@@ -36,15 +36,8 @@ interface Load {
 
 const LOADING: PeopleListState = { status: 'loading' };
 
-/** Espera da digitação antes de buscar pelo nome (a busca anterior é cancelada). */
 export const SEARCH_DEBOUNCE_MS = 300;
 
-/**
- * Facade de negócio da lista de pessoas (FE 01). Expõe `loading`/`empty`/`error`/`data` por signals e
- * repassa o que a API devolveu: `net`, `direction`, `openDebts` e `nextDueDate` chegam como vieram
- * (nenhuma soma no front, S-142). `search` espera a digitação (300 ms) e cancela a busca anterior.
- * `loadAll` pagina até o fim (como S-91) para os seletores de pessoa. Escopo de componente.
- */
 @Injectable()
 export class PeopleListFacade {
   private readonly gateway = inject(PeopleGateway);
@@ -56,7 +49,6 @@ export class PeopleListFacade {
   private readonly createKeys = new IdempotencyTracker<PersonInput>();
 
   readonly state = this.current.asReadonly();
-  /** Texto da busca em vigor (para distinguir "ninguém cadastrado" de "nenhum resultado"). */
   readonly query = this.queryState.asReadonly();
   readonly loading = computed(() => this.current().status === 'loading');
   readonly empty = computed(() => this.current().status === 'empty');
@@ -72,7 +64,6 @@ export class PeopleListFacade {
   constructor() {
     this.loads
       .pipe(
-        // switchMap: uma busca nova (ou trocar de aba) descarta a anterior.
         switchMap(({ status, q }) =>
           this.loadAll(status, q).pipe(
             map((data): PeopleListState =>
@@ -93,19 +84,16 @@ export class PeopleListFacade {
       .subscribe((q) => this.load(this.status, q));
   }
 
-  /** Carrega (ou recarrega, no "tentar de novo") as pessoas do filtro; sem filtro, as ativas. */
   load(status: PersonStatus = 'ACTIVE', q = this.queryState()): void {
     this.status = status;
     this.queryState.set(q);
     this.loads.next({ status, q });
   }
 
-  /** Busca pelo nome com espera (300 ms); só a última digitação chega ao backend. */
   search(q: string): void {
     this.searches.next(q.trim());
   }
 
-  /** Todas as pessoas do filtro, pedindo `pageSize=50` e paginando até o fim. */
   loadAll(status: PersonStatus = 'ACTIVE', q = ''): Observable<readonly Person[]> {
     const page = (n: number) => this.gateway.list({ status, q, page: n, pageSize: MAX_PAGE_SIZE });
     return page(1).pipe(
@@ -114,10 +102,6 @@ export class PeopleListFacade {
     );
   }
 
-  /**
-   * Cria a pessoa antes da dívida (S-138): devolve a pessoa da resposta, que passa a ser a escolhida.
-   * Com `Idempotency-Key`: depois de uma falha ambígua, criar o mesmo nome de novo reusa a chave.
-   */
   create(input: PersonInput): Observable<Person> {
     return defer(() => this.gateway.create(input, this.createKeys.begin(input))).pipe(
       tap({
@@ -135,7 +119,6 @@ export class PeopleListFacade {
     return this.gateway.unarchive(id).pipe(tap((person) => this.replace(person)));
   }
 
-  /** Troca a pessoa pelo recurso da resposta; sai da lista se deixou de casar com o filtro. */
   private replace(person: Person): void {
     const state = this.current();
     if (state.status !== 'ready') return;

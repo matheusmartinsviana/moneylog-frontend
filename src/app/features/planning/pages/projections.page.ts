@@ -39,13 +39,6 @@ import {
 } from '~/modules/projections/core/types/projection';
 import { formatCompetence, formatIsoDate } from '~/util/date';
 
-/**
- * Projeções (smart, T103): `/planning/projections?horizon=M6&trend=1`. **Sempre rotulada como projeção, não
- * certeza**, com as premissas (`assumptions[]`, chaves traduzidas) e a série mensal em tabela (a leitura
- * acessível) e em sparkline SVG própria (só desenho). A tendência é uma série à parte, rotulada
- * "estimativa", que não altera a base; sem 3 meses completos o motivo vem do backend. Horizonte e tendência
- * ficam na URL (o F5 restaura); mudar cancela a requisição anterior. Nada é calculado aqui.
- */
 @Component({
   selector: 'app-projections-page',
   imports: [
@@ -72,7 +65,6 @@ export class ProjectionsPage {
   protected readonly t = this.i18n.t;
   protected readonly projection = inject(ProjectionsFacade);
 
-  /** Query params da URL (`?horizon=` e `?trend=1`). */
   readonly horizon = input<string>();
   readonly trend = input<string>();
 
@@ -163,7 +155,6 @@ export class ProjectionsPage {
   ]);
 
   constructor() {
-    // A URL manda: os controles espelham o horizonte e a tendência dela; a requisição sai daqui.
     effect(() => {
       const horizon = this.selectedHorizon();
       const includeTrend = this.includeTrend();

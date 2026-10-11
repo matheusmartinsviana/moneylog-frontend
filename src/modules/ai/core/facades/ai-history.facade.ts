@@ -18,7 +18,6 @@ export type HistoryState =
 
 const PAGE_SIZE = 20;
 
-/** Histórico de análises: carrega a primeira página e acrescenta as seguintes. Escopo de componente. */
 @Injectable()
 export class AiHistoryFacade {
   private readonly gateway = inject(AiGateway);
@@ -60,7 +59,6 @@ export class AiHistoryFacade {
       });
   }
 
-  /** Conteúdo enviado por análise (`GET /analyses/{id}`), buscado só quando o usuário pede para ver. */
   readonly payloads = signal<
     Readonly<Record<string, { status: 'loading' | 'error' | 'ready'; text: string | null }>>
   >({});

@@ -12,16 +12,6 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-/**
- * Stack do projeto `integration` (T44): um `postgres:17` descartável (docker compose, projeto
- * `moneylog-e2e-run`, volume apagado no fim), o backend real com o perfil `dev` e variáveis de teste.
- * O `ng serve --configuration local` sobe pelo `webServer` do `playwright.config.ts`.
- *
- * Segredos (JWT, senha do banco, senha e hash do dono) são gerados a cada execução e vivem só nas
- * variáveis de ambiente dos processos (o hash vai para um arquivo temporário fora do repositório).
- * Nada disso é versionado. `E2E_STACK=external` pula tudo: o ambiente (Postgres, backend e as variáveis
- * `E2E_OWNER_*`, `DB_*`, `E2E_PG_CONTAINER`, `JWT_SECRET`) já foi preparado à mão.
- */
 const ROOT = resolve(__dirname, '..', '..', '..');
 const PROJECT = 'moneylog-e2e-run';
 const PG_PORT = '55433';
@@ -45,14 +35,11 @@ function bcrypt(password: string): string {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],
       });
-      // htpasswd gera `$2y$`; o Spring aceita `$2a$` e `$2y$`. Sai ":$2y$..." (usuário vazio).
       return out
         .trim()
         .replace(/^:/, '')
         .replace(/^\$2y\$/, '$2a$');
-    } catch {
-      // tenta o próximo
-    }
+    } catch {}
   }
   throw new Error(
     'E2E stack: precisa de `htpasswd` (apache2-utils) ou `python3` com o pacote bcrypt para gerar o hash do dono.',
@@ -65,9 +52,7 @@ async function waitFor(url: string, timeoutMs: number): Promise<void> {
     try {
       const res = await fetch(url);
       if (res.ok) return;
-    } catch {
-      // ainda subindo
-    }
+    } catch {}
     await new Promise((r) => setTimeout(r, 1000));
   }
   throw new Error(
@@ -151,9 +136,7 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | voi
     if (backend.pid) {
       try {
         process.kill(-backend.pid, 'SIGTERM');
-      } catch {
-        // já encerrado
-      }
+      } catch {}
     }
     try {
       execFileSync(
@@ -164,9 +147,7 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | voi
           stdio: 'ignore',
         },
       );
-    } catch {
-      // melhor esforço
-    }
+    } catch {}
     if (existsSync(workDir)) rmSync(workDir, { recursive: true, force: true });
   }
 

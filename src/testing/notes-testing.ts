@@ -26,7 +26,6 @@ import type {
 } from '~/modules/notes/infra/responses/note.response';
 import type { Slice } from '~/util/api/slice';
 
-/** Nota do cenário do plano: "Revisão de outubro" com `[[MacBook]]` e vínculo à compra do notebook. */
 export function aNote(overrides: Partial<Note> = {}): Note {
   return {
     id: 'note-1',
@@ -103,7 +102,6 @@ function page<T>(items: readonly T[], p: number, size: number): Slice<T> {
   return { items: items.slice(start, start + size), hasNext: start + size < items.length };
 }
 
-/** Porta falsa de notas: guarda as chamadas e devolve o que o teste configurar. */
 export class NotesGatewayStub extends NotesGateway {
   notes: NoteSummary[] = [];
   trashed: NoteSummary[] = [];
@@ -117,7 +115,6 @@ export class NotesGatewayStub extends NotesGateway {
   readonly creates: NoteInput[] = [];
   readonly updates: { id: string; body: string; version: number }[] = [];
   readonly linkSets: { id: string; links: readonly NoteLinkRef[]; version: number }[] = [];
-  /** Resultado das escritas (`create`, `update`, `trash`, `restore`, `setLinks`). */
   next: Observable<Note> | null = null;
   moveResult: Observable<NoteMoved> | null = null;
   getResult: Observable<Note> | null = null;
@@ -125,9 +122,7 @@ export class NotesGatewayStub extends NotesGateway {
   emptyResult: Observable<void> | null = null;
   backlinksResult: Observable<Slice<Backlink>> | null = null;
   linkedResult: Observable<Slice<NoteSummary>> | null = null;
-  /** Fila de resultados de `update` (um por chamada); depois dela vale `next`. */
   updateQueue: Observable<Note>[] = [];
-  /** Filas de resultados de `move` e `setLinks` (um por chamada). */
   moveQueue: Observable<NoteMoved>[] = [];
   setLinksQueue: Observable<Note>[] = [];
   readonly moves: { id: string; newPath: string; version: number }[] = [];
@@ -246,7 +241,6 @@ export function provideNotesStub(
   ];
 }
 
-/** Respostas cruas da API (como `schema.gen.ts`), para os testes da infra. */
 export function aLinkResponse(overrides: Partial<NoteLinkResponse> = {}): NoteLinkResponse {
   return {
     origin: 'WIKILINK',

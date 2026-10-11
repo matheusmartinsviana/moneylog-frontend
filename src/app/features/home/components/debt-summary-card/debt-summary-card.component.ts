@@ -5,18 +5,12 @@ import { MoneyComponent } from '~/app/common/components/money/money.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { DebtOverviewFacade } from '~/modules/debt-overview/core/facades/debt-overview.facade';
 
-/**
- * "Você deve" no Início (smart, sucinto): o total **como o servidor calculou**, com link para a página de dívidas
- * totais (as três partes ficam lá). Nada cadastrado convida a cadastrar, sem número; erro degrada só este cartão
- * (o Início segue de pé) com "Tentar de novo". Escopo próprio: a facade nasce com o cartão.
- */
 @Component({
   selector: 'app-debt-summary-card',
   imports: [RouterLink, MoneyComponent],
   providers: [DebtOverviewFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Só o total e o link; as três partes ficam na página de dívidas totais. -->
     <section class="brief glass" aria-labelledby="home-debts-title" data-cy="home-debts-brief">
       <h2 class="brief__title" id="home-debts-title">{{ t().debtOverview.home.title }}</h2>
       @switch (overview.state().status) {
@@ -102,7 +96,6 @@ import { DebtOverviewFacade } from '~/modules/debt-overview/core/facades/debt-ov
       box-shadow: var(--focus-ring);
     }
 
-    /* Celular: título, total e link numa linha só (o gráfico fica com a altura). */
     @container (width < 40rem) {
       .brief {
         display: flex;

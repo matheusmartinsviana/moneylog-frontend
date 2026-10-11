@@ -44,12 +44,6 @@ export interface ActionCheckIn {
   readonly done: boolean;
 }
 
-/**
- * Plano da meta (presentational). Mostra o plano AUTOMÁTICO como sugestão (ritmo por mês, meses restantes,
- * marco do mês e "no ritmo"/"atrasado em": tudo do servidor, nada calculado aqui) e o plano DECLARADO: o
- * texto (`planNote`, até 500) e até 10 ações com check-in por período. As escritas saem por eventos; quem
- * usa (a página, via facade) manda ao servidor e devolve a meta atualizada. Nada move dinheiro.
- */
 @Component({
   selector: 'app-goal-plan',
   imports: [
@@ -72,11 +66,8 @@ export class GoalPlanComponent {
   protected readonly t = this.i18n.t;
 
   readonly goal = input.required<Goal>();
-  /** Escrita do plano em andamento: bloqueia os botões (sem envio duplicado). */
   readonly busy = input(false);
-  /** Meta arquivada não aceita edição do plano. */
   readonly locked = input(false);
-  /** Falha da última escrita, já traduzida. */
   readonly problem = input<string | null>(null);
 
   readonly noteSaved = output<string>();
@@ -95,7 +86,6 @@ export class GoalPlanComponent {
   });
   protected readonly noteChanged = signal(false);
 
-  /** Formulário da ação (modal). `editing`: `null` fechado; `''` nova; id = edição. */
   protected readonly editing = signal<string | null>(null);
   protected readonly removing = signal<GoalAction | null>(null);
   protected readonly actionForm = new FormGroup({
@@ -124,7 +114,6 @@ export class GoalPlanComponent {
     this.editing() === '' ? this.t().goals.plan.addTitle : this.t().goals.plan.editTitle,
   );
 
-  /** Texto do plano automático. `null` quando o servidor não devolveu ritmo. */
   protected readonly suggestion = computed(() => {
     const goal = this.goal();
     if (goal.requiredPace === null || goal.deadline === null) return null;
@@ -146,8 +135,6 @@ export class GoalPlanComponent {
   protected readonly today = todayIso();
 
   constructor() {
-    // Mostra sempre o texto que o servidor guarda; digitação em andamento não é sobrescrita por releituras
-    // iguais (o `effect` só roda quando `planNote` muda).
     effect(() => {
       const value = this.goal().planNote ?? '';
       untracked(() => {
@@ -239,7 +226,6 @@ export class GoalPlanComponent {
     return interpolate(this.t().goals.plan.removeAction, { title: action.title });
   }
 
-  /** Rótulo de um período já marcado: mês, semana ou "Feito". */
   protected periodLabel(period: string): string {
     const parts = parsePeriod(period);
     switch (parts.kind) {

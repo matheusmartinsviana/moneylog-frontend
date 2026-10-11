@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-/**
- * Confere o contraste WCAG dos pares texto/fundo de src/styles/tokens.css nos dois temas.
- * Mínimo 4,5:1 (texto normal, AA) e 3:1 para objetos gráficos (séries dos gráficos, borda de campos e anel de
- * foco, WCAG 1.4.11).
- * Os tokens `*-soft` (tintas) são hex sólido de propósito: este script só lê `#rrggbb`.
- * Imprime a tabela em Markdown (usada no README de styles/).
- */
 import { readFileSync } from 'node:fs';
 
 const css = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8');
@@ -13,23 +6,19 @@ const MIN = 4.5;
 const FOREGROUNDS = ['text', 'text-muted', 'accent', 'positive', 'warning', 'risk'];
 const BACKGROUNDS = ['canvas', 'surface', 'surface-muted', 'surface-inset'];
 const MIN_GRAPHIC = 3;
-/** Texto sobre a própria tinta (chip de variação, item ativo da sidebar). */
 const SOFT_PAIRS = [
   ['accent', 'accent-soft'],
   ['positive', 'positive-soft'],
   ['warning', 'warning-soft'],
   ['risk', 'risk-soft'],
   ['text', 'accent-soft'],
-  // Hover do `.button--soft`: tinta sólida (nada de `opacity`, que derrubava o contraste do texto).
   ['accent', 'accent-soft-hover'],
 ];
-/** Objetos gráficos (séries) sobre as superfícies onde o gráfico fica. */
 const GRAPHIC_PAIRS = [
   ['chart-1', 'surface'],
   ['chart-2', 'surface'],
   ['chart-1', 'surface-muted'],
   ['chart-2', 'surface-muted'],
-  // Borda de campos e controles interativos (WCAG 1.4.11): `--color-control-border` (BUG-QA-09, FE-S-236).
   ['control-border', 'surface'],
   ['control-border', 'surface-muted'],
   ['control-border', 'canvas'],
@@ -40,7 +29,6 @@ const GRAPHIC_PAIRS = [
   ['focus', 'surface-muted'],
 ];
 
-/** Extrai as variáveis --color-* de um bloco CSS. */
 function colors(block) {
   const map = {};
   for (const [, name, value] of block.matchAll(/--color-([a-z0-9-]+):\s*(#[0-9a-fA-F]{6})\s*;/g))
@@ -59,7 +47,6 @@ const mediaBlock = css.slice(
 );
 const themes = { claro: colors(lightBlock), escuro: colors(darkBlock) };
 
-// O bloco do sistema escuro e o [data-theme='dark'] precisam ser idênticos.
 if (JSON.stringify(colors(mediaBlock)) !== JSON.stringify(themes.escuro)) {
   console.error(
     "Os tokens de @media (prefers-color-scheme: dark) e de [data-theme='dark'] divergem.",
@@ -82,7 +69,6 @@ function ratio(a, b) {
 const blocks = { claro: lightBlock, escuro: darkBlock };
 const hex = (r, g, b) =>
   '#' + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
-/** Fundo de hover (`--color-hover-soft`, translúcido) composto sobre o fundo, para conferir o texto. */
 function hoverOver(block, bgHex) {
   const m = block.match(/--color-hover-soft:\s*rgb\((\d+) (\d+) (\d+) \/ (\d+)%\)/);
   if (!m) {

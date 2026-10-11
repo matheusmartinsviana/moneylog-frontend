@@ -13,12 +13,6 @@ import {
 } from './support';
 import { homeResponses, NOTE_ID } from './support/home-fixtures';
 
-/**
- * Projetos `webkit-iphone` (iPhone 14, WebKit) e `webkit-desktop` (Safari desktop): o motor do iOS
- * Safari/Safari. Cobre as rotas principais e os componentes de overlay (Select como folha em
- * celular, DatePicker, trava de rolagem). Limitação: é o WebKit do Playwright, não o iOS Safari
- * real (sem teclado virtual nem barra de endereço dinâmica); ver ADR-007.
- */
 const isPhone = (name: string): boolean => name === 'webkit-iphone';
 
 test.describe('WebKit: rotas principais', () => {
@@ -273,7 +267,6 @@ test.describe('WebKit: overlays', () => {
       await expect(panel).toHaveAttribute('aria-modal', 'true');
       const box = await panel.boundingBox();
       const viewport = page.viewportSize()!;
-      // Folha encostada embaixo e na largura toda; nada fora da tela.
       expect(Math.round(box!.x)).toBe(0);
       expect(Math.round(box!.width)).toBe(viewport.width);
       expect(Math.round(box!.y + box!.height)).toBeLessThanOrEqual(viewport.height);
@@ -329,7 +322,6 @@ test.describe('WebKit: overlays', () => {
     await seedPreferences(page, { language: 'pt' });
     await page.goto('/dev/ui-kit');
     await waitForApp(page);
-    // Um campo bem abaixo na página: a folha tem de segurar a posição de rolagem em que estava.
     const trigger = page.locator('[data-cy="light-month-default"]');
     await trigger.scrollIntoViewIfNeeded();
     const before = await page.evaluate(() => window.scrollY);
@@ -348,7 +340,6 @@ test.describe('WebKit: overlays', () => {
     expect(locked.overflow).toBe('hidden');
     expect(locked.top).toBe(`-${before}px`);
 
-    // Rolar por trás da folha não move a página (o corpo é `position: fixed`).
     await page.evaluate(() => window.scrollTo(0, 900));
     await page.waitForTimeout(150);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
@@ -386,11 +377,6 @@ test.describe('WebKit: overlays', () => {
   });
 });
 
-/**
- * Gate G-UI-E3 no WebKit (T157, T163, T164, T166): Menu como folha no iPhone, Dialog/Sheet (foco,
- * inert, trava de rolagem), NumberStepper por toque, Tabs e RadioGroup. As mesmas limitações do
- * WebKit do Playwright valem (sem teclado virtual nem iOS real).
- */
 test.describe('WebKit: componentes do gate G-UI-E3', () => {
   test('Menu: folha no celular (44 px), popover no desktop; Esc devolve o foco ao botão', async ({
     page,
@@ -416,7 +402,6 @@ test.describe('WebKit: componentes do gate G-UI-E3', () => {
     await expect(panel).toHaveCount(0);
     await expect(trigger).toBeFocused();
 
-    // Escolher um item fecha e já deixa o foco no botão (o Safari não foca no toque).
     if (isPhone(testInfo.project.name)) await trigger.tap();
     else await trigger.click();
     const item = page.locator('[data-cy="light-menu-default-item-export"]');
@@ -482,7 +467,6 @@ test.describe('WebKit: componentes do gate G-UI-E3', () => {
       expect(Math.round(box.y + box.height)).toBeLessThanOrEqual(viewport.height);
     } else {
       await expect(panel).toHaveAttribute('data-side', 'side');
-      // A folha desliza ao abrir: espera ela assentar na borda direita (a medida logo após abrir pode vir 1 px adiante).
       await expect
         .poll(async () => {
           const settled = (await panel.boundingBox())!;
@@ -556,7 +540,6 @@ test.describe('WebKit: Markdown hostil no Web Worker (F1)', () => {
 
       await expect(page.locator('[data-cy="note-text"]')).toBeVisible({ timeout: 20_000 });
       if (isPhone(testInfo.project.name)) {
-        // No celular a pré-visualização só desenha na aba "Ler".
         await page.locator('[data-cy="note-mode-tab-read"]').click();
       }
       await expect(page.locator('[data-cy="markdown-too-complex"]')).toBeVisible({

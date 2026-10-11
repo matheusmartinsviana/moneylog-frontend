@@ -77,7 +77,6 @@ export function anInsight(overrides: Partial<Insight> = {}): Insight {
   };
 }
 
-/** Porta de IA em memória; cada operação é um campo que o teste troca. */
 export class AiGatewayStub extends AiGateway {
   statusResult: () => Observable<AiStatus> = () => of(anAiStatus());
   previewResult: (request: AiPreviewRequest) => Observable<AiPreview> = () => of(anAiPreview());

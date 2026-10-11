@@ -30,12 +30,6 @@ import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 
-/**
- * Calendário de um mês (padrão "date picker dialog" do APG): grade `role="grid"` com roving tabindex.
- * Setas movem 1 dia/1 semana, Home/End início/fim da semana, PageUp/PageDown mês, Shift+PageUp/Down
- * ano, Enter/Espaço escolhe. Dias fora de `min`/`max` ficam desabilitados. Cabeçalho com mês
- * anterior/seguinte e troca de mês e ano. Só emite a data escolhida (`YYYY-MM-DD`).
- */
 @Component({
   selector: 'app-calendar',
   imports: [IconComponent, MonthGridComponent],
@@ -259,9 +253,7 @@ export class CalendarComponent {
   private readonly i18n = inject(I18nService);
   protected readonly t = this.i18n.t;
 
-  /** Data escolhida (`YYYY-MM-DD`). */
   readonly value = input<string | null>(null);
-  /** "Hoje" no fuso do usuário (`YYYY-MM-DD`). */
   readonly today = input.required<string>();
   readonly min = input(MIN_DATE);
   readonly max = input(MAX_DATE);
@@ -288,7 +280,6 @@ export class CalendarComponent {
     const start = weekStart(this.i18n.language());
     const short = new Intl.DateTimeFormat(this.locale(), { weekday: 'narrow', timeZone: 'UTC' });
     const long = new Intl.DateTimeFormat(this.locale(), { weekday: 'long', timeZone: 'UTC' });
-    // 2026-10-04 é domingo.
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(Date.UTC(2026, 9, 4 + ((start + i) % 7)));
       return { short: short.format(date), long: long.format(date) };
@@ -321,7 +312,6 @@ export class CalendarComponent {
     });
   }
 
-  /** Foca o dia em foco da grade (ao abrir o painel). */
   focusGrid(): void {
     afterNextRender(
       () =>

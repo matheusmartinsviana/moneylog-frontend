@@ -13,11 +13,6 @@ export type GoalMetricValueState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly metric: GoalMetric; readonly value: Money };
 
-/**
- * Valor atual da medida escolhida, para mostrar antes de criar a meta. Vem do servidor (a mesma fonte
- * das telas de dívidas, Início e custos fixos): nada é calculado aqui. Trocar a medida cancela a
- * leitura anterior (`switchMap`). Escopo de componente.
- */
 @Injectable()
 export class GoalMetricValueFacade {
   private readonly gateway = inject(GoalsGateway);
@@ -49,7 +44,6 @@ export class GoalMetricValueFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** Lê (ou relê, no "tentar de novo") o valor atual da medida; `null` limpa. */
   load(metric: GoalMetric | null): void {
     this.requests.next(metric);
   }

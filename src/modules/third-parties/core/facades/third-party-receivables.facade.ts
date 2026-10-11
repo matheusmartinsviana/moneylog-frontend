@@ -8,17 +8,10 @@ import { Problem, problemOf } from '~/util/api/problem';
 
 export type ThirdPartyReceivablesState =
   | { readonly status: 'loading' }
-  /** Ninguém deve nada ao usuário e nenhuma despesa de terceiro no mês. */
   | { readonly status: 'empty'; readonly data: ThirdPartyReceivables }
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: ThirdPartyReceivables };
 
-/**
- * Facade de "dinheiro a receber de terceiros": o mês vai na requisição e trocar de mês ou recarregar
- * **cancela** a anterior (`switchMap`). O estado é o que o backend devolveu, sem conta no front. A tela é
- * "vazia" quando não há pessoa e o mês não tem gasto bruto nem de terceiro (lido do `0` do servidor).
- * Escopo de componente.
- */
 @Injectable()
 export class ThirdPartyReceivablesFacade {
   private readonly gateway = inject(ThirdPartiesGateway);
@@ -27,7 +20,6 @@ export class ThirdPartyReceivablesFacade {
   private readonly monthState = signal<string | null>(null);
 
   readonly state = this.current.asReadonly();
-  /** `AAAA-MM` pedido; `null` = o mês atual do servidor. */
   readonly month = this.monthState.asReadonly();
   readonly data = computed(() => {
     const state = this.current();
@@ -67,7 +59,6 @@ export class ThirdPartyReceivablesFacade {
   }
 }
 
-/** O servidor mandou zero? (Só lê o texto decimal, sem aritmética.) */
 function isZero(amount: string): boolean {
   return /^-?0+(?:\.0+)?$/.test(amount);
 }

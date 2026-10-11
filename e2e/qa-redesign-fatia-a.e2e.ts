@@ -18,20 +18,11 @@ import {
 } from './support';
 import { homeResponses } from './support/home-fixtures';
 
-/**
- * QA da fatia A do redesign (T196), por um agente independente: o que os testes do dev não pegam.
- * Relatório: docs/qa/2026-10-11-qa-redesign-fatia-a.md. Capturas: docs/qa/evidencias/redesign/qa/.
- *
- * Os bugs que esta suíte pegou (BUG-QA-xx) foram corrigidos pelo dev-frontend e os `test.fail` viraram os
- * testes verdadeiros: nenhum foi enfraquecido. Cada título de `describe` cita o bug que ele guarda.
- */
-
 const ROUTE_PATHS: string[] = [...ROUTES.map((r) => r.path), '/settings/categories'];
 const WIDTHS = [320, 375, 390, 414, 768, 820, 1023, 1024, 1180, 1199, 1200, 1280, 1440, 1920];
 
 const heightFor = (width: number) => (width < 768 ? 812 : 800);
 
-/** Início com dados (o botão "+ Registrar" e o gráfico só existem com o resumo carregado). */
 async function openHomeWithAccounts(page: Page): Promise<void> {
   await seedMockResponses(page, homeResponses());
   await open(page, '/');
@@ -98,7 +89,6 @@ test.describe('layout: larguras do plano e transições de breakpoint', () => {
       const gap = await page.evaluate(() => {
         const nav = document.querySelector('[data-cy="bottom-nav"]')!.getBoundingClientRect();
         const content = document.querySelector('.shell__content')!.getBoundingClientRect();
-        // O fim do conteúdo (já sem o respiro reservado à barra) precisa ficar acima do topo da barra.
         return nav.top - (content.bottom - nav.height);
       });
       expect(gap, `${path}: respiro mínimo acima da barra`).toBeGreaterThanOrEqual(-1);
@@ -184,7 +174,6 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
       'sidebar-more',
       'sidebar-settings',
       'sidebar-signOut',
-      // Cabeçalho: busca, tema, sino e avatar.
       'global-search-input',
       'header-theme-toggle',
       'header-bell',
@@ -240,7 +229,6 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
       await page.locator('[data-cy="header-profile"]').click();
       await expect(page.locator('[role="menu"]')).toBeVisible();
       const violations = (await runAxe(page)).filter(
-        // Mesma exceção de `ui-kit.e2e.ts`: popover no portal do `body`, sem papel de diálogo.
         (v) => !(v.id === 'region' && v.targets.every((t) => t.includes('app-overlay-panel'))),
       );
       expect(violations, JSON.stringify(violations)).toEqual([]);
@@ -257,7 +245,6 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
     }
     await open(page, '/');
     await expect(page.locator('[data-cy="header-ai-status"]')).toHaveText('IA desligada');
-    // O logo é uma imagem decorativa (alt vazio); o nome acessível vem de BRAND_NAME.
     await expect(page.locator('[data-cy="sidebar-brand"] img')).toHaveCount(1);
     await expect(page.locator('[data-cy="sidebar-brand"]')).toHaveText('moneylog');
     await expect(page).toHaveTitle(/moneylog/);
@@ -375,7 +362,6 @@ test.describe('forced-colors (Windows alto contraste)', () => {
     await page.emulateMedia({ forcedColors: 'active' });
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, '/cards');
-    // Visual real em forced-colors: fundo igual ao do canvas (transparente ou `Canvas`) não distingue nada.
     const style = (cy: string) =>
       page.evaluate((key) => {
         const cs = getComputedStyle(document.querySelector(`[data-cy="${key}"] .sidebar__sq`)!);
@@ -412,7 +398,6 @@ test.describe('BUG-QA-07 · texto ampliado em tela estreita', () => {
       await open(page, '/');
       await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
       await expectNoHorizontalScroll(page);
-      // Nada do cabeçalho fica para fora da tela: o chip e o avatar quebram de linha.
       const outside = await page.evaluate(() =>
         [...document.querySelectorAll('[data-cy="workspace-header"] *')]
           .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 0.5)
@@ -443,8 +428,6 @@ for (const scheme of ['light', 'dark'] as const) {
   }
 }
 
-/* ------------------------------------------------------------------ gráficos */
-
 interface Money {
   amount: string;
   currency: string;
@@ -465,11 +448,6 @@ const series = (id: string, tone: 'primary' | 'secondary', values: string[]): Ch
   values: values.map(brl),
 });
 
-/**
- * O gráfico só recebe dados por entradas de sinal; a página do UI Kit tem cenários fixos. Para exercitar
- * valores extremos sem tocar no código do app, o teste troca as entradas pelo depurador do Angular
- * (`window.ng`, só existe no build de desenvolvimento = projeto `mock`).
- */
 async function feedChart(
   page: Page,
   data: { series: ChartSeries[]; keys: { id: string; label: string }[]; label?: string },
@@ -644,7 +622,6 @@ test.describe('gráficos: valores extremos (UI Kit, mock)', () => {
       return { pending: svg.classList.contains('is-pending'), transition: cs.transitionDuration };
     });
     expect(info.pending).toBe(false);
-    // O Chromium converte `0ms` em 0,00001s (reset de movimento reduzido): na prática, sem transição.
     expect(Number.parseFloat(info.transition)).toBeLessThan(0.001);
   });
 
@@ -729,8 +706,6 @@ test.describe('gráficos: valores extremos (UI Kit, mock)', () => {
   });
 });
 
-/* ------------------------------------------------- alvos de toque, contraste e hierarquia */
-
 test.describe('A4 / BUG-QA-12 · alvos de toque e hover sem perder contraste', () => {
   test.describe('ponteiro grosso (tablet com toque, 820 px)', () => {
     test.use({ hasTouch: true, viewport: { width: 820, height: 1180 } });
@@ -781,7 +756,6 @@ test.describe('A4 / BUG-QA-12 · alvos de toque e hover sem perder contraste', (
         return { color: cs.color, background: cs.backgroundColor, opacity: cs.opacity };
       });
       expect(state.opacity).toBe('1');
-      // O fundo do hover é translúcido: o contraste é medido contra o cartão por trás dele.
       const card = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
       expect(contrastRatio(state.color, card)).toBeGreaterThanOrEqual(4.5);
     });
@@ -832,7 +806,6 @@ test.describe('BUG-QA-06a · foco em forced-colors também nos campos', () => {
     await page.emulateMedia({ forcedColors: 'active' });
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, '/accounts/new');
-    // Foco por teclado (:focus-visible): anda com Tab até o primeiro campo de texto do formulário.
     let outline = { style: 'none', width: 0 };
     for (let i = 0; i < 12; i++) {
       await page.keyboard.press('Tab');
@@ -876,7 +849,6 @@ test.describe('M6 · cabeçalho do Início e espaço do logo', () => {
     const slot = page.locator('.sidebar__logo-slot');
     await expect(slot).toHaveCount(1);
     expect(await slot.evaluate((el) => el.childNodes.length)).toBe(0);
-    // O quadrado da marca e os ícones do trilho ficam na mesma coluna (centros alinhados).
     const centers = await page.evaluate(() => {
       const center = (el: Element | null) => {
         const r = el!.getBoundingClientRect();

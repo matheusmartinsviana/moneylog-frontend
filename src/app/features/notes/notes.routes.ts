@@ -15,7 +15,6 @@ const routes: Routes = [
         path: ':id',
         component: NotePage,
         title: pageTitle('notes'),
-        // Alterações não salvas: o ConfirmDialog "Sair sem salvar?" da própria página decide.
         canDeactivate: [(page: NotePage) => page.confirmLeave()],
       },
     ],

@@ -28,17 +28,9 @@ export type AccountsListState =
 
 const LOADING: AccountsListState = { status: 'loading' };
 
-/**
- * Facade de negócio da lista de contas (FE 01). Expõe `loading`/`empty`/`error`/`data` por signals e
- * repassa o que a API devolveu: `currentBalance`, `openingEditable` e `archivable` chegam como vieram
- * (nenhuma soma de saldos no front). Depois de arquivar/desarquivar, usa o recurso da resposta.
- *
- * Escopo de componente (`providers: [AccountsListFacade]`): o estado nasce a cada visita.
- */
 @Injectable()
 export class AccountsListFacade {
   private readonly gateway = inject(AccountsGateway);
-  /** No Início o saldo (derivado do razão) entra na fila de leituras, depois do dashboard (R13). */
   private readonly gate = inject(LEDGER_GATE, { optional: true });
   private readonly loads = new Subject<AccountStatus | undefined>();
   private readonly current = signal<AccountsListState>(LOADING);
@@ -59,7 +51,6 @@ export class AccountsListFacade {
   constructor() {
     this.loads
       .pipe(
-        // switchMap: trocar de aba (ativas × arquivadas) descarta a carga anterior.
         switchMap((status) =>
           this.gated(this.loadAll(status)).pipe(
             map((data): AccountsListState =>
@@ -80,16 +71,11 @@ export class AccountsListFacade {
     return this.gate ? this.gate.run(source, 5) : source;
   }
 
-  /** Carrega (ou recarrega, no "tentar de novo") as contas do filtro; `undefined` = todas. */
   load(status?: AccountStatus): void {
     this.filter = status;
     this.loads.next(status);
   }
 
-  /**
-   * Todas as contas do filtro, pedindo `pageSize=50` e paginando até `hasNext=false` (S-91). É o que
-   * a lista e os selects de conta usam: a 11ª conta não pode sumir.
-   */
   loadAll(status?: AccountStatus): Observable<readonly Account[]> {
     const page = (n: number) => this.gateway.list({ status, page: n, pageSize: MAX_PAGE_SIZE });
     return page(1).pipe(
@@ -109,7 +95,6 @@ export class AccountsListFacade {
     return this.gateway.unarchive(id).pipe(tap((account) => this.replace(account)));
   }
 
-  /** Troca a conta pelo recurso da resposta; sai da lista se deixou de casar com o filtro. */
   private replace(account: Account): void {
     const state = this.current();
     if (state.status !== 'ready') return;

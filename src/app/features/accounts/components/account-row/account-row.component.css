@@ -1,11 +1,10 @@
-/* Cartão Wallet (T213): glifo + nome/tipo/instituição, saldo grande à direita da mesma faixa, ações embaixo. */
 :host {
   display: grid;
   list-style: none;
 }
 
 :host(.row) {
-  position: relative; /* contém o link esticado (cartão inteiro clicável) */
+  position: relative;
   grid-template-columns: auto minmax(0, 1fr);
   grid-template-areas:
     'glyph main'
@@ -121,7 +120,6 @@
   font-weight: var(--weight-medium);
 }
 
-/* Botões do cartão ficam acima do link esticado. */
 .row__actions {
   position: relative;
   z-index: var(--z-content);

@@ -12,10 +12,6 @@ import { transactionLabel } from '~/app/features/transactions/transaction-label'
 import type { Transaction } from '~/modules/transactions/core/types/transaction';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Visão Registros: tabela no desktop (Data · Descrição · Tipo · Categoria · Conta · Método · Valor)
- * e lista de itens no celular. Linhas navegáveis por setas e Enter abre o detalhe. Presentational.
- */
 @Component({
   selector: 'app-records-table',
   imports: [MoneyComponent, IconComponent, TransactionListItemComponent],
@@ -28,7 +24,6 @@ export class RecordsTableComponent {
   protected readonly t = this.i18n.t;
 
   readonly items = input.required<readonly Transaction[]>();
-  /** Filtro de conta ativo (define o sentido da transferência). */
   readonly accountId = input<string | null>(null);
   readonly open = output<Transaction>();
 
@@ -55,7 +50,6 @@ export class RecordsTableComponent {
       : labels.types[tx.type];
   }
 
-  /** Conta (ou, nas movimentações de cartão, o cartão). */
   protected accountLabel(tx: Transaction): string {
     const from = tx.account?.name ?? tx.card?.name ?? '';
     return tx.counterpartAccount ? `${from} → ${tx.counterpartAccount.name}` : from;
@@ -69,7 +63,6 @@ export class RecordsTableComponent {
     return interpolate(this.t().transactions.open, { description: this.title(tx) });
   }
 
-  /** Setas sobem e descem entre as linhas; Enter abre. */
   protected onKeydown(event: KeyboardEvent, tx: Transaction): void {
     const row = event.currentTarget as HTMLElement;
     if (event.key === 'Enter') {

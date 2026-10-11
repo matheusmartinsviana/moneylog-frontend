@@ -24,12 +24,10 @@ async function setup(source: string, links: readonly NoteLink[] = []) {
     providers: [provideI18nTesting('pt'), provideRouter([]), provideFakeMarkdownWorker()],
   });
   const root = result.container.querySelector('.md') as HTMLElement;
-  // O parsing roda num executor assíncrono (sem Worker no jsdom: ramo em thread principal, só texto curto).
   await waitFor(() => expect(root).not.toHaveAttribute('aria-busy'));
   return { ...result, created, root };
 }
 
-/** O que nenhum Markdown pode produzir no DOM, qualquer que seja a entrada (S-159). */
 const FORBIDDEN_TAGS = [
   'script',
   'iframe',

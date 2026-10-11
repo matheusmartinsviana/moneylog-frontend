@@ -1,7 +1,6 @@
 import type { AppI18n } from '~/app/common/i18n/i18n';
 import { BRAND_NAME } from '~/app/config/brand';
 
-/** English. */
 export const en: AppI18n = {
   shell: {
     brand: BRAND_NAME,
@@ -571,7 +570,6 @@ export const en: AppI18n = {
       on: 'On',
       off: 'Off',
     },
-    /** Fechar um formulário em modal com alterações não salvas. */
     discard: {
       title: 'Discard your changes?',
       description: 'What you filled in and did not save will be lost.',

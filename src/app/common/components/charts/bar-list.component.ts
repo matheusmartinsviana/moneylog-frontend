@@ -8,14 +8,11 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { formatMoney, type Money } from '~/util/money';
 import { formatRatio, ratioForBar } from '~/util/ratio';
 
-/** Um item já calculado pelo backend (`GET /v1/reports/spending-by-category`). */
 export interface BarListItem {
   readonly id: string;
   readonly label: string;
   readonly amount: Money;
-  /** Razão decimal (`0.2007`) ou `null` (sem base): `null` esconde a barra e o percentual. */
   readonly share: string | null;
-  /** Torna o rótulo um link (ex.: as movimentações da categoria); `label` é o nome acessível do link. */
   readonly link?: BarListLink;
 }
 
@@ -25,21 +22,12 @@ export interface BarListLink {
   readonly label: string;
 }
 
-/** "Outras": as categorias que o backend agrupou; o último item da lista. */
 export interface BarListOther {
   readonly amount: Money;
   readonly share: string | null;
   readonly categories: number;
 }
 
-/**
- * Barras horizontais de categoria (DS 02, M34; o donut foi descartado: exige ângulo e legenda e lê pior por
- * teclado). Lista semântica (`<ul>`): o **valor e o percentual estão em texto** e a barra é só reforço
- * (`aria-hidden`), então a cor nunca é o único sinal. O `share` vem do backend e é só **formatado**
- * (`formatRatio`); a largura da barra posiciona esse mesmo número, sem aritmética. Valor negativo usa o tom
- * de risco com o sinal no texto. Entra na viewport revelando as barras (≤ 300 ms; sem animação com
- * `prefers-reduced-motion`). Presentational.
- */
 @Component({
   selector: 'app-bar-list',
   imports: [RouterLink],
@@ -74,7 +62,6 @@ export interface BarListOther {
           </div>
           @if (row.bar !== null) {
             <div class="bl__track" aria-hidden="true">
-              <!-- Largura = o share do backend (posicionamento, não conta). -->
               <!-- eslint-disable-next-line @angular-eslint/template/no-inline-styles -->
               <div class="bl__fill" [style.width.%]="row.bar"></div>
             </div>
@@ -111,7 +98,6 @@ export interface BarListOther {
       text-decoration: none;
     }
 
-    /* Alvo de toque de 44 px sem mudar o desenho da linha. */
     @media (pointer: coarse) {
       .bl__link {
         padding-block: var(--space-3);
@@ -159,7 +145,6 @@ export interface BarListOther {
       transition: clip-path var(--duration-slow) var(--ease-emphasized);
     }
 
-    /* Revela as barras da esquerda para a direita quando a lista entra na viewport. */
     .bl.is-pending .bl__fill {
       clip-path: inset(0 100% 0 0);
     }
@@ -231,7 +216,6 @@ export class BarListComponent {
         negative: row.amount.amount.startsWith('-'),
         amountText: formatMoney(row.amount),
         shareText: row.share === null ? '' : formatRatio(row.share, locale),
-        // Posiciona a barra (0 a 100%); o valor negativo e o fora do formato não desenham barra.
         bar: bar === null ? null : Math.min(100, Math.max(0, Math.round(bar * 10_000) / 100)),
       };
     });

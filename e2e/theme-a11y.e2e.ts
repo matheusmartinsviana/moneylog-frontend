@@ -11,8 +11,6 @@ import {
   waitForApp,
 } from './support';
 
-/** T15 CA 1 (tema real no navegador) e T20 CA 5 (axe no shell e nos estados vazios). */
-
 test.describe('tema claro e escuro', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
@@ -67,9 +65,6 @@ test.describe('tema claro e escuro', () => {
     expect(duration.split(',').every((d) => parseFloat(d) <= 0.01)).toBe(true);
   });
 
-  // DS 02 / ADR-011: a pilha começa na fonte do sistema (SF em aparelho Apple) e o Geist, empacotado, é o
-  // fallback. Por isso o teste não exige mais que o Geist renderize a página (em macOS ele nem é usado):
-  // confere a ordem da pilha e que o Geist carrega do próprio domínio quando é pedido (onde a SF não existe).
   test('a pilha de fontes começa na do sistema e o Geist é o fallback empacotado', async ({
     page,
   }) => {
@@ -82,9 +77,6 @@ test.describe('tema claro e escuro', () => {
     expect(families.indexOf('Geist Variable')).toBeGreaterThan(families.indexOf('SF Pro Text'));
   });
 
-  // M7: onde não há a SF (Linux, Windows) é o Geist que renderiza o texto. Tira da pilha real as fontes de
-  // sistema da Apple e mede o mesmo texto com o que sobra e com `sans-serif`: larguras diferentes provam que
-  // uma fonte própria (o Geist empacotado, já carregado) pintou o texto.
   test('sem a SF na pilha, o Geist empacotado é quem renderiza o texto', async ({ page }) => {
     await page.goto('/');
     await waitForApp(page);
@@ -125,7 +117,6 @@ test.describe('tema claro e escuro', () => {
     });
     await page.goto('/');
     await waitForApp(page);
-    // Pede o Geist de propósito: num aparelho Apple a página renderiza em SF e não o baixaria sozinha.
     await page.evaluate(() => document.fonts.load('16px "Geist Variable"'));
     const loaded = await page.evaluate(() =>
       [...document.fonts].filter((f) => f.status === 'loaded').map((f) => f.family),
@@ -148,7 +139,6 @@ for (const viewport of ['mobile', 'desktop'] as ViewportName[]) {
           await waitForApp(page);
           const violations = await runAxe(page);
           for (const v of violations) {
-            // `region` entra no relatório para travar a regressão do BUG-03 (conteúdo fora de landmark).
             if (v.impact === 'critical' || v.impact === 'serious' || v.id === 'region') {
               report.push(`${route} · ${v.impact} · ${v.id}: ${v.help} → ${v.targets.join(' | ')}`);
             } else {

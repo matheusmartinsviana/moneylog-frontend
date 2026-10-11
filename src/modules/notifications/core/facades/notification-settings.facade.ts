@@ -11,10 +11,6 @@ export type SettingsState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly settings: NotificationSettings };
 
-/**
- * Facade das configurações de notificação. Salvar usa `version` (lock otimista) e `exhaustMap`; o resultado
- * é o que o backend devolveu. `409` (`VERSION_CONFLICT`) recarrega as configurações atuais. Escopo de componente.
- */
 @Injectable()
 export class NotificationSettingsFacade {
   private readonly gateway = inject(NotificationsGateway);
@@ -32,7 +28,6 @@ export class NotificationSettingsFacade {
   });
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
-  /** Verdadeiro depois de um salvar bem-sucedido, até a próxima edição. */
   readonly saved = this.savedState.asReadonly();
 
   constructor() {

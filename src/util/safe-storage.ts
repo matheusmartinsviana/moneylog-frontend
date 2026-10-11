@@ -1,7 +1,3 @@
-/**
- * Acesso ao localStorage que nunca quebra a tela: em aba privada, storage bloqueado ou
- * ambiente sem `window`, as leituras devolvem `null` e as escritas são ignoradas.
- */
 function storage(): Storage | null {
   try {
     return typeof window === 'undefined' ? null : window.localStorage;
@@ -21,15 +17,11 @@ export function readStorage(key: string): string | null {
 export function writeStorage(key: string, value: string): void {
   try {
     storage()?.setItem(key, value);
-  } catch {
-    // Preferência só deixa de persistir; a tela continua funcionando.
-  }
+  } catch {}
 }
 
 export function removeStorage(key: string): void {
   try {
     storage()?.removeItem(key);
-  } catch {
-    // Idem.
-  }
+  } catch {}
 }

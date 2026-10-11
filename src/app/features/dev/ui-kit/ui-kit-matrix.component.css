@@ -38,7 +38,6 @@
 
 .kit__cell {
   display: grid;
-  /* minmax(0, 1fr): um filho que rola na horizontal (abas, segmentado) não estica a coluna. */
   grid-template-columns: minmax(0, 1fr);
   align-content: start;
   gap: var(--space-2);
@@ -53,7 +52,6 @@
   font-size: var(--text-sm);
 }
 
-/* Foco simulado com o anel do token: `:focus-visible` não pode ficar ligado em vários campos. */
 .kit__cell--focus
   :is(
     input,

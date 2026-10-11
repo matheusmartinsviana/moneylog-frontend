@@ -13,10 +13,6 @@ import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-/**
- * Facade de requisições do resumo mensal (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS` ligado,
- * devolve o mês vazio e não faz requisição.
- */
 @Injectable({ providedIn: 'root' })
 export class MonthlySummaryRequestsFacade extends MonthlySummaryGateway {
   private readonly http = inject(HttpClient);

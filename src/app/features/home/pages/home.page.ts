@@ -33,16 +33,6 @@ import type { ReportPeriod } from '~/modules/reports/core/types/reports';
 import { LEDGER_GATE, LedgerGate } from '~/util/api/ledger-gate';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Início (smart, **sucinto**): cabe na tela sem rolar (regra em `src/styles/README.md`, ADR-011) e só mostra o
- * essencial: saldo em contas, gasto, receita e resultado do mês com a taxa de poupança, os próximos compromissos
- * (até 3, próximos 7 dias), "Você deve", a meta em destaque e o gráfico compacto de entradas e saídas, mais o
- * botão "+ Registrar". O resto mudou de lugar sem sair do app: contas em Contas, movimentações em Movimentações,
- * gasto por categoria no Resumo do mês, compromissos completos e patrimônio no Panorama de Planejamento,
- * insights em Insights. Fala só com as facades de negócio (FE 01) e trata carregando, vazio, erro (com tentar de
- * novo), sem permissão e dados; **cada bloco tem o próprio estado** e as leituras do razão entram numa fila por
- * prioridade, no máximo 2 em voo (R13, `LedgerGate`). Nenhum valor, percentual ou variação é calculado aqui.
- */
 @Component({
   selector: 'app-home-page',
   imports: [
@@ -57,7 +47,6 @@ import { formatIsoDate } from '~/util/date';
     EmptyStateComponent,
   ],
   providers: [
-    // Uma fila por visita: no máximo 2 leituras do razão em voo (R13, ADR-008).
     { provide: LEDGER_GATE, useFactory: () => new LedgerGate() },
     DashboardFacade,
     GoalsListFacade,
@@ -77,10 +66,8 @@ export class HomePage implements OnInit {
   protected readonly overview = inject(SpendingOverviewFacade);
   private readonly viewport = inject(ViewportService);
 
-  /** "Cabe sem rolar" só em tela maior; no celular a Início rola como uma página normal (sem rolagem por dentro). */
   protected readonly fit = computed(() => !this.viewport.compact());
 
-  /** Estado vazio: "Adicionar conta" leva ao cadastro; importar segue indisponível (S-33). */
   protected readonly emptyActions = computed<readonly EmptyStateAction[]>(() => {
     const copy = this.t().emptyState.home;
     return [
@@ -108,7 +95,6 @@ export class HomePage implements OnInit {
 
   private readonly locale = computed(() => HTML_LANG[this.i18n.language()]);
 
-  /** Estado do resumo mensal para o KPI (que só distingue carregando, erro e pronto). */
   protected readonly monthlyStatus = computed(() => {
     const status = this.monthly.state().status;
     return status === 'ready'
@@ -118,7 +104,6 @@ export class HomePage implements OnInit {
         : ('loading' as const);
   });
 
-  /** Estado da meta em destaque: `empty` (sem metas) é "pronto" com lista vazia. */
   protected readonly goalsStatus = computed(() => {
     const status = this.goals.state().status;
     return status === 'error'
@@ -129,7 +114,6 @@ export class HomePage implements OnInit {
   });
 
   constructor() {
-    // Dashboard pronto (ou recarregado): o resto do Início carrega por prioridade.
     effect(() => {
       const data = this.dashboard.data();
       if (data === null) return;
@@ -142,10 +126,6 @@ export class HomePage implements OnInit {
     this.goals.load('ACTIVE', true);
   }
 
-  /**
-   * Os demais blocos usam a competência do **backend**; a fila (`LedgerGate`) decide a ordem. O período do gráfico
-   * escolhido pelo usuário é mantido numa recarga.
-   */
   private loadSecondary(summary: DashboardSummary): void {
     this.monthly.load(summary.month.competence);
     this.overview.load(this.overview.period());

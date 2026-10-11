@@ -1,4 +1,3 @@
-/** Endpoints de IA (Etapa 8). Contrato: tag AI. */
 export const AI_ENDPOINTS = {
   status: '/v1/ai/status',
   previews: '/v1/ai/previews',

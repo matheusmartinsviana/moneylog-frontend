@@ -26,15 +26,6 @@ import type { ImportLine, ImportLinePatch } from '~/modules/imports/core/types/i
 const METHODS = ['CASH', 'DEBIT', 'PIX', 'TRANSFER', 'BOLETO', 'OTHER'] as const;
 type Mode = 'edit' | 'force' | 'transfer' | 'installment';
 
-/**
- * Decisão sobre uma linha (presentational), numa folha:
- * - `POSSIBLE_TRANSFER` pendente: "é transferência para a conta X" ou "é gasto/receita";
- * - `LOOKS_LIKE_INSTALLMENT`: importar como compra à vista ou ignorar (ligar a uma compra existente não
- *   existe no backend);
- * - `DUPLICATE`: "Forçar importação" (explícito);
- * - demais: editar categoria, método e descrição (e "lembrar esta categoria").
- * Devolve o corpo do `PATCH`; quem usa o envia. Categoria é obrigatória ao aceitar como gasto/receita.
- */
 @Component({
   selector: 'app-decision-sheet',
   imports: [

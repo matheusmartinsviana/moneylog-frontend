@@ -8,10 +8,6 @@ import {
 } from '~/util/markdown/markdown-render';
 import { handleMarkdownRequest } from '~/util/markdown/markdown-worker-handler';
 
-/**
- * Executor falso do Markdown para os testes (jsdom não tem `Worker`). `handle` decide o que fazer com cada
- * pedido: `respond` devolve o resultado (pelo parser real ou por um falso), `ignore` simula um lexer preso.
- */
 export interface FakeMarkdownWorker extends MarkdownWorkerHandle {
   readonly requests: MarkdownWorkerRequest[];
   terminated: boolean;
@@ -19,12 +15,10 @@ export interface FakeMarkdownWorker extends MarkdownWorkerHandle {
 
 export type FakeBehavior = (request: MarkdownWorkerRequest, worker: FakeMarkdownWorker) => void;
 
-/** Responde na hora com o parser real (o que o worker de verdade faria). */
 export const respondWithRealParser: FakeBehavior = (request, worker) => {
   worker.onmessage?.({ data: handleMarkdownRequest(request) });
 };
 
-/** Nunca responde: simula um lexer que se enrola (o tempo limite é o que resolve). */
 export const neverRespond: FakeBehavior = () => undefined;
 
 export function fakeMarkdownWorkerFactory(
@@ -39,7 +33,6 @@ export function fakeMarkdownWorkerFactory(
       onerror: null,
       postMessage(request) {
         worker.requests.push(request);
-        // O worker de verdade responde de forma assíncrona.
         queueMicrotask(() => {
           if (!worker.terminated) behavior(request, worker);
         });

@@ -3,7 +3,6 @@ import type { MonthlySummaryResponse } from '~/modules/monthly-summary/infra/res
 const zero = { amount: '0.00', currency: 'BRL' as const };
 const noDelta = { amount: zero, percent: null };
 
-/** Ambiente mock (S-67): mês sem nenhum registro. Mesmo formato bruto da API. */
 export function emptySummary(month: string): MonthlySummaryResponse {
   return {
     competence: month,
@@ -34,7 +33,6 @@ export function emptySummary(month: string): MonthlySummaryResponse {
   };
 }
 
-/** Só rótulo do mês anterior no mock vazio (texto `YYYY-MM`, sem relógio e sem valores). */
 function previousMonth(month: string): string {
   const [year, number] = month.split('-').map(Number) as [number, number];
   return number === 1 ? `${year - 1}-12` : `${year}-${String(number - 1).padStart(2, '0')}`;

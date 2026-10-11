@@ -21,12 +21,6 @@ import { AiConsentFacade } from '~/modules/ai/core/facades/ai-consent.facade';
 import type { AiRunnablePurpose } from '~/modules/ai/core/types/ai';
 import { formatCompetence } from '~/util/date';
 
-/**
- * Fluxo "prévia, consentimento, resultado" da IA (T149). Abre, pede a prévia ao backend e mostra **o conteúdo
- * exato** (`redactedPayload`) que seria enviado; só o botão "Enviar à IA" aprova. O resultado leva o rótulo
- * "Gerado por IA" e o aviso de revisão; se a IA não produziu texto (`fallback`), explica sem erro bloqueante e
- * leva aos insights calculados. A tela que usa controla `open`. Smart (fala com a facade do consentimento).
- */
 @Component({
   selector: 'app-ai-ask-dialog',
   imports: [NgTemplateOutlet, DialogComponent, DisclosureComponent, RouterLink],
@@ -270,7 +264,6 @@ export class AiAskDialogComponent {
 
   readonly open = input.required<boolean>();
   readonly purpose = input.required<AiRunnablePurpose>();
-  /** Competência `AAAA-MM`; `null` = mês corrente do backend. */
   readonly month = input<string | null>(null);
   readonly closed = output<void>();
 

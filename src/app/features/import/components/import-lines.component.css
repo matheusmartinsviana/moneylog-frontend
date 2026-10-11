@@ -78,11 +78,6 @@
   font-weight: var(--weight-medium);
 }
 
-/*
- * Celular e tablet (< 960 px): cartão compacto de 4 linhas (descrição e valor; data e situação; categoria e forma;
- * ações), sem os rótulos (seguem no DOM para leitores de tela e no `aria-label` da linha), e a lista rola dentro do
- * próprio painel, em vez de alongar a página (auditoria mobile: 3277 px no 390).
- */
 @media (width < 960px) {
   .list {
     max-height: min(34rem, 68dvh);
@@ -152,7 +147,6 @@
   }
 }
 
-/* Desktop: tabela estilo planilha. */
 @media (width >= 960px) {
   .head,
   .line {

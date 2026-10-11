@@ -31,7 +31,6 @@ export type PersonLoadState =
 
 const NAME_DEBOUNCE_MS = 300;
 
-/** Compara nomes sem diferenciar maiúsculas, acentos e espaços nas pontas (só para o aviso de homônimo). */
 export function sameName(a: string, b: string): boolean {
   const norm = (text: string) =>
     text
@@ -42,13 +41,6 @@ export function sameName(a: string, b: string): boolean {
   return norm(a) === norm(b);
 }
 
-/**
- * Facade do formulário de pessoa (criar e editar). O salvar usa `exhaustMap` (clique duplo = uma
- * requisição) e devolve **a pessoa da resposta**. Falhas chegam tipadas em `problem`. `checkName`
- * pergunta ao backend, com espera de 300 ms, se já há alguém com o nome digitado: homônimos são
- * aceitos (S-138), então é só um **aviso** (`homonym`). A criação leva `Idempotency-Key` (uma por
- * tentativa, reutilizada no retry da mesma entrada depois de falha ambígua). Escopo de componente.
- */
 @Injectable()
 export class PersonFormFacade {
   private readonly gateway = inject(PeopleGateway);
@@ -66,10 +58,8 @@ export class PersonFormFacade {
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly loadStatus = this.loadState.asReadonly();
-  /** A pessoa carregada; durante uma recarga (ex.: depois de um 409) continua a anterior. */
   readonly person = this.loaded.asReadonly();
   readonly homonym = computed(() => this.homonymState());
-  /** Emite a pessoa devolvida pela API quando o salvar dá certo. */
   readonly saved$ = this.savedEvents.asObservable();
 
   constructor() {
@@ -125,7 +115,6 @@ export class PersonFormFacade {
                 map((slice) =>
                   slice.items.some((item) => item.id !== selfId && sameName(item.name, name)),
                 ),
-                // O aviso é só uma ajuda: se a busca falha, o salvar continua possível.
                 catchError(() => of(false)),
               ),
         ),
@@ -134,12 +123,10 @@ export class PersonFormFacade {
       .subscribe((exists) => this.homonymState.set(exists));
   }
 
-  /** Carrega a pessoa para edição (também recarrega depois de um `409 VERSION_CONFLICT`). */
   load(id: string): void {
     this.loads.next(id);
   }
 
-  /** Descarta a falha mostrada (ex.: depois de o usuário escolher recarregar num conflito de versão). */
   dismissProblem(): void {
     this.problemState.set(null);
   }
@@ -148,7 +135,6 @@ export class PersonFormFacade {
     this.saves.next(command);
   }
 
-  /** Nome digitado: avisa se já existe uma pessoa com ele (`selfId` exclui a própria na edição). */
   checkName(name: string, selfId: string | null = null): void {
     this.names.next({ name: name.trim(), selfId });
   }

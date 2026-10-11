@@ -12,10 +12,6 @@ export type InsightsState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly items: readonly Insight[] };
 
-/**
- * Insights determinísticos do mês (`GET /v1/insights`). Valem sem IA. Mudar o mês cancela o pedido anterior.
- * Escopo de componente.
- */
 @Injectable()
 export class InsightsFacade {
   private readonly gateway = inject(AiGateway);
@@ -50,7 +46,6 @@ export class InsightsFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** `null` = mês corrente do backend. */
   load(month: string | null): void {
     this.last = month;
     this.loads.next(month);

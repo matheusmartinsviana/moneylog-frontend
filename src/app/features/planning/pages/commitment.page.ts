@@ -40,12 +40,6 @@ import {
 import { formatCompetence, formatIsoDate, todayIso } from '~/util/date';
 import { formatRatio } from '~/util/ratio';
 
-/**
- * Detalhe do compromisso (`/planning/commitments/:id`, smart): resumo e cronograma **como o servidor
- * calculou**, "marcar parcela paga" (só acompanhamento: nenhuma conta é movimentada) e, no empréstimo de
- * terceiro, "atualizar progresso" (só o que o usuário informa; não há saldo restante). A resposta do
- * backend é o novo estado; conflito de versão relê o compromisso.
- */
 @Component({
   selector: 'app-commitment-page',
   imports: [
@@ -75,7 +69,6 @@ export class CommitmentPage {
   protected readonly facade = inject(CommitmentDetailFacade);
   protected readonly currency = COMMITMENT_CURRENCY;
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
   protected readonly commitment = this.facade.commitment;
@@ -121,7 +114,6 @@ export class CommitmentPage {
       const id = this.id();
       untracked(() => this.facade.load(id));
     });
-    // A tela de progresso começa com o que o backend devolveu (e acompanha cada resposta nova).
     effect(() => {
       const c = this.commitment();
       untracked(() => {

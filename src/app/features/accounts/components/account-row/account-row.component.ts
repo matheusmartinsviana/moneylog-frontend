@@ -23,12 +23,6 @@ const ICON: Readonly<Record<AccountType, IconName>> = {
   INVESTMENT: 'insights',
 };
 
-/**
- * Uma conta na lista, no estilo Wallet do workspace (DS 02, T213): cartão com glifo em tom do tipo (o mesmo do
- * Início), sem parecer cartão físico. Presentational: mostra o saldo
- * que a API calculou (`currentBalance`, nunca somado aqui) e só habilita "Arquivar" quando
- * `archivable` é `true`. Saldo negativo aparece na cor de risco e sem bloquear nada (S-5).
- */
 @Component({
   selector: 'li[app-account-row]',
   imports: [RouterLink, IconComponent, MoneyComponent, AccountTypeLabelComponent],

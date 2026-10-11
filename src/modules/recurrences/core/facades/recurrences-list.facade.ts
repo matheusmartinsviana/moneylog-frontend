@@ -37,12 +37,6 @@ type RowAction =
 
 const LOADING = { status: 'loading' } as const;
 
-/**
- * Facade da lista de recorrências (FE 01) e do resumo "custo fixo mensal" / "receita recorrente mensal"
- * (estimativa, S-146): ambos vêm do backend, sem soma no front. O resumo tem estado próprio (uma falha
- * nele não esconde a lista). Encerrar e desativar usam `exhaustMap`, substituem a recorrência pela
- * resposta e recarregam o resumo do backend (uma recorrência desativada deixa de contar). Escopo de componente.
- */
 @Injectable()
 export class RecurrencesListFacade {
   private readonly gateway = inject(RecurrencesGateway);
@@ -68,11 +62,8 @@ export class RecurrencesListFacade {
     const state = this.current();
     return state.status === 'error' ? state.problem : null;
   });
-  /** Encerrar/desativar em andamento. */
   readonly busy = this.busyState.asReadonly();
-  /** Falha da última ação de linha (`RECURRENCE_INVALID`...). */
   readonly problem = this.problemState.asReadonly();
-  /** Emite a recorrência devolvida pela API quando encerrar ou desativar dá certo. */
   readonly done$ = this.doneEvents.asObservable();
 
   constructor() {
@@ -121,7 +112,6 @@ export class RecurrencesListFacade {
             tap((recurrence) => {
               this.replace(recurrence);
               this.doneEvents.next({ action: action.kind, recurrence });
-              // O custo fixo muda quando a recorrência deixa de contar: o backend recalcula.
               this.summaryLoads.next();
             }),
             map(() => null),
@@ -136,7 +126,6 @@ export class RecurrencesListFacade {
       });
   }
 
-  /** Carrega (ou recarrega, no "tentar de novo") a lista e o resumo. */
   load(): void {
     this.loads.next();
     this.summaryLoads.next();
@@ -146,7 +135,6 @@ export class RecurrencesListFacade {
     this.summaryLoads.next();
   }
 
-  /** Todas as recorrências (ativas e desativadas), paginando até o fim (como S-91). */
   loadAll(): Observable<readonly Recurrence[]> {
     const page = (n: number) => this.gateway.list({ page: n, pageSize: MAX_PAGE_SIZE });
     return page(1).pipe(
@@ -162,7 +150,6 @@ export class RecurrencesListFacade {
     this.actions.next({ kind: 'deactivate', id });
   }
 
-  /** Encerra numa data (`null` = hoje, definida pelo backend). */
   end(id: string, endDate: string | null): void {
     this.actions.next({ kind: 'end', id, endDate });
   }

@@ -6,15 +6,8 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { DisplayTextPipe } from '~/app/common/pipes/display-text.pipe';
 import type { ImportReport, ImportWarning } from '~/modules/notes/core/types/note';
 
-/** Quantos itens de cada lista aparecem (um zip pode ter até 2.000 arquivos). */
 const LIST_LIMIT = 20;
 
-/**
- * Relatório da importação (T119 CA2): criadas, puladas, links pendentes e o que ficou de fora (arquivos
- * ignorados, notas renomeadas, avisos), com a linguagem calma do DS ("Revise antes de seguir"). Tudo é **texto**:
- * nomes de arquivo e avisos vêm do zip do usuário e nunca viram marcação. As listas mostram os primeiros itens e
- * dizem quantos faltam. Presentational.
- */
 @Component({
   selector: 'app-import-report',
   imports: [RouterLink, DisplayTextPipe],
@@ -236,7 +229,6 @@ export class ImportReportComponent {
       : null;
   }
 
-  /** O aviso traduzido pelo `code`; código novo mostra o texto genérico (a mensagem do backend não é a tela). */
   protected warningText(warning: ImportWarning): string {
     const copy = this.t().notes.vault.report;
     return copy.warningCodes[warning.code] ?? copy.warningOther;

@@ -23,31 +23,11 @@ import type {
 import { toDebtSummary } from '~/util/debt';
 import type { Money } from '~/util/money';
 
-/**
- * Resposta → tipos do core. Só copia campos: nenhum valor é somado, subtraído, arredondado nem
- * convertido para `number` (arquitetura §1).
- */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,
 });
 
-/**
- * Mapa **resposta → entrada** de S-90, o único lugar que o conhece. A resposta usa nomes genéricos
- * (`account`, `counterpartAccount`, `adjustmentKind`, `refundOf`); o formulário de edição precisa dos
- * nomes de entrada:
- *
- * | type | resposta | entrada |
- * |---|---|---|
- * | EXPENSE, INCOME | `account.id`, `category.id`, `method` | `accountId`, `categoryId`, `method` |
- * | TRANSFER | `account.id`, `counterpartAccount.id` | `fromAccountId`, `toAccountId` |
- * | INVESTMENT | `account.id`, `counterpartAccount.id`, `direction` | `cashAccountId`, `investmentAccountId`, `direction` |
- * | ADJUSTMENT | `account.id`, `direction`, `adjustmentKind`, `reason` | `accountId`, `direction`, `kind`, `reason` |
- * | REFUND | `account.id` ou `card.id`, `category.id`, `refundOf.id` | `accountId` ou `cardId`, `categoryId`, `refundOfTransactionId` |
- * | CARD_PURCHASE | `card.id`, `category.id`, `installments[].total`, `amount` (total) | `cardId`, `categoryId`, `installments`, `amount` |
- *
- * Devolve `null` se o tipo não é editável nesta etapa ou se falta uma referência obrigatória.
- */
 export function toFormValue(response: TransactionResponse): TransactionInput | null {
   const base = {
     amount: response.amount.amount,
@@ -99,7 +79,6 @@ export function toFormValue(response: TransactionResponse): TransactionInput | n
         reason: response.reason ?? '',
       };
     case 'REFUND':
-      // Em conta ou no cartão: exatamente um dos dois.
       if ((accountId === null) === (cardId === null)) return null;
       return {
         ...base,
@@ -110,7 +89,6 @@ export function toFormValue(response: TransactionResponse): TransactionInput | n
         refundOfTransactionId: response.refundOf?.id ?? null,
       };
     case 'CARD_PURCHASE': {
-      // `total` de cada parcela é o nº de parcelas da compra (as canceladas continuam na lista).
       const installments = response.installments[0]?.total ?? null;
       if (!cardId || installments === null) return null;
       return { ...base, type: 'CARD_PURCHASE', cardId, categoryId: categoryId ?? '', installments };
@@ -247,11 +225,9 @@ export function toEntrySlice(response: EntrySliceResponse): EntrySlice {
   };
 }
 
-/** Corpo do `POST` (e base do `PUT`): campos do tipo, sem `notes` vazio. */
 export function toRequestBody(input: TransactionInput): TransactionCreateRequest {
   const notes = input.notes !== null && input.notes.trim() !== '' ? input.notes : null;
   const description = input.description.trim();
-  // Opcionais (contrato 2.11): vazio é omitido; o servidor aplica o padrão.
   const common = {
     amount: input.amount,
     date: input.date,
@@ -268,7 +244,6 @@ export function toRequestBody(input: TransactionInput): TransactionCreateRequest
         accountId: input.accountId,
         ...category(input.categoryId),
         ...(input.method ? { method: input.method } : {}),
-        // Só a receita leva a competência; vazia é omitida (no PUT, ausente limpa no servidor).
         ...(input.type === 'INCOME' && input.incomeCompetence
           ? { incomeCompetence: input.incomeCompetence }
           : {}),
@@ -309,7 +284,6 @@ export function toRequestBody(input: TransactionInput): TransactionCreateRequest
       return {
         ...common,
         type: 'REFUND',
-        // Só o destino escolhido vai no corpo: conta **ou** cartão (nunca os dois).
         ...(input.cardId !== null ? { cardId: input.cardId } : { accountId: input.accountId }),
         ...category(input.categoryId),
         refundOfTransactionId: input.refundOfTransactionId,
@@ -330,7 +304,6 @@ export function toRequestBody(input: TransactionInput): TransactionCreateRequest
         newDebt: toNewDebt(input.newDebt),
       };
     case 'MONEY_RECEIVED':
-      // Devolução (`debtId`) **ou** captação (`newDebt`): nunca os dois.
       return {
         ...common,
         type: 'MONEY_RECEIVED',
@@ -357,7 +330,6 @@ function toNewDebt(debt: NewDebtInput) {
   return { personId: debt.personId, expectedDate: debt.expectedDate, description };
 }
 
-/** Corpo do `PUT`: o corpo do `POST` do tipo + `version` (S-68). */
 export function toUpdateBody(input: TransactionInput, version: number): TransactionUpdateRequest {
   return { ...toRequestBody(input), version } as TransactionUpdateRequest;
 }

@@ -53,12 +53,10 @@ import { Problem, ProblemError, toProblem } from '~/util/api/problem';
 import type { Slice } from '~/util/api/slice';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 
-/** Falha de rede/HTTP → `ProblemError` tipado (o core nunca vê `HttpErrorResponse`). */
 function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então qualquer cartão ou fatura pedido por id não existe. */
 function notFound(code: 'CARD_NOT_FOUND' | 'INVOICE_NOT_FOUND'): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -70,10 +68,6 @@ function notFound(code: 'CARD_NOT_FOUND' | 'INVOICE_NOT_FOUND'): Observable<neve
   return throwError(() => new ProblemError(problem));
 }
 
-/**
- * Facade de requisições de cartões e faturas (FE 05): o único lugar com HTTP do módulo. Com
- * `API_MOCKS` ligado, responde com `mock-data` vazio e não faz requisição; desligado, chama `/v1`.
- */
 @Injectable({ providedIn: 'root' })
 export class CardsRequestsFacade extends CardsGateway {
   private readonly http = inject(HttpClient);
@@ -100,7 +94,6 @@ export class CardsRequestsFacade extends CardsGateway {
 
   create(input: CardInput): Observable<Card> {
     if (this.useMocks) {
-      // Sem persistência no mock: devolve o cartão como o backend o devolveria.
       const body = toCreateRequest(input);
       return of(
         toCard({

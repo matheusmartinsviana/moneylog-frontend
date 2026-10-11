@@ -6,12 +6,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import type { Card } from '~/modules/cards/core/types/card';
 
-/**
- * Cartões no Início (T71, presentational): por cartão, o disponível, o **total comprometido** (fatura
- * corrente + fechadas) e, **em linha separada**, o que já foi comprometido em compras futuras. Os dois
- * valores vêm do backend (`totalCommitted` e `committedFuture`) e nunca se somam aqui (PR 01, regra 1);
- * a nota explica a diferença. Acima do limite aparece com texto, não só cor.
- */
 @Component({
   selector: 'app-cards-summary',
   imports: [RouterLink, MoneyComponent],

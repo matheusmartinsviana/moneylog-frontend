@@ -27,7 +27,6 @@ function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então nenhuma meta (nem foto) existe. */
 function notFound(): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -39,12 +38,6 @@ function notFound(): Observable<never> {
   return throwError(() => new ProblemError(problem));
 }
 
-/**
- * Facade de requisições das fotos das metas (FE 05): o único lugar com HTTP das fotos. O envio é
- * `multipart/form-data` (campo `file`) com `Idempotency-Key`; o conteúdo vem como `Blob` pelo `HttpClient`
- * (o interceptor põe o Bearer; nunca vai token na URL). O nome do arquivo só segue no multipart (o servidor
- * o ignora).
- */
 @Injectable({ providedIn: 'root' })
 export class GoalPhotosRequestsFacade extends GoalPhotosGateway {
   private readonly http = inject(HttpClient);

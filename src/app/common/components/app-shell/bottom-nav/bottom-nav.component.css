@@ -39,10 +39,6 @@
   transition: color var(--duration-fast) var(--ease-standard);
 }
 
-/*
- * Tipografia de tab bar (S-56, BUG-02): 10px, peso médio, sem padding lateral e sem reticências.
- * O rótulo é o nome inteiro da seção, igual ao nome acessível (WCAG 2.5.3); não existe rótulo curto.
- */
 .bottom-nav__label {
   max-width: 100%;
   font-size: var(--text-tab);
@@ -54,7 +50,6 @@
   white-space: nowrap;
 }
 
-/* Celular estreito: rótulo curto de "Movimentações" (o completo segue no DOM, para o nome acessível). */
 .bottom-nav__label-short {
   display: none;
 }
@@ -78,7 +73,6 @@
   color: var(--color-text);
 }
 
-/* Ícone em quadrado arredondado; o ativo é preenchido no acento com o ícone escuro (DS 03). */
 .bottom-nav__sq {
   display: inline-flex;
   align-items: center;
@@ -94,7 +88,6 @@
   color: var(--color-on-accent);
 }
 
-/* Alto contraste: o item ativo se distingue por borda, sublinhado e peso, não só por cor (BUG-QA-06b). */
 @media (forced-colors: active) {
   .bottom-nav__link {
     border: 2px solid transparent;
@@ -130,7 +123,6 @@
   transform: scale(0.96);
 }
 
-/* Paisagem de celular (pouca altura): barra baixa, só ícones (o rótulo segue no DOM para leitores de tela). */
 @media (orientation: landscape) and (max-height: 500px) {
   .bottom-nav__label {
     position: absolute;

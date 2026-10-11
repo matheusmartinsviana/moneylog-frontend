@@ -57,7 +57,6 @@ import { todayIso } from '~/util/date';
 
 type EndMode = 'none' | 'date' | 'max';
 
-/** Códigos de regra que o backend atribui a um campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   TRANSACTION_AMOUNT_NOT_POSITIVE: 'amount',
   AMOUNT_ABOVE_LIMIT: 'amount',
@@ -70,7 +69,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   TRANSACTION_PAYMENT_METHOD_REQUIRED: 'method',
   CARD_NOT_FOUND: 'cardId',
   CARD_ARCHIVED: 'cardId',
-  // Recorrência encerrada salva sem fim: o campo certo é o fim (a dica explica como reabrir).
   RECURRENCE_ENDED: 'endDate',
 };
 
@@ -83,13 +81,6 @@ const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
   'OTHER',
 ];
 
-/**
- * Criar (`/planning/recurrences/new`) e editar (`/planning/recurrences/:id/edit`) uma recorrência (T87).
- * Frequência `DAILY|WEEKLY|MONTHLY|YEARLY|CUSTOM` (intervalo e unidade só em `CUSTOM`), início, fim por
- * data ou por número de ocorrências, e destino: conta + método (despesa e receita) ou cartão (compra
- * **à vista**, S-144). Na edição o tipo, a frequência e o início ficam desabilitados com a explicação
- * "para mudar, encerre e crie outra" (S-139). Nada é calculado aqui; a estimativa mensal volta do backend.
- */
 @Component({
   selector: 'app-recurrence-form-page',
   imports: [
@@ -112,7 +103,6 @@ const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
   styleUrl: './recurrence-form.page.css',
 })
 export class RecurrenceFormPage {
-  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
   protected readonly skeleton: readonly FormSkeletonPiece[] = [
     'note-2',
     'field-segmented',
@@ -138,7 +128,6 @@ export class RecurrenceFormPage {
   protected readonly facade = inject(RecurrenceFormFacade);
   protected readonly currency = RECURRENCE_CURRENCY;
 
-  /** `:id` da rota; ausente em `/planning/recurrences/new`. */
   readonly id = input<string>();
 
   protected readonly editing = computed(() => this.id() !== undefined);
@@ -162,18 +151,15 @@ export class RecurrenceFormPage {
     endMode: new FormControl<string | null>('none'),
     endDate: new FormControl<string | null>(null),
     maxOccurrences: new FormControl<number | null>(null),
-    /** Só receita (ADR-017): a renda de cada ocorrência pertence ao mês seguinte à data. */
     nextMonthIncome: new FormControl(false, { nonNullable: true }),
   });
 
-  /** Alterações digitadas e não salvas: fechar pede confirmação. */
   protected readonly dirty = dirtySignal(this.form);
 
   private readonly typeValue = valueSignal(this.form.controls.type);
   private readonly frequencyValue = valueSignal(this.form.controls.frequency);
   private readonly endModeValue = valueSignal(this.form.controls.endMode);
   private readonly accountValue = valueSignal(this.form.controls.accountId);
-  /** Com conta escolhida o meio de pagamento vale; sem ela, a conta e o meio ficam para a confirmação. */
   protected readonly hasAccount = computed(() => this.accountValue() !== null);
   protected readonly isIncome = computed(() => this.typeValue() === 'INCOME');
   protected readonly isCard = computed(() => this.typeValue() === 'CARD_PURCHASE');
@@ -263,7 +249,6 @@ export class RecurrenceFormPage {
   protected readonly notFound = computed(() => this.loadProblem()?.status === 404);
 
   constructor() {
-    // Destino e fim: só os campos que o tipo, a frequência e o modo de fim usam participam da validação.
     effect(() => {
       const card = this.isCard();
       const custom = this.isCustom();
@@ -281,13 +266,11 @@ export class RecurrenceFormPage {
         toggle(c.endDate, editing || mode === 'date');
         toggle(c.maxOccurrences, !editing && mode === 'max');
         toggle(c.endMode, !editing);
-        // Tipo, frequência e início não mudam na edição (S-139).
         toggle(c.type, !editing);
         toggle(c.frequency, !editing);
         toggle(c.startDate, !editing);
       });
     });
-    // A categoria de um tipo não serve a outro: ao trocar, limpa.
     effect(() => {
       this.typeValue();
       untracked(() => {
@@ -299,7 +282,6 @@ export class RecurrenceFormPage {
       const id = this.id();
       if (id !== undefined) untracked(() => this.facade.load(id));
     });
-    // A cada versão carregada (inclusive depois de um conflito) repõe o formulário.
     effect(() => {
       const recurrence = this.recurrence();
       if (!recurrence) return;
@@ -331,7 +313,6 @@ export class RecurrenceFormPage {
         this.fieldHandled.set(false);
         return;
       }
-      // Conflito de versão: nada é recarregado sozinho (o digitado fica); o usuário escolhe recarregar.
       untracked(() => this.fieldHandled.set(applyProblemToForm(this.form, problem, CODE_TO_FIELD)));
     });
     this.facade.saved$.pipe(takeUntilDestroyed()).subscribe(() => {
@@ -343,12 +324,10 @@ export class RecurrenceFormPage {
     });
   }
 
-  /** Para onde o modal volta: a lista (criar) ou a página de origem (editar). */
   private backUrl(): string[] {
     return this.editing() ? ['/planning/recurrences'] : ['/planning/recurrences'];
   }
 
-  /** Fechar sem salvar (já confirmado, se havia alterações). */
   protected close(): void {
     void this.router.navigate(this.backUrl());
   }
@@ -374,7 +353,6 @@ export class RecurrenceFormPage {
             card || value.accountId === null ? null : (value.method as RecurrenceMethod | null),
           cardId: card ? value.cardId : null,
           endDate: value.endDate,
-          // Ausente mantém o atual no servidor; em receita mandamos o que o formulário mostra.
           ...(recurrence.type === 'INCOME'
             ? { incomeCompetenceOffsetMonths: value.nextMonthIncome ? (1 as const) : (0 as const) }
             : {}),
@@ -405,7 +383,6 @@ export class RecurrenceFormPage {
     this.facade.save({ kind: 'create', input });
   }
 
-  /** Conflito de versão: o usuário escolheu a versão mais recente (o digitado é substituído). */
   protected reloadLatest(): void {
     const id = this.id();
     if (id === undefined) return;
@@ -413,14 +390,12 @@ export class RecurrenceFormPage {
     this.facade.load(id);
   }
 
-  /** "Tentar de novo" do erro de carga: refaz as opções (também na criação) e a recorrência. */
   protected retryLoad(): void {
     if (this.optionsProblem() !== null) this.loadOptions();
     const id = this.id();
     if (id !== undefined && this.facade.loadStatus().status === 'error') this.facade.load(id);
   }
 
-  /** Carrega contas, categorias e cartões do formulário; zera o erro anterior. */
   private loadOptions(): void {
     this.optionsProblem.set(null);
     this.options.set(null);

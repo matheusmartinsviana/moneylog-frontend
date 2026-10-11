@@ -35,7 +35,6 @@ import { GOAL_CURRENCY, type Goal } from '~/modules/goals/core/types/goal';
 import { Problem, problemOf } from '~/util/api/problem';
 import { todayIso } from '~/util/date';
 
-/** Códigos de regra que o backend atribui a um campo da folha. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   TRANSACTION_AMOUNT_NOT_POSITIVE: 'amount',
   AMOUNT_ABOVE_LIMIT: 'amount',
@@ -46,16 +45,8 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   ACCOUNT_NOT_FOUND: 'accountId',
 };
 
-/** Códigos em que a meta já não aceita a operação: quem usa recarrega. */
 const STALE_CODES: ReadonlySet<string> = new Set(['GOAL_ARCHIVED', 'GOAL_NOT_FOUND']);
 
-/**
- * "Reservar" e "Liberar" numa meta (T100): conta (só as ativas, `CASH` ou `INVESTMENT`; a liberação oferece
- * as contas que a meta já tem reservadas, mesmo arquivadas), valor, data e nota. Liberar é uma **chave
- * própria** (Reservar | Liberar): o usuário digita o valor positivo e a infra manda o negativo no corpo. O
- * texto explica que a reserva não move dinheiro. A `Idempotency-Key` é por tentativa e reutilizada no "tentar
- * de novo". Com mais de uma meta (atalho do Início) a folha deixa escolher a meta.
- */
 @Component({
   selector: 'app-reserve-sheet',
   imports: [
@@ -82,17 +73,12 @@ export class ReserveSheetComponent {
   protected readonly currency = GOAL_CURRENCY;
 
   readonly open = input.required<boolean>();
-  /** As metas que a folha pode receber (uma só, ou várias no atalho do Início). */
   readonly goals = input.required<readonly Goal[]>();
-  /** A meta escolhida ao abrir (a de maior prioridade, no atalho). */
   readonly goalId = input<string>();
-  /** Começa em "Liberar"? */
   readonly releasing = input(false);
 
   readonly closed = output<void>();
-  /** A meta devolvida pelo backend (com `current`, `progress` e as reservas). */
   readonly reserved = output<Goal>();
-  /** A meta já não aceita a operação (arquivada ou removida): recarregue. */
   readonly stale = output<void>();
 
   protected readonly form = new FormGroup({
@@ -134,7 +120,6 @@ export class ReserveSheetComponent {
   );
   protected readonly accountOptions = computed<readonly ChoiceOption[]>(() => {
     if (this.isRelease()) {
-      // Liberar: as contas que a meta já tem reservadas (inclusive arquivadas), sem repetir.
       const seen = new Map<string, string>();
       for (const reservation of this.selectedGoal()?.reservations ?? []) {
         seen.set(reservation.account.id, reservation.account.name);
@@ -156,7 +141,6 @@ export class ReserveSheetComponent {
   private lastKind: 'reserve' | 'release' = 'reserve';
 
   constructor() {
-    // Abriu: zera o formulário (uma falha ambígua da MESMA meta continua pendente) e carrega as contas.
     effect(() => {
       const open = this.open();
       untracked(() => {
@@ -176,7 +160,6 @@ export class ReserveSheetComponent {
         this.loadAccounts();
       });
     });
-    // Trocar de tipo ou de meta muda as contas oferecidas: a escolha anterior deixa de valer.
     effect(() => {
       this.kindValue();
       this.goalValue();
@@ -222,7 +205,6 @@ export class ReserveSheetComponent {
     this.loadAccounts();
   }
 
-  /** As contas ativas (`CASH` e `INVESTMENT` são todas as que existem hoje); recarrega a cada abertura. */
   private loadAccounts(): void {
     this.accountsProblem.set(null);
     this.accounts.set(null);

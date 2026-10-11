@@ -37,7 +37,6 @@ import {
 import { formatIsoDate } from '~/util/date';
 import { formatMoney } from '~/util/money';
 
-/** Códigos de regra do backend → campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   ONGOING_INVALID_COUNT: 'remainingInstallments',
   ONGOING_FIRST_INVOICE_NOT_PAYABLE: 'firstInvoiceDate',
@@ -48,12 +47,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
 
 const MAX_INSTALLMENTS = 36;
 
-/**
- * Cadastro da compra parcelada em andamento (modal, smart): cartão, descrição, valor de cada parcela,
- * parcelas no total e quantas **faltam pagar** ("3 de 10" = 8). A prévia ("Faltam R$ 1.200,00 em 8
- * parcelas, até 06/2027") vem do **servidor**: o front não soma parcelas. Salvar usa `exhaustMap` (sem
- * idempotência no contrato) e o botão fica desabilitado durante o envio. Erros 422 vão para o campo.
- */
 @Component({
   selector: 'app-ongoing-installments-modal',
   imports: [
@@ -247,11 +240,9 @@ export class OngoingInstallmentsModalComponent {
   protected readonly currency = DEBT_OVERVIEW_CURRENCY;
   protected readonly maxInstallments = MAX_INSTALLMENTS;
 
-  /** Cartão já escolhido (detalhe do cartão): o seletor some. */
   readonly cardId = input<string | null>(null);
 
   readonly closed = output<void>();
-  /** Compra criada: quem usa recarrega do backend. */
   readonly saved = output<void>();
 
   protected readonly cardPreset = computed(() => this.cardId() !== null);
@@ -307,7 +298,6 @@ export class OngoingInstallmentsModalComponent {
         if (preset !== null) this.form.controls.cardId.setValue(preset);
       });
     });
-    // Dados completos pedem a prévia ao servidor (300 ms, cancela a anterior); incompletos limpam.
     effect(() => {
       const input = this.toInput(this.values());
       const cardId = this.values().cardId ?? null;

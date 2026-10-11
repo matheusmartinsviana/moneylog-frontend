@@ -31,12 +31,6 @@ export type RecurrenceLoadState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly recurrence: Recurrence };
 
-/**
- * Facade do formulário de recorrência (criar e editar). `exhaustMap` no salvar (clique duplo = uma
- * requisição) e **a recorrência da resposta** é o novo estado. Falhas chegam tipadas (`code` +
- * `fieldErrors`, `RECURRENCE_INVALID`, `VERSION_CONFLICT`). A criação leva `Idempotency-Key` (uma por
- * tentativa, reutilizada no "Salvar" da mesma entrada depois de falha ambígua). Escopo de componente.
- */
 @Injectable()
 export class RecurrenceFormFacade {
   private readonly gateway = inject(RecurrencesGateway);
@@ -52,7 +46,6 @@ export class RecurrenceFormFacade {
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly loadStatus = this.loadState.asReadonly();
-  /** A recorrência carregada; durante uma recarga (ex.: depois de um 409) continua a anterior. */
   readonly recurrence = this.loaded.asReadonly();
   readonly saved$ = this.savedEvents.asObservable();
 
@@ -103,7 +96,6 @@ export class RecurrenceFormFacade {
     this.loads.next(id);
   }
 
-  /** Descarta a falha mostrada (ex.: depois de o usuário escolher recarregar num conflito de versão). */
   dismissProblem(): void {
     this.problemState.set(null);
   }

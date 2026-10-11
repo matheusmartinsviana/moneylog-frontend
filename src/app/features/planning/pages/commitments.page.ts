@@ -12,11 +12,6 @@ import { CommitmentRowComponent } from '~/app/features/planning/components/commi
 import { PlanningNavComponent } from '~/app/features/planning/components/planning-nav/planning-nav.component';
 import { CommitmentsListFacade } from '~/modules/commitments/core/facades/commitments-list.facade';
 
-/**
- * Compromissos acompanhados (smart): empréstimos de terceiros e projetos de longo prazo, num bloco **à
- * parte** (fora do total de dívidas, sem mexer em contas). Cadastrar abre em modal sobre a lista; ao
- * fechar, a lista é relida do backend.
- */
 @Component({
   selector: 'app-commitments-page',
   imports: [

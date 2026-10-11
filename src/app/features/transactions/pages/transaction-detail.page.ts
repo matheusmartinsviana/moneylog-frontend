@@ -55,19 +55,10 @@ interface Field {
   readonly key: string;
   readonly label: string;
   readonly text: string;
-  /** Destino de um link (a despesa original de um reembolso, a fatura de um pagamento). */
   readonly link?: readonly string[];
   readonly linkCy?: string;
 }
 
-/**
- * Detalhe de uma movimentação (`/transactions/:id`, smart). Mostra os dados, o `impact` calculado
- * pelo backend e as ações de editar e estornar, que seguem as flags `editable`/`voidable` e
- * `voidBlockedBy` (S-88, S-89). No desktop (≥ 1280 px) abre como painel lateral sobre a lista; no
- * celular, como página. Esc fecha e devolve o foco à linha de onde veio. Na compra no cartão (T70), mostra
- * as parcelas (situação, fatura, lançamento tardio), bloqueia o estorno com a razão quando há parcela em
- * fatura fechada e oferece "Cancelar parcelas restantes"; no pagamento de fatura e no crédito, liga à fatura.
- */
 @Component({
   selector: 'app-transaction-detail-page',
   imports: [
@@ -102,7 +93,6 @@ export class TransactionDetailPage {
   protected readonly facade = inject(TransactionDetailFacade);
   protected readonly thirdParty = inject(ThirdPartyExpenseFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
   protected readonly cancelDone = signal(0);
@@ -133,7 +123,6 @@ export class TransactionDetailPage {
     const tx = this.transaction();
     return tx !== null && tx.status === 'ACTIVE' && tx.editable;
   });
-  /** "Renda de <mês> (recebida em <data>)": só quando a competência difere do mês da data (ADR-017). */
   protected readonly incomeMonth = computed(() => {
     const tx = this.transaction();
     return tx
@@ -147,7 +136,6 @@ export class TransactionDetailPage {
       date: formatInstant(tx.voidedAt, HTML_LANG[this.i18n.language()]),
     });
   });
-  /** Despesa ou compra no cartão ativa: pode ser de terceiro (a marca não muda o lançamento). */
   protected readonly canMarkThirdParty = computed(() => {
     const tx = this.transaction();
     return (
@@ -166,8 +154,6 @@ export class TransactionDetailPage {
       const id = this.id();
       untracked(() => this.facade.load(id));
     });
-    // Ao abrir (e a cada resposta nova: movimentação, não encontrada ou erro), o foco vai para o
-    // título do painel.
     effect(() => {
       if (this.state().status !== 'loading' && this.state().status !== 'idle') {
         untracked(() =>
@@ -177,7 +163,6 @@ export class TransactionDetailPage {
         );
       }
     });
-    // Despesa elegível: pergunta ao backend se já está marcada (pessoa e reembolso recebido).
     effect(() => {
       const tx = this.transaction();
       const eligible = this.canMarkThirdParty();
@@ -196,7 +181,6 @@ export class TransactionDetailPage {
 
   protected readonly receiptOpen = signal(false);
 
-  /** A pessoa e a despesa desta tela são o único vínculo possível no modal. */
   protected receiptPeople(link: ThirdPartyLink): readonly ReceiptPersonOption[] {
     return [
       {
@@ -235,18 +219,15 @@ export class TransactionDetailPage {
     return transactionLabel(tx, this.t().transactions.types);
   }
 
-  /** Esc fecha o painel, a não ser que haja um modal por cima (edição, Novo registro): ele trata o Esc. */
   protected onEscape(event: Event): void {
     if (event.defaultPrevented || this.document.querySelector('[role="dialog"]')) return;
     this.close();
   }
 
-  /** Voltou da edição (salva ou não): relê a movimentação do backend. */
   protected reloadAfterEdit(): void {
     this.facade.load(this.id());
   }
 
-  /** Fecha o painel (ou volta à lista no celular) e devolve o foco à linha de origem. */
   protected close(): void {
     const id = this.id();
     void this.router
@@ -326,7 +307,6 @@ export class TransactionDetailPage {
       });
     }
     if (tx.notes) fields.push({ key: 'notes', label: copy.notes, text: tx.notes });
-    // Dívida da movimentação (emprestar, receber, pagar) e partes de uma despesa dividida: do backend.
     if (tx.debt) {
       fields.push({
         key: 'debt',

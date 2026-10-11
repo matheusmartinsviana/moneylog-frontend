@@ -18,7 +18,6 @@
   margin-block: var(--space-3);
 }
 
-/* Cabeçalho da "tabela" só no desktop; no celular cada cartão é um card com seus rótulos. */
 .table-head {
   display: none;
 }

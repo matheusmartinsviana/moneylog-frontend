@@ -10,11 +10,6 @@ export interface IncomeExpenseChartLabels {
   readonly expenses: string;
 }
 
-/**
- * Prepara a série do backend (`GET /v1/reports/income-expenses`) para o `LineChart`: só **apresentação**
- * (rótulos de data e a ordem das séries). Os valores passam como vieram; nada é somado, comparado nem
- * arredondado. Entradas = série primária (azul, cheia); saídas = secundária (neutra, tracejada).
- */
 export function toIncomeExpenseChart(
   data: IncomeExpenseSeries,
   locale: string,

@@ -1,4 +1,3 @@
-/** Endpoints do vault, num lugar só (FE 05). Contrato: tags Notes e Vault. */
 export const NOTES_ENDPOINTS = {
   collection: '/v1/notes',
   tags: '/v1/notes/tags',

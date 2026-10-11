@@ -31,11 +31,6 @@ import type {
 } from '~/modules/transactions/core/types/transaction-input';
 import { todayIso } from '~/util/date';
 
-/**
- * Formulário de ajuste (presentational): valor → conta → sentido (aumentar/diminuir) → tipo
- * (correção/rendimento) → motivo obrigatório → data (→ descrição opcional). Rendimento só vale em
- * conta `INVESTMENT`. O texto de ajuda lembra que ajuste não é receita nem despesa.
- */
 @Component({
   selector: 'app-adjustment-form',
   imports: [
@@ -52,7 +47,6 @@ import { todayIso } from '~/util/date';
   styleUrl: '../entry-form.css',
 })
 export class AdjustmentFormComponent extends TransactionFormBase {
-  /** Todas as contas ativas: ajuste vale em conta de caixa e de investimento. */
   readonly accounts = input.required<readonly Account[]>();
   readonly initial = input<AdjustmentInput | null>(null);
   readonly defaultAccountId = input<string | null>(null);
@@ -88,7 +82,6 @@ export class AdjustmentFormComponent extends TransactionFormBase {
       { value: 'DECREASE', label: labels.DECREASE },
     ];
   });
-  /** Rendimento só com conta de investimento (`ADJUSTMENT_YIELD_REQUIRES_INVESTMENT_ACCOUNT`). */
   protected readonly yieldAllowed = computed(
     () => this.accounts().find((a) => a.id === this.accountId())?.liquidity === 'INVESTMENT',
   );
@@ -112,7 +105,6 @@ export class AdjustmentFormComponent extends TransactionFormBase {
 
   constructor() {
     super();
-    // Trocar para uma conta que não rende desfaz o "rendimento".
     this.form.controls.accountId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       if (!this.yieldAllowed() && this.form.controls.kind.value === 'YIELD') {
         this.form.controls.kind.setValue('CORRECTION');

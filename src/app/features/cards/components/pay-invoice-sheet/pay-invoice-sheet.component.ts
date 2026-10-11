@@ -31,7 +31,6 @@ import type { Invoice, InvoiceSummary } from '~/modules/cards/core/types/invoice
 import { formatCompetenceShort, todayIso } from '~/util/date';
 import { formatMoney, isPositive } from '~/util/money';
 
-/** Códigos de regra que o backend atribui a um campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   TRANSACTION_ACCOUNT_NOT_CASH: 'accountId',
   ACCOUNT_ARCHIVED: 'accountId',
@@ -40,16 +39,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   AMOUNT_ABOVE_LIMIT: 'amount',
 };
 
-/**
- * "Pagar fatura" (T68): folha com conta, valor e data. O valor já vem com o `outstanding` que o backend
- * devolveu e a conta com a padrão do cartão; trocar a conta não recalcula nada. Ao digitar o valor, pede
- * a **prévia do backend** (300 ms, cancela a anterior): `PARTIAL` "restam R$ …", `OVERPAY` "R$ … viram
- * crédito na próxima fatura", `PREPAY` "pagamento antecipado" (os números são os recebidos). A prévia
- * é só informativa: um erro nela não impede de pagar. Data futura avisa "pagamento agendado" (S-130).
- * O envio leva uma `Idempotency-Key` por tentativa (reutilizada no "tentar de novo"); clique duplo é uma
- * requisição. Em sucesso emite a fatura da resposta. A folha prende o foco, `Esc` fecha sem enviar e o
- * foco volta ao botão que abriu (comportamento do `Sheet`).
- */
 @Component({
   selector: 'app-pay-invoice-sheet',
   imports: [
@@ -73,14 +62,10 @@ export class PayInvoiceSheetComponent {
   protected readonly currency = CARD_CURRENCY;
 
   readonly open = input.required<boolean>();
-  /** A fatura a pagar: o `outstanding` dela é a sugestão de valor (vem do backend). */
   readonly invoice = input<InvoiceSummary | null>(null);
-  /** Contas `CASH` ativas que podem pagar. */
   readonly accounts = input.required<readonly Account[]>();
-  /** Conta padrão do cartão (`defaultPaymentAccountId`). */
   readonly defaultAccountId = input<string | null>(null);
 
-  /** A fatura devolvida pelo backend depois do pagamento. */
   readonly paid = output<Invoice>();
   readonly closed = output<void>();
 
@@ -103,7 +88,6 @@ export class PayInvoiceSheetComponent {
   });
 
   private readonly date = signal<string | null>(todayIso());
-  /** Data de pagamento no futuro: "pagamento agendado" (S-130). */
   protected readonly scheduled = computed(() => {
     const date = this.date();
     return date !== null && date > todayIso();
@@ -133,7 +117,6 @@ export class PayInvoiceSheetComponent {
   });
 
   constructor() {
-    // Abriu (ou trocou a fatura): valor = outstanding do backend, conta = padrão do cartão, data = hoje.
     effect(() => {
       const open = this.open();
       const invoice = this.invoice();
@@ -143,14 +126,12 @@ export class PayInvoiceSheetComponent {
           return;
         }
         this.facade.reopen(invoice.id);
-        // Sem saldo (ex.: fatura aberta com 0,00): o campo começa vazio em vez de sugerir "0,00".
         const suggested = isPositive(invoice.outstanding) ? invoice.outstanding.amount : null;
         this.form.reset({ accountId: this.initialAccount(), amount: suggested, date: todayIso() });
         this.date.set(todayIso());
         this.facade.requestPreview(invoice.id, suggested);
       });
     });
-    // Valor digitado: pede a prévia do backend (o `null` de um valor inválido limpa).
     this.form.controls.amount.valueChanges.pipe(takeUntilDestroyed()).subscribe((amount) => {
       const invoice = this.invoice();
       if (invoice && this.open()) this.facade.requestPreview(invoice.id, amount);
@@ -158,7 +139,6 @@ export class PayInvoiceSheetComponent {
     this.form.controls.date.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((date) => this.date.set(date));
-    // Falha do envio: marca o campo apontado; o resto vira o aviso do rodapé.
     effect(() => {
       const problem = this.facade.problem();
       untracked(() =>

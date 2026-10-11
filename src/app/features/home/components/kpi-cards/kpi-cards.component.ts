@@ -15,19 +15,11 @@ import { formatPoints, formatRatio, ratioForBar, ratioMagnitude, ratioSign } fro
 export type KpiMonthlyStatus = 'loading' | 'error' | 'ready';
 type Tone = 'positive' | 'warning' | 'neutral';
 
-/** Chip de variação: o texto vem do backend (só formatado) e o tom nunca é o único sinal (a frase diz o sentido). */
 interface Chip {
   readonly text: string;
   readonly tone: Tone;
 }
 
-/**
- * Os 4 KPIs do Início (DS 02, T202), com hierarquias diferentes: herói (saldo em contas), métrica com variação
- * (gasto), métrica simples (receita) e anel (taxa de poupança). **Nenhum cálculo no front**: valores, percentuais
- * e variações vêm do backend (`balances.inAccountsChange`, `comparison.*Delta`, `savingsRate`,
- * `savingsRateDelta`) e só são formatados. Com `partial = true` (mês em andamento contra o anterior inteiro) os
- * chips ficam neutros e dizem isso (R5): nada de verde nem de "menor que o mês anterior" no dia 10. Presentational.
- */
 @Component({
   selector: 'app-kpi-cards',
   imports: [MoneyComponent, GaugeComponent],
@@ -42,7 +34,6 @@ interface Chip {
       data-cy="home-kpis"
     >
       @if (part() === 'compact') {
-        <!-- Início sucinto: saldo (com a variação do servidor), gasto, receita e resultado do mês, e a taxa de poupança num medidor pequeno. -->
         <section
           class="kpi kpi--hero kpi--compact-balance glass glass--halo"
           aria-labelledby="kpi-in-accounts-title"
@@ -208,7 +199,6 @@ interface Chip {
           data-cy="kpi-savings"
         >
           <h3 class="kpi__label" id="kpi-savings-title">{{ t().dashboard.kpis.savings.title }}</h3>
-          <!-- O arco só desenha a razão do backend (savingsRate); o número está em texto, dentro do medidor. -->
           <app-gauge [share]="ringShare()" data-cy="kpi-savings-ring">
             @switch (monthlyStatus()) {
               @case ('ready') {
@@ -272,19 +262,13 @@ export class KpiCardsComponent {
   protected readonly t = this.i18n.t;
 
   readonly summary = input.required<DashboardSummary>();
-  /** `null` enquanto não chegou ou se falhou (veja `monthlyStatus`). */
   readonly monthly = input<MonthlySummary | null>(null);
   readonly monthlyStatus = input<KpiMonthlyStatus>('loading');
   readonly retry = output<void>();
-  /**
-   * Quais KPIs desenhar: `compact` (Início sucinto: saldo, gasto, receita, resultado do mês que o servidor devolve e
-   * o medidor pequeno da poupança) ou `all` (os quatro, com as variações de cada um).
-   */
   readonly part = input<'all' | 'compact'>('all');
 
   private readonly locale = computed(() => HTML_LANG[this.i18n.language()]);
 
-  /** `true` quando o mês em andamento é comparado com o anterior inteiro (R5). */
   private readonly partial = computed(() => this.monthly()?.partial ?? false);
 
   protected readonly caption = computed(() => {
@@ -339,7 +323,6 @@ export class KpiCardsComponent {
     };
   });
 
-  /** Posição do arco (0 a 100): a taxa do backend, só para desenhar; taxa negativa ou ausente não desenha. */
   protected readonly ringShare = computed(() => {
     const rate = this.monthly()?.savingsRate ?? null;
     const bar = rate === null ? null : ratioForBar(rate);
@@ -347,10 +330,6 @@ export class KpiCardsComponent {
     return Math.round(Math.min(1, bar) * 1000) / 10;
   });
 
-  /**
-   * Chip de uma variação `comparison.*Delta` do backend. `better` diz em que sentido a variação é boa (gastar menos,
-   * receber mais). Com o mês em andamento o chip é neutro e mostra o valor com o rótulo do que está sendo comparado.
-   */
   private relativeChip(delta: SummaryDelta | undefined, better: 'up' | 'down'): Chip | null {
     if (!delta) return null;
     const copy = this.t().dashboard.kpis.delta;

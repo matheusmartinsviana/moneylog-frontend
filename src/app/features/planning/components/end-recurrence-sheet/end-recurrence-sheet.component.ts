@@ -17,11 +17,6 @@ import { problemMessage } from '~/app/common/i18n/problem-message';
 import type { Problem } from '~/util/api/problem';
 import { todayIso } from '~/util/date';
 
-/**
- * Encerrar uma recorrência numa data (T87 CA2): nada é apagado, só deixa de gerar ocorrências depois dela.
- * A data vem sugerida com o dia de hoje (a faixa válida, anterior ao início ou à última ocorrência
- * realizada ou pulada, é do backend: `RECURRENCE_INVALID`). Presentational.
- */
 @Component({
   selector: 'app-end-recurrence-sheet',
   imports: [ReactiveFormsModule, SheetComponent, DatePickerComponent],

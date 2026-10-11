@@ -32,13 +32,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import { todayIso } from '~/util/date';
 
-/**
- * Campo de data próprio: digitação com máscara (`dd/mm/aaaa`, `mm/dd/aaaa` em inglês) e calendário
- * em popover (desktop) ou folha inferior (celular). O valor do controle é `YYYY-MM-DD` (formato da
- * API) ou `null`; os limites padrão são os do backend (2000-01-01 a 2100-12-31). "Hoje" vem do
- * fuso do usuário (S-1). Valida 31/02, data incompleta e fora do intervalo com erro de campo (sem
- * bolha do navegador). O padrão "hoje" é de quem cria o formulário: `new FormControl(todayIso())`.
- */
 @Component({
   selector: 'app-date-picker',
   imports: [FieldErrorComponent, IconComponent, OverlayPanelComponent, CalendarComponent],
@@ -183,7 +176,6 @@ import { todayIso } from '~/util/date';
       border: 0;
       background: transparent;
       color: var(--color-text);
-      /* 16px: abaixo disso o Safari do iPhone dá zoom ao focar. */
       font-size: 1rem;
     }
 
@@ -251,9 +243,7 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
   private readonly ngInjector = inject(Injector);
   protected readonly t = this.i18n.t;
 
-  /** Menor data aceita (`YYYY-MM-DD`), inclusive. Padrão: 2000-01-01 (backend). */
   readonly min = input<string | undefined>(undefined);
-  /** Maior data aceita (`YYYY-MM-DD`), inclusive. Padrão: 2100-12-31 (backend). */
   readonly max = input<string | undefined>(undefined);
   readonly mandatory = input(true);
 
@@ -263,7 +253,6 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
 
   protected readonly effectiveMin = computed(() => this.min() ?? MIN_DATE);
   protected readonly effectiveMax = computed(() => this.max() ?? MAX_DATE);
-  /** "Hoje" é relido a cada abertura: um PWA aberto atravessando a meia-noite não fica com o dia velho. */
   protected readonly today = signal(todayIso());
   protected readonly yesterday = computed(() => addDays(this.today(), -1));
   private readonly order = computed(() => dateOrder(this.i18n.language()));
@@ -288,7 +277,6 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
       if (this.boundsApplied) this.validatorChange();
       this.boundsApplied = true;
     });
-    // Troca de idioma: o mesmo valor, na ordem do novo idioma.
     effect(() => {
       const order = this.order();
       untracked(() => {
@@ -315,7 +303,6 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
     if (value === null) return { dateFormat: true };
     const min = this.effectiveMin();
     const max = this.effectiveMax();
-    // Datas ISO comparam como texto.
     if (value < min) return { dateMin: { min } };
     if (value > max) return { dateMax: { max } };
     return null;
@@ -337,7 +324,6 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
   protected choose(iso: string): void {
     this.apply(formatMasked(iso, this.order()), iso);
     this.open.set(false);
-    // Escolher no calendário é uma interação completa: o erro (se houver) já pode aparecer.
     this.onTouched();
   }
 
@@ -349,7 +335,6 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
 
   protected onFocusOut(event: FocusEvent): void {
     const box = event.currentTarget as HTMLElement;
-    // Do campo para o botão do calendário (ou de volta) não é "sair": o erro só aparece depois.
     if (box.contains(event.relatedTarget as Node | null) || this.open()) return;
     this.onTouched();
   }
@@ -368,11 +353,9 @@ export class DatePickerComponent extends FieldControl<string | null> implements 
     let masked: string;
     const isoPaste = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim());
     if (isoPaste) {
-      // Colar `2026-10-04` (formato da API) também funciona.
       masked = formatMasked(raw.trim(), this.order()) || maskDigits(raw);
     } else {
       let digits = raw.replace(/\D/g, '');
-      // Apagar uma barra não pode "travar" a máscara: apaga o dígito anterior.
       if (inputType.startsWith('delete') && digits === this.text().replace(/\D/g, '')) {
         digits = digits.slice(0, -1);
       }

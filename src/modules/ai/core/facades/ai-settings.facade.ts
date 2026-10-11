@@ -11,7 +11,6 @@ export type AiSettingsState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly settings: AiSettings };
 
-/** Preferências de IA (mensagem diária). Salvar usa `exhaustMap`; o estado é o que o backend devolveu. */
 @Injectable()
 export class AiSettingsFacade {
   private readonly gateway = inject(AiGateway);

@@ -20,7 +20,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { DisplayTextPipe } from '~/app/common/pipes/display-text.pipe';
 import type { FolderNode } from '~/modules/notes/core/types/note-path';
 
-/** Chave do item "Todas as notas" (a raiz da árvore). */
 const ALL = '';
 
 interface Row {
@@ -31,12 +30,6 @@ interface Row {
   readonly expanded: boolean;
 }
 
-/**
- * Árvore de pastas do vault (padrão `tree` do APG, `role="tree"`): derivada dos caminhos das notas. Um só
- * item na ordem de tabulação (tabindex móvel); `↓`/`↑` andam pelos itens visíveis, `→` abre a pasta (ou
- * desce ao primeiro filho), `←` fecha (ou sobe ao pai), `Home`/`End`, `Enter`/Espaço escolhem a pasta. Escolher
- * a pasta filtra a lista (as subpastas entram). Presentational: quem usa controla `selected`.
- */
 @Component({
   selector: 'app-folder-tree',
   imports: [NgTemplateOutlet, IconComponent, DisplayTextPipe],
@@ -123,7 +116,6 @@ interface Row {
       gap: var(--space-2);
       min-height: 1.875rem;
       padding-right: var(--space-2);
-      /* Linha simples, como o explorador de arquivos: sem caixa nem contorno, só o fundo da linha inteira. */
       border-radius: calc(var(--radius-control) / 2);
       color: var(--color-text);
       font-size: var(--text-sm);
@@ -178,7 +170,6 @@ interface Row {
       background-color: var(--color-surface-muted);
     }
 
-    /* Guias de indentação: linha vertical fina e suave sob o chevron da pasta-mãe. */
     .tree__group {
       position: relative;
     }
@@ -267,9 +258,7 @@ export class FolderTreeComponent {
   private readonly i18n = inject(I18nService);
 
   readonly root = input.required<FolderNode>();
-  /** Pasta escolhida; `null` = todas as notas. */
   readonly selected = input<string | null>(null);
-  /** Nome acessível da árvore. */
   readonly label = input.required<string>();
   readonly allLabel = input.required<string>();
 
@@ -278,7 +267,6 @@ export class FolderTreeComponent {
   protected readonly expandedSet = signal<ReadonlySet<string>>(new Set([ALL]));
   protected readonly focused = signal(ALL);
 
-  /** Itens visíveis, em ordem (para o teclado). */
   private readonly rows = computed<readonly Row[]>(() => {
     const open = this.expandedSet();
     const out: Row[] = [
@@ -302,7 +290,6 @@ export class FolderTreeComponent {
   });
 
   constructor() {
-    // A pasta escolhida (URL) abre os ancestrais e fica como item focável.
     effect(() => {
       const selected = this.selected();
       untracked(() => {

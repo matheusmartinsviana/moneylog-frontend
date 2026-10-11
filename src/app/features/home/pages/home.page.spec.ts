@@ -80,7 +80,6 @@ function stubs(): Stubs {
 
 async function setup(s: Stubs = stubs(), language: 'pt' | 'en' = 'pt') {
   const result = await render(HomePage, {
-    // O gráfico é um bloco @defer (chunk à parte): o Testing Library o deixa manual por padrão.
     deferBlockBehavior: DeferBlockBehavior.Playthrough,
     providers: [
       provideI18nTesting(language),
@@ -392,7 +391,6 @@ function anEmptyUpcomingWith(items: UpcomingItem[]) {
 }
 
 describe('HomePage: fila das leituras do razão (R13)', () => {
-  /** Observável que conta quantas leituras estão em voo e em que ordem começaram. */
   class Meter {
     inFlight = 0;
     max = 0;

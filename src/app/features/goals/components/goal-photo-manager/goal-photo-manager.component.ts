@@ -30,19 +30,11 @@ import {
 } from '~/modules/goals/core/types/goal';
 import { formatBytes } from '~/util/format-bytes';
 
-/** Pedido de mover uma foto (da meta ou, antes de a meta existir, da fila local). */
 export interface PhotoMoveRequest {
   readonly id: string;
   readonly delta: -1 | 1;
 }
 
-/**
- * Seção "Fotos do sonho" do formulário da meta (presentational, ADR-018): grade de miniaturas com capa,
- * reordenar por **botões** (esquerda/direita, por teclado; o botão no fim da fila fica `aria-disabled` e
- * continua focável, então o foco não se perde ao mover), definir capa, remover (a confirmação é do pai),
- * contador "n de 8" e a fila de envio (progresso, cancelar, tentar de novo). Antes de a meta existir, as
- * fotos escolhidas são só uma fila local na ordem final. Mensagens de falha vêm traduzidas pelo `code`.
- */
 @Component({
   selector: 'app-goal-photo-manager',
   imports: [FilesButtonComponent, GoalPhotoComponent, IconComponent],
@@ -55,7 +47,6 @@ export class GoalPhotoManagerComponent {
   protected readonly t = this.i18n.t;
   protected readonly accept = GOAL_PHOTO_ACCEPT;
 
-  /** Meta já existe (edição); `null` na criação (fila local). */
   readonly goalId = input<string | null>(null);
   readonly goalName = input('');
   readonly photos = input<readonly GoalPhoto[]>([]);
@@ -63,9 +54,7 @@ export class GoalPhotoManagerComponent {
   readonly coverPhotoId = input<string | null>(null);
   readonly count = input.required<number>();
   readonly max = input(8);
-  /** Meta arquivada ou em salvamento: sem ações. */
   readonly locked = input(false);
-  /** Falha da última escrita (já traduzida). */
   readonly problem = input<string | null>(null);
   readonly rejections = input<readonly PhotoRejection[]>([]);
   readonly lastMove = input<PhotoMove | null>(null);
@@ -95,7 +84,6 @@ export class GoalPhotoManagerComponent {
     () => this.queue().filter((item) => item.status === 'failed').length,
   );
   protected readonly total = computed(() => this.photos().length);
-  /** Capa efetiva: a que o servidor disse ou, até ele responder, a primeira. */
   protected readonly cover = computed(() => this.coverPhotoId() ?? this.photos()[0]?.id ?? null);
 
   protected readonly rejectionTexts = computed(() => {
@@ -118,7 +106,6 @@ export class GoalPhotoManagerComponent {
       : '';
   });
 
-  /** Miniaturas das fotos ainda na fila (arquivo local; revogadas ao sair da fila). */
   private readonly previews = new Map<string, string>();
   protected readonly previewUrls = signal<ReadonlyMap<string, string>>(new Map());
 

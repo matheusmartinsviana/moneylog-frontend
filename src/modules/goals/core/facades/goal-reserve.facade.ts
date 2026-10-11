@@ -12,13 +12,6 @@ interface Command {
   readonly input: ReservationInput;
 }
 
-/**
- * Facade de reservar ou liberar dinheiro numa meta (T100). A `Idempotency-Key` é gerada **por tentativa** e
- * **reutilizada** no "tentar de novo" e no mesmo envio depois de uma falha ambígua (rede, 5xx, `409 CONFLICT`):
- * o backend devolve a meta no estado atual em vez de reservar duas vezes. Dados diferentes geram chave nova.
- * `exhaustMap`: clique duplo = uma requisição. A meta da resposta (com `current`, `progress` e as reservas)
- * é a fonte da verdade e sai em `reserved$`. Escopo de componente.
- */
 @Injectable()
 export class GoalReserveFacade {
   private readonly gateway = inject(GoalsGateway);
@@ -64,15 +57,10 @@ export class GoalReserveFacade {
     this.commands.next(this.last);
   }
 
-  /** "Tentar de novo": o mesmo comando, que reaproveita a chave da tentativa ambígua. */
   retry(): void {
     if (this.last) this.commands.next(this.last);
   }
 
-  /**
-   * A folha (re)abriu: uma falha ambígua do **mesmo** comando continua pendente (aviso e "tentar de novo");
-   * qualquer outra é descartada.
-   */
   reopen(goalId: string): void {
     if (this.last?.goalId === goalId && isAmbiguousFailure(this.problemState())) return;
     this.last = null;

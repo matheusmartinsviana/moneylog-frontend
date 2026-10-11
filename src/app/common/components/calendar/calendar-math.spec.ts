@@ -36,7 +36,6 @@ describe('calendar-math', () => {
   });
 
   it('Dado a semana começando no domingo ou na segunda, então a grade alinha o dia 1', () => {
-    // 2026-10-01 é quinta-feira.
     expect(weekday('2026-10-01')).toBe(4);
     expect(monthGrid('2026-10', 0)[0]?.indexOf('2026-10-01')).toBe(4);
     expect(monthGrid('2026-10', 1)[0]?.indexOf('2026-10-01')).toBe(3);

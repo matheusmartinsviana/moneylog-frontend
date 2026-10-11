@@ -21,20 +21,12 @@ import {
 } from '~/modules/dashboard/mock-data/empty-dashboard';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 
-/** Traduz o erro técnico para o motivo que o core entende (403 → sem permissão). */
 function toFailure(error: unknown): Observable<never> {
   const reason =
     error instanceof HttpErrorResponse && error.status === 403 ? 'forbidden' : 'unavailable';
   return throwError(() => new DashboardFailure(reason));
 }
 
-/**
- * Facade de requisições do dashboard (FE 05): o único lugar com HTTP do módulo. Implementa a porta
- * `DashboardGateway` e mapeia `*Response` → tipos do core.
- *
- * Com `API_MOCKS` ligado (Etapa 1), responde com `mock-data` e não sai nenhuma requisição.
- * Desligado, chama `/v1` (endpoints em `endpoints.ts`): caminho preparado para a Etapa 2.
- */
 @Injectable({ providedIn: 'root' })
 export class DashboardRequestsFacade extends DashboardGateway {
   private readonly http = inject(HttpClient);

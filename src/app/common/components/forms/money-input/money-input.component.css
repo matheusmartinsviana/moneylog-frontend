@@ -17,7 +17,6 @@
   pointer-events: none;
 }
 
-/* Valor alinhado à direita, com números tabulares, como uma célula de planilha (DS 00 §5). */
 .money__input {
   padding-left: var(--space-10);
   font-variant-numeric: tabular-nums;

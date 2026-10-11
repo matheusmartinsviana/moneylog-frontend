@@ -1,9 +1,5 @@
 import type { NoteLink, NoteLinkType } from '~/modules/notes/core/types/note';
 
-/**
- * Para onde o vínculo leva (a tela do registro). `null` quando a rota exige mais do que o vínculo traz: a
- * fatura mora sob o cartão (`/cards/:cardId/invoices/:id`) e o vínculo só guarda o id da fatura.
- */
 export function linkRoute(
   type: NoteLinkType,
   id: string | null,

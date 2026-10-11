@@ -4,15 +4,9 @@ import { AppShellComponent } from '~/app/common/components/app-shell/app-shell.c
 import { authGuard, guestGuard } from '~/app/common/guards/auth.guard';
 import { devRoutes } from '~/app/config/dev-routes';
 
-/**
- * Rotas lazy (FE 02): cada seção é um chunk próprio via `loadChildren` + `export default`.
- * Tudo fica dentro do shell, atrás do `authGuard`, exceto `/login`; rota desconhecida cai na página
- * "não encontrada".
- */
 const quickAddRoutes = () => import('~/app/features/quick-add/quick-add.routes');
 
 export const routes: Routes = [
-  // Fora do shell (sem sidebar nem barra inferior).
   {
     path: 'login',
     canMatch: [guestGuard],
@@ -32,8 +26,6 @@ export const routes: Routes = [
         path: 'transactions',
         loadChildren: () => import('~/app/features/transactions/transactions.routes'),
       },
-      // Novo registro é um modal: rota auxiliar `(modal:quick-add)` sobre a tela de origem. A URL
-      // `/quick-add?...` (deep link, atalhos) é convertida pelo guard e abre sobre a origem (ou o Início).
       { path: 'quick-add', loadChildren: quickAddRoutes },
       { path: 'quick-add', outlet: 'modal', loadChildren: quickAddRoutes },
       { path: 'goals', loadChildren: () => import('~/app/features/goals/goals.routes') },
@@ -55,7 +47,6 @@ export const routes: Routes = [
       { path: 'ai', loadChildren: () => import('~/app/features/ai/ai.routes') },
       { path: 'mcp', loadChildren: () => import('~/app/features/mcp/mcp.routes') },
       { path: 'settings', loadChildren: () => import('~/app/features/settings/settings.routes') },
-      // Só em desenvolvimento/mock: em produção `devRoutes` é vazio (`config/dev-routes.ts`).
       ...devRoutes,
       { path: '**', loadChildren: () => import('~/app/features/not-found/not-found.routes') },
     ],

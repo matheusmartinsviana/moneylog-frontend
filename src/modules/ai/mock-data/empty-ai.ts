@@ -1,6 +1,5 @@
 import type { AiSettings, AiStatus } from '~/modules/ai/core/types/ai';
 
-/** Ambiente mock: IA desligada, sem requisição. */
 export const OFF_STATUS: AiStatus = {
   enabled: false,
   provider: 'none',

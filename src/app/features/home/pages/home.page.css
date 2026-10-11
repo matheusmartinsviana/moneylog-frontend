@@ -1,7 +1,3 @@
-/*
- * Início sucinto: cabe na tela sem rolar (src/styles/README.md). A página (`app-page-layout fit`) dá a altura que
- * sobra; a grade a reparte e o gráfico fica com o que resta (`minmax(0, 1fr)`), sem altura fixa em px.
- */
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -40,9 +36,8 @@
   border-radius: var(--radius-panel);
 }
 
-/* Celular: uma coluna (indicadores, compromissos, dívida e meta, gráfico); o gráfico fica com a sobra. */
 .home {
-  position: relative; /* contém os elementos só para leitores de tela: sem altura fantasma na página */
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto auto minmax(8.5rem, 1fr);
@@ -55,7 +50,6 @@
   height: 100%;
   min-height: 0;
   min-width: 0;
-  /* Rede de segurança de telas muito baixas: rola dentro do painel, nunca a página. */
   overflow-y: auto;
 }
 
@@ -73,7 +67,7 @@
 
 .home__chart {
   grid-area: chart;
-  min-height: 8.5rem; /* nunca vira uma tira: se faltar altura, o painel rola até ele */
+  min-height: 8.5rem;
 }
 
 .home__goal {
@@ -87,7 +81,6 @@
   gap: var(--space-2);
 }
 
-/* Tablet e janela: indicadores em cima, gráfico à esquerda, compromissos e dívida à direita, meta embaixo. */
 @container (width >= 54rem) {
   .home {
     grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
@@ -99,18 +92,12 @@
     gap: var(--space-3);
   }
 
-  /* Compromissos e dívida lado a lado embaixo do gráfico; a meta em destaque ocupa a coluna da direita. */
   .home__side {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     min-height: 0;
   }
 }
 
-/*
- * Tela larga (a partir de 76 rem de conteúdo): o gráfico cresce à esquerda, na altura toda abaixo dos indicadores;
- * a coluna da direita (28 a 34 rem) empilha a meta em destaque (que estica e preenche) e, embaixo, compromissos e
- * dívida com a altura do próprio conteúdo. Nenhum cartão fica com área vazia.
- */
 @container (width >= 76rem) {
   .home {
     grid-template-columns: minmax(0, 1fr) clamp(24rem, 28%, 34rem);
@@ -126,10 +113,6 @@
   }
 }
 
-/*
- * Paisagem de celular (altura < 500 px): não há como caber tudo sem rolar; a página inteira rola (o painel não
- * prende o conteúdo numa janela de ~130 px) e o gráfico ganha uma altura legível.
- */
 @media (orientation: landscape) and (max-height: 500px) {
   .home {
     grid-template-rows: none;
@@ -142,7 +125,6 @@
   }
 }
 
-/* Celular de pouca altura (<= 700 px): respiros menores entre os blocos para o gráfico ter a sobra. */
 @media (width < 48rem) and (max-height: 700px) {
   .home,
   .home__side {
@@ -150,10 +132,6 @@
   }
 }
 
-/*
- * Celular (<= 40 rem, a mesma tela "compacta" do app): a Início não tenta caber na altura da janela. A página rola
- * normalmente, cada bloco tem a altura do próprio conteúdo e o gráfico não fica espremido numa altura mínima.
- */
 @media (width <= 40rem) {
   .home {
     grid-template-rows: none;

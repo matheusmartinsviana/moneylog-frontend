@@ -58,11 +58,6 @@ class NotFound extends Error {}
 
 const DEMO_ERROR = { status: 409, code: 'DEMO_MODE' } as const;
 
-/**
- * Backend de demonstração: responde a `/v1/*` com o mundo fictício e nunca sai da página. Leituras
- * funcionam; qualquer alteração responde `409 DEMO_MODE` (as alterações não são salvas). Substitui o
- * `HttpBackend` só no build `demo`; as facades de requisições e os mappers rodam como em produção.
- */
 @Injectable()
 export class DemoHttpBackend extends HttpBackend {
   private world: World | null = null;
@@ -130,7 +125,6 @@ export class DemoHttpBackend extends HttpBackend {
         req.body as { amount: string; installments: number; date: string },
       );
 
-    // Prévia do parcelado em andamento: o "servidor" do demo calcula o que falta (nada é gravado).
     const ongoingPreview = /^\/v1\/cards\/[^/]+\/ongoing-installments\/preview$/.exec(path);
     if (req.method === 'POST' && ongoingPreview)
       return ongoingPreviewView(
@@ -138,10 +132,8 @@ export class DemoHttpBackend extends HttpBackend {
         req.body as { installmentAmount: string; remainingInstallments: number },
       );
 
-    // O envio de um extrato devolve o lote de exemplo em revisão (as demais escritas seguem recusadas).
     if (req.method === 'POST' && path === '/v1/imports') return importBatches(w)[0]!.batch;
 
-    // A preferência da mensagem diária vale só nesta sessão (a IA do demo está desligada; nada é enviado).
     if (req.method === 'PUT' && path === '/v1/settings/ai') {
       this.dailyAi = (req.body as { dailyMessageEnabled: boolean }).dailyMessageEnabled;
       return { dailyMessageEnabled: this.dailyAi };
@@ -149,7 +141,6 @@ export class DemoHttpBackend extends HttpBackend {
 
     if (req.method !== 'GET') throw new Error('demo-read-only');
 
-    // ---- Painel
     if (path === '/v1/dashboard/summary') return dashboardView(w);
     if (path === '/v1/dashboard/upcoming') return upcomingView(w);
     if (path === '/v1/reports/income-expenses')
@@ -166,7 +157,6 @@ export class DemoHttpBackend extends HttpBackend {
     if (summary) return summaryView(w, summary[1]!);
     if (path === '/v1/search') return searchView(w, q.get('q') ?? '');
 
-    // ---- Contas e categorias
     if (path === '/v1/accounts') {
       const list = w.accounts.map((a) => accountView(w, a));
       return paged(q.get('status') === 'ARCHIVED' ? [] : list, page, pageSize);
@@ -176,7 +166,6 @@ export class DemoHttpBackend extends HttpBackend {
     if (path === '/v1/categories')
       return categoryView(w).filter((c) => !q.get('kind') || c.kind === q.get('kind'));
 
-    // ---- Movimentações
     if (path === '/v1/transactions') {
       return listTransactions(
         w,
@@ -210,7 +199,6 @@ export class DemoHttpBackend extends HttpBackend {
       );
     }
 
-    // ---- Cartões e faturas
     if (path === '/v1/cards')
       return paged(
         q.get('status') === 'ARCHIVED' ? [] : [cardView(w), noLimitCardView(w)],
@@ -260,7 +248,6 @@ export class DemoHttpBackend extends HttpBackend {
       } satisfies S['PaymentPreview'];
     }
 
-    // ---- Pessoas e dívidas
     if (path === '/v1/people') {
       const term = norm(q.get('q') ?? '');
       const list = w.people
@@ -294,7 +281,6 @@ export class DemoHttpBackend extends HttpBackend {
     const debt = /^\/v1\/debts\/([^/]+)$/.exec(path);
     if (debt) return debtView(w, this.find(w.debts, debt[1]!));
 
-    // ---- Recorrências
     if (path === '/v1/recurrences') {
       const active = q.get('active');
       return paged(
@@ -311,7 +297,6 @@ export class DemoHttpBackend extends HttpBackend {
     const recurrence = /^\/v1\/recurrences\/([^/]+)$/.exec(path);
     if (recurrence) return recurrenceView(w, this.find(w.recurrences, recurrence[1]!));
 
-    // ---- Metas
     if (path === '/v1/goals') {
       const status = q.get('status');
       const featured = q.get('featured');
@@ -321,7 +306,6 @@ export class DemoHttpBackend extends HttpBackend {
         .filter((g) => featured === null || g.featured === (featured === 'true'));
       return paged(list, page, pageSize);
     }
-    // Bytes da foto sintética (SVG gerado por código); escritas de fotos caem no 409 DEMO_MODE.
     const photo = /^\/v1\/goals\/([^/]+)\/photos\/([^/]+)\/content$/.exec(path);
     if (photo) {
       const found = goalView(w, this.find(w.goals, photo[1]!));
@@ -331,7 +315,6 @@ export class DemoHttpBackend extends HttpBackend {
     const goal = /^\/v1\/goals\/([^/]+)$/.exec(path);
     if (goal) return goalView(w, this.find(w.goals, goal[1]!));
 
-    // ---- Notas
     if (path === '/v1/notes') {
       const term = norm(q.get('q') ?? '');
       const tag = q.get('tag');
@@ -372,7 +355,6 @@ export class DemoHttpBackend extends HttpBackend {
     const note = /^\/v1\/notes\/([^/]+)$/.exec(path);
     if (note) return noteView(this.find(w.notes, note[1]!));
 
-    // ---- Importação de extrato (Etapa 7)
     if (path === '/v1/imports') {
       const status = q.get('status');
       const list = importBatches(w)
@@ -396,7 +378,6 @@ export class DemoHttpBackend extends HttpBackend {
     }
     if (/^\/v1\/import-mappings\/[^/]+$/.test(path)) throw new NotFound();
 
-    // ---- Notificações, lembretes, configurações, push e mensagem do dia (Etapa 7)
     if (path === '/v1/notifications') {
       const unreadOnly = q.get('status') === 'UNREAD';
       const kind = q.get('kind');
@@ -415,7 +396,6 @@ export class DemoHttpBackend extends HttpBackend {
     if (path === '/v1/push/config') return { enabled: false, publicKey: null };
     if (path === '/v1/daily-message') return dailyMessage(w);
 
-    // ---- IA (Etapa 8): desligada no demo; os insights são calculados com os dados de exemplo
     if (path === '/v1/ai/status') return aiStatus();
     if (path === '/v1/ai/analyses') return { items: [], hasNext: false };
     if (path === '/v1/insights') return insightsView(w, q.get('month') ?? w.month);

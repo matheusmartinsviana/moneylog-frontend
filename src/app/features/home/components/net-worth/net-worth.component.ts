@@ -4,10 +4,6 @@ import { MoneyComponent } from '~/app/common/components/money/money.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { NetWorth } from '~/modules/dashboard/core/types/dashboard-summary';
 
-/**
- * Patrimônio como veio da API. As parcelas futuras do cartão aparecem à parte, com a explicação de
- * que estão fora do total (S-8).
- */
 @Component({
   selector: 'app-net-worth',
   imports: [MoneyComponent],

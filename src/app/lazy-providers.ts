@@ -15,21 +15,13 @@ import { provideRecurrences } from '~/modules/recurrences/infra/recurrences.prov
 import { provideReports } from '~/modules/reports/infra/reports.providers';
 import { provideThirdParties } from '~/modules/third-parties/infra/third-parties.providers';
 
-/**
- * Portas (core) → implementações (infra) usadas por uma única área, ligadas na rota lazy dela
- * (orçamento do bundle inicial, T177). Como `app.config.ts`, é bootstrap autorizado a importar a
- * infra (S-31). O que o shell ou várias áreas usam continua em `app.config.ts`.
- * Se uma facade nova passar a usar uma porta daqui fora das rotas listadas, adicione a rota.
- */
 export const IMPORT_PROVIDERS: Provider[] = [provideImports()];
-/** Configurações: exportação e a seção do cofre (`VaultSectionComponent`, que usa `VaultGateway`). */
 export const SETTINGS_PROVIDERS: Provider[] = [provideExports(), provideNotes()];
 export const PLANNING_PROVIDERS: Provider[] = [
   provideRecurrences(),
-  // Panorama (o que o Início tinha em "Compromissos e patrimônio") e o gasto por categoria do Resumo do mês.
   provideDashboard(),
   provideReports(),
-  provideNotes(), // notas ligadas ao resumo do mês e aos compromissos (`LinkedNotes` lê `NotesGateway`)
+  provideNotes(),
   provideProjections(),
   provideMonthlySummary(),
   provideDebtOverview(),
@@ -37,13 +29,11 @@ export const PLANNING_PROVIDERS: Provider[] = [
   provideCommitments(),
   providePeople(),
 ];
-/** Detalhe da movimentação: marcar como despesa de terceiro (pessoas + terceiros). */
 export const TRANSACTIONS_PROVIDERS: Provider[] = [
   provideThirdParties(),
   providePeople(),
   provideNotes(),
 ];
-/** Relatórios: só o Início os lê; o UI Kit (dev/mock) usa a porta de demonstração do mesmo provider. */
 export const REPORTS_PROVIDERS: Provider[] = [provideReports()];
 export const HOME_PROVIDERS: Provider[] = [
   provideDashboard(),
@@ -54,7 +44,6 @@ export const HOME_PROVIDERS: Provider[] = [
   providePeople(),
   provideThirdParties(),
 ];
-/** Detalhe do cartão e fatura: dívidas totais e as notas ligadas (`LinkedNotes` lê `NotesGateway`). */
 export const CARD_DETAIL_PROVIDERS: Provider[] = [provideDebtOverview(), provideNotes()];
 export const GOALS_PROVIDERS: Provider[] = [provideGoals(), provideNotes()];
 export const NOTES_PROVIDERS: Provider[] = [

@@ -5,22 +5,14 @@ import { ratioForBar } from '~/util/ratio';
 
 export type SegmentTone = 'accent' | 'positive' | 'warning' | 'risk' | 'neutral';
 
-/** Segmento já calculado pelo backend: `share` é a razão dele no total (o front não soma nem divide). */
 export interface SegmentedBarSegment {
   readonly id: string;
   readonly label: string;
-  /** Razão decimal (`0.4000`) do backend. */
   readonly share: string;
-  /** Texto do valor, formatado por quem usa (ex.: "R$ 820,00"). */
   readonly valueText: string;
   readonly tone: SegmentTone;
 }
 
-/**
- * Barra segmentada (DS 02: progresso do orçamento mensal, hoje "em breve"). Desenha segmentos **já calculados**
- * pelo backend; a legenda em texto (rótulo e valor) é o sinal principal e a cor só reforça. Desabilitada
- * (`disabled`) mostra a trilha vazia e "Disponível em breve", sem número nenhum. Presentational.
- */
 @Component({
   selector: 'app-segmented-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,7 +25,6 @@ export interface SegmentedBarSegment {
         [attr.data-cy]="cy() + '-track'"
       >
         @for (seg of drawn(); track seg.id) {
-          <!-- Largura = o share do backend (posicionamento, não conta). -->
           <!-- eslint-disable-next-line @angular-eslint/template/no-inline-styles -->
           <span class="sb__seg" [attr.data-tone]="seg.tone" [style.width.%]="seg.width"></span>
         }

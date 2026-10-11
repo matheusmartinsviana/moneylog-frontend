@@ -26,11 +26,6 @@ export type RemindersState =
 
 type Write = () => Observable<unknown>;
 
-/**
- * Facade dos lembretes (abertos primeiro). Cada escrita roda em fila e, no fim, a lista é relida do
- * backend (a resposta é a verdade). `saved$`-like: `lastSaved` guarda o lembrete devolvido. Concluir não
- * gera notificação (regra do backend). Escopo de componente.
- */
 @Injectable()
 export class RemindersFacade {
   private readonly gateway = inject(NotificationsGateway);
@@ -101,7 +96,6 @@ export class RemindersFacade {
     this.enqueue(() => this.gateway.completeReminder(id));
   }
 
-  /** Adia para daqui a `days` dias (1 = amanhã). */
   snooze(id: string, days = 1): void {
     this.enqueue(() => this.gateway.snoozeReminder(id, days));
   }

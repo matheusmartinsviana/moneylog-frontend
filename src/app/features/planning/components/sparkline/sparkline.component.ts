@@ -1,15 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/** Uma série da sparkline: valores decimais do backend (strings) na ordem do eixo X. */
 export interface SparklineSeries {
   readonly id: string;
   readonly values: readonly string[];
-  /**
-   * Posição de cada valor no eixo X (a competência, `YYYY-MM`, ordenável como texto). Com `keys` as séries se
-   * alinham pelo mês, mesmo com tamanhos diferentes; sem `keys`, vale a posição no índice (FE-S-174).
-   */
   readonly keys?: readonly string[];
-  /** Linha tracejada (a estimativa não se confunde com a base: nunca só cor). */
   readonly dashed?: boolean;
 }
 
@@ -24,12 +18,6 @@ interface DrawnSeries {
   readonly dots: readonly { readonly x: number; readonly y: number }[];
 }
 
-/**
- * Sparkline em SVG próprio (sem biblioteca de gráficos): desenha **os valores do backend** com escala
- * visual apenas (`Number()` só para posicionar pontos; nenhuma conta financeira). Decorativa para leitor de
- * tela (`aria-hidden`): a tabela equivalente ao lado carrega os mesmos valores. A tendência é tracejada e
- * os pontos têm forma, então a leitura não depende só de cor.
- */
 @Component({
   selector: 'app-sparkline',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -149,13 +137,11 @@ export class SparklineComponent {
     };
   });
 
-  /** Linha do zero (só quando a escala atravessa o zero): é só desenho. */
   protected readonly zeroY = computed(() => {
     const extent = this.extent();
     return extent !== null && extent.min < 0 && extent.max > 0 ? { y: this.scaleY()(0) } : null;
   });
 
-  /** O domínio do eixo X: as chaves (competências) de todas as séries, sem repetir, em ordem. */
   private readonly domain = computed(() => {
     const keys = new Set<string>();
     for (const series of this.series()) for (const key of series.keys ?? []) keys.add(key);

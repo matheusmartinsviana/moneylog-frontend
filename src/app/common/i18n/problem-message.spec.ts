@@ -12,11 +12,6 @@ const problem = (status: number, code: string): Problem => ({
   retryAfterSeconds: null,
 });
 
-/**
- * Códigos concretos da tabela `Problem.code` de `contracts/openapi.yaml` (curingas `*_TOO_LONG` e
- * `*_REQUIRED` ficam de fora: os concretos que o backend lança estão em `EMITTED`). Ao mudar a tabela
- * do contrato, atualize esta lista: o teste garante que nenhum code fica sem tradução.
- */
 const CONTRACT_CODES = [
   'VALIDATION_FAILED',
   'UNAUTHENTICATED',

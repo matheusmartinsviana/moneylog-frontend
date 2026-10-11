@@ -11,11 +11,6 @@ import type { Card } from '~/modules/cards/core/types/card';
 import { formatCompetenceShort, formatIsoDate } from '~/util/date';
 import { isPositive } from '~/util/money';
 
-/**
- * Um cartão na lista (card no celular, linha de tabela no desktop). Presentational: limite, disponível,
- * crédito e fatura atual são os que a API calculou; só habilita "Arquivar" quando `archivable` é `true`.
- * Nunca mostra número, validade ou CVV (o contrato não os tem).
- */
 @Component({
   selector: 'li[app-card-row]',
   imports: [RouterLink, MoneyComponent, LimitMeterComponent, ClosingBadgeComponent],

@@ -1,10 +1,6 @@
 import { expect, seedMockResponses, seedPreferences, test, waitForApp } from './support';
 import { homeResponses } from './support/home-fixtures';
 
-/**
- * Fumaça do movimento LIGADO (o resto da suíte roda com `reducedMotion: 'reduce'`): o Início anima a entrada
- * e termina com todos os blocos visíveis, sem classes de animação sobrando, e clicáveis.
- */
 test.use({ reducedMotion: 'no-preference' });
 
 test('o Início entra em cascata e termina visível e clicável', async ({ page }) => {
@@ -15,7 +11,6 @@ test('o Início entra em cascata e termina visível e clicável', async ({ page 
 
   const home = page.locator('[data-cy="home-dashboard"]');
   await expect(home).toBeVisible();
-  // Os blocos abaixo da dobra entram ao aparecer: rola por todos e confere que terminam visíveis.
   for (const child of await home.locator(':scope > *').all()) {
     await child.scrollIntoViewIfNeeded();
     await expect(child).not.toHaveClass(/m-pending/, { timeout: 3000 });

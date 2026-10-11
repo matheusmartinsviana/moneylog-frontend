@@ -36,12 +36,6 @@ import { formatCompetence, formatIsoDate } from '~/util/date';
 import { formatMoney, isPositive } from '~/util/money';
 import { formatRatio } from '~/util/ratio';
 
-/**
- * Dívidas totais (smart): quanto o usuário ainda deve, **como o servidor calculou** (cartões, pessoas e
- * outros credores), o custo fixo **ao lado e separado** (nunca soma no total), a comparação com renda e saldo,
- * o cronograma de vencimentos por mês e o caminho da meta de quitar tudo. O front só exibe: sem renda, as
- * razões ficam ocultas com o motivo; "nada cadastrado" nunca vira "sem dívidas".
- */
 @Component({
   selector: 'app-debts-overview-page',
   imports: [
@@ -124,7 +118,6 @@ export class DebtsOverviewPage implements OnInit {
     });
   }
 
-  /** Há saldo devedor? (Só lê o sinal do total que o servidor devolveu.) */
   protected hasDebt(data: DebtOverview): boolean {
     return isPositive(data.total);
   }

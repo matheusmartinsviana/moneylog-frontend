@@ -13,7 +13,6 @@ function setup(gateway = new CardsGatewayStub()) {
 describe('InvoiceDetailFacade', () => {
   it('Dado a fatura, então expõe itens, total, carryIn e outstanding como o backend os calculou', () => {
     const gateway = new CardsGatewayStub();
-    // Os valores não fecham de propósito (total − pago ≠ em aberto): o front mostra o que veio.
     gateway.invoice$ = of(
       anInvoice({
         total: brl('10.00'),

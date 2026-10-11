@@ -12,7 +12,6 @@ import {
 } from '~/util/markdown/markdown';
 import { wikilinkKey } from '~/util/markdown/wikilink-key';
 
-/** Todos os nós inline da árvore, em qualquer profundidade. */
 function allInlines(blocks: readonly MdBlock[]): MdInline[] {
   const out: MdInline[] = [];
   const walkInline = (nodes: readonly MdInline[]) => {
@@ -36,7 +35,6 @@ function allInlines(blocks: readonly MdBlock[]): MdInline[] {
   return out;
 }
 
-/** Payloads clássicos de XSS (OWASP) e variações específicas de Markdown. */
 const XSS_PAYLOADS: readonly string[] = [
   '<script>alert(1)</script>',
   '<SCRIPT SRC=http://evil/x.js></SCRIPT>',
@@ -205,14 +203,12 @@ describe('parseMarkdown', () => {
       (payload) => {
         const blocks = parseMarkdown(payload);
         const nodes = allInlines(blocks);
-        // 1) Todo link vivo tem esquema permitido e nenhum atributo extra.
         for (const node of nodes) {
           if (node.kind === 'link') {
             expect(node.href).toMatch(/^(https?:\/\/|mailto:)/i);
             expect(node.href.toLowerCase()).not.toContain('javascript:');
           }
         }
-        // 2) A árvore só tem tipos de dados conhecidos (nunca "html"): HTML bruto é texto.
         const kinds = new Set([...nodes.map((n) => n.kind), ...blocks.map((b) => b.kind)]);
         for (const kind of kinds) {
           expect([
@@ -234,7 +230,6 @@ describe('parseMarkdown', () => {
             'table',
           ]).toContain(kind);
         }
-        // 3) Imagens são sempre bloqueadas (a árvore não tem como carregar).
         for (const node of nodes) {
           if (node.kind === 'image')
             expect(Object.keys(node).sort()).toEqual(['alt', 'kind', 'source']);

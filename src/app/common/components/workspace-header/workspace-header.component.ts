@@ -20,10 +20,6 @@ import { ThemeService } from '~/app/common/services/theme.service';
 import { NotificationsPopoverComponent } from '~/app/features/notifications/components/notifications-popover.component';
 import { UnreadCountFacade } from '~/modules/notifications/core/facades/unread-count.facade';
 
-/**
- * Hora local (0 a 23) usada **só** para escolher "Bom dia", "Boa tarde" ou "Boa noite" (FE-S-211): nenhuma
- * data ou valor financeiro depende dela (as datas vêm do backend, `asOf`). Injetável para o teste.
- */
 export const GREETING_HOUR = new InjectionToken<() => number>('GREETING_HOUR', {
   providedIn: 'root',
   factory: () => () => new Date().getHours(),
@@ -31,23 +27,12 @@ export const GREETING_HOUR = new InjectionToken<() => number>('GREETING_HOUR', {
 
 export type GreetingPeriod = 'morning' | 'afternoon' | 'evening';
 
-/** 05:00 a 11:59 manhã; 12:00 a 17:59 tarde; o restante, noite. */
 export function greetingPeriod(hour: number): GreetingPeriod {
   if (hour >= 5 && hour < 12) return 'morning';
   if (hour >= 12 && hour < 18) return 'afternoon';
   return 'evening';
 }
 
-/**
- * Cabeçalho do workspace (DS 02, T194), no shell de todas as rotas, **compacto e em uma linha só**:
- * - **saudação** (sem nome, D4) e subtítulo **só no Início** (as demais telas têm o `h1` próprio);
- * - **busca global** (T209) em pílula; em tela compacta, um botão de lupa que abre uma folha;
- * - à direita: tema (sol/lua, alterna claro e escuro), **sino** de notificações (abre um pop-up com as últimas, com o
- *   contador de não lidas do backend, polling leve só com a aba visível) e o avatar genérico (menu do perfil). O
- *   estado da IA fica na sidebar (item "IA").
- * As ações rápidas (adicionar despesa/receita, transferir, emprestei) moraram aqui e foram para o cartão do
- * Quick Capture no Início; nas demais telas o "+" da sidebar e da barra inferior leva ao registro. Presentational + roteador.
- */
 @Component({
   selector: 'app-workspace-header',
   imports: [
@@ -69,7 +54,6 @@ export class WorkspaceHeaderComponent {
   private readonly unread = inject(UnreadCountFacade);
 
   private readonly theme = inject(ThemeService);
-  /** Sol quando o tema na tela é claro, lua quando é escuro (o botão alterna claro e escuro). */
   protected readonly themeIcon = computed(() =>
     this.theme.effective() === 'dark' ? 'moon' : 'sun',
   );
@@ -78,7 +62,6 @@ export class WorkspaceHeaderComponent {
     return this.theme.effective() === 'dark' ? copy.toLight : copy.toDark;
   });
 
-  /** Alterna claro e escuro; "Sistema" continua nas Configurações. */
   protected cycleTheme(): void {
     this.theme.set(this.theme.effective() === 'dark' ? 'light' : 'dark');
   }

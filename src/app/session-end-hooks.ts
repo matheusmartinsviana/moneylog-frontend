@@ -10,7 +10,6 @@ import { PUSH_SUBSCRIPTION_KEY } from '~/modules/notifications/core/facades/push
 import { NotificationsGateway } from '~/modules/notifications/core/interfaces/notifications.gateway';
 import { readStorage, removeStorage } from '~/util/safe-storage';
 
-/** No logout: cancela a assinatura de push no backend (melhor esforço) e esquece o id guardado (M4). */
 export function cancelPushHook(gateway: NotificationsGateway): SessionEndHook {
   return (): Observable<unknown> => {
     const id = readStorage(PUSH_SUBSCRIPTION_KEY);
@@ -22,13 +21,8 @@ export function cancelPushHook(gateway: NotificationsGateway): SessionEndHook {
   };
 }
 
-/** Caches que o logout preserva: o shell do app (`ngsw:`) e a preferência de idioma do worker de push. */
 const KEPT_CACHE_PREFIXES = ['ngsw:', 'moneylog-prefs'];
 
-/**
- * No logout: apaga do Cache Storage tudo que não é o shell do app, para não sobrar dado privado no
- * dispositivo (hoje o `ngsw-config` não cacheia a API; isto é a rede de segurança). Melhor esforço.
- */
 export function clearPrivateCachesHook(cacheStorage: CacheStorage | undefined): SessionEndHook {
   return (): Observable<unknown> =>
     from(
@@ -44,7 +38,6 @@ export function clearPrivateCachesHook(cacheStorage: CacheStorage | undefined): 
     ).pipe(catchError(() => of(undefined)));
 }
 
-/** No logout: revoga todos os `blob:` URLs das fotos das metas e esvazia o cache em memória (ADR-018). */
 export function revokeGoalPhotosHook(cache: GoalPhotoCache): SessionEndHook {
   return (): Observable<unknown> => {
     cache.clear();

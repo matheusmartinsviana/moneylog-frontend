@@ -10,11 +10,6 @@ import type {
 import { IdempotencyTracker } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Recebimentos de terceiros **sem movimento de conta**: registrar (`exhaustMap` + `Idempotency-Key` por
- * tentativa) e remover (correção de vínculo). Nada toca conta, renda ou consumo; depois de cada ação, quem
- * usa relê o `third-party-receivables` do backend (o front não ajusta números). Escopo de componente.
- */
 @Injectable()
 export class ThirdPartyReceiptFacade {
   private readonly gateway = inject(ThirdPartiesGateway);
@@ -31,7 +26,6 @@ export class ThirdPartyReceiptFacade {
   readonly removing = this.removingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly recorded$ = this.recordedEvents.asObservable();
-  /** Emite o id removido. */
   readonly removed$ = this.removedEvents.asObservable();
 
   constructor() {

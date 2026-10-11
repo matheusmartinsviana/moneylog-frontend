@@ -6,15 +6,6 @@ import type { EntryTotals } from '~/modules/transactions/core/types/entry';
 import type { TransactionTotals } from '~/modules/transactions/core/types/transaction';
 import { isNegative } from '~/util/money';
 
-/**
- * Totais do filtro **inteiro**, exatamente como o backend os calculou (S-79, S-80). Presentational:
- * mostra `count`, entradas, saídas e líquido (registros) ou `total` e a quebra por categoria
- * (competência). Nada é somado aqui, mesmo que a página exibida traga outras linhas.
- *
- * `variant`: `footer` é a linha fixa no rodapé da tabela (desktop); `summary` é o resumo fixo acima da
- * lista no celular. Com filtro de conta, o líquido é "Movimento da conta" (revisão A25); com
- * `status=VOIDED`, a nota "estornadas não entram nos totais" (S-80).
- */
 @Component({
   selector: 'app-totals-row',
   imports: [MoneyComponent],

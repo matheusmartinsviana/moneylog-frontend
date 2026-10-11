@@ -7,10 +7,6 @@ import { NotificationIconComponent } from '~/app/features/notifications/componen
 import { notificationLink, notificationText } from '~/app/features/notifications/notification-text';
 import type { AppNotification } from '~/modules/notifications/core/types/notification';
 
-/**
- * Uma notificação da central (presentational). O texto é montado pela chave de i18n e pelos `params`;
- * "não lida" é dito em texto, nunca só pela cor. Leva à entidade citada e marca como lida.
- */
 @Component({
   selector: 'li[app-notification-row]',
   imports: [NotificationIconComponent, RouterLink],
@@ -54,7 +50,6 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
     </div>
   `,
   styles: `
-    /* Linha de uma lista agrupada (o contêiner arredondado e as divisórias são da página): sem caixa própria. */
     :host {
       position: relative;
       display: grid;
@@ -65,7 +60,6 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
       list-style: none;
     }
 
-    /* Não lida: bolinha de acento à esquerda (como no Mail). A palavra "Não lida" segue no texto, oculta. */
     .row__dot {
       position: absolute;
       top: 1.25rem;
@@ -109,7 +103,6 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
       margin-top: var(--space-2);
     }
 
-    /* Ações discretas em pílula: "Abrir" na tinta do acento, "Marcar como lida" só texto. */
     .row__action {
       display: inline-flex;
       align-items: center;

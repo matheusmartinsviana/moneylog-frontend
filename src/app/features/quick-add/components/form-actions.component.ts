@@ -3,10 +3,6 @@ import { RouterLink } from '@angular/router';
 
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/**
- * Rodapé dos formulários de movimentação (presentational): aviso de falha, "tentar de novo" (mesma
- * `Idempotency-Key`, quem usa decide), cancelar e salvar.
- */
 @Component({
   selector: 'app-form-actions',
   imports: [RouterLink],

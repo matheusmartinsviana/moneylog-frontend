@@ -86,7 +86,6 @@ describe('PeopleRequestsFacade', () => {
       const slice = await result;
       expect(slice.hasNext).toBe(true);
       expect(slice.items[0]).toMatchObject({ name: 'João', direction: 'RECEIVABLE' });
-      // O saldo é a string da API, sem conversão.
       expect(slice.items[0]?.net).toEqual({ amount: '150.00', currency: 'BRL' });
     });
 

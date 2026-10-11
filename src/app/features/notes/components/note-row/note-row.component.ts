@@ -10,10 +10,6 @@ import type { NoteSummary } from '~/modules/notes/core/types/note';
 import { formatInstant } from '~/util/date';
 import { highlightSegments } from '~/util/highlight';
 
-/**
- * Uma nota na lista: título (link para o editor), caminho, trecho com o termo destacado (texto puro do
- * backend, marcado com `<mark>`: nunca HTML), tags e a data. `li[app-note-row]`. Presentational.
- */
 @Component({
   selector: 'li[app-note-row]',
   imports: [RouterLink, ChipComponent, DisplayTextPipe],
@@ -125,7 +121,6 @@ export class NoteRowComponent {
   private readonly i18n = inject(I18nService);
 
   readonly note = input.required<NoteSummary>();
-  /** O termo buscado, para destacar no título e no trecho. */
   readonly term = input('');
 
   protected readonly titleParts = computed(() => highlightSegments(this.note().title, this.term()));

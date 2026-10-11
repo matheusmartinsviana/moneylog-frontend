@@ -11,11 +11,6 @@ interface PurchaseKey extends PurchasePreviewRequest {
   readonly cardId: string;
 }
 
-/**
- * Prévia da compra no cartão (S-124, T67): parcelas, fatura alvo, `LATE_ENTRY`/`OVER_LIMIT` e o limite
- * depois da compra, **como o backend devolveu**. O front não divide o valor nem escolhe a fatura:
- * quem usa só mostra `preview()`. Escopo de componente.
- */
 @Injectable()
 export class PurchasePreviewFacade {
   private readonly gateway = inject(CardsGateway);
@@ -32,7 +27,6 @@ export class PurchasePreviewFacade {
   readonly loading = this.preview.loading;
   readonly problem = this.preview.problem;
 
-  /** Valor, parcelas e data digitados; `null` (dados incompletos) limpa a prévia. */
   request(cardId: string, request: PurchasePreviewRequest | null): void {
     this.preview.request(request === null ? null : { cardId, ...request });
   }

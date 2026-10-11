@@ -9,12 +9,6 @@ import type { PurchasePreview } from '~/modules/cards/core/types/purchase-previe
 import type { Problem } from '~/util/api/problem';
 import { formatCompetenceShort, formatIsoDate } from '~/util/date';
 
-/**
- * Prévia da compra no cartão (T67 CA2 e CA3, presentational): mostra **exatamente** o que o backend
- * devolveu (S-124): cada parcela com seu valor e a fatura onde cai, o total, o limite disponível depois e
- * os avisos (`OVER_LIMIT`, `LATE_ENTRY`, `FUTURE_DATE`). O front não divide o valor nem escolhe a
- * fatura. Os avisos informam e nunca bloqueiam o salvar (S-125). Erro ao calcular é informativo.
- */
 @Component({
   selector: 'app-purchase-preview',
   imports: [MoneyComponent],

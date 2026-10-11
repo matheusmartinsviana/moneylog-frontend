@@ -9,11 +9,6 @@ import { problemMessage } from '~/app/common/i18n/problem-message';
 import { CardClosingFacade } from '~/modules/cards/core/facades/card-closing.facade';
 import type { Card } from '~/modules/cards/core/types/card';
 
-/**
- * "Confirmar fechamento" (modal): mostra o dia de fechamento e o de vencimento que estão salvos e
- * pergunta se batem com o documento do cartão. Confirmar chama o `POST closing-confirmation` e usa o cartão
- * da resposta. Se os dias estão errados, o caminho é "Ajustar os dias" (edição do cartão, com a prévia).
- */
 @Component({
   selector: 'app-closing-confirm-modal',
   imports: [FormModalComponent, RouterLink],
@@ -120,7 +115,6 @@ export class ClosingConfirmModalComponent {
 
   readonly card = input.required<Card>();
   readonly closed = output<void>();
-  /** Confirmado (cartão do backend): quem usa relê e avisa. */
   readonly confirmed = output<Card>();
 
   protected readonly banner = computed(() => {

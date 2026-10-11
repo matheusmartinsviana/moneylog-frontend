@@ -18,7 +18,6 @@ export interface ApiResult<T = any> {
   headers: Record<string, string>;
 }
 
-/** "Hoje" no fuso do usuário (America/Sao_Paulo), como o backend e o front contam. */
 export function todayInSaoPaulo(offsetDays = 0): string {
   const d = new Date(Date.now() + offsetDays * 86_400_000);
   return new Intl.DateTimeFormat('en-CA', {
@@ -29,13 +28,8 @@ export function todayInSaoPaulo(offsetDays = 0): string {
   }).format(d);
 }
 
-/** Falhas de contrato acumuladas por quem chamou a API (o fixture as confere no fim do teste). */
 export type FailureSink = ContractFailure[];
 
-/**
- * Cliente da API real para montar cenários (conta, categoria, movimentações) e para os testes de
- * contrato. Toda requisição e resposta passa pelo ajv (`contract.ts`); as falhas vão para `sink`.
- */
 export class Api {
   token = '';
   readonly calls: { method: string; path: string; status: number }[] = [];
@@ -65,7 +59,6 @@ export class Api {
       auth?: boolean;
       headers?: Record<string, string>;
       validate?: boolean;
-      /** `false`: não confere o corpo enviado (sonda com corpo de propósito inválido), só a resposta. */
       validateRequest?: boolean;
     } = {},
   ): Promise<ApiResult<T>> {
@@ -131,7 +124,6 @@ export class Api {
     return found.id;
   }
 
-  /** Cria a movimentação (com `Idempotency-Key` nova). Devolve a resposta completa. */
   tx(input: Record<string, unknown>, key: string = randomUUID()): Promise<ApiResult> {
     return this.call('POST', '/v1/transactions', input, { headers: { 'Idempotency-Key': key } });
   }
@@ -179,7 +171,6 @@ function pg(args: string[]): string {
   ).trim();
 }
 
-/** Apaga os dados de domínio (contas, movimentações, categorias do usuário) do banco de teste. */
 export function resetDatabase(): void {
   pg([
     '-c',
@@ -190,7 +181,6 @@ export function resetDatabase(): void {
   ]);
 }
 
-/** Consulta SQL só de leitura (evidência de persistência). */
 export function psql(sql: string): string {
   return pg(['-c', sql]);
 }

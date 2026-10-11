@@ -13,16 +13,9 @@ export type CategorySpendingState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: SpendingByCategory };
 
-/** Logo depois do resumo mensal e antes da série (R13). */
 const PRIORITY = 10;
-/** Quantas categorias o cartão mostra antes de "Outras" (T205). */
 export const CATEGORY_LIMIT = 5;
 
-/**
- * Facade do "Where your money goes" (T205): `share`, `base`, `total` e "Outras" vêm do backend e são repassados
- * como vieram (o front não normaliza os `share` nem subtrai nada). Cancela a leitura anterior ao pedir de
- * novo e passa pelo `LedgerGate`. `empty` = nenhuma categoria e nenhuma "Outras". Escopo de componente.
- */
 @Injectable()
 export class CategorySpendingFacade {
   private readonly gateway = inject(ReportsGateway);
@@ -63,7 +56,6 @@ export class CategorySpendingFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** Carrega a competência `YYYY-MM` (a do backend: `summary.month.competence`). */
   load(month: string): void {
     this.month = month;
     this.loads.next(month);

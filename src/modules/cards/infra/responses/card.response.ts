@@ -2,7 +2,6 @@ import type { components } from '~/util/api/schema.gen';
 
 type Schemas = components['schemas'];
 
-/** Respostas e corpos de cartões e faturas = schemas gerados do contrato (S-66). */
 export type CardResponse = Schemas['Card'];
 export type CardSliceResponse = Schemas['CardSlice'];
 export type CardCreateRequest = Schemas['CardInput'];

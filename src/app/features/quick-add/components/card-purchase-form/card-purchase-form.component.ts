@@ -36,21 +36,11 @@ import type {
 import type { Problem } from '~/util/api/problem';
 import { isIsoDate, todayIso } from '~/util/date';
 
-/** O que a tela pede ao backend para a prévia: o cartão e o corpo (`null` = dados incompletos). */
 export interface PurchasePreviewQuery {
   readonly cardId: string;
   readonly request: PurchasePreviewRequest;
 }
 
-/**
- * Formulário da compra no cartão (T67, presentational): cartão → valor total → descrição → categoria →
- * data → parcelas (`NumberStepper` de 1 a 36), com a **prévia do backend** logo abaixo (parcelas, fatura
- * alvo, avisos, limite depois). Emite `previewRequest` quando cartão, valor, parcelas e data estão
- * válidos (quem usa pede a prévia, com espera e cancelamento) e a entrada pronta em `submitted`. O
- * front nunca calcula parcela nem fatura. Sem `accountId`: a compra vai para a fatura. Na edição
- * (`initial`), só descrição, categoria e observação mudam (S-121): cartão, valor, data e parcelas ficam
- * em leitura, com a dica de como corrigir.
- */
 @Component({
   selector: 'app-card-purchase-form',
   imports: [
@@ -71,7 +61,6 @@ export class CardPurchaseFormComponent extends TransactionFormBase {
   readonly cards = input.required<readonly Card[]>();
   readonly categories = input.required<readonly Category[]>();
   readonly initial = input<CardPurchaseInput | null>(null);
-  /** Nome do cartão da compra editada (pode estar arquivado e fora de `cards`). */
   readonly initialCardName = input<string | null>(null);
   readonly defaultCardId = input<string | null>(null);
   readonly preview = input<PurchasePreview | null>(null);
@@ -116,7 +105,6 @@ export class CardPurchaseFormComponent extends TransactionFormBase {
 
   constructor() {
     super();
-    // Cartão padrão (o último usado, o único ou o pedido na URL), só enquanto o campo está vazio.
     effect(() => {
       const cardId = this.defaultCardId();
       untracked(() => {
@@ -124,7 +112,6 @@ export class CardPurchaseFormComponent extends TransactionFormBase {
         if (cardId && control.value === null && this.initial() === null) control.setValue(cardId);
       });
     });
-    // Edição: o valor inicial (e cada versão nova, depois de um conflito) repõe o formulário.
     effect(() => {
       const initial = this.initial();
       if (!initial) return;
@@ -143,9 +130,6 @@ export class CardPurchaseFormComponent extends TransactionFormBase {
         }
       });
     });
-    // Cartão, valor, parcelas ou data mudaram: pede a prévia (ou limpa, se faltam dados).
-    // Só a combinação cartão + valor + data + parcelas conta: descrição, categoria e observações não
-    // refazem a prévia (nem a fazem piscar "calculando").
     this.form.valueChanges
       .pipe(
         map(() => {

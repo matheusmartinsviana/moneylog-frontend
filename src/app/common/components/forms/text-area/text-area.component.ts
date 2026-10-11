@@ -14,23 +14,11 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { FieldControl } from '~/app/common/components/forms/field-control';
 import { FieldErrorComponent } from '~/app/common/components/forms/field-error/field-error.component';
 
-/** Seleção do texto (`start` e `end` em unidades UTF-16, como o `selectionStart` do navegador). */
 export interface TextSelection {
   readonly start: number;
   readonly end: number;
 }
 
-/**
- * Campo de texto de várias linhas (notas, descrições longas). O valor do controle é a string digitada
- * (`''` quando vazio); as regras (`required`, `maxLength`) vêm dos validators do `FormControl` e o erro
- * aparece só depois de `touched` (FieldError). Fonte de 16 px (o Safari do iPhone dá zoom abaixo disso) e
- * `resize` desligado (o controle nativo de redimensionar não existe aqui: use `rows` ou `fillHeight`).
- *
- * Para editores: `monospace`, atributos de lista de sugestões (`autocompleteList`, `ariaControls`,
- * `ariaActivedescendant`), os eventos `keyPressed` (antes de qualquer padrão do navegador; quem chama pode
- * `preventDefault`) e `selectionChanged`, e os métodos `focus()`, `selection()`, `setSelection()` e
- * `replaceRange()` (que preserva o desfazer nativo quando o navegador deixa). Presentational.
- */
 @Component({
   selector: 'app-text-area',
   imports: [FieldErrorComponent],
@@ -120,29 +108,18 @@ export class TextAreaComponent extends FieldControl<string | null> {
   readonly rows = input(6);
   readonly maxlength = input<number>();
   readonly placeholder = input<string>();
-  /** Só informa `aria-required`; a regra é o `Validators.required` do controle. */
   readonly mandatory = input(false);
   readonly monospace = input(false);
-  /** Esconde o rótulo visualmente (continua sendo o nome acessível). */
   readonly hideLabel = input(false);
-  /** Ocupa a altura do contêiner (editor em tela cheia). */
   readonly fillHeight = input(false);
   readonly spellcheck = input<'true' | 'false'>('true');
   readonly enterkeyhint = input<string>();
-  /** Ids de ajuda extra (ex.: dica de atalhos) somados ao `aria-describedby`. */
   readonly describedByExtra = input<string>();
-  /**
-   * O campo tem uma lista de sugestões (`role="listbox"`) ao lado. O `<textarea>` não aceita `role="combobox"`
-   * (axe `aria-allowed-role`): fica como caixa de texto com `aria-autocomplete="list"`, `aria-haspopup`,
-   * `aria-controls` (só com a lista no DOM) e `aria-activedescendant` (a opção ativa).
-   */
   readonly autocompleteList = input(false);
   readonly ariaControls = input<string>();
   readonly ariaActivedescendant = input<string>();
 
-  /** Tecla pressionada, entregue antes do padrão do navegador (use `preventDefault()` para tomar a tecla). */
   readonly keyPressed = output<KeyboardEvent>();
-  /** O cursor ou a seleção podem ter mudado (teclas, clique, seleção). */
   readonly selectionChanged = output<void>();
   readonly focused = output<void>();
 
@@ -151,8 +128,6 @@ export class TextAreaComponent extends FieldControl<string | null> {
 
   constructor() {
     super();
-    // O valor entra no campo **só se for diferente** do que ele já mostra: reescrever o mesmo texto leva o cursor
-    // para o fim em alguns navegadores (WebKit), e o editor acabou de posicionar a seleção.
     effect(() => {
       const next = this.value();
       const el = this.area().nativeElement;
@@ -190,10 +165,6 @@ export class TextAreaComponent extends FieldControl<string | null> {
     el.setSelectionRange(start, end);
   }
 
-  /**
-   * Troca `[start, end)` por `text` e deixa o cursor em `[selectStart, selectEnd]` (padrão: depois do texto).
-   * Usa `insertText` quando o navegador tem, para o Ctrl/Cmd+Z desfazer a edição; senão escreve direto.
-   */
   replaceRange(
     start: number,
     end: number,

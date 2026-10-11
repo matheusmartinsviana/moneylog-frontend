@@ -37,13 +37,6 @@ import { InvoiceDetailFacade } from '~/modules/cards/core/facades/invoice-detail
 import type { Invoice } from '~/modules/cards/core/types/invoice';
 import { formatCompetenceShort } from '~/util/date';
 
-/**
- * Detalhe da fatura (`/cards/:id/invoices/:invoiceId`, smart, T66): itens (parcelas e créditos),
- * pagamentos, `carryIn`, `creditCarry`, `outstanding` e situação, tudo como o backend calculou. "Pagar"
- * abre a folha de pagamento (T68) e fica desabilitada com a razão quando a fatura é `PAID` ou `FUTURE`
- * (a decisão vem do `status`; a recusa final é do backend). Depois de pagar, a fatura devolvida
- * substitui a atual e o cartão é recarregado.
- */
 @Component({
   selector: 'app-invoice-page',
   imports: [
@@ -74,7 +67,6 @@ export class InvoicePage {
   protected readonly facade = inject(InvoiceDetailFacade);
   private readonly cardFacade = inject(CardDetailFacade);
 
-  /** `:id` da rota: o cartão. */
   readonly id = input.required<string>();
   readonly invoiceId = input.required<string>();
 
@@ -103,7 +95,6 @@ export class InvoicePage {
     const status = this.invoice()?.status;
     return status !== undefined && status !== 'PAID' && status !== 'FUTURE';
   });
-  /** Por que "Pagar" não está disponível (só `PAID` e `FUTURE`). */
   protected readonly payBlocked = computed(() => {
     const status = this.invoice()?.status;
     return status === 'PAID' || status === 'FUTURE'
@@ -136,7 +127,6 @@ export class InvoicePage {
     this.accountsFacade
       .loadAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      // Sem a lista de contas, os pagamentos aparecem sem o nome da conta.
       .subscribe({ next: (accounts) => this.accounts.set(accounts), error: () => undefined });
   }
 
@@ -148,14 +138,12 @@ export class InvoicePage {
     this.paying.set(false);
   }
 
-  /** A fatura devolvida pelo pagamento é a fonte da verdade; o cartão (limite) é recarregado. */
   protected onPaid(invoice: Invoice): void {
     this.paying.set(false);
     this.facade.replace(invoice);
     this.cardFacade.loadCard(this.id(), true);
   }
 
-  /** Fechamento confirmado: relê o cartão e a fatura do backend (o calendário não muda, mas o selo some). */
   protected afterClosing(): void {
     this.closingOpen.set(false);
     this.toast.show(this.t().cards.closing.toast);

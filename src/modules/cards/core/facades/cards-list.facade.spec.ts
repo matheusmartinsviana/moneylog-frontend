@@ -32,7 +32,6 @@ describe('CardsListFacade', () => {
 
   it('Dado cartões, então "data" traz os dois comprometidos e o disponível exatamente como recebidos', () => {
     const gateway = new CardsGatewayStub();
-    // Os números não "fecham" de propósito: o front não soma nem corrige.
     gateway.cards = [
       aCard({
         id: 'a',

@@ -53,7 +53,6 @@ describe('ExportsRequestsFacade', () => {
       expect(req.request.responseType).toBe('blob');
       expect(req.request.params.get('from')).toBe('2026-10-01');
       expect(req.request.params.get('to')).toBe('2026-10-31');
-      // O token vai no header (interceptor), nunca na URL.
       expect(req.request.urlWithParams).not.toMatch(/token|access/i);
       req.flush(new Blob(['﻿data;tipo\r\n'], { type: 'text/csv' }), {
         headers: {

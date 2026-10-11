@@ -22,13 +22,6 @@ import {
   test,
 } from './fixtures';
 
-/**
- * T44 CA6 e PR 01 regra 10: 375/768/1280 px, tema claro/escuro, pt/en/es. Em cada combinação, as
- * telas de Início, lista (registros e competência), contas, /quick-add e detalhe mostram exatamente
- * os números que a API devolveu (a tela só exibe; quem calcula é o backend), sem scroll horizontal,
- * sem chave de i18n crua, sem violação axe crítica/séria, sem erro de console e sem requisição
- * duplicada (os dois últimos são conferidos pelos observadores automáticos).
- */
 const SIZES = { 375: VIEWPORTS.mobile, 768: VIEWPORTS.tablet, 1280: VIEWPORTS.desktop } as const;
 const LANGS: Lang[] = ['pt', 'en', 'es'];
 const THEMES = ['light', 'dark'] as const;
@@ -138,7 +131,6 @@ for (const [width, viewport] of Object.entries(SIZES)) {
             }
           };
 
-          // Início
           await open(page, '/planning/overview');
           await expect(cy(page, 'home-legacy')).toBeVisible();
           const m = summary.month;
@@ -158,7 +150,6 @@ for (const [width, viewport] of Object.entries(SIZES)) {
           expect(await cyText(page, 'home-month-refunds')).toBe(fmt(m.refunds.amount));
           await check('inicio');
 
-          // Lista (registros)
           await open(page, '/transactions');
           await expect(
             page
@@ -171,7 +162,6 @@ for (const [width, viewport] of Object.entries(SIZES)) {
           expect(await totalsText(page, 'in')).toBe(fmt(t.cashFlow.in.amount));
           expect(await totalsText(page, 'out')).toBe(fmt(t.cashFlow.out.amount));
           expect(await totalsText(page, 'net')).toBe(fmt(t.cashFlow.net.amount));
-          // O rodapé da lista é o fluxo de caixa do Início, número por número.
           expect(await totalsText(page, 'in')).toBe(await totalsText(page, 'in'));
           expect(t.cashFlow.in.amount).toBe(m.cashFlow.in.amount);
           expect(t.cashFlow.out.amount).toBe(m.cashFlow.out.amount);
@@ -189,7 +179,6 @@ for (const [width, viewport] of Object.entries(SIZES)) {
           }
           await check('lista');
 
-          // Lista (competência)
           await cy(page, 'view-entries').click();
           expect(await totalsText(page, 'total')).toBe(fmt(entries.totals.total.amount));
           expect(entries.totals.total.amount).toBe(m.consumption.amount);
@@ -198,7 +187,6 @@ for (const [width, viewport] of Object.entries(SIZES)) {
           }
           await check('competencia');
 
-          // Contas
           await open(page, '/accounts');
           await expect(cy(page, 'accounts-list')).toBeVisible();
           for (const acc of accounts) {
@@ -208,13 +196,11 @@ for (const [width, viewport] of Object.entries(SIZES)) {
           }
           await check('contas');
 
-          // /quick-add (Pix)
           await open(page, '/quick-add?mode=pix');
           await expect(cy(page, 'expense-form')).toBeVisible();
           await check('quick-add');
 
-          // Detalhe da despesa (painel no desktop, página no celular)
-          await page.goto(`/transactions/${meal.id}`); // no celular o detalhe é uma página: o título da lista fica oculto
+          await page.goto(`/transactions/${meal.id}`);
           await expect(cy(page, 'transaction-detail')).toBeVisible();
           await expect(cy(page, 'detail-amount'))
             .toContainText(fmt('123.45').replace('R$ ', '').replace(/\s/g, ''), {
@@ -233,7 +219,6 @@ for (const [width, viewport] of Object.entries(SIZES)) {
 
 test.describe('BUG-E2E-01', () => {
   test.use({ viewport: VIEWPORTS.mobile });
-  // Corrigido (BUG-E2E-01): o texto oculto da dica do "Crédito" desabilitado é contido pelo botão do seletor de modo.
   test('/quick-add não tem scroll horizontal a 375 px', async ({ page, api, signIn }) => {
     await api.createAccount({ name: 'Conta', openingBalance: '10.00' });
     await signIn(page);

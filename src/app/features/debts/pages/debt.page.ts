@@ -40,13 +40,6 @@ import { isOpenStatus } from '~/util/debt';
 
 type Dialog = 'forgive' | 'void' | null;
 
-/**
- * Detalhe da dívida (smart, T85): principal, quitado e o que falta (os do backend), status em texto e as
- * quitações com a opção de estornar cada uma. Ações: quitar (devolução recebida ou pagamento), perdoar o
- * restante (motivo obrigatório, não pode ser desfeito), estornar o registro (só dívida sem movimentação e
- * sem quitações: com `voidBlockedBy` a ação fica desabilitada com a explicação e o caminho) e editar a
- * descrição e a previsão. Nenhum valor é calculado aqui; depois de cada ação a dívida vem do backend.
- */
 @Component({
   selector: 'app-debt-page',
   imports: [
@@ -74,7 +67,6 @@ export class DebtPage {
   protected readonly facade = inject(DebtDetailFacade);
   protected readonly transactions = inject(TransactionDetailFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
   protected readonly debt = this.facade.debt;
@@ -82,7 +74,6 @@ export class DebtPage {
   protected readonly settling = signal(false);
   protected readonly editing = signal(false);
   protected readonly dialog = signal<Dialog>(null);
-  /** Quitação em estorno (a movimentação dela). */
   protected readonly reversing = signal<string | null>(null);
   private readonly accounts = signal<readonly Account[]>([]);
 
@@ -166,7 +157,6 @@ export class DebtPage {
     this.accountsFacade
       .loadAll('ACTIVE')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      // Sem a lista de contas a quitação mostra "cadastre uma conta"; o resto da tela segue.
       .subscribe({ next: (accounts) => this.accounts.set(accounts), error: () => undefined });
     this.facade.done$.pipe(takeUntilDestroyed()).subscribe(({ action }) => {
       this.dialog.set(null);
@@ -185,7 +175,6 @@ export class DebtPage {
       this.toast.show(this.t().debts.detail.settlements.reverseToast);
       this.facade.refresh(this.id());
     });
-    // Falha ao estornar a quitação: fecha o diálogo e mostra o motivo; o estado real vem do backend.
     effect(() => {
       if (this.transactions.voidProblem()) {
         untracked(() => {

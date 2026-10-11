@@ -1,4 +1,3 @@
-/** Tipos do negócio de notificações, lembretes, configurações e push (Etapa 7). */
 export type NotificationKind =
   | 'INVOICE_DUE'
   | 'DEBT_COLLECT'
@@ -12,7 +11,6 @@ export type NotificationKind =
 
 export type NotificationRefType = 'CARD' | 'DEBT' | 'RECURRENCE' | 'GOAL' | 'REMINDER' | 'USER';
 
-/** Tipos que o usuário pode ligar ou desligar (o contrato aceita só estes em `kinds`). */
 export const CONFIGURABLE_KINDS = [
   'INVOICE_DUE',
   'DEBT_COLLECT',
@@ -26,7 +24,6 @@ export type ConfigurableKind = (typeof CONFIGURABLE_KINDS)[number];
 export interface AppNotification {
   readonly id: string;
   readonly kind: NotificationKind;
-  /** Chave de i18n do título; o corpo é `bodyKey`. O texto é montado na tela com `params`. */
   readonly titleKey: string;
   readonly bodyKey: string;
   readonly params: Readonly<Record<string, string>>;
@@ -53,7 +50,6 @@ export interface Reminder {
   readonly id: string;
   readonly title: string;
   readonly remindOn: string;
-  /** `HH:mm` ou `null`. */
   readonly remindAt: string | null;
   readonly note: string | null;
   readonly link: ReminderLink | null;
@@ -78,7 +74,6 @@ export interface NotificationSettings {
     readonly time: string;
     readonly frequency: SummaryFrequency;
   };
-  /** Tipo ausente = ligado (padrão do backend). */
   readonly kinds: Readonly<Partial<Record<ConfigurableKind, boolean>>>;
   readonly quietHours: { readonly from: string; readonly to: string };
   readonly push: { readonly enabled: boolean };
@@ -99,7 +94,6 @@ export interface PushSubscriptionInput {
 
 export interface DailyMessage {
   readonly key: string;
-  /** `name?`, `available`, `committed7d`, `goalName?`, `goalProgress?` (decimais em string). */
   readonly params: Readonly<Record<string, string>>;
   readonly generatedAt: string;
 }

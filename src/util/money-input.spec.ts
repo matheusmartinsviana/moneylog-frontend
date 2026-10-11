@@ -22,10 +22,8 @@ describe('parseAmountInput (BRL, separadores pt-BR)', () => {
     ['R$ 1.234,56', '1234.56'],
     ['  9,9  ', '9.90'],
     ['1 234,56', '1234.56'],
-    // Teclado decimal de aparelho em outro idioma: um ponto seguido de 1 ou 2 dígitos é decimal.
     ['18.5', '18.50'],
     ['18.50', '18.50'],
-    // Com 3 dígitos depois do ponto, é separador de milhar.
     ['1.234', '1234.00'],
     ['1.500', '1500.00'],
     ['0.500', '500.00'],

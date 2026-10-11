@@ -4,19 +4,12 @@ export interface FrontmatterEntry {
 }
 
 export interface SplitNote {
-  /** Pares `chave: valor` do bloco de metadados (`---`); `null` quando a nota não tem bloco. */
   readonly meta: readonly FrontmatterEntry[] | null;
-  /** O corpo sem o bloco de metadados. */
   readonly content: string;
 }
 
 const BLOCK = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/;
 
-/**
- * Separa o bloco de metadados (frontmatter) do corpo de uma nota para a prévia do vault. Só texto: as chaves e os
- * valores vão para a tela por interpolação (escapados), nunca como HTML. Linhas que não são `chave: valor` ficam
- * de fora da lista (o corpo da nota continua intacto no editor).
- */
 export function splitFrontmatter(body: string): SplitNote {
   const match = BLOCK.exec(body);
   if (!match) return { meta: null, content: body };

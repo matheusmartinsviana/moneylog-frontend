@@ -4,7 +4,7 @@
 }
 
 :host(.row) {
-  position: relative; /* contém o link esticado (cartão inteiro clicável) */
+  position: relative;
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -65,7 +65,6 @@
   }
 }
 
-/* Botões do cartão ficam acima do link esticado. */
 .row__actions {
   position: relative;
   z-index: var(--z-content);

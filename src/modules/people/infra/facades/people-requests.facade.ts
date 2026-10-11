@@ -27,12 +27,10 @@ import type { Slice } from '~/util/api/slice';
 import { API_MOCKS } from '~/util/api-mocks';
 import { cleanSearchTerm } from '~/util/search-term';
 
-/** Falha de rede/HTTP → `ProblemError` tipado (o core nunca vê `HttpErrorResponse`). */
 function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então qualquer pessoa pedida por id não existe. */
 function notFound(): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -44,10 +42,6 @@ function notFound(): Observable<never> {
   return throwError(() => new ProblemError(problem));
 }
 
-/**
- * Facade de requisições de pessoas (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS`
- * ligado, responde com `mock-data` vazio e não faz requisição; desligado, chama `/v1`.
- */
 @Injectable({ providedIn: 'root' })
 export class PeopleRequestsFacade extends PeopleGateway {
   private readonly http = inject(HttpClient);
@@ -75,7 +69,6 @@ export class PeopleRequestsFacade extends PeopleGateway {
   create(input: PersonInput, idempotencyKey: string): Observable<Person> {
     const body = toCreateRequest(input);
     if (this.useMocks) {
-      // Sem persistência no mock: devolve a pessoa como o backend a devolveria.
       return of(
         toPerson({
           id: '00000000-0000-4000-8000-0000000000a1',

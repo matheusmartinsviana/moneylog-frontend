@@ -5,7 +5,6 @@ import type {
 } from '~/modules/projections/infra/responses/projection.response';
 import type { Money } from '~/util/money';
 
-/** Resposta → tipos do core. Só copia campos: nenhum valor é somado nem convertido para `number`. */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,
@@ -28,7 +27,6 @@ function toTrend(response: ProjectionTrendResponse): ProjectionTrend {
 
 export function toProjection(response: ProjectionResponse): Projection {
   return {
-    // Sempre uma projeção, nunca uma certeza: a UI não depende do campo vir `true`.
     isProjection: true,
     horizon: response.horizon,
     asOf: response.asOf,

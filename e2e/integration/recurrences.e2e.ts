@@ -3,12 +3,6 @@ import { brl, todayInSaoPaulo } from '../support/api';
 
 import { cy, cyText, expect, fmt, norm, open, pick, resetDatabase, test } from './fixtures';
 
-/**
- * Etapa 4 com o backend real, parte de recorrências (T90 do front): criar a recorrência → ver no Início e
- * na lista de pendentes → realizar com o valor real → pular → compra no cartão realizada cai na fatura →
- * resposta perdida ao realizar reenvia a mesma `Idempotency-Key`. O teste só compara a tela com a API.
- * **Escrito, não executado pelo dev-frontend** (o backend estava em teste): a QA roda `npm run e2e:integration`.
- */
 test.describe.configure({ mode: 'serial' });
 
 test.beforeEach(() => resetDatabase());
@@ -42,7 +36,6 @@ test('criar a recorrência Internet → ver no Início e nos pendentes → reali
   const nubank = await api.createAccount({ name: 'Nubank', openingBalance: '2000.00' });
   await signIn(page);
 
-  // 1. Cria pela tela (despesa mensal, em conta, boleto), começando hoje.
   await open(page, '/planning/recurrences/new');
   await cy(page, 'recurrence-amount').fill('119,00');
   await cy(page, 'recurrence-amount').blur();
@@ -58,7 +51,6 @@ test('criar a recorrência Internet → ver no Início e nos pendentes → reali
   expect(recurrence.amount.amount).toBe('119.00');
   expect(recurrence.account.id).toBe(nubank.id);
 
-  // 2. A lista e a estimativa mensal (rotulada) são as da API.
   const summary = await net.body('GET', '/v1/recurrences/summary');
   expect(summary.estimate).toBe(true);
   expect(await cyText(page, 'recurrence-fixed-costs')).toBe(fmt(summary.fixedCosts.amount));
@@ -72,7 +64,6 @@ test('criar a recorrência Internet → ver no Início e nos pendentes → reali
     fmt(recurrence.monthlyEstimate.amount),
   );
 
-  // 3. O Início mostra a ocorrência com "Realizar"; os totais são os do /upcoming.
   await open(page, '/planning/overview');
   await expect(cy(page, 'home-legacy')).toBeVisible();
   const upcoming = await net.body('GET', '/v1/dashboard/upcoming');
@@ -87,7 +78,6 @@ test('criar a recorrência Internet → ver no Início e nos pendentes → reali
     .first();
   expect(norm(await row.innerText())).toContain(fmt('119.00'));
 
-  // 4. Realiza do Início com o valor real 124,90 (a folha abre com o valor do modelo).
   await row.locator('[data-cy="home-upcoming-realize"]').click();
   await expect(cy(page, 'realize-sheet-panel')).toBeVisible();
   await expect(cy(page, 'realize-amount')).toHaveValue('119,00');
@@ -107,15 +97,12 @@ test('criar a recorrência Internet → ver no Início e nos pendentes → reali
   expect(realized.date).toBe(TODAY());
   expect(realized.recurrenceId).toBe(recurrence.id);
 
-  // 5. A ocorrência some do Início e do /upcoming (sem dupla contagem) e a despesa está na lista.
   const upcomingAfter = await api.get('/v1/dashboard/upcoming');
   expect(
     upcomingAfter.body.items.filter(
       (i: any) => i.kind === 'RECURRENCE' && i.refId === recurrence.id && i.dueDate === TODAY(),
     ),
   ).toHaveLength(0);
-  // O Início recarrega em segundo plano (sem esqueleto). Sem mais compromissos a lista mostra o vazio
-  // (os totais só aparecem com itens); com itens, os totais são os do /upcoming.
   const itemsLeft = upcomingAfter.body.items.length + upcomingAfter.body.undated.length;
   if (itemsLeft === 0) {
     await expect(cy(page, 'home-upcoming-empty')).toBeVisible();
@@ -224,7 +211,6 @@ test('compra no cartão recorrente: realizar leva à fatura que o backend escolh
   expect(realized.installments).toHaveLength(1);
   const invoiceId = realized.installments[0].invoiceId as string;
 
-  // O aviso leva à fatura da 1ª parcela, a que o backend escolheu, com o item da compra.
   await cy(page, 'toast-info').getByRole('button', { name: 'Ver fatura' }).click();
   await expect(page).toHaveURL(new RegExp(`/cards/${card.id}/invoices/${invoiceId}$`));
   expect(norm(await cy(page, 'invoice-items').innerText())).toContain('Streaming');
@@ -250,7 +236,6 @@ test('resposta perdida ao realizar: o "tentar de novo" reenvia a mesma Idempoten
     `/v1/recurrences/${recurrence.id}/occurrences/${TODAY()}/realize$`,
   );
 
-  // O backend processa, mas a resposta se perde.
   net.dropNextResponse('POST', realizePath);
   await cy(page, `occurrence-realize-${key}`).click();
   await cy(page, 'realize-submit').click();
@@ -284,7 +269,6 @@ test('realizar uma ocorrência já realizada: a mensagem é clara e a lista reca
   await open(page, '/planning/occurrences');
   const key = `${recurrence.id}-${TODAY()}`;
 
-  // Outra aba (a API) realiza antes.
   await api.ok(
     api.call('POST', `/v1/recurrences/${recurrence.id}/occurrences/${TODAY()}/realize`, undefined, {
       headers: { 'Idempotency-Key': crypto.randomUUID() },

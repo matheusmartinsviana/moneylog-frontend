@@ -246,7 +246,6 @@ describe('CardFormPage', () => {
       it('Dado fechamento 25 → 10, então pede a prévia (300 ms), mostra o efeito como recebido e só então habilita salvar', async () => {
         const gateway = new CardsGatewayStub();
         gateway.cards = [aCard({ id: 'card-1', closingDay: 25, dueDay: 5, version: 3 })];
-        // Valores de propósito diferentes dos "óbvios": a tela mostra o que veio.
         gateway.billingPreview$ = of(
           aBillingPreview({
             effectiveFromClosingDate: '2026-11-25',

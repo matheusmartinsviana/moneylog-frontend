@@ -33,7 +33,6 @@ async function setup() {
   const session = TestBed.inject(SessionFacade);
   const router = TestBed.inject(Router);
   await router.navigateByUrl('/transactions');
-  // Login real pela infra, para o token nascer do jeito de produção.
   session.login({ email: 'dono@moneylog.app', password: 'x' });
   controller.expectOne(AUTH_ENDPOINTS.login).flush(token('token-1'));
   return { http, controller, session, router };

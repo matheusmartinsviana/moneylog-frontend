@@ -6,7 +6,6 @@ import type { Debt, DebtInput, DebtUpdate } from '~/modules/debts/core/types/deb
 import { brl } from '~/testing/accounts-testing';
 import type { Slice } from '~/util/api/slice';
 
-/** O cenário padrão do plano: empréstimo de 300,00 ao João, 100,00 já devolvidos. */
 export function aDebt(overrides: Partial<Debt> = {}): Debt {
   return {
     id: 'debt-1',
@@ -37,17 +36,14 @@ export function aDebt(overrides: Partial<Debt> = {}): Debt {
   };
 }
 
-/** Porta falsa de dívidas: guarda as chamadas e devolve o que o teste configurar. */
 export class DebtsGatewayStub extends DebtsGateway {
   debts: Debt[] = [];
   readonly queries: DebtsQuery[] = [];
   readonly calls: string[] = [];
   readonly creates: DebtInput[] = [];
-  /** `Idempotency-Key` de cada `create`, na ordem. */
   readonly createKeys: string[] = [];
   readonly updates: DebtUpdate[] = [];
   readonly reasons: string[] = [];
-  /** Resultado das escritas (`create`, `update`, `cancel`, `void`). */
   next: Observable<Debt> | null = null;
   getResult: Observable<Debt> | null = null;
   listError: Observable<never> | null = null;

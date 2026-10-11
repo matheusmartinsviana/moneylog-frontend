@@ -18,7 +18,6 @@ import type { Reminder, ReminderInput } from '~/modules/notifications/core/types
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-/** Folha de criar/editar um lembrete (presentational): título, data, hora opcional e nota. */
 @Component({
   selector: 'app-reminder-form',
   imports: [
@@ -101,7 +100,6 @@ export class ReminderFormComponent {
   protected readonly t = inject(I18nService).t;
 
   readonly open = input.required<boolean>();
-  /** Lembrete em edição; `null` = novo. */
   readonly reminder = input<Reminder | null>(null);
   readonly busy = input(false);
   readonly saved = output<ReminderInput>();

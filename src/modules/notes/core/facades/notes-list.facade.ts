@@ -34,26 +34,13 @@ export type NotesListState =
       readonly hasNext: boolean;
     };
 
-/** Debounce da busca (T115 CA3). */
 export const SEARCH_DEBOUNCE_MS = 300;
-/**
- * A árvore de pastas é derivada dos caminhos (o contrato não tem endpoint de pastas). Para não fazer até 20
- * requisições seguidas a cada abertura, lê só `TREE_INITIAL_PAGES` páginas (50 notas cada) e o resto vem **sob
- * demanda** (`loadMoreTree`, `TREE_STEP_PAGES` por vez). Acima de `TREE_MAX_PAGES` (1.000 notas) a tela avisa
- * que a árvore é parcial (nunca trunca em silêncio).
- */
 export const TREE_INITIAL_PAGES = 2;
 export const TREE_STEP_PAGES = 4;
 export const TREE_MAX_PAGES = 20;
 
 type Command = { readonly kind: 'load' } | { readonly kind: 'more' };
 
-/**
- * Facade da lista de notas: busca (`q` com debounce de 300 ms; a requisição anterior é cancelada),
- * filtro por tag e pasta, lixeira (restaurar, esvaziar), tags com contagem e a **árvore de pastas** derivada
- * dos caminhos das notas ativas, lidos aos poucos (o backend não tem endpoint de pastas; ver `TREE_*`). Trocar o filtro cancela a
- * requisição em curso (`switchMap`). A lista nunca traz o corpo. Escopo de componente.
- */
 @Injectable()
 export class NotesListFacade {
   private readonly gateway = inject(NotesGateway);
@@ -86,24 +73,16 @@ export class NotesListFacade {
   readonly state = this.listState.asReadonly();
   readonly loadingMore = this.loadingMoreState.asReadonly();
   readonly tags = this.tagsState.asReadonly();
-  /** Árvore de pastas das notas ativas (raiz com `path` vazio). */
   readonly tree = this.treeState.asReadonly();
   readonly treeLoaded = this.treeLoadedState.asReadonly();
-  /**
-   * A árvore cobre só parte das notas: `available` (dá para carregar mais pastas) ou `capped` (já são 1.000
-   * notas; a árvore fica parcial e a tela avisa).
-   */
   readonly treeMore = this.treeMoreState.asReadonly();
   readonly treeLoadingMore = this.treeLoadingMoreState.asReadonly();
-  /** Quantas notas a árvore já considerou. */
   readonly treeNotes = this.treeNotesState.asReadonly();
-  /** Falha de restaurar/esvaziar; a lista continua como estava. */
   readonly actionProblem = this.actionProblemState.asReadonly();
   readonly busy = this.busyState.asReadonly();
   readonly restored$ = this.restoredEvents.asObservable();
   readonly emptied$ = this.emptiedEvents.asObservable();
 
-  /** Há algum filtro ativo (busca, tag ou pasta)? Distingue "vazio" de "sem resultado". */
   readonly filtered = computed(() => {
     const f = this.filtersState();
     return f.q !== '' || f.tag !== null || f.folder !== null;
@@ -192,7 +171,6 @@ export class NotesListFacade {
       });
   }
 
-  /** Aplica os filtros de uma vez (vindos da URL) e carrega a primeira página. */
   apply(filters: NotesFilters): void {
     const current = this.filtersState();
     const same =
@@ -200,14 +178,12 @@ export class NotesListFacade {
       current.tag === filters.tag &&
       current.folder === filters.folder &&
       current.view === filters.view;
-    // O mesmo filtro de novo (a URL ecoando o que a tela acabou de aplicar) não recarrega.
     if (this.started && same) return;
     this.started = true;
     this.filtersState.set(filters);
     this.commands.next({ kind: 'load' });
   }
 
-  /** Busca com debounce de 300 ms; a requisição anterior é cancelada. */
   search(term: string): void {
     this.searches.next(term);
   }
@@ -235,13 +211,11 @@ export class NotesListFacade {
     this.actionProblemState.set(null);
   }
 
-  /** Carrega a árvore de pastas (todas as notas ativas, ordenadas por caminho) e as tags. */
   loadTreeAndTags(): void {
     this.reloadTree();
     this.reloadTags();
   }
 
-  /** Lê mais páginas de caminhos para completar a árvore (a pedido do usuário). */
   loadMoreTree(): void {
     if (this.treeMoreState() !== 'available' || this.treeLoadingMoreState()) return;
     this.fetchTreePages(TREE_STEP_PAGES);

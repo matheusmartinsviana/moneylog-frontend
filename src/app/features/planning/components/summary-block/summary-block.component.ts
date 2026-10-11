@@ -3,10 +3,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MoneyComponent } from '~/app/common/components/money/money.component';
 import type { Money } from '~/util/money';
 
-/**
- * Uma linha do resumo (presentational): rótulo, valor que o backend calculou e, opcionalmente, uma nota
- * curta. Nada é somado aqui. `tone` só destaca saldo negativo (texto + cor).
- */
 @Component({
   selector: 'div[app-summary-block]',
   imports: [MoneyComponent],
@@ -54,7 +50,6 @@ export class SummaryBlockComponent {
   readonly cy = input.required<string>();
   readonly label = input.required<string>();
   readonly value = input<Money | null>(null);
-  /** Texto no lugar do valor (percentual já formatado, "—"). */
   readonly text = input<string>('');
   readonly note = input<string>();
 }

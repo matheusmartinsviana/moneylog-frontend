@@ -34,7 +34,6 @@ import { todayIso } from '~/util/date';
 import { counterpartyName } from '~/util/debt-name';
 import { formatMoney, isPositive } from '~/util/money';
 
-/** Códigos de regra que o backend atribui a um campo do formulário (além dos de movimentação). */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   ...TRANSACTION_CODE_TO_FIELD,
   ACCOUNT_ARCHIVED: 'accountId',
@@ -44,14 +43,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   DEBT_ALREADY_SETTLED: 'amount',
 };
 
-/**
- * "Quitar" uma dívida (T85): devolução recebida (`MONEY_RECEIVED` com `debtId`, nunca receita) quando
- * "me devem" ou pagamento (`DEBT_PAYMENT`) quando "eu devo". O valor sugerido é o `outstanding` **do
- * backend**; um valor maior recebe o erro dele traduzido (`DEBT_SETTLEMENT_EXCEEDS_OUTSTANDING`, S-143),
- * sem o front calcular nada. O envio leva `Idempotency-Key` por tentativa, reutilizada no "tentar de novo"
- * depois de falha de rede/5xx/`409 CONFLICT` e ao reabrir a folha com os mesmos dados; clique duplo = uma
- * requisição. Em sucesso emite a movimentação devolvida e quem usa recarrega a dívida do backend.
- */
 @Component({
   selector: 'app-settle-sheet',
   imports: [
@@ -75,9 +66,7 @@ export class SettleSheetComponent {
   protected readonly currency = ACCOUNT_CURRENCY;
 
   readonly open = input.required<boolean>();
-  /** A dívida a quitar: o `outstanding` dela é a sugestão de valor (vem do backend). */
   readonly debt = input.required<Debt>();
-  /** Contas `CASH` ativas. */
   readonly accounts = input.required<readonly Account[]>();
   readonly defaultAccountId = input<string | null>(null);
 
@@ -123,8 +112,6 @@ export class SettleSheetComponent {
   });
 
   constructor() {
-    // Abriu: valor = `outstanding` do backend, data = hoje, conta = a padrão. Uma falha ambígua (resposta
-    // perdida) continua pendente, com o "tentar de novo" e a mesma chave; qualquer outra é descartada.
     effect(() => {
       const open = this.open();
       const debt = this.debt();
@@ -140,8 +127,6 @@ export class SettleSheetComponent {
         });
       });
     });
-    // As contas podem chegar depois de a folha abrir (a tela as carrega à parte): se nenhuma conta foi
-    // escolhida ainda, a padrão (ou a única) entra assim que a lista chega.
     effect(() => {
       this.accounts();
       untracked(() => {

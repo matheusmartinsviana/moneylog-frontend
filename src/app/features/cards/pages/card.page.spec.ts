@@ -35,7 +35,6 @@ class DummyComponent {}
 
 const text = (el: HTMLElement) => el.textContent?.replace(/\s+/g, ' ').trim();
 
-/** O cenário padrão: fatura corrente 1.283,00, 1.000,00 em parcelas futuras, disponível 7.717,00. */
 function scenario(): CardsGatewayStub {
   const gateway = new CardsGatewayStub();
   gateway.cards = [aCard()];
@@ -107,7 +106,6 @@ describe('CardPage', () => {
   it('Dado a tela, então mostra o bloco de notas vinculadas ao registro (a página injeta o bloco; nenhum módulo importa notes)', async () => {
     await setup();
 
-    // As notas ligadas moram em "Mais" (recolhido e montado só ao abrir).
     await userEvent.click(await screen.findByTestId('card-more-toggle'));
     expect(await screen.findByTestId('card-notes-block')).toHaveTextContent('Notas vinculadas');
     expect(screen.getByTestId('card-notes-new')).toBeInTheDocument();

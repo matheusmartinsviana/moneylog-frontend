@@ -44,12 +44,6 @@ import { formatIsoDate } from '~/util/date';
 import { formatMoney } from '~/util/money';
 import { formatRatio, ratioForBar } from '~/util/ratio';
 
-/**
- * Detalhe da meta (smart, T100): progresso, valores, estimativa mensal, aviso de reserva descoberta, as
- * reservas e as ações (reservar, liberar, editar, arquivar). **Tudo vem do backend**: depois de reservar ou
- * liberar, a meta da resposta vira o estado (sem chute). Meta atingida explica as duas ações de "usar o
- * dinheiro" (despesa + liberação) sem automatizar nada.
- */
 @Component({
   selector: 'app-goal-page',
   imports: [
@@ -85,7 +79,6 @@ export class GoalPage {
   protected readonly t = this.i18n.t;
   protected readonly detail = inject(GoalDetailFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
   protected readonly goal = this.detail.goal;
@@ -93,7 +86,6 @@ export class GoalPage {
     const goal = this.goal();
     return goal ? goalName(goal, this.t().goals) : '';
   });
-  /** Meta de medida arquivada não calcula: `current` e `remaining` vêm nulos. */
   protected readonly notCalculated = computed(() => this.goal()?.current === null);
   protected readonly planError = computed(() => {
     const problem = this.detail.planProblem();
@@ -157,7 +149,6 @@ export class GoalPage {
   protected readonly canRelease = computed(() => (this.goal()?.reservations.length ?? 0) > 0);
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('goals')
       .pipe(takeUntilDestroyed())
@@ -203,7 +194,6 @@ export class GoalPage {
     this.reserveOpen.set(true);
   }
 
-  /** A meta que o backend devolveu (com `current`, `progress` e as reservas) vira o estado. */
   protected afterReserve(goal: Goal): void {
     this.reserveOpen.set(false);
     this.detail.apply(goal);
@@ -222,7 +212,6 @@ export class GoalPage {
     if (!this.detail.busy()) this.confirmingArchive.set(false);
   }
 
-  /** "Cadastrei tudo": o servidor fixa o total de hoje; a meta devolvida vira o estado. */
   protected confirmBaseline(): void {
     this.detail.clearProblem();
     this.detail.baseline(this.id());

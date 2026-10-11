@@ -10,7 +10,6 @@ import type {
 } from '~/modules/commitments/infra/responses/commitment.response';
 import type { Money } from '~/util/money';
 
-/** Resposta → tipos do core. Só copia campos: nenhum valor é somado nem convertido para `number`. */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,

@@ -28,11 +28,6 @@ import {
 
 const PERMISSIVE: AmountRules = { allowNegative: true, allowZero: true };
 
-/**
- * Campo de valor monetário (T32). O valor do controle é a string decimal da API (`"1234.50"`) ou
- * `null` enquanto o texto é inválido; nunca um `number`. Separadores e símbolo seguem a moeda do
- * dado (FE 04). O texto é reformatado ao sair do campo (`1.234,5` → `1.234,50`).
- */
 @Component({
   selector: 'app-money-input',
   imports: [FieldErrorComponent],
@@ -51,7 +46,6 @@ const PERMISSIVE: AmountRules = { allowNegative: true, allowZero: true };
 export class MoneyInputComponent extends FieldControl<string | null> implements Validator {
   private readonly i18n = inject(I18nService);
 
-  /** Moeda do dado (ISO 4217), não a do idioma. */
   readonly currency = input('BRL');
   readonly allowNegative = input(false);
   readonly allowZero = input(false);
@@ -82,12 +76,10 @@ export class MoneyInputComponent extends FieldControl<string | null> implements 
 
   constructor() {
     super();
-    // Moeda ou regras mudaram: revalida o texto atual e avisa o formulário.
     effect(() => {
       const currency = this.currency();
       const rules = this.rules();
       const text = untracked(this.text);
-      // A primeira execução só registra as regras iniciais: o formulário já validou com elas.
       if (!this.rulesApplied || text === '') {
         this.rulesApplied = true;
         return;
@@ -141,7 +133,6 @@ export class MoneyInputComponent extends FieldControl<string | null> implements 
   private apply(result: AmountResult): void {
     this.result.set(result);
     const value = result.ok ? result.value : null;
-    // Mesmo valor (ex.: `1.234,5` → `1.234,50`) não dispara outra mudança no formulário.
     if (value === this.emitted && value !== null) return;
     this.emitted = value;
     this.onChange(value);

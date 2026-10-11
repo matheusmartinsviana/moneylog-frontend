@@ -9,10 +9,6 @@ import { isNegative, isPositive } from '~/util/money';
 
 let nextId = 0;
 
-/**
- * "Quanto tenho": o disponível em destaque e, logo abaixo, a fórmula com os valores recebidos
- * (em contas − comprometido em 30 dias − reservado, S-21). O front não refaz a conta.
- */
 @Component({
   selector: 'app-available-balance',
   imports: [MoneyComponent, RouterLink, TooltipDirective],
@@ -27,6 +23,5 @@ export class AvailableBalanceComponent {
 
   protected readonly headingId = `available-title-${++nextId}`;
   protected readonly negative = computed(() => isNegative(this.balances().available));
-  /** Há valor reservado em metas: só lê o sinal do texto da API, sem somar nada. */
   protected readonly hasReserved = computed(() => isPositive(this.balances().reserved));
 }

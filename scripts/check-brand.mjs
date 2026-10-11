@@ -1,14 +1,4 @@
 #!/usr/bin/env node
-/**
- * A marca vive em um lugar só (T192, ADR-011): `BRAND_NAME` em src/app/config/brand.ts.
- * - `index.html` (`<title>`, `application-name`, `apple-mobile-web-app-title`) e o manifest são arquivos
- *   estáticos que não leem TypeScript: precisam repetir a constante (este script falha se divergirem);
- * - nenhuma string de marca escrita à mão em ts/html da interface, fora da constante e dos specs: nem
- *   sozinha ("moneylog" entre aspas ou entre tags) nem **no meio de uma frase** (`\bmoneylog\b` dentro de uma
- *   string ou de uma linha de tradução). As traduções interpolam `BRAND_NAME`. Exceção documentada: a **chave
- *   reservada do frontmatter** das notas, que se chama "moneylog" e não é a marca (ver `RESERVED_KEY`);
- * - o logo (arte do dono, `brand/`) aparece na sidebar e no login e os PNGs gerados por `npm run icons` existem.
- */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
@@ -44,10 +34,8 @@ function walk(dir) {
   });
 }
 const literal = new RegExp(`(['"\`])${brand}\\1|>\\s*${brand}\\s*<`, 'i');
-/** `moneylog.language`, `moneylog:note-draft`, `moneylog-vault.zip`: identificadores técnicos, não a marca em texto. */
 const ident = '(?![.:_-]\\w)';
 const word = new RegExp(`\\b${brand}\\b${ident}`, 'i');
-/** A chave reservada do frontmatter das notas (`moneylog:`) é um nome técnico, não a marca. */
 const RESERVED_KEY = new RegExp(
   `(chave|key|clave)\\s+${brand}\\b|\\b${brand}\\s+key\\b|${brand}\\s+das propriedades|${brand}\\s+in the properties`,
   'i',
@@ -64,7 +52,6 @@ for (const file of walk(join(src, 'app'))) {
     .forEach((line, index) => {
       if (comment.test(line)) return;
       const bare = literal.test(line);
-      // Traduções: qualquer menção à marca fora de `BRAND_NAME` (frase inteira, inclusive linha quebrada).
       const inSentence = translation ? word.test(line) : quoted.test(line);
       if ((bare || inSentence) && !RESERVED_KEY.test(line))
         problems.push(`${rel}:${index + 1} marca escrita à mão: ${line.trim()}`);

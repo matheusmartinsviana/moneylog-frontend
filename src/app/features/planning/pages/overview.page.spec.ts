@@ -174,7 +174,6 @@ describe('OverviewPage (Panorama): dívidas e recorrências (T89)', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    // A recarga está pendente (NEVER): o Panorama segue na tela, sem esqueleto, e a folha com o erro.
     expect(summaries).toBe(2);
     expect(screen.queryByTestId('overview-loading')).not.toBeInTheDocument();
     expect(screen.getByTestId('home-legacy')).toBeInTheDocument();
@@ -192,7 +191,6 @@ describe('OverviewPage (Panorama): dívidas e recorrências (T89)', () => {
     recurrences.realize$ = failWith(0, 'NETWORK');
     await userEvent.click(screen.getByTestId('realize-submit'));
     await fixture.whenStable();
-    // A recarga do Panorama (aqui via o botão de erro de outra seção) não pode destruir a folha.
     fixture.componentInstance['dashboard'].reload();
     await fixture.whenStable();
     fixture.detectChanges();
@@ -237,7 +235,6 @@ describe('OverviewPage (Panorama): dívidas e recorrências (T89)', () => {
     expect(screen.getByTestId('home-upcoming-truncated')).toHaveTextContent(
       pt.home.upcoming.overdueTruncated,
     );
-    // Os totais continuam os do backend.
     expect(text(screen.getByTestId('home-upcoming-total-out'))).toBe('R$ 119,00');
   });
 

@@ -18,8 +18,6 @@ import {
   type World,
 } from '~/demo/demo-world';
 
-/** Respostas do modo demonstração no formato do contrato (`contracts/openapi.yaml`). Só no build `demo`. */
-
 export function norm(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
 }
@@ -34,8 +32,6 @@ export function paged<T>(
 }
 
 const ts = (iso: string) => `${iso}T12:00:00Z`;
-
-// ---------- Cadastros ----------
 
 export function accountView(w: World, a: AccountDef): S['Account'] {
   const reserved = reservedIn(w, a.id);
@@ -78,8 +74,6 @@ export const accRef = (w: World, id: string | null): S['AccountRef'] | null => {
   const a = w.accounts.find((x) => x.id === id);
   return a ? { id: a.id, name: a.name } : null;
 };
-
-// ---------- Cartão e faturas ----------
 
 function invoiceCore(w: World, inv: InvoiceDef): S['InvoiceSummary'] {
   return {
@@ -170,10 +164,6 @@ export function cardView(w: World): S['Card'] {
   };
 }
 
-/**
- * Segundo cartão do demo, **sem limite definido** e com o fechamento **não confirmado** (dados sintéticos,
- * sem fatura nem compra): mostra "Limite não definido" e o selo de fechamento provisório.
- */
 export function noLimitCardView(w: World): S['Card'] {
   return {
     id: demoId('card', 2),
@@ -216,8 +206,6 @@ export function futureInstallments(w: World): S['FutureInstallments'] {
     })),
   };
 }
-
-// ---------- Movimentações ----------
 
 function installmentsOf(w: World, rec: Rec): S['Installment'][] {
   return w.installments
@@ -424,8 +412,6 @@ export function listEntries(
   };
 }
 
-// ---------- Pessoas e dívidas ----------
-
 function personRef(p: PersonDef): S['PersonRef'] {
   return { id: p.id, name: p.name };
 }
@@ -509,8 +495,6 @@ export function personDetail(w: World, p: PersonDef): S['PersonDetail'] {
     debts: w.debts.filter((d) => d.personId === p.id).map((d) => debtSummary(w, d)),
   };
 }
-
-// ---------- Recorrências ----------
 
 export function nextDateOf(r: RecurrenceDef, after: string): string {
   let key = r.startDate.slice(0, 7);
@@ -599,8 +583,6 @@ export function listOccurrences(
   }
   return items.sort((a, b) => (a.date < b.date ? -1 : 1));
 }
-
-// ---------- Compromissos, painel e projeção ----------
 
 interface Commit {
   date: string | null;
@@ -903,8 +885,6 @@ export function projectionView(
   };
 }
 
-// ---------- Resumo mensal e relatórios ----------
-
 function totalsOf(w: World, month: string): S['SummaryTotals'] {
   const t = monthTotals(w, month);
   const net = t.income - t.consumption;
@@ -1084,8 +1064,6 @@ export function spendingByCategory(
         : null,
   };
 }
-
-// ---------- Notas e busca ----------
 
 function titleOf(n: NoteDef): string {
   const file = n.path.split('/').pop() ?? n.path;

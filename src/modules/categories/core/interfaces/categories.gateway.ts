@@ -12,10 +12,6 @@ export interface CategoriesQuery {
   readonly includeArchived: boolean;
 }
 
-/**
- * Porta de categorias (FE 01). Lista curta, sem paginação. As implementações falham com
- * `ProblemError` (`CATEGORY_NAME_TAKEN`, `VERSION_CONFLICT`...).
- */
 export abstract class CategoriesGateway {
   abstract list(query: CategoriesQuery): Observable<readonly Category[]>;
   abstract create(input: CategoryInput): Observable<Category>;

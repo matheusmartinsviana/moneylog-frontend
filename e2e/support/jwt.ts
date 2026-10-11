@@ -3,16 +3,11 @@ import { createHmac, randomUUID } from 'node:crypto';
 const b64 = (v: object | Buffer): string =>
   (Buffer.isBuffer(v) ? v : Buffer.from(JSON.stringify(v))).toString('base64url');
 
-/** `sub` (id do usuário) do access token que a API devolveu. */
 export function subjectOf(accessToken: string): string {
   const payload = JSON.parse(Buffer.from(accessToken.split('.')[1] ?? '', 'base64url').toString());
   return payload.sub as string;
 }
 
-/**
- * JWT HS256 **de verdade, assinado com o segredo do backend de teste, já vencido** (T44 CA4): o backend
- * o recusa por expiração (não por assinatura inválida), exatamente como um access token de 15 min velho.
- */
 export function expiredAccessToken(
   subject: string,
   secret = process.env['JWT_SECRET'] ?? '',

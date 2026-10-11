@@ -8,10 +8,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { problemMessage } from '~/app/common/i18n/problem-message';
 import type { Problem } from '~/util/api/problem';
 
-/**
- * Estado de erro de carregamento (FE 02): título, a mensagem do `code` e "tentar de novo". Presentational.
- * `role="alert"` para o leitor de tela anunciar a falha.
- */
 @Component({
   selector: 'app-error-state',
   imports: [EmptyStateComponent],

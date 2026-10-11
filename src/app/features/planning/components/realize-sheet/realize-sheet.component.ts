@@ -32,23 +32,15 @@ import type {
 import { formatIsoDate } from '~/util/date';
 import type { Money } from '~/util/money';
 
-/** A ocorrência a realizar: o valor é o do modelo (editável) e a data é a da ocorrência. */
 export interface RealizeTarget {
   readonly recurrenceId: string;
-  /** `YYYY-MM-DD`. */
   readonly date: string;
   readonly amount: Money;
   readonly label: string;
-  /** Compra no cartão? `null` quando a tela não sabe (o `/upcoming` não diz). */
   readonly viaCard: boolean | null;
-  /**
-   * Recorrência "a definir" (2.14.0): pede a conta e o meio de pagamento. `undefined` quando a tela não sabe
-   * (o `/upcoming` não diz): o backend responde `RECURRENCE_ACCOUNT_REQUIRED` e a folha passa a pedir.
-   */
   readonly accountToDefine?: boolean;
 }
 
-/** Meios de pagamento de uma recorrência em conta. */
 const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
   'PIX',
   'DEBIT',
@@ -58,12 +50,10 @@ const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
   'OTHER',
 ];
 
-/** Códigos em que a ocorrência já não está pendente: quem usa recarrega a lista. */
 const STALE_CODES: ReadonlySet<string> = new Set([
   'RECURRENCE_OCCURRENCE_ALREADY_REALIZED',
   'RECURRENCE_OCCURRENCE_SKIPPED',
   'RECURRENCE_NOT_AN_OCCURRENCE',
-  // Recorrência desativada ou encerrada em outro aparelho: a ocorrência saiu da agenda.
   'RECURRENCE_INACTIVE',
   'RECURRENCE_ENDED',
 ]);
@@ -78,13 +68,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   AMOUNT_ABOVE_LIMIT: 'amount',
 };
 
-/**
- * "Realizar" uma ocorrência (T88): confirma e cria a movimentação **na data da ocorrência**. O valor
- * começa com o do modelo e é editável (conta de luz). Para cartão, a fatura alvo é a que o backend
- * escolhe: vem na resposta (o aviso oferece "Ver fatura"). A `Idempotency-Key` é por tentativa e
- * reutilizada no "tentar de novo" (rede, 5xx, `409 CONFLICT`) e ao reabrir a folha; clique duplo = uma
- * requisição. `RECURRENCE_OCCURRENCE_ALREADY_REALIZED` mostra a mensagem e pede a recarga da lista.
- */
 @Component({
   selector: 'app-realize-sheet',
   imports: [ReactiveFormsModule, SheetComponent, MoneyInputComponent, SelectComponent],
@@ -105,9 +88,7 @@ export class RealizeSheetComponent {
   readonly target = input.required<RealizeTarget>();
 
   readonly closed = output<void>();
-  /** A movimentação que nasceu (a resposta do backend). */
   readonly realized = output<RealizedTransaction>();
-  /** A ocorrência já não está pendente (já realizada ou pulada): recarregue a lista. */
   readonly stale = output<void>();
 
   protected readonly form = new FormGroup({
@@ -117,7 +98,6 @@ export class RealizeSheetComponent {
     ]),
     method: new FormControl<string | null>({ value: null, disabled: true }, [Validators.required]),
   });
-  /** A recorrência não tem conta: a conta e o meio são obrigatórios para confirmar. */
   protected readonly needsAccount = signal(false);
   protected readonly accountOptions = computed<readonly ChoiceOption[]>(() =>
     (this.accounts.data() ?? [])
@@ -148,7 +128,6 @@ export class RealizeSheetComponent {
   });
 
   constructor() {
-    // Abriu: o valor do modelo (editável). Uma falha ambígua da MESMA ocorrência continua pendente.
     effect(() => {
       const open = this.open();
       const target = this.target();
@@ -162,7 +141,6 @@ export class RealizeSheetComponent {
     effect(() => {
       const problem = this.facade.problem();
       untracked(() => {
-        // O backend pediu a conta (a tela não sabia): passa a pedir e deixa o erro no campo.
         if (problem?.code === 'RECURRENCE_ACCOUNT_REQUIRED') this.requireAccount(true);
         this.fieldHandled.set(
           problem ? applyProblemToForm(this.form, problem, CODE_TO_FIELD) : false,
@@ -191,7 +169,6 @@ export class RealizeSheetComponent {
     });
   }
 
-  /** Conta e meio só valem (e só são validados) quando a recorrência não tem conta. */
   private requireAccount(needs: boolean): void {
     this.needsAccount.set(needs);
     const { accountId, method } = this.form.controls;
@@ -211,7 +188,6 @@ export class RealizeSheetComponent {
     const target = this.target();
     const amount = this.form.controls.amount.value;
     const { accountId, method } = this.form.getRawValue();
-    // O mesmo valor do modelo vai como "sem valor" (o backend usa o do modelo); outro valor vai como digitado.
     this.facade.realize(
       target.recurrenceId,
       target.date,

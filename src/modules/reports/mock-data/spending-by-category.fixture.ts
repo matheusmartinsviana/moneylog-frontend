@@ -1,7 +1,6 @@
 import type { SpendingByCategory } from '~/modules/reports/core/types/reports';
 import { lastDayOfMonth, toMoney } from '~/modules/reports/mock-data/demo-support';
 
-/** Categorias de demonstração do mês, em centavos, já em ordem decrescente. */
 const CATEGORIES: readonly { id: string; name: string; cents: number }[] = [
   { id: 'demo-housing', name: 'Moradia', cents: 182_000 },
   { id: 'demo-food', name: 'Alimentação', cents: 82_000 },
@@ -12,17 +11,12 @@ const CATEGORIES: readonly { id: string; name: string; cents: number }[] = [
   { id: 'demo-health', name: 'Saúde', cents: 8_550 },
 ];
 
-/** Razão com 4 casas, `HALF_UP` (a regra do backend; aqui só simulada). */
 function share(cents: number, base: number): string | null {
   if (base <= 0) return null;
   const rounded = Math.floor((cents * 20_000 + base) / (2 * base));
   return `${Math.trunc(rounded / 10_000)}.${String(rounded % 10_000).padStart(4, '0')}`;
 }
 
-/**
- * Gastos por categoria de DEMONSTRAÇÃO no formato do contrato futuro (plano 5.2): as `limit` maiores
- * categorias, `other` com as demais, `share` = valor / `base` (4 casas). `base` = soma das positivas.
- */
 export function demoSpendingByCategory(month: string, limit = 5): SpendingByCategory {
   const [year, mm] = month.split('-').map(Number);
   const base = CATEGORIES.reduce((sum, c) => sum + c.cents, 0);

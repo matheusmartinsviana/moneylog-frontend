@@ -22,15 +22,12 @@
   position: relative;
   height: 14rem;
   border-radius: var(--radius-control);
-  /* Grade vertical em listras finas (token). */
   background-image: var(--gradient-stripes);
   touch-action: pan-y;
   user-select: none;
-  /* O tooltip se ajusta à largura do gráfico (`@container`). */
   container-type: inline-size;
 }
 
-/* Um ponto pede pouca altura; 30 pontos, um pouco mais. */
 .lc__plot--single {
   height: 7rem;
 }
@@ -47,7 +44,6 @@
   transition: clip-path var(--duration-slow) var(--ease-emphasized);
 }
 
-/* Revela o traço até o gráfico entrar na viewport (o estado final já está no DOM). */
 .lc__svg.is-pending {
   clip-path: inset(-6px 100% -6px -6px);
 }
@@ -87,7 +83,6 @@
   stop-color: var(--color-chart-1);
 }
 
-/* Painel principal: mais alto, com halo decorativo no traço primário. */
 .lc__plot--hero {
   height: 17rem;
 }
@@ -166,7 +161,6 @@
   transform: translateX(calc(-100% - var(--space-3)));
 }
 
-/* Celular: o balão encosta na borda oposta ao ponto, inteiro dentro do gráfico (BUG-QA-05). */
 @container (width < 26rem) {
   .lc__tip {
     right: 0;
@@ -211,7 +205,6 @@
   gap: var(--space-2);
 }
 
-/* Swatch: cheio com círculo × tracejado com quadrado. */
 .lc__swatch {
   flex: none;
   width: 0.75rem;
@@ -233,7 +226,6 @@
   font-size: var(--text-xs);
 }
 
-/* Alvo de toque de 44 px (revisão A4). */
 @media (width <= 640px), (pointer: coarse) {
   .lc__toggle {
     min-height: 2.75rem;

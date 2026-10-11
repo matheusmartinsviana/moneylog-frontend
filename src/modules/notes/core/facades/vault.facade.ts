@@ -16,13 +16,6 @@ export type ImportState =
   | { readonly status: 'done'; readonly report: ImportReport }
   | { readonly status: 'error'; readonly problem: Problem };
 
-/**
- * Facade de exportar e importar o vault (zip). `exhaustMap` nos dois: com um em curso o clique seguinte é
- * ignorado. O zip exportado sai em `file$` para a tela entregar ao navegador (gesto do usuário, FE-S-168);
- * a importação é **tudo ou nada** no backend, então uma falha (`VAULT_IMPORT_INVALID`, `VAULT_IMPORT_TOO_LARGE`,
- * `429`) não muda nada na lista. Exportar é leitura e importar com `SKIP` é idempotente: sem `Idempotency-Key`
- * (contrato). Escopo de componente.
- */
 @Injectable()
 export class VaultFacade {
   private readonly gateway = inject(VaultGateway);
@@ -43,11 +36,6 @@ export class VaultFacade {
   readonly exportProblem = this.exportProblemState.asReadonly();
   readonly importStatus = this.importState.asReadonly();
   readonly importing = computed(() => this.importState().status === 'uploading');
-  /**
-   * A importação falhou **sem confirmação** do servidor (rede, 5xx, 504) e o modo é `RENAME`: o zip pode ter
-   * sido gravado e repeti-lo duplicaria cada nota como `nome (2)`. Só `SKIP` é idempotente, então só nele o
-   * "tentar de novo" é automático (F5). Erro 4xx e 429 são recusas definitivas: nada foi gravado.
-   */
   readonly importUncertain = computed(() => {
     const state = this.importState();
     if (state.status !== 'error' || this.lastMode() !== 'RENAME') return false;
@@ -106,10 +94,6 @@ export class VaultFacade {
     this.imports.next({ file, mode });
   }
 
-  /**
-   * "Tentar de novo" depois de uma falha: reenvia o mesmo arquivo com o mesmo modo. **Não** reenvia quando o
-   * resultado é incerto em `RENAME` (`importUncertain`): o usuário confere o vault antes.
-   */
   retryImport(): void {
     if (this.last && !this.importUncertain()) this.imports.next(this.last);
   }

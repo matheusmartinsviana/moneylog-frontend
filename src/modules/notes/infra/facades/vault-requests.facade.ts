@@ -21,11 +21,6 @@ import { safeFilenameFromContentDisposition } from '~/util/api/content-dispositi
 import { ProblemError, toProblem } from '~/util/api/problem';
 import { API_MOCKS } from '~/util/api-mocks';
 
-/**
- * Facade de requisições do vault (FE 05). O zip sai como `Blob` por uma requisição autenticada (nunca por
- * link com token); o nome vem do `Content-Disposition` endurecido. A importação manda o `multipart/form-data`
- * (`file`) com `mode` na **query** (contrato). Nada do conteúdo do zip é lido no front.
- */
 @Injectable({ providedIn: 'root' })
 export class VaultRequestsFacade extends VaultGateway {
   private readonly http = inject(HttpClient);
@@ -65,7 +60,6 @@ export class VaultRequestsFacade extends VaultGateway {
       map(toImportReport),
       catchError((error: unknown) => {
         const problem = toProblem(error);
-        // O proxy/servidor recusa o corpo grande com 413 sem o corpo do contrato: é o caso de `VAULT_IMPORT_TOO_LARGE`.
         return throwError(
           () =>
             new ProblemError(

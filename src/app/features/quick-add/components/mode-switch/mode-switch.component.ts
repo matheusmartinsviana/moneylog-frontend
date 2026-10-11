@@ -20,10 +20,6 @@ import {
   QuickAddMode,
 } from '~/app/features/quick-add/quick-add-mode';
 
-/**
- * Seletor de tipo do `/quick-add` (presentational): um único `app-select` com opções agrupadas
- * (Gastos, Entradas, Entre contas, Pessoas, Outros). Quem manda no modo é a URL (`?mode=`).
- */
 @Component({
   selector: 'app-mode-switch',
   imports: [ReactiveFormsModule, SelectComponent],

@@ -2,10 +2,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
 import { IconName, ICONS } from '~/app/common/components/icon/icons';
 
-/**
- * Ícone decorativo de traço fino. Fica oculto para leitores de tela: o rótulo acessível é sempre
- * o texto do controle que o contém.
- */
 @Component({
   selector: 'app-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,

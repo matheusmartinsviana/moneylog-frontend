@@ -29,7 +29,6 @@
   padding: var(--space-3);
 }
 
-/* O degrau atual ganha borda mais grossa e fundo de destaque, além do texto "Você está aqui". */
 .ladder__step[data-state='current'] {
   border-width: 2px;
   border-color: var(--color-accent);

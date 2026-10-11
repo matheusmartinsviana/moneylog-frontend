@@ -6,14 +6,8 @@ import { MenuComponent, type MenuItem } from '~/app/common/components/menu/menu.
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { MAIN_MODES, type QuickAddMode } from '~/app/features/quick-add/quick-add-mode';
 
-/** Atalhos do menu do botão: os modos do Novo registro que o Início oferecia (receita, cartão, "Emprestei"). */
 const SHORTCUTS = ['income', 'credit', 'loan'] as const satisfies readonly QuickAddMode[];
 
-/**
- * "+ Registrar" do Início (presentational): o único botão primário da tela. O clique abre o modal de Novo registro
- * (a mesma rota da sidebar) e o menu ao lado abre o mesmo modal já no tipo escolhido (receita, compra no cartão,
- * "Emprestei"). Não grava nada: o formulário é o do modal.
- */
 @Component({
   selector: 'app-register-button',
   imports: [RouterLink, IconComponent, MenuComponent],

@@ -1,4 +1,3 @@
-/** Chave de comparação de um alvo de wikilink: sem `.md`, sem acento, sem caixa, espaços colapsados. */
 export function wikilinkKey(target: string): string {
   return target
     .normalize('NFD')

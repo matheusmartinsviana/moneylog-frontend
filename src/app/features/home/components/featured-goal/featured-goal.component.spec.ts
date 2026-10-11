@@ -40,7 +40,6 @@ async function setup(
   return { ...result, retry, photos };
 }
 
-/** Avança o relógio falso e deixa o Angular desenhar o que mudou. */
 async function tick(fixture: { detectChanges: () => void }, ms: number) {
   await vi.advanceTimersByTimeAsync(ms);
   fixture.detectChanges();

@@ -1,9 +1,3 @@
-/**
- * Trava a rolagem do fundo enquanto um painel modal está aberto (contagem para aninhar).
- * `overflow: hidden` no `body` não segura o iOS Safari < 16 nem o "rubber band": o corpo vira
- * `position: fixed` na posição atual da rolagem (que é restaurada ao soltar), e `overflow-y: scroll`
- * mantém a largura da barra de rolagem no desktop (sem salto de layout).
- */
 let locks = 0;
 let saved: { overflow: string; position: string; top: string; width: string; scrollY: number } = {
   overflow: '',

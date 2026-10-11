@@ -44,7 +44,6 @@ import {
   type GoalPriority,
 } from '~/modules/goals/core/types/goal';
 
-/** Códigos de regra que o backend atribui a um campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   GOAL_NAME_REQUIRED: 'name',
   GOAL_NAME_TOO_LONG: 'name',
@@ -53,12 +52,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   GOAL_TEXT_TOO_LONG: 'description',
 };
 
-/**
- * Criar (`/goals/new`) e editar (`/goals/:id/edit`) uma meta (T100): nome, valor alvo, prazo opcional,
- * prioridade e descrição. Sem imagem (S-149). Nada é calculado aqui: `current`, `progress` e a estimativa
- * mensal voltam do backend. `409 VERSION_CONFLICT` mostra o conflito, mantém o digitado e oferece "Manter o que digitei" (só atualiza a versão) ou "Recarregar a versão atual"; meta arquivada
- * não é editável.
- */
 @Component({
   selector: 'app-goal-form-page',
   imports: [
@@ -81,7 +74,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   styleUrl: './goal-form.page.css',
 })
 export class GoalFormPage {
-  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
   protected readonly skeleton: readonly FormSkeletonPiece[] = [
     'field',
     'field',
@@ -100,20 +92,15 @@ export class GoalFormPage {
   protected readonly photos = inject(GoalPhotosFacade);
   protected readonly currency = GOAL_CURRENCY;
 
-  /** `:id` da rota; ausente em `/goals/new`. */
   readonly id = input<string>();
 
   protected readonly editing = computed(() => this.id() !== undefined);
-  /** Prioridade fica recolhida em "Mais opções" (e omitida se não escolhida). */
   protected readonly goal = this.facade.goal;
   protected readonly archived = computed(() => this.goal()?.status === 'ARCHIVED');
-  /** Meta de medida: nome opcional e alvo que aceita zero (ADR-016). */
   protected readonly isMetric = computed(() => this.goal()?.kind === 'METRIC');
-  /** Fotos e destaque só em meta de reserva (`SAVINGS`); ao criar, a meta nasce como reserva. */
   protected readonly showPhotos = computed(() =>
     this.editing() ? this.goal()?.kind === 'SAVINGS' && !this.archived() : true,
   );
-  /** Meta criada com fotos ou destaque ainda por enviar: a tela espera a fila e só então fecha. */
   protected readonly created = signal<Goal | null>(null);
   protected readonly confirmingRemove = signal<string | null>(null);
   protected readonly photoProblem = computed(() => {
@@ -141,9 +128,7 @@ export class GoalFormPage {
     }),
   });
 
-  /** Alterações digitadas e não salvas: fechar pede confirmação. */
   protected readonly dirty = dirtySignal(this.form);
-  /** Fotos escolhidas e ainda não enviadas também contam como alteração não salva. */
   protected readonly modalDirty = computed(
     () => this.dirty() || (this.created() === null && this.photos.hasPending()),
   );
@@ -156,7 +141,6 @@ export class GoalFormPage {
   );
 
   private readonly fieldHandled = signal(false);
-  /** Próxima meta carregada só troca a versão: o formulário mantém o digitado. */
   private keepTyped = false;
   protected readonly banner = computed(() => {
     const problem = this.facade.problem();
@@ -175,8 +159,6 @@ export class GoalFormPage {
       const id = this.id();
       if (id !== undefined) untracked(() => this.facade.load(id));
     });
-    // A cada versão carregada repõe o formulário, exceto quando o usuário pediu para manter o que digitou
-    // (conflito de versão): aí só a versão (`goal().version`, usada no próximo "Salvar") é atualizada.
     effect(() => {
       const goal = this.goal();
       if (!goal) {
@@ -205,7 +187,6 @@ export class GoalFormPage {
         else this.form.enable({ emitEvent: false });
       });
     });
-    // Meta de reserva carregada: o gerenciador de fotos passa a refletir a meta (uma vez por meta).
     effect(() => {
       const goal = this.goal();
       if (goal?.kind !== 'SAVINGS') return;
@@ -213,12 +194,10 @@ export class GoalFormPage {
         if (this.photos.goal()?.id !== goal.id) this.photos.setGoal(goal);
       });
     });
-    // Fotos mudaram a meta no servidor (versão nova): o próximo "Salvar" usa a versão certa e o digitado fica.
     this.photos.goalChanged$.pipe(takeUntilDestroyed()).subscribe((goal) => {
       this.keepTyped = true;
       this.facade.adopt(goal);
     });
-    // Criação com fotos: terminou a fila; se nada falhou, conclui (senão fica para "tentar de novo").
     this.photos.settled$.pipe(takeUntilDestroyed()).subscribe(() => {
       if (this.created() !== null && this.photos.failed().length === 0) this.finish();
     });
@@ -228,12 +207,10 @@ export class GoalFormPage {
         this.fieldHandled.set(false);
         return;
       }
-      // Conflito de versão: nada é recarregado sozinho (o digitado fica); o usuário escolhe recarregar.
       untracked(() => this.fieldHandled.set(applyProblemToForm(this.form, problem, CODE_TO_FIELD)));
     });
     this.facade.saved$.pipe(takeUntilDestroyed()).subscribe((goal) => {
       if (!this.editing() && goal.kind === 'SAVINGS' && this.photos.hasPending()) {
-        // A meta existe; as fotos (e o destaque) vão em seguida, uma por vez.
         this.created.set(goal);
         this.form.disable({ emitEvent: false });
         this.changes.notify('goals');
@@ -244,7 +221,6 @@ export class GoalFormPage {
     });
   }
 
-  /** Fim do fluxo: aviso, lista atualizada e volta para onde o modal abriu. */
   protected finish(): void {
     this.toast.show(this.editing() ? this.t().goals.toast.updated : this.t().goals.toast.created);
     this.changes.notify('goals');
@@ -262,12 +238,10 @@ export class GoalFormPage {
     if (id !== null) this.photos.remove(id);
   }
 
-  /** Para onde o modal volta: a lista (criar) ou a página de origem (editar). */
   private backUrl(): string[] {
     return this.editing() ? ['/goals', this.id() as string] : ['/goals'];
   }
 
-  /** Fechar sem salvar (já confirmado, se havia alterações). */
   protected close(): void {
     void this.router.navigate(this.backUrl());
   }
@@ -291,7 +265,6 @@ export class GoalFormPage {
       description: value.description.trim() === '' ? null : value.description.trim(),
     };
     if (id !== undefined && goal) {
-      // O `PUT` apaga o que não vai: o texto do plano segue como está (ele é editado no detalhe).
       this.facade.save({
         kind: 'update',
         id,
@@ -302,7 +275,6 @@ export class GoalFormPage {
     }
   }
 
-  /** Conflito de versão: atualiza só a versão e mantém o digitado (o usuário salva de novo com os seus valores). */
   protected keepMine(): void {
     const id = this.id();
     if (id === undefined) return;
@@ -311,7 +283,6 @@ export class GoalFormPage {
     this.facade.load(id);
   }
 
-  /** Conflito de versão: o usuário escolheu a versão mais recente (o digitado é substituído). */
   protected reloadLatest(): void {
     const id = this.id();
     if (id === undefined) return;

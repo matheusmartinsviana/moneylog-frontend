@@ -23,11 +23,6 @@
   transform: none;
 }
 
-/*
- * Fundo da página: o canvas (e o halo) são pintados no `body`. A altura vem da cadeia flex
- * body > app-root > app-shell > .shell > janela (nada de `100dvh` somado a uma faixa acima, como a de demonstração):
- * uma página "sucinta" (`data-fit-page`, regra em `src/styles/README.md`) enche exatamente a tela e não rola.
- */
 .shell {
   display: flex;
   flex: 1 1 auto;
@@ -35,7 +30,6 @@
   min-height: 0;
 }
 
-/* Mobile (< 768 px): sem sidebar; conteúdo direto sobre o canvas, a barra inferior e a safe-area. */
 .shell__window {
   display: grid;
   flex: 1 1 auto;
@@ -59,10 +53,6 @@
   padding-left: env(safe-area-inset-left);
 }
 
-/*
- * A partir de 768 px de largura E 600 px de altura: trilho (painel) à esquerda e o conteúdo sobre o canvas. Em paisagem
- * de celular (altura < 600 px) o trilho tomaria a tela e esconderia itens: fica a barra inferior, compacta.
- */
 @media (width >= 768px) and (height >= 600px) {
   .shell {
     padding: var(--space-3);
@@ -83,10 +73,6 @@
     border-radius: var(--radius-panel);
   }
 
-  /*
-   * A coluna cobre a altura toda; a sidebar acompanha a rolagem (sticky) dentro dela e nunca passa da tela
-   * (nem da altura da janela numa página "sucinta", onde a faixa de demonstração tira espaço da tela).
-   */
   .shell__sidebar {
     position: sticky;
     top: var(--space-3);

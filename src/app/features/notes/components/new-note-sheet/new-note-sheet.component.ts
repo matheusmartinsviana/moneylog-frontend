@@ -23,19 +23,11 @@ import { NoteCreateFacade } from '~/modules/notes/core/facades/note-create.facad
 import type { Note, NoteLinkRef } from '~/modules/notes/core/types/note';
 import { buildNotePath, type PathProblem, pathProblem } from '~/modules/notes/core/types/note-path';
 
-/** Códigos de regra que o backend atribui ao campo do nome. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   NOTE_PATH_TAKEN: 'name',
   NOTE_PATH_INVALID: 'name',
 };
 
-/**
- * "Nova nota" (folha): nome e pasta opcional viram o caminho `.md`. Serve a lista de notas e o bloco "Notas
- * vinculadas" das telas financeiras (`links`: a nota nasce já ligada ao registro, sem o front tocar em valor
- * algum). A criação leva `Idempotency-Key` por tentativa, reutilizada no "tentar de novo" depois de falha
- * ambígua. O caminho é conferido aqui só para avisar cedo; o backend é a verdade (`NOTE_PATH_INVALID`,
- * `NOTE_PATH_TAKEN`, `NOTE_LIMIT_REACHED`). Escopo de componente: `NoteCreateFacade`.
- */
 @Component({
   selector: 'app-new-note-sheet',
   imports: [ReactiveFormsModule, SheetComponent, TextFieldComponent],
@@ -125,11 +117,8 @@ export class NewNoteSheetComponent {
   protected readonly facade = inject(NoteCreateFacade);
 
   readonly open = input.required<boolean>();
-  /** Vínculos explícitos da nota nova (ex.: a movimentação aberta). */
   readonly links = input<readonly NoteLinkRef[]>([]);
-  /** Nome sugerido ao abrir (o usuário pode trocar). */
   readonly suggestedName = input('');
-  /** Pasta sugerida ao abrir (ex.: a de um `[[pasta/nome]]` pendente). */
   readonly suggestedFolder = input('');
   readonly heading = input<string>();
   readonly description = input<string>();

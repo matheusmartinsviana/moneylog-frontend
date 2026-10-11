@@ -12,14 +12,8 @@ export type MonthlySummaryState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: MonthlySummary };
 
-/** Leitura do razão logo depois do dashboard quando a página fornece o `LedgerGate` (Início, R13). */
 const PRIORITY = 0;
 
-/**
- * Facade do resumo mensal: pede o mês ao backend e expõe os estados da tela. Trocar de mês cancela a
- * requisição anterior (`switchMap`), então uma resposta atrasada nunca sobrescreve o mês atual. Nenhum valor
- * é calculado aqui. Escopo de componente.
- */
 @Injectable()
 export class MonthlySummaryFacade {
   private readonly gateway = inject(MonthlySummaryGateway);
@@ -57,7 +51,6 @@ export class MonthlySummaryFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** Carrega (ou recarrega) a competência `YYYY-MM`. */
   load(month: string): void {
     this.loads.next(month);
   }

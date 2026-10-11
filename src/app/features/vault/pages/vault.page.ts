@@ -23,13 +23,6 @@ import { NotesListFacade } from '~/modules/notes/core/facades/notes-list.facade'
 import { VaultOverviewFacade } from '~/modules/notes/core/facades/vault-overview.facade';
 import { formatInstant } from '~/util/date';
 
-/**
- * `/vault` (T221, smart): o cartão do vault (data da última alteração lida do backend, **sem contagem de notas**
- * e **sem selo "sincronizado"**: o vault mora no servidor, e levar para outro lugar é exportar/importar o zip),
- * a árvore de pastas real, a lista de notas da pasta e a **prévia** da nota escolhida. O Markdown é desenhado
- * pelo `app-markdown-view` (sem `innerHTML`); o bloco de metadados (frontmatter) aparece como texto escapado.
- * Editar continua em `/notes/:id`.
- */
 @Component({
   selector: 'app-vault-page',
   imports: [
@@ -72,7 +65,6 @@ export class VaultPage {
   constructor() {
     this.list.loadTreeAndTags();
     this.overview.load();
-    // A nota escolhida vem do backend; uma nota que sumiu da lista deixa de ser a escolhida.
     effect(() => {
       const items = this.list.items();
       const selected = this.selectedId();

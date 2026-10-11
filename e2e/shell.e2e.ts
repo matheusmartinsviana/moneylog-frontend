@@ -17,11 +17,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * T17 CA 1–6 e T20 CA 3: shell responsivo, rotas, idiomas, navegação sem recarregar e teclado.
- * Roda contra o `ng serve` (projeto `dev`) e contra o build de produção (projeto `prod`).
- */
-
 test.describe('shell em 375 × 812 (mobile)', () => {
   test.use({ viewport: VIEWPORTS.mobile });
 
@@ -48,14 +43,12 @@ test.describe('shell em 375 × 812 (mobile)', () => {
       );
     }
 
-    // Fixa no rodapé: encostada na borda inferior da viewport, inclusive depois de rolar.
     const box = await bottomNav.boundingBox();
     expect(box).not.toBeNull();
     expect(Math.round(box!.y + box!.height)).toBe(VIEWPORTS.mobile.height);
     const position = await bottomNav.evaluate((el) => getComputedStyle(el).position);
     expect(position).toBe('fixed');
 
-    // O "+" é o item central e tem destaque visual próprio (círculo com a cor de acento).
     const add = page.locator('[data-cy="bottom-nav-quickAdd"]');
     const addBg = await add
       .locator('.bottom-nav__add-circle')
@@ -82,15 +75,12 @@ test.describe('shell em 375 × 812 (mobile)', () => {
       const link = page.locator(`[data-cy="bottom-nav-${key}"]`);
       await link.click();
       if (key === 'quickAdd') {
-        // Novo registro é um modal sobre a tela de origem: sem página própria nem aria-current.
         await expect(page.getByRole('dialog')).toBeVisible();
         await page.keyboard.press('Escape');
         await expect(page.getByRole('dialog')).toBeHidden();
         continue;
       }
       await expect(link).toHaveAttribute('aria-current', 'page');
-      // A sidebar fica no DOM com display:none no mobile; conta só o que está visível, na barra inferior
-      // (as abas de uma página, como "Ativas" em Metas, também usam aria-current).
       await expect(
         page.locator('[data-cy="bottom-nav"] [aria-current="page"]:visible'),
       ).toHaveCount(1);
@@ -140,14 +130,12 @@ test.describe('shell em 375 × 812 (mobile)', () => {
       });
       if (info?.cy?.startsWith('bottom-nav-')) {
         expect(info.focusVisible, `${info.cy} com :focus-visible`).toBe(true);
-        // O anel de foco do tema (--focus-ring) é um box-shadow de duas camadas.
         expect(info.ring, `${info.cy} com anel de foco`).toMatch(/0px 0px 0px 4px/);
         reached.push(info.cy.replace('bottom-nav-', ''));
       }
     }
     expect(reached).toEqual(BOTTOM_NAV_ORDER);
 
-    // O foco está no "Mais" (último). Três Shift+Tab voltam até Movimentações e Enter navega.
     await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Shift+Tab');
     await page.keyboard.press('Shift+Tab');
@@ -162,7 +150,6 @@ test.describe('shell em 375 × 812 (mobile)', () => {
     await page.keyboard.press('Tab');
     const skip = page.locator('[data-cy="skip-to-content"]');
     await expect(skip).toBeFocused();
-    // Entra na tela com uma transição curta: espera terminar.
     await expect
       .poll(() => skip.evaluate((el) => el.getBoundingClientRect().top))
       .toBeGreaterThanOrEqual(0);
@@ -190,7 +177,6 @@ test.describe('shell em 768 × 1024 (tablet)', () => {
       await expect(link).toBeVisible();
       await expect(link).toHaveAccessibleName(NAV_LABELS.pt[key]!);
     }
-    // Rótulos escondidos visualmente no estado recolhido (o balão vem do appTooltip, no body).
     const labelWidth = await page
       .locator('[data-cy="sidebar-cards"] .sidebar__label')
       .evaluate((el) => el.getBoundingClientRect().width);
@@ -201,11 +187,9 @@ test.describe('shell em 768 × 1024 (tablet)', () => {
   test('Tab alcança a sidebar com foco visível e o rótulo aparece como tooltip', async ({
     page,
   }) => {
-    // Página fora da sidebar: nenhum item ativo (o foco no item ativo é testado à parte).
     await page.goto('/more');
     await waitForApp(page);
     const reached: string[] = [];
-    // Marca, "Novo registro", 11 itens, perfil e as ações do cabeçalho: o laço precisa de folga (era 20).
     for (let i = 0; i < 40 && reached.length < SIDEBAR_ORDER.length; i++) {
       await page.keyboard.press('Tab');
       const info = await page.evaluate(() => {
@@ -215,7 +199,6 @@ test.describe('shell em 768 × 1024 (tablet)', () => {
       if (info.cy && SIDEBAR_ORDER.includes(info.cy.replace('sidebar-', ''))) {
         reached.push(info.cy.replace('sidebar-', ''));
         expect(info.ring, `${info.cy} com anel de foco`).toMatch(/0px 0px 0px 4px/);
-        // O tooltip aparece com transição de opacidade: espera estabilizar.
         await expect
           .poll(
             () =>
@@ -258,13 +241,10 @@ test.describe('shell em 1280 × 800 (desktop)', () => {
   });
 
   test('o item ativo da sidebar continua com foco visível', async ({ page }) => {
-    // Regressão do BUG-01 (docs/qa/2026-10-04-qa-frontend-etapa-1.md): a sombra de
-    // `.sidebar__link.is-active` não pode substituir o anel de foco.
     await page.goto('/transactions');
     await waitForApp(page);
     const active = page.locator('[data-cy="sidebar-transactions"]');
     await expect(active).toHaveAttribute('aria-current', 'page');
-    // Foco por teclado no item ativo: precisa do mesmo anel de foco dos outros itens.
     await page.locator('[data-cy="sidebar-home"]').focus();
     await page.keyboard.press('Tab');
     await expect(active).toBeFocused();
@@ -290,7 +270,6 @@ test.describe('shell em 1280 × 800 (desktop)', () => {
   });
 });
 
-/** Páginas com conteúdo próprio (menu, formulário de importação, Vault e MCP): não mostram o estado vazio de lista. */
 const NO_EMPTY_STATE = new Set(['more', 'import', 'vault', 'mcp']);
 
 for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {

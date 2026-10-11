@@ -48,7 +48,6 @@ describe('TabsComponent', () => {
     expect(screen.getByRole('tab', { name: 'Limite' })).toHaveAttribute('aria-selected', 'false');
     expect(screen.getByRole('tabpanel', { name: 'Fatura' })).toBeVisible();
     expect(screen.getByText('Fatura aberta')).toBeVisible();
-    // Painel de uma aba nunca aberta nem existe (montagem preguiçosa).
     expect(screen.queryByText('Histórico', { selector: 'p' })).not.toBeInTheDocument();
   });
 

@@ -1,12 +1,6 @@
 import { addMonths, addMonthsKey, dateIn } from '~/demo/demo-dates';
 import { money, ratio, type S, type World } from '~/demo/demo-world';
 
-/**
- * Terceiros e compromissos acompanhados do modo demonstração (2.14.0), com valores **sintéticos**. Este
- * código só existe no build `demo`: ele simula o servidor, que calcula tudo (pendente, saldo nominal,
- * progresso, líquido do mês). O app real não faz nenhuma destas contas.
- */
-
 const DEMO_COMMITMENT_IDS = {
   loan: '00000010-0000-4000-8000-000000000001',
   project: '00000010-0000-4000-8000-000000000002',
@@ -14,7 +8,6 @@ const DEMO_COMMITMENT_IDS = {
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-/** "Dinheiro a receber de terceiros": uma pessoa com uma despesa marcada e um empréstimo concedido. */
 export function thirdPartyReceivablesView(
   w: World,
   month: string | null,
@@ -43,7 +36,6 @@ export function thirdPartyReceivablesView(
       status: 'PARTIAL',
     });
   }
-  // Recebimento sem movimento de conta (já refletido no saldo), de valor sintético.
   const receiptOwed = 5_000;
   const receiptReceived = 5_000;
   items.push({
@@ -194,7 +186,6 @@ export function commitmentViews(w: World): S['Commitment'][] {
   return [loan, project];
 }
 
-/** Os compromissos acompanhados na visão de dívidas: fora do total, com a curva à parte. */
 export function trackedOverview(w: World): S['DebtOverviewTracked'] {
   const views = commitmentViews(w);
   return {

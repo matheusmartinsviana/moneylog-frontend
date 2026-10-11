@@ -29,29 +29,23 @@ import { Problem, problemOf } from '~/util/api/problem';
 
 export type PhotoQueueStatus = 'waiting' | 'uploading' | 'failed';
 
-/** Foto escolhida que ainda não está na meta (aguardando a meta existir, enviando ou com falha). */
 export interface PhotoQueueItem {
   readonly localId: string;
   readonly file: File;
   readonly status: PhotoQueueStatus;
-  /** 0 a 100. */
   readonly percent: number;
   readonly problem: Problem | null;
-  /** Mesma chave a cada reenvio: o servidor devolve a foto já gravada em vez de duplicar. */
   readonly key: string;
 }
 
-/** Por que um arquivo escolhido foi recusado ANTES do envio (conforto; quem decide é o servidor). */
 export type PhotoRejectionReason = 'type' | 'size' | 'empty' | 'limit';
 export interface PhotoRejection {
   readonly name: string;
   readonly reason: PhotoRejectionReason;
 }
 
-/** Última movida: a tela anuncia a nova posição para leitores de tela. */
 export interface PhotoMove {
   readonly photoId: string;
-  /** Posição, de 1. */
   readonly position: number;
   readonly total: number;
 }
@@ -69,14 +63,6 @@ function typeAllowed(file: File): boolean {
   return file.type === '' && ALLOWED_EXTENSIONS.some((ext) => name.endsWith(ext));
 }
 
-/**
- * Facade do gerenciador de fotos de uma meta de sonho (ADR-018). Envia **uma foto por vez** (fila com
- * `concatMap`: a ordem importa), com progresso, cancelamento e reenvio com a **mesma** `Idempotency-Key`.
- * Reordenar, definir capa, remover e destacar vão pela mesma fila e **a meta da resposta vira o estado**
- * (nada é chutado); em falha, relê a meta do backend. Sem meta ainda (criação), as fotos escolhidas ficam
- * na fila local, na ordem final, e sobem quando `setGoal` recebe a meta criada. A validação de tipo e
- * tamanho aqui é só conforto: o servidor decide. Escopo de componente.
- */
 @Injectable()
 export class GoalPhotosFacade {
   private readonly photosGateway = inject(GoalPhotosGateway);
@@ -99,26 +85,19 @@ export class GoalPhotosFacade {
 
   readonly goal = this.goalState.asReadonly();
   readonly queue = this.queueState.asReadonly();
-  /** Há uma escrita (ordem, capa, remover, destaque) ou envio em andamento. */
   readonly busy = this.busyState.asReadonly();
-  /** Falha da última escrita (mensagem pelo `code`). */
   readonly problem = this.problemState.asReadonly();
   readonly rejections = this.rejectionState.asReadonly();
   readonly lastMove = this.moveState.asReadonly();
-  /** Destaque desejado (na criação vale depois que a meta existe; na edição reflete a meta). */
   readonly featured = computed(() => this.goalState()?.featured ?? this.featuredIntent());
   readonly photos = computed(() => this.goalState()?.photos ?? []);
   readonly coverPhotoId = computed(() => this.goalState()?.coverPhotoId ?? null);
-  /** Fotos na meta + na fila (o contador "n de 8"). */
   readonly count = computed(() => this.photos().length + this.queueState().length);
   readonly max = GOAL_PHOTO_MAX;
   readonly full = computed(() => this.count() >= GOAL_PHOTO_MAX);
   readonly failed = computed(() => this.queueState().filter((item) => item.status === 'failed'));
-  /** Algo para enviar ou aplicar quando a meta existir (criação). */
   readonly hasPending = computed(() => this.queueState().length > 0 || this.featuredIntent());
-  /** Meta com a lista de fotos já feita pelo servidor: sem fila, o gerenciador só reflete a meta. */
   readonly goalChanged$ = this.changedEvents.asObservable();
-  /** A fila de comandos esvaziou (envios e escritas terminaram, com ou sem falha). */
   readonly settled$ = this.settledEvents.asObservable();
 
   constructor() {
@@ -141,7 +120,6 @@ export class GoalPhotosFacade {
       .subscribe();
   }
 
-  /** Recebe a meta (carregada ou recém-criada) e começa a enviar o que estava aguardando. */
   setGoal(goal: Goal): void {
     const first = this.goalState() === null;
     this.goalState.set(goal);
@@ -154,7 +132,6 @@ export class GoalPhotosFacade {
     this.enqueueAll(batch);
   }
 
-  /** Escolha de arquivos (vários): valida por conforto, enfileira os aceitos e devolve os recusados. */
   add(files: readonly File[]): void {
     const rejections: PhotoRejection[] = [];
     const accepted: PhotoQueueItem[] = [];
@@ -199,13 +176,11 @@ export class GoalPhotosFacade {
     this.problemState.set(null);
   }
 
-  /** Cancela um envio (ou tira da fila): o que já subiu continua na meta. */
   cancel(localId: string): void {
     this.cancels.next(localId);
     this.queueState.update((queue) => queue.filter((item) => item.localId !== localId));
   }
 
-  /** "Tentar de novo": reenvia só a que falhou, com a mesma chave. */
   retry(localId: string): void {
     const item = this.queueState().find((candidate) => candidate.localId === localId);
     if (!item || item.status !== 'failed') return;
@@ -217,7 +192,6 @@ export class GoalPhotosFacade {
     for (const item of this.failed()) this.retry(item.localId);
   }
 
-  /** Reordena as fotos da fila local (só antes de a meta existir). */
   moveQueued(localId: string, delta: -1 | 1): void {
     if (this.goalState() !== null) return;
     this.queueState.update((queue) => {
@@ -230,7 +204,6 @@ export class GoalPhotosFacade {
     });
   }
 
-  /** Antes de a meta existir, a capa é a primeira da fila. */
   makeQueuedCover(localId: string): void {
     if (this.goalState() !== null) return;
     this.queueState.update((queue) => {
@@ -242,7 +215,6 @@ export class GoalPhotosFacade {
     });
   }
 
-  /** Move a foto uma posição; a ordem é calculada na hora de executar (a fila garante a sequência). */
   move(photoId: string, delta: -1 | 1): void {
     const goalId = this.goalState()?.id;
     if (goalId === undefined) return;
@@ -285,7 +257,6 @@ export class GoalPhotosFacade {
     });
   }
 
-  /** Liga ou desliga o destaque. Sem meta (criação), guarda a intenção para depois de criar. */
   setFeatured(featured: boolean): void {
     if (this.goalState() === null) {
       this.featuredIntent.set(featured);
@@ -308,7 +279,6 @@ export class GoalPhotosFacade {
     this.enqueueAll([command]);
   }
 
-  /** Conta o lote inteiro antes de despachar: o fim da fila (`settled$`) só vale quando o lote acaba. */
   private enqueueAll(batch: readonly Command[]): void {
     this.pendingCommands += batch.length;
     for (const command of batch) this.commands.next(command);
@@ -336,7 +306,6 @@ export class GoalPhotosFacade {
         tap((event) => {
           if (event.kind === 'progress') this.patchItem(localId, { percent: event.percent });
           else {
-            // A foto criada pelo servidor entra na meta já (a releitura do lote confirma ordem e capa).
             this.queueState.update((queue) => queue.filter((i) => i.localId !== localId));
             this.goalState.update((goal) =>
               goal && !goal.photos.some((photo) => photo.id === event.photo.id)
@@ -350,7 +319,6 @@ export class GoalPhotosFacade {
           return of(null);
         }),
         finalize(() => {
-          // Última do lote: relê a meta (capa, ordem e posições vêm do servidor).
           const more = this.queueState().some(
             (candidate) => candidate.status === 'waiting' || candidate.status === 'uploading',
           );
@@ -374,7 +342,6 @@ export class GoalPhotosFacade {
       }),
       catchError((error: unknown) => {
         this.problemState.set(problemOf(error));
-        // Falha: o servidor é a fonte da verdade, então relê a meta.
         return this.reload();
       }),
     );

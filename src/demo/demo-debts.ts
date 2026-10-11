@@ -3,11 +3,6 @@ import { trackedOverview } from '~/demo/demo-third-parties';
 import { dashboardView, recurrenceSummary } from '~/demo/demo-views';
 import { money, ratio, type S, type World } from '~/demo/demo-world';
 
-/**
- * Dívidas totais do modo demonstração. Este código só existe no build `demo`: ele **simula o servidor**
- * (que calcula total, partes, razões e cronograma). O app real não faz nenhuma destas contas.
- */
-
 const cents = (m: S['Money']): number => Math.round(Number(m.amount) * 100);
 
 interface Plan {
@@ -67,7 +62,6 @@ export function debtOverviewView(w: World, months: number): S['DebtOverview'] {
   const peopleDue = addMonths(w.today, 1);
   const otherDue = addMonths(w.today, 3);
 
-  // Cronograma: cartão (parcelas + à vista na 1ª fatura), pessoa no mês do vencimento, financiamento em 3 meses.
   const points: S['DebtOverviewPoint'][] = [];
   let left = total;
   for (let i = 0; i < months; i++) {
@@ -167,7 +161,6 @@ export function debtOverviewView(w: World, months: number): S['DebtOverview'] {
   };
 }
 
-/** Prévia do parcelado em andamento: o "servidor" do demo calcula o que falta. */
 export function ongoingPreviewView(
   w: World,
   body: { installmentAmount: string; remainingInstallments: number },

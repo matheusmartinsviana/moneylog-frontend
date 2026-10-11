@@ -26,12 +26,6 @@ import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 
 const fail = (error: unknown) => throwError(() => new ProblemError(toProblem(error)));
 
-/**
- * Facade de requisições dos relatórios (FE 05, contrato 2.6.0): o único lugar com HTTP do módulo. Falha com
- * `ProblemError` (`REPORT_PERIOD_INVALID`, `REPORT_MONTH_INVALID`, 401...). Com `API_MOCKS` ligado não sai
- * requisição: responde a série vazia (ou o JSON que o E2E deixou em `window.__MONEYLOG_MOCK_RESPONSES__`).
- * Nunca devolve dado de demonstração: este arquivo não importa as fixtures.
- */
 @Injectable()
 export class ReportsRequestsFacade extends ReportsGateway {
   readonly isDemo = false;

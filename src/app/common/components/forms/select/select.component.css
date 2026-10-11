@@ -46,7 +46,6 @@
   transform: rotate(180deg);
 }
 
-/* Filtros e seletores compactos: texto menor, no mesmo tamanho dos chips e botões. */
 .select__trigger--compact {
   font-size: var(--text-sm);
 }
@@ -76,7 +75,6 @@
   border: 0;
   background: transparent;
   color: var(--color-text);
-  /* 16px: abaixo disso o Safari do iPhone dá zoom ao focar. */
   font-size: 1rem;
 }
 

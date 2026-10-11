@@ -10,11 +10,6 @@ import { frequencyText } from '~/app/features/planning/recurrence-text';
 import { isAccountToDefine, type Recurrence } from '~/modules/recurrences/core/types/recurrence';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Uma recorrência na lista. Presentational: o valor do modelo, a próxima ocorrência **pendente** (inclui
- * as vencidas) e a estimativa mensal são os do backend. Desativada e encerrada (`ended`) aparecem em
- * texto, não só apagadas; a encerrada não mostra a estimativa (0,00, fora do custo fixo).
- */
 @Component({
   selector: 'li[app-recurrence-row]',
   imports: [RouterLink, MoneyComponent, MenuComponent],
@@ -45,7 +40,6 @@ export class RecurrenceRowComponent {
     const name = recurrence.card?.name ?? recurrence.account?.name;
     return name ? interpolate(this.t().recurrences.row.on, { name }) : null;
   });
-  /** Despesa/receita sem conta: a conta e o meio são informados ao confirmar cada ocorrência. */
   protected readonly accountToDefine = computed(() => isAccountToDefine(this.recurrence()));
   protected readonly next = computed(() => {
     const date = this.recurrence().nextOccurrence;
@@ -67,7 +61,6 @@ export class RecurrenceRowComponent {
     const copy = this.t().recurrences.row;
     const recurrence = this.recurrence();
     return [
-      // Encerrada (`ended`, do backend): "Encerrar" não se aplica; para reabrir, edite o fim.
       ...(recurrence.ended ? [] : [{ id: 'end', label: copy.end, disabled: !recurrence.active }]),
       { id: 'deactivate', label: copy.deactivate, disabled: !recurrence.active, destructive: true },
     ];

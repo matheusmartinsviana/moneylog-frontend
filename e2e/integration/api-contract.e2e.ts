@@ -6,11 +6,6 @@ import { findOperation, OPERATIONS_IN_CONTRACT } from '../support/contract';
 
 import { expect, resetDatabase, test } from './fixtures';
 
-/**
- * T44 CA5: a API real contra o contrato, sem navegador. Cada requisição e resposta passa pelo ajv
- * (o fixture `api` falha o teste listando operação e caminho). Cobre os pontos que o front deixou sem
- * confirmar: replay de idempotência, 409 de versão, validação, 404, 401 e a consistência entre as visões.
- */
 test.beforeEach(() => resetDatabase());
 
 const cents = (v: string): bigint => BigInt(v.replace('.', ''));
@@ -36,7 +31,6 @@ test('idempotência: mesma chave+comando devolve o mesmo recurso; comando difere
   expect(replay.body.id).toBe(first.body.id);
   expect((await api.get('/v1/transactions?pageSize=50')).body.items).toHaveLength(1);
 
-  // Replay devolve o ESTADO ATUAL: depois de uma edição, a mesma chave mostra a versão nova.
   const put = await api.call('PUT', `/v1/transactions/${first.body.id}`, {
     ...body,
     amount: '12.00',
@@ -51,7 +45,6 @@ test('idempotência: mesma chave+comando devolve o mesmo recurso; comando difere
   expect(other.status).toBe(409);
   expect(other.body.code).toBe('IDEMPOTENCY_KEY_REUSED');
 
-  // Erro não é memorizado: a mesma chave, depois de um 422, aceita o comando corrigido.
   const key2 = randomUUID();
   const bad = await api.tx({ ...body, amount: '0.00' }, key2);
   expect(bad.status).toBe(422);
@@ -59,12 +52,10 @@ test('idempotência: mesma chave+comando devolve o mesmo recurso; comando difere
   const fixed = await api.tx({ ...body, description: 'corrigida' }, key2);
   expect(fixed.status).toBe(201);
 
-  // Sem a chave: 400.
   const noKey = await api.call('POST', '/v1/transactions', body);
   expect(noKey.status).toBe(400);
   expect(noKey.body.code).toBe('VALIDATION_FAILED');
 
-  // Execuções concorrentes com a mesma chave: uma só criação.
   const key3 = randomUUID();
   const racers = await Promise.all(
     Array.from({ length: 5 }, () => api.tx({ ...body, description: 'corrida' }, key3)),
@@ -147,7 +138,6 @@ test('Idempotency-Key opcional em POST /v1/people, /v1/debts e /v1/recurrences: 
     const other = await api.call('POST', path, changed, { headers: { 'Idempotency-Key': key } });
     expect(other.status, path).toBe(409);
     expect(other.body.code, path).toBe('IDEMPOTENCY_KEY_REUSED');
-    // Sem a chave, cada chamada cria um recurso novo (a chave é opcional).
     const a = await api.call('POST', path, body);
     const b = await api.call('POST', path, body);
     expect(a.status, path).toBe(201);
@@ -216,7 +206,7 @@ test('validação, paginação e autenticação', async ({ api, playwright, base
   expect((await api.get('/v1/transactions?page=0')).status).toBe(400);
   expect((await api.get('/v1/transactions?pageSize=51')).status).toBe(400);
   expect((await api.get('/v1/accounts?pageSize=51')).status).toBe(400);
-  expect((await api.get('/v1/entries')).status).toBe(400); // competence obrigatória
+  expect((await api.get('/v1/entries')).status).toBe(400);
 
   const noValidate = { validate: false, headers: { 'Idempotency-Key': randomUUID() } };
   const num = await api.call('POST', '/v1/transactions', { ...good, amount: 10.5 }, noValidate);
@@ -237,7 +227,6 @@ test('validação, paginação e autenticação', async ({ api, playwright, base
     { ...good, surprise: 1 },
     { validate: false, headers: { 'Idempotency-Key': randomUUID() } },
   );
-  // O contrato declara `additionalProperties: false`: campo desconhecido é 400 VALIDATION_FAILED / UNKNOWN_FIELD.
   expect(extra.status).toBe(400);
   expect(extra.body.code).toBe('VALIDATION_FAILED');
   expect(extra.body.errors[0].code).toBe('UNKNOWN_FIELD');
@@ -256,7 +245,6 @@ test('validação, paginação e autenticação', async ({ api, playwright, base
   );
   expect(wrongFormat.status).toBe(400);
 
-  // Sem token / token inválido: 401 UNAUTHENTICATED (corpo do contrato).
   const anon = await playwright.request.newContext({ baseURL });
   const res = await anon.get('/v1/accounts');
   expect(res.status()).toBe(401);
@@ -265,7 +253,6 @@ test('validação, paginação e autenticação', async ({ api, playwright, base
     headers: { Authorization: 'Bearer lixo.lixo.lixo' },
   });
   expect(garbage.status()).toBe(401);
-  // Refresh sem cookie e sem Origin válida.
   const noOrigin = await anon.post('/v1/auth/refresh', {
     headers: { Origin: 'https://evil.example' },
   });
@@ -361,22 +348,17 @@ test('consistência (PR 01 regra 10): dashboard, lista, entries e saldos das con
   ).body;
   const accounts = (await api.get('/v1/accounts?pageSize=50')).body.items;
 
-  // consumo: despesas - reembolso; igual em dashboard e entries
-  expect(s.month.consumption.amount).toBe('110.10'); // 123.45 + 10.10 - 23.45
+  expect(s.month.consumption.amount).toBe('110.10');
   expect(entries.totals.total.amount).toBe(s.month.consumption.amount);
   expect(s.month.refunds.amount).toBe('23.45');
-  // receita
   expect(s.month.income.amount).toBe('3000.00');
   expect(entriesIncome.totals.total.amount).toBe(s.month.income.amount);
-  // fluxo de caixa do mês = totais da lista no mês inteiro
   expect(list.totals.cashFlow.in.amount).toBe(s.month.cashFlow.in.amount);
   expect(list.totals.cashFlow.out.amount).toBe(s.month.cashFlow.out.amount);
   expect(list.totals.cashFlow.net.amount).toBe(s.month.cashFlow.net.amount);
   expect(cents(s.month.cashFlow.in.amount) - cents(s.month.cashFlow.out.amount)).toBe(
     cents(s.month.cashFlow.net.amount),
   );
-  // transferência CASH->CASH não aparece em consumo nem altera o total em contas
-  // total em contas = soma dos saldos CASH; investimentos = saldo da conta de investimento
   const cash = accounts
     .filter((x: any) => x.liquidity === 'CASH')
     .reduce((sum: bigint, x: any) => sum + cents(x.currentBalance.amount), 0n);
@@ -385,12 +367,10 @@ test('consistência (PR 01 regra 10): dashboard, lista, entries e saldos das con
     .reduce((sum: bigint, x: any) => sum + cents(x.currentBalance.amount), 0n);
   expect(cents(s.balances.inAccounts.amount)).toBe(cash);
   expect(cents(s.balances.investments.amount)).toBe(invested);
-  // saldos esperados, conta a conta
   const bal = (id: string) => accounts.find((x: any) => x.id === id).currentBalance.amount;
-  expect(bal(a.id)).toBe('3372.23'); // 1000 - 123.45 + 3000 - 77.77 - 500 + 50 + 23.45
-  expect(bal(b.id)).toBe('264.34'); // 200 - 10.10 + 77.77 - 3.33
-  expect(bal(inv.id)).toBe('750.00'); // 300 + 500 - 50
-  // estornada não entra em nada e só aparece com status=VOIDED
+  expect(bal(a.id)).toBe('3372.23');
+  expect(bal(b.id)).toBe('264.34');
+  expect(bal(inv.id)).toBe('750.00');
   expect(list.items.some((i: any) => i.id === voided.id)).toBe(false);
   expect(
     (await api.get('/v1/transactions?status=VOIDED&pageSize=50')).body.items.map((i: any) => i.id),
@@ -399,13 +379,6 @@ test('consistência (PR 01 regra 10): dashboard, lista, entries e saldos das con
   void refund;
 });
 
-/**
- * Operações da Etapa 3 (cartões, faturas, parcelas). Elas receberam uma chamada de fumaça (id nulo,
- * corpo vazio): respondem, validam contra o contrato e não dão 5xx. Os fluxos de negócio da Etapa 3 são
- * testados na própria etapa. (Enquanto o backend as entregava, uma lista explícita de pendentes e uma
- * sentinela as deixavam fora da cobertura; quando a última passou a ter handler, a lista foi esvaziada
- * e apagada.)
- */
 const STAGE_3_OPERATIONS = [
   'POST /v1/transactions/{id}/cancel-installments',
   'GET /v1/cards',
@@ -423,11 +396,6 @@ const STAGE_3_OPERATIONS = [
   'POST /v1/invoices/{id}/payments',
 ];
 
-/**
- * Operações da Etapa 5 (metas, resumo mensal, projeção, exportações): o front ainda não as consome,
- * mas o backend as entrega e o contrato as declara. Chamada de fumaça (id nulo, corpo vazio): têm
- * handler, validam contra o contrato e não dão 5xx. Os fluxos de negócio são testados na etapa delas.
- */
 const STAGE_5_OPERATIONS = [
   'GET /v1/goals',
   'POST /v1/goals',
@@ -444,7 +412,6 @@ const STAGE_5_OPERATIONS = [
 
 const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 
-/** Chama a operação com id nulo e corpo vazio (sem conferir o corpo enviado: só a resposta). */
 function smoke(api: Api, operation: string) {
   const [method, template] = operation.split(' ') as [string, string];
   const path = template
@@ -452,12 +419,10 @@ function smoke(api: Api, operation: string) {
     .replace('{month}', todayInSaoPaulo().slice(0, 7))
     .replace('{date}', todayInSaoPaulo());
   const body = method === 'POST' || method === 'PUT' ? {} : undefined;
-  // O CSV não é JSON: o validador do contrato só lê corpo JSON, então esta resposta não é conferida.
   const csv = template.endsWith('.csv');
   return api.call(method, path, body, { validateRequest: false, validate: !csv });
 }
 
-/** Rota que o Spring não conhece: 404 genérico (`NOT_FOUND`) ou 405. Um 404 de domínio traz outro código. */
 const isUnrouted = (res: { status: number; body: any }): boolean =>
   res.status === 405 || (res.status === 404 && res.body?.code === 'NOT_FOUND');
 
@@ -505,7 +470,6 @@ test('todas as operações do contrato respondem e validam (cobertura de operati
     version: (await api.get('/v1/categories')).body.find((c: any) => c.id === cat.id).version,
   });
 
-  // Auth: login (já feito), refresh e logout com o cookie real do contexto de requisição.
   const auth = await playwright.request.newContext({
     baseURL,
     extraHTTPHeaders: { Origin: baseURL ?? '' },
@@ -520,14 +484,12 @@ test('todas as operações do contrato respondem e validam (cobertura de operati
   expect(sink).toEqual([]);
   await auth.dispose();
 
-  // Etapa 3: chamada de fumaça em cada operação (tem handler, valida o contrato, nunca 5xx).
   for (const operation of STAGE_3_OPERATIONS) {
     const res = await smoke(api, operation);
     expect(res.status, `${operation} respondeu ${res.status}`).toBeLessThan(500);
     expect(isUnrouted(res), `${operation} não tem handler no backend`).toBe(false);
   }
 
-  // Etapa 4: pessoas, dívidas e recorrências com dados reais (cada operação responde e valida).
   const key = () => ({ 'Idempotency-Key': randomUUID() });
   const person = await api.ok(
     api.call('POST', '/v1/people', { name: 'Cobertura', notes: null }, { headers: key() }),
@@ -636,7 +598,6 @@ test('todas as operações do contrato respondem e validam (cobertura de operati
   expect((await api.call('POST', `/v1/recurrences/${recC.id}/deactivate`)).status).toBe(200);
   void renamed;
 
-  // Etapa 5: fumaça.
   for (const operation of STAGE_5_OPERATIONS) {
     const res = await smoke(api, operation);
     expect(res.status, `${operation} respondeu ${res.status}`).toBeLessThan(500);

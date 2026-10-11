@@ -1,5 +1,3 @@
-/** Tipos do vault de notas (Etapa 6). Espelham o contrato `Notes`/`Vault`; o front nunca altera valores financeiros. */
-
 export const NOTE_LINK_TYPES = [
   'TRANSACTION',
   'ACCOUNT',
@@ -17,11 +15,9 @@ export type NoteStatusFilter = 'ACTIVE' | 'TRASHED';
 export type NoteSort = 'RELEVANCE' | 'UPDATED' | 'PATH' | 'TITLE';
 export type NoteLinkOrigin = 'WIKILINK' | 'EXPLICIT';
 export type NoteLinkState = 'RESOLVED' | 'PENDING';
-/** Estado do alvo de um vínculo (S-164: o vínculo nunca some). */
 export type NoteTargetStatus = 'ACTIVE' | 'VOIDED' | 'ARCHIVED' | 'CANCELED' | 'TRASHED';
 export type ImportConflictMode = 'SKIP' | 'RENAME';
 
-/** Limites do contrato (S-162). */
 export const MAX_NOTE_BYTES = 200 * 1024;
 export const MAX_PATH_LENGTH = 255;
 export const MAX_SEARCH_LENGTH = 200;
@@ -32,7 +28,6 @@ export interface NoteSummary {
   readonly path: string;
   readonly title: string;
   readonly tags: readonly string[];
-  /** Trecho de texto puro (nunca HTML) com o termo buscado; `null` sem busca. */
   readonly snippet: string | null;
   readonly updatedAt: string;
   readonly trashedAt: string | null;
@@ -41,7 +36,6 @@ export interface NoteSummary {
 
 export interface NoteLinkTarget {
   readonly id: string | null;
-  /** `AAAA-MM` no resumo mensal. */
   readonly key: string | null;
   readonly label: string | null;
   readonly status: NoteTargetStatus | null;
@@ -51,7 +45,6 @@ export interface NoteLink {
   readonly origin: NoteLinkOrigin;
   readonly type: NoteLinkType;
   readonly state: NoteLinkState;
-  /** Alvo como escrito no wikilink (ou valor original de um vínculo pendente). */
   readonly text: string | null;
   readonly alias: string | null;
   readonly section: string | null;
@@ -63,7 +56,6 @@ export interface Note {
   readonly id: string;
   readonly path: string;
   readonly title: string;
-  /** Markdown como o usuário escreveu: é **dado**, nunca HTML. */
   readonly body: string;
   readonly tags: readonly string[];
   readonly links: readonly NoteLink[];
@@ -73,7 +65,6 @@ export interface Note {
   readonly updatedAt: string;
 }
 
-/** Vínculo explícito enviado ao backend: `id` para entidades e notas, `key` (`AAAA-MM`) para o resumo mensal. */
 export interface NoteLinkRef {
   readonly type: NoteLinkType;
   readonly id?: string;
@@ -106,7 +97,6 @@ export interface NoteRef {
 
 export interface NoteMoved {
   readonly note: Note;
-  /** As outras notas cujo texto foi reescrito (wikilinks que apontavam para a movida). */
   readonly rewrittenNotes: readonly NoteRef[];
 }
 
@@ -122,7 +112,6 @@ export interface NotesQuery {
 
 export interface LinkedNotesQuery {
   readonly type: NoteLinkType;
-  /** `id` da entidade, ou `key` (`AAAA-MM`) no resumo mensal. */
   readonly id?: string;
   readonly key?: string;
   readonly page: number;
@@ -155,11 +144,9 @@ export interface DownloadedFile {
   readonly filename: string;
 }
 
-/** Alvo de um vínculo vindo de uma tela financeira (a página informa; o módulo não importa os outros). */
 export interface LinkTarget {
   readonly type: NoteLinkType;
   readonly id?: string;
   readonly key?: string;
-  /** Nome para sugerir o título da nota nova ("Nota de ..."). */
   readonly label: string;
 }

@@ -11,10 +11,6 @@ import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { FieldControl } from '~/app/common/components/forms/field-control';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/**
- * Interruptor próprio (padrão switch do APG): `button role="switch"`. O estado nunca depende só da
- * cor: a posição do botão muda e, com `showState`, o texto "Ligado"/"Desligado" acompanha.
- */
 @Component({
   selector: 'app-switch',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -133,7 +129,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 })
 export class SwitchComponent extends FieldControl<boolean> {
   protected readonly t = inject(I18nService).t;
-  /** Mostra "Ligado/Desligado" ao lado do interruptor. */
   readonly showState = input(true);
   protected readonly on = signal(false);
 

@@ -146,7 +146,7 @@ describe('SessionFacade', () => {
 
     it('Dado o token já renovado por outra requisição, então reaproveita-o sem novo refresh', async () => {
       const { gateway, session } = setup();
-      session.login({ email: 'a@b.c', password: 'x' }); // token-1
+      session.login({ email: 'a@b.c', password: 'x' });
 
       const token = await firstValueFrom(session.refreshAfterUnauthorized('token-antigo'));
 

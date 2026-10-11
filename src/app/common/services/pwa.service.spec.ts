@@ -13,8 +13,6 @@ function promptEvent(outcome: 'accepted' | 'dismissed') {
 describe('PwaService', () => {
   const service = () => TestBed.inject(PwaService);
 
-  // `install-prompt-capture` guarda o `beforeinstallprompt` em estado de módulo (e o listener fica no `window`
-  // se outro spec do mesmo worker abriu o shell): sem esvaziar, o evento de um teste vaza para o serviço do próximo.
   beforeEach(() => takeCapturedInstallPrompt());
 
   afterEach(() => {

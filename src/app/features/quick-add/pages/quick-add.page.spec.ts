@@ -37,7 +37,6 @@ import {
 } from '~/testing/transactions-testing';
 import { todayIso } from '~/util/date';
 
-// Fluxos longos com userEvent e axe: folga para máquinas ocupadas (CI, outros processos).
 vi.setConfig({ testTimeout: 20_000 });
 
 @Component({ selector: 'app-dummy', template: '' })
@@ -109,7 +108,6 @@ const pick = async (id: string, value: string) => {
   await userEvent.click(screen.getByTestId(id));
   await userEvent.click(screen.getByTestId(`${id}-option-${value}`));
 };
-/** O "Tipo de registro" é um seletor só: abre a lista e escolhe o tipo. */
 const pickMode = (mode: string) => pick('quick-add-mode', mode);
 const expectMode = (mode: keyof typeof pt.quickAdd.modes.titles) =>
   expect(screen.getByTestId('quick-add-mode')).toHaveTextContent(pt.quickAdd.modes[mode]);
@@ -275,7 +273,6 @@ describe('QuickAddPage', () => {
         .getAllByRole('option', { hidden: true })
         .filter((o) => o.getAttribute('data-cy')?.startsWith('entry-method-option-'))
         .map((o) => o.textContent?.trim());
-      // A primeira é a opção vazia (omite o método; o servidor usa OTHER), rotulada como "Outro".
       expect(labels).toEqual(
         ['OTHER', 'CASH', 'DEBIT', 'PIX', 'TRANSFER', 'BOLETO', 'OTHER'].map(
           (m) => pt.transactions.methods[m as keyof typeof pt.transactions.methods],
@@ -1004,7 +1001,6 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
       });
 
       await typeAmount('1.200,00');
-      // Parcelas: o stepper "+" 5 vezes (1 → 6).
       for (let i = 0; i < 5; i++)
         await userEvent.click(screen.getByTestId('entry-installments-increase'));
       expect(screen.getByTestId('purchase-preview-loading')).toBeInTheDocument();
@@ -1298,7 +1294,6 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
   it('Dado o formulário de crédito, então os campos têm fonte de pelo menos 16 px (sem zoom do Safari)', async () => {
     await setup({ url: '/quick-add?mode=credit', cards: [ROXINHO] });
 
-    // A regra `.input` do tema fixa 1rem; o stepper usa a mesma classe.
     for (const id of ['entry-amount', 'entry-description', 'entry-installments']) {
       expect(field(id).className).toMatch(/input|stepper/);
     }

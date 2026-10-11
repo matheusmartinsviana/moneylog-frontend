@@ -42,7 +42,6 @@ describe('ExportSectionComponent', () => {
     await fixture.whenStable();
 
     expect(gateway.csvQueries).toEqual([{ from: '2026-10-01', to: '2026-10-31', language: 'pt' }]);
-    // Baixar o conteúdo NÃO salva sozinho e NÃO diz "pronto": mostra "Arquivo pronto" com o botão Salvar.
     expect(save).not.toHaveBeenCalled();
     expect(toast.toasts()).toHaveLength(0);
     expect(screen.getByTestId('export-ready')).toHaveTextContent(pt.exports.ready.title);
@@ -192,7 +191,6 @@ describe('ExportSectionComponent', () => {
     await userEvent.click(await screen.findByTestId('export-share'));
 
     expect(share).toHaveBeenCalledTimes(1);
-    // O usuário cancelou a folha de compartilhamento: nada de "pronto".
     expect(toast.toasts()).toHaveLength(0);
 
     await userEvent.click(screen.getByTestId('export-share'));

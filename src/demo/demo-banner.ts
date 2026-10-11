@@ -1,11 +1,9 @@
-/** Texto da faixa por idioma (só existe no build `demo`; o idioma vem do `<html lang>` que a UI mantém). */
 const TEXT: Record<string, string> = {
   pt: 'Modo demonstração: as alterações não são salvas',
   en: 'Demo mode: changes are not saved',
   es: 'Modo demostración: los cambios no se guardan',
 };
 
-/** Mostra a faixa de demonstração no topo da página, sem sobrepor o cabeçalho. */
 export function mountDemoBanner(): void {
   const doc = document;
   const banner = doc.createElement('div');
@@ -20,7 +18,6 @@ export function mountDemoBanner(): void {
     attributes: true,
     attributeFilter: ['lang'],
   });
-  // Faixa no fluxo da página (primeira coisa do `body`): nunca fica por cima do cabeçalho do workspace.
   Object.assign(banner.style, {
     padding: '3px 12px',
     background: 'var(--color-text)',

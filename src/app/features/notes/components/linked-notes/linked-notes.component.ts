@@ -26,13 +26,6 @@ import { safeFileName } from '~/modules/notes/core/types/note-path';
 
 let nextId = 0;
 
-/**
- * Bloco "Notas vinculadas" das telas financeiras (T118): as notas ativas ligadas ao registro (`GET /v1/links`),
- * com "Nova nota vinculada" (a nota nasce já ligada e abre no editor) e os estados vazio, carregando e erro (com
- * "tentar de novo"). Fica em `features/notes` e é **usado pelas páginas** das outras telas: nenhum módulo importa
- * `notes`. O registro continua sendo o dono do valor: uma nota nunca o altera. Se o registro está estornado,
- * arquivado ou cancelado, o bloco continua e mostra o estado (`status`). Escopo de componente.
- */
 @Component({
   selector: 'app-linked-notes',
   imports: [ErrorStateComponent, NoteRowComponent, NewNoteSheetComponent],
@@ -170,19 +163,12 @@ export class LinkedNotesComponent {
   protected readonly t = inject(I18nService).t;
   protected readonly facade = inject(LinkedNotesFacade);
 
-  /** O que o registro é (`TRANSACTION`, `GOAL`, `PERSON`, `DEBT`, `CARD`, `INVOICE`, `MONTHLY_SUMMARY`). */
   readonly type = input.required<NoteLinkType>();
-  /** `id` do registro (todos os tipos, menos o resumo mensal). */
   readonly entityId = input<string>();
-  /** `AAAA-MM` do resumo mensal. */
   readonly entityKey = input<string>();
-  /** Nome do registro, para sugerir o título da nota nova. */
   readonly label = input('');
-  /** Estado do registro (estornada, arquivada, cancelada): o bloco continua e o mostra. */
   readonly status = input<NoteTargetStatus | null>(null);
-  /** Resumo mensal: título "Vinculada à revisão mensal". */
   readonly monthly = input(false);
-  /** Sufixo do `data-cy` do bloco (`linked-notes`). */
   readonly cy = input('linked-notes');
 
   protected readonly creating = signal(false);

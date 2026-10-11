@@ -11,11 +11,6 @@ import {
 } from './support';
 import { homeResponses } from './support/home-fixtures';
 
-/**
- * Capturas de evidência do redesign (DS 02, fatias A e B) para o dono comparar com as imagens de referência (D2),
- * claro e escuro em 375, 768 e 1280 px. Só rodam com `E2E_EVIDENCE=1` e no projeto `mock` (o UI Kit com os gráficos
- * só existe nele): `E2E_EVIDENCE=1 npx playwright test --project=mock evidence-redesign`.
- */
 const OUT_DIR = resolve(__dirname, '..', '..', 'docs', 'qa', 'evidencias', 'redesign');
 const SIZE: Record<ViewportName, number> = { mobile: 375, tablet: 768, desktop: 1280 };
 
@@ -87,7 +82,6 @@ for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {
         await page.goto('/dev/ui-kit');
         await waitForApp(page);
         const block = page.locator(`[data-cy="${scheme}-charts"]`);
-        // Passa por cada gráfico: o traço só é revelado quando ele entra na viewport (300 ms).
         for (const name of [
           'line-chart',
           'line-negative',

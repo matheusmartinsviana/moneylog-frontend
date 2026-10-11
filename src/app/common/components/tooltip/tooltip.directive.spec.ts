@@ -20,7 +20,6 @@ describe('TooltipDirective', () => {
     const button = screen.getByRole('button', { name: 'Crédito' });
 
     await userEvent.tab();
-    // jsdom não implementa :focus-visible de forma confiável: mostra pelo hover.
     await userEvent.hover(button);
     const tip = await screen.findByRole('tooltip');
 
@@ -45,7 +44,6 @@ describe('TooltipDirective', () => {
   });
 
   it('Dado que o ponteiro vai do gatilho ao balão, então o tooltip fica (hoverable) e some ao sair dele', async () => {
-    // Relógio falso: o tempo avança só quando o teste manda, então a carga da máquina não muda o resultado.
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const user = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTime(ms) });
     await render(HostComponent);

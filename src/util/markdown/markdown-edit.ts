@@ -1,14 +1,8 @@
-/**
- * Edições de texto do editor Markdown, **puras** (texto + seleção → o que trocar e onde ficar o cursor). O
- * componente aplica o resultado com `replaceRange`. Nada aqui toca o DOM nem valores financeiros.
- */
-
 export interface Selection {
   readonly start: number;
   readonly end: number;
 }
 
-/** Troca `[from, to)` por `insert` e deixa a seleção em `[selectStart, selectEnd]` (posições no texto novo). */
 export interface Edit {
   readonly from: number;
   readonly to: number;
@@ -17,13 +11,11 @@ export interface Edit {
   readonly selectEnd: number;
 }
 
-/** Negrito (`**`), itálico (`*`) e código (`` ` ``): liga e desliga o marcador em volta da seleção. */
 export function toggleWrap(text: string, selection: Selection, marker: string): Edit {
   const { start, end } = selection;
   const selected = text.slice(start, end);
   const before = text.slice(Math.max(0, start - marker.length), start);
   const after = text.slice(end, end + marker.length);
-  // Já envolvido por fora da seleção: tira.
   if (before === marker && after === marker) {
     return {
       from: start - marker.length,
@@ -33,7 +25,6 @@ export function toggleWrap(text: string, selection: Selection, marker: string): 
       selectEnd: end - marker.length,
     };
   }
-  // A seleção já inclui os marcadores: tira.
   if (
     selected.length >= marker.length * 2 &&
     selected.startsWith(marker) &&
@@ -49,7 +40,6 @@ export function toggleWrap(text: string, selection: Selection, marker: string): 
     };
   }
   if (selected === '') {
-    // Sem seleção: abre e fecha o marcador com o cursor no meio.
     return {
       from: start,
       to: end,
@@ -67,7 +57,6 @@ export function toggleWrap(text: string, selection: Selection, marker: string): 
   };
 }
 
-/** Link `[texto](url)`: o texto é a seleção e a `url` fica selecionada para ser digitada. */
 export function insertLink(text: string, selection: Selection): Edit {
   const { start, end } = selection;
   const selected = text.slice(start, end);
@@ -77,7 +66,6 @@ export function insertLink(text: string, selection: Selection): Edit {
   return { from: start, to: end, insert, selectStart: urlStart, selectEnd: urlStart + 3 };
 }
 
-/** Link para outra nota `[[nota]]`: envolve a seleção; sem seleção, deixa o cursor entre os colchetes. */
 export function insertWikilink(text: string, selection: Selection): Edit {
   const { start, end } = selection;
   const selected = text.slice(start, end);
@@ -90,22 +78,17 @@ export function insertWikilink(text: string, selection: Selection): Edit {
   };
 }
 
-/** Início da linha que contém `index`. */
 function lineStart(text: string, index: number): number {
-  // `lastIndexOf('\n', -1)` olha o índice 0 e acharia a quebra de uma linha 0 vazia (`\nabc`).
   return index <= 0 ? 0 : text.lastIndexOf('\n', index - 1) + 1;
 }
 
-/** Fim (sem a quebra) da linha que contém `index`. */
 function lineEnd(text: string, index: number): number {
   const at = text.indexOf('\n', index);
   return at < 0 ? text.length : at;
 }
 
-/** Liga ou desliga um prefixo (`- `, `> `) em todas as linhas tocadas pela seleção. */
 export function toggleLinePrefix(text: string, selection: Selection, prefix: string): Edit {
   const from = lineStart(text, selection.start);
-  // Uma seleção que termina no começo de uma linha não toca essa linha.
   const endIndex =
     selection.end > selection.start && text[selection.end - 1] === '\n'
       ? selection.end - 1
@@ -128,10 +111,6 @@ export function toggleLinePrefix(text: string, selection: Selection, prefix: str
 
 const INDENT = '  ';
 
-/**
- * `Tab` recua e `Shift+Tab` desfaz o recuo. Sem seleção multilinha, `Tab` insere o recuo no cursor; com
- * seleção de várias linhas, recua todas.
- */
 export function indent(text: string, selection: Selection, outdent: boolean): Edit | null {
   const { start, end } = selection;
   const multiline = text.slice(start, end).includes('\n');
@@ -177,17 +156,11 @@ export function indent(text: string, selection: Selection, outdent: boolean): Ed
   };
 }
 
-/** O que o usuário está digitando dentro de `[[...`: onde começa o alvo e o texto até o cursor. */
 export interface WikilinkContext {
-  /** Índice do primeiro caractere depois de `[[`. */
   readonly start: number;
   readonly query: string;
 }
 
-/**
- * O cursor está dentro de um `[[` ainda aberto (na mesma linha, sem `]` nem outro `[` no meio)? Devolve onde
- * o alvo começa e o que já foi digitado; senão `null`. Não lê dentro de blocos de código (cerca ` ``` `).
- */
 export function wikilinkContext(text: string, caret: number): WikilinkContext | null {
   const lineFrom = lineStart(text, caret);
   const before = text.slice(lineFrom, caret);
@@ -195,13 +168,11 @@ export function wikilinkContext(text: string, caret: number): WikilinkContext | 
   if (open < 0) return null;
   const query = before.slice(open + 2);
   if (/[\][\n]/.test(query) || query.length > 120) return null;
-  // Dentro de uma cerca de código aberta (número ímpar de ``` antes): não sugere.
   const fences = (text.slice(0, lineFrom).match(/^(```|~~~)/gm) ?? []).length;
   if (fences % 2 === 1) return null;
   return { start: lineFrom + open + 2, query };
 }
 
-/** Troca o que foi digitado depois de `[[` pelo alvo escolhido e fecha com `]]` (sem duplicar o que já existe). */
 export function completeWikilink(
   text: string,
   context: WikilinkContext,

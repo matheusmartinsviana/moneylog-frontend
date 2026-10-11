@@ -1,7 +1,6 @@
 import type { AppI18n } from '~/app/common/i18n/i18n';
 import { BRAND_NAME } from '~/app/config/brand';
 
-/** Português (Brasil): idioma padrão da UI (S-34). */
 export const pt: AppI18n = {
   shell: {
     brand: BRAND_NAME,
@@ -577,7 +576,6 @@ export const pt: AppI18n = {
       on: 'Ligado',
       off: 'Desligado',
     },
-    /** Fechar um formulário em modal com alterações não salvas. */
     discard: {
       title: 'Descartar as alterações?',
       description: 'O que você preencheu e não salvou será perdido.',

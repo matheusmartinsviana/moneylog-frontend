@@ -18,7 +18,6 @@ import { SEARCH_GROUPS, type SearchResults } from '~/modules/search/core/types/s
 import { Problem, problemOf } from '~/util/api/problem';
 import { searchQueryOf } from '~/util/search-term';
 
-/** Espera entre a última tecla e a requisição (T209, pedido da rodada C1). */
 export const GLOBAL_SEARCH_DEBOUNCE_MS = 300;
 
 export type SearchFailureKind = 'invalid' | 'rateLimit' | 'generic';
@@ -42,12 +41,6 @@ function isEmpty(data: SearchResults): boolean {
   return SEARCH_GROUPS.every((group) => data[group].length === 0);
 }
 
-/**
- * Facade da busca global (T209). O texto digitado vira `q` (sem caracteres de controle, no máximo 100 caracteres,
- * mínimo 2); a requisição só sai depois de 300 ms parado e **a anterior é cancelada** (`switchMap`), então uma
- * resposta atrasada nunca sobrescreve a mais nova. Sem `q` válido volta a `idle` na hora (e cancela o que
- * estava em voo). Os resultados são repassados como vieram: nenhum total, nenhuma soma. Escopo de componente.
- */
 @Injectable()
 export class SearchFacade {
   private readonly gateway = inject(SearchGateway);
@@ -57,7 +50,6 @@ export class SearchFacade {
   private lastQuery: string | null = null;
 
   readonly state = this.current.asReadonly();
-  /** O termo limpo da busca atual (`null` sem termo válido). */
   readonly query = signal<string | null>(null);
   readonly data = computed(() => {
     const state = this.current();
@@ -67,12 +59,9 @@ export class SearchFacade {
   constructor() {
     const debounced = this.typed.pipe(
       map((text) => searchQueryOf(text)),
-      // Termo curto demais (ou vazio) limpa na hora; termo válido espera a pausa de digitação.
-      // (`timer` e não `debounceTime` sobre `of(q)`: este emitiria no `complete`, sem esperar.)
       switchMap((q) =>
         q === null ? of(null) : timer(GLOBAL_SEARCH_DEBOUNCE_MS).pipe(map(() => q)),
       ),
-      // Mesmo termo que a tela já mostra (um espaço a mais, por exemplo): nada a pedir.
       filter((q) => q === null || !this.showing(q)),
     );
     merge(debounced, this.retries)
@@ -83,30 +72,25 @@ export class SearchFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** O campo mudou. */
   type(text: string): void {
     const q = searchQueryOf(text);
     this.lastQuery = q;
     this.query.set(q);
     if (q === null) this.current.set(IDLE);
     else if (!this.showing(q)) {
-      // Termo novo: não deixa resultados do termo anterior à mostra (e à mercê do Enter) durante a pausa.
       this.current.set({ status: 'loading' });
     }
     this.typed.next(text);
   }
 
-  /** "Tentar de novo" depois de uma falha: repete o último termo sem esperar a pausa. */
   retry(): void {
     if (this.lastQuery !== null) this.retries.next(this.lastQuery);
   }
 
-  /** Esvazia a busca (fechou o painel). */
   clear(): void {
     this.type('');
   }
 
-  /** A tela já mostra o resultado (ou o "nada encontrado") deste mesmo termo. */
   private showing(q: string): boolean {
     const state = this.current();
     if (state.status === 'ready') return state.data.q === q;

@@ -1,11 +1,5 @@
 import { CANVAS, expect, test, VIEWPORTS, waitForApp } from './support';
 
-/**
- * T18 e T20 CA 4: instalabilidade com o build de produção servido (projeto `prod`).
- * Usa a mesma checagem do Chrome DevTools → Application (CDP `Page.getInstallabilityErrors`),
- * já que o Lighthouse atual não tem mais a categoria PWA.
- */
-
 interface Manifest {
   name: string;
   short_name: string;
@@ -17,7 +11,6 @@ interface Manifest {
   icons: { src: string; sizes: string; type: string; purpose?: string }[];
 }
 
-/** Lê largura e altura do cabeçalho IHDR de um PNG. */
 function pngSize(buffer: Buffer): { width: number; height: number } {
   return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
 }
@@ -64,7 +57,6 @@ test('manifest válido, ícones 192/512 e maskable, cores iguais ao canvas claro
   expect(png.some((i) => i.sizes === '512x512' && i.purpose === 'any')).toBe(true);
   expect(png.some((i) => i.purpose === 'maskable')).toBe(true);
 
-  // iOS: apple-touch-icon 180×180 e metas.
   const apple = await page.locator('link[rel="apple-touch-icon"]').getAttribute('href');
   const appleRes = await request.get(`/${apple}`);
   expect(pngSize(await appleRes.body())).toEqual({ width: 180, height: 180 });
@@ -85,7 +77,6 @@ test('service worker ativo e o Chrome não aponta erro de instalabilidade', asyn
   await page.goto('/');
   await waitForApp(page);
 
-  // registrationStrategy: registerWhenStable:30000 (no pior caso registra em 30 s).
   const scope = await page.evaluate(
     () =>
       new Promise<string>((resolve, reject) => {
@@ -102,7 +93,6 @@ test('service worker ativo e o Chrome não aponta erro de instalabilidade', asyn
   );
   expect(scriptURL).toMatch(/sw-push\.js$/);
 
-  // Recarrega já controlado pelo SW, como o Chrome faz antes de oferecer a instalação.
   await page.reload();
   await waitForApp(page);
   expect(await page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
@@ -149,7 +139,6 @@ test('offline depois da primeira carga: o shell abre e as fontes vêm do cache',
   await page.goto('/');
   await waitForApp(page);
   await page.evaluate(() => navigator.serviceWorker.ready);
-  // Espera o SW terminar o prefetch (o ngsw só serve offline depois de instalar os assets).
   await page.reload();
   await waitForApp(page);
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
@@ -159,8 +148,6 @@ test('offline depois da primeira carga: o shell abre e as fontes vêm do cache',
   await page.goto('/cards');
   await waitForApp(page);
   await expect(page.locator('[data-cy="page-title"]')).toHaveText('Cartões');
-  // O Geist é o fallback da pilha (a SF vem primeiro em aparelho Apple e o Geist nem seria usado): pede-se
-  // o Geist de propósito para provar que o service worker o serve offline (prefetch no `ngsw-config.json`).
   await page.evaluate(() => document.fonts.load('16px "Geist Variable"'));
   const geist = await page.evaluate(() =>
     [...document.fonts].some((f) => /Geist/.test(f.family) && f.status === 'loaded'),

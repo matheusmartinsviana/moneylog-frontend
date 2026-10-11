@@ -26,12 +26,6 @@ import {
 import { OccurrencesFacade } from '~/modules/recurrences/core/facades/occurrences.facade';
 import type { Occurrence } from '~/modules/recurrences/core/types/recurrence';
 
-/**
- * Pendentes (smart, T88): as ocorrências vencidas ("Atrasadas", pelo `overdue` do backend) e as próximas,
- * com "Realizar" (valor real editável, cria a movimentação na data da ocorrência) e "Pular" (confirma e
- * não cria movimentação). Depois de realizar, a lista é recarregada do backend; uma ocorrência que já não
- * está pendente (`RECURRENCE_OCCURRENCE_ALREADY_REALIZED`) também recarrega.
- */
 @Component({
   selector: 'app-occurrences-page',
   imports: [
@@ -53,12 +47,10 @@ export class OccurrencesPage implements OnInit {
   protected readonly t = inject(I18nService).t;
   protected readonly occurrences = inject(OccurrencesFacade);
 
-  /** A última ocorrência aberta: a folha continua montada depois de fechar, para guardar a chave pendente. */
   protected readonly realizing = signal<RealizeTarget | null>(null);
   protected readonly realizeOpen = signal(false);
   protected readonly skipping = signal<Occurrence | null>(null);
 
-  /** "Atrasadas" e "Próximas" pelo `overdue` que o backend calcula (não pela data do aparelho). */
   protected readonly overdue = computed(
     () => this.occurrences.data()?.filter((occurrence) => occurrence.overdue) ?? [],
   );
@@ -75,7 +67,6 @@ export class OccurrencesPage implements OnInit {
       this.skipping.set(null);
       this.toast.show(this.t().recurrences.occurrences.toastSkipped);
     });
-    // Falha ao pular: fecha o diálogo e mostra o motivo (a lista já foi recarregada se ficou velha).
     effect(() => {
       if (this.occurrences.problem()) untracked(() => this.skipping.set(null));
     });

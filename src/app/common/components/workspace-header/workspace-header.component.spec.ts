@@ -23,7 +23,6 @@ class BlankComponent {}
 
 async function setup(options: { hour?: number; language?: 'pt' | 'en' | 'es'; url?: string } = {}) {
   const result = await render(WorkspaceHeaderComponent, {
-    // A busca e o avatar carregam em blocos @defer.
     deferBlockBehavior: DeferBlockBehavior.Playthrough,
     routes: [
       { path: '', component: BlankComponent },
@@ -37,7 +36,6 @@ async function setup(options: { hour?: number; language?: 'pt' | 'en' | 'es'; ur
       { provide: GREETING_HOUR, useValue: () => options.hour ?? 20 },
     ],
   });
-  // A busca e o avatar carregam em blocos @defer: espera chegarem.
   await screen.findByTestId('header-profile');
   if (options.url) {
     await TestBed.inject(Router).navigateByUrl(options.url);
@@ -72,7 +70,6 @@ describe('WorkspaceHeaderComponent', () => {
 
     expect(screen.getByTestId('workspace-greeting')).toHaveTextContent(text);
     expect(screen.getByTestId('workspace-subtitle')).toHaveTextContent(pt.header.subtitle);
-    // Sem nome (D4): só a saudação.
     expect(screen.getByTestId('workspace-greeting').textContent?.trim()).toBe(text);
   });
 

@@ -45,7 +45,6 @@ import {
 } from '~/modules/notes/core/types/note-filters';
 import type { FolderNode } from '~/modules/notes/core/types/note-path';
 
-/** Opções da pasta no celular: a árvore achatada, com o recuo no rótulo (a árvore vira lista com seletor). */
 function folderOptions(root: FolderNode): readonly ChoiceOption[] {
   const out: ChoiceOption[] = [];
   const walk = (nodes: readonly FolderNode[], depth: number) => {
@@ -62,12 +61,6 @@ function folderOptions(root: FolderNode): readonly ChoiceOption[] {
   return out;
 }
 
-/**
- * Notas (smart): árvore de pastas (derivada dos caminhos), lista com busca (debounce de 300 ms, o termo vai
- * para a URL), filtro por tag, lixeira com restaurar e esvaziar (confirmação explícita) e o estado vazio do
- * DS 01. 375 px: a árvore vira um seletor de pasta; 1280 px: painel lateral. O vault mora no servidor, e a
- * tela diz isso com honestidade (S-157). Fala só com facades de negócio (FE 01).
- */
 @Component({
   selector: 'app-notes-page',
   imports: [
@@ -113,7 +106,6 @@ export class NotesPage {
 
   protected readonly tree = this.list.tree;
   protected readonly folderChoices = computed(() => folderOptions(this.tree()));
-  /** A árvore é parcial: diz quantas notas ela já cobre (nunca trunca em silêncio). */
   protected readonly treeNotice = computed(() => {
     const copy = this.t().notes.list;
     const count = String(this.list.treeNotes());
@@ -122,7 +114,6 @@ export class NotesPage {
     });
   });
   protected readonly selectedFolder = computed(() => this.filters().folder);
-  /** Cofre sem nenhuma nota (nem filtro): estado vazio do DS 01. */
   protected readonly vaultEmpty = computed(() => {
     const items = this.list.items();
     return items !== null && items.length === 0 && !this.list.filtered() && !this.trashView();
@@ -141,14 +132,12 @@ export class NotesPage {
   protected readonly loadError = this.list.error;
 
   constructor() {
-    // URL → filtros (primeira carga, F5, voltar/avançar).
     this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
       const filters = filtersFromQuery((key) => params.get(key));
       this.search.setValue(filters.q, { emitEvent: false });
       this.folderControl.setValue(filters.folder, { emitEvent: false });
       this.list.apply(filters);
     });
-    // Filtros → URL (a busca com debounce também passa por aqui).
     effect(() => {
       const query = filtersToQuery(this.filters());
       untracked(() => {
@@ -169,7 +158,6 @@ export class NotesPage {
     this.folderControl.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((folder) => this.selectFolder(folder));
-    // Anuncia a quantidade de resultados depois de uma busca (leitor de tela).
     effect(() => {
       const items = this.list.items();
       const q = this.filters().q;
@@ -213,7 +201,6 @@ export class NotesPage {
     else if (id === 'import-vault') this.vaultOpen.set(true);
   }
 
-  /** A importação terminou: a lista, as pastas e as tags voltam do backend (nada é chutado). */
   protected onImported(): void {
     this.list.loadTreeAndTags();
     this.list.retry();

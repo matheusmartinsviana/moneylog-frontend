@@ -14,11 +14,6 @@ interface ImpactRow {
   readonly value: Money;
 }
 
-/**
- * Efeito da movimentação nas lentes de D1 §1: no caixa, no consumo de cada competência e no
- * patrimônio. Presentational: mostra os valores de `impact` exatamente como o backend calculou; não
- * soma, não subtrai e não deriva nada.
- */
 @Component({
   selector: 'app-impact-panel',
   imports: [MoneyComponent],
@@ -97,8 +92,6 @@ export class ImpactPanelComponent {
         value: item.amount,
       })),
       { key: 'net-worth', label: copy.netWorth, value: impact.netWorth },
-      // Só a compra no cartão tem compromisso próprio (parcelas em faturas futuras); é a mesma visão do
-      // `committedFuture` do cartão e do `/upcoming`, então nunca se soma aos demais.
       ...(isPositive(impact.commitment)
         ? [{ key: 'commitment', label: copy.commitment, value: impact.commitment }]
         : []),

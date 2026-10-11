@@ -12,7 +12,6 @@
   position: relative;
 }
 
-/* Proporção fixa + teto de altura: a troca de foto nunca muda o layout (sem CLS). */
 .gal__photo {
   aspect-ratio: 16 / 9;
   max-height: 20rem;

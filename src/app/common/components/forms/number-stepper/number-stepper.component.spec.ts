@@ -126,7 +126,6 @@ describe('NumberStepperComponent', () => {
 
     await userEvent.clear(field);
     await userEvent.type(field, '40');
-    // "4" era válido e foi para o formulário; "40" passa de 36 e é ignorado.
     expect(control.value).toBe(4);
     expect(field).toHaveValue('40');
     await userEvent.tab();

@@ -104,7 +104,6 @@ describe('MoneyInputComponent', () => {
       expect(screen.getByText(message)).toBeVisible();
       expect(field).toHaveAttribute('aria-invalid', 'true');
       expect(field).toHaveAccessibleDescription(expect.stringContaining(message));
-      // Texto inválido não é reformatado: o usuário corrige o que digitou.
       expect(field).toHaveValue(text);
     },
   );

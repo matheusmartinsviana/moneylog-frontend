@@ -47,7 +47,6 @@ const NOT_FOUND: Problem = {
   retryAfterSeconds: null,
 };
 
-/** Parâmetros da visão registros (só o que o contrato define para `GET /v1/transactions`). */
 export function recordsParams(filters: ListFilters, page: number, pageSize: number): HttpParams {
   let params = new HttpParams();
   if (filters.from) params = params.set('from', filters.from);
@@ -62,7 +61,6 @@ export function recordsParams(filters: ListFilters, page: number, pageSize: numb
   return params;
 }
 
-/** Parâmetros da visão por competência (`GET /v1/entries`). */
 export function entriesParams(filters: ListFilters, page: number, pageSize: number): HttpParams {
   let params = new HttpParams()
     .set('competence', filters.competence)
@@ -75,10 +73,6 @@ export function entriesParams(filters: ListFilters, page: number, pageSize: numb
   return params;
 }
 
-/**
- * Facade de requisições de movimentações (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS`
- * ligado, responde com slices vazios e `totals` zerados, sem requisição.
- */
 @Injectable({ providedIn: 'root' })
 export class TransactionsRequestsFacade extends TransactionsGateway {
   private readonly http = inject(HttpClient);
@@ -117,7 +111,6 @@ export class TransactionsRequestsFacade extends TransactionsGateway {
 
   create(input: TransactionInput, idempotencyKey: string): Observable<Transaction> {
     if (this.useMocks) {
-      // Sem persistência no mock: devolve a movimentação como o backend a devolveria.
       const normalized = normalizeAmount(input.amount, 'BRL');
       return of(
         toTransaction(

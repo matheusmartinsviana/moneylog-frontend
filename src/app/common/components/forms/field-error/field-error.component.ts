@@ -9,7 +9,6 @@ import { formatCompetence, formatIsoDate } from '~/util/date';
 
 type ErrorMessages = AppI18n['form']['errors'];
 
-/** Texto do primeiro erro do controle, a partir do contrato de i18n. */
 export function errorMessage(
   errors: ValidationErrors,
   messages: ErrorMessages,
@@ -39,7 +38,6 @@ export function errorMessage(
       return interpolate(messages.monthMin, { month: formatCompetence(param('min'), locale) });
     case 'monthMax':
       return interpolate(messages.monthMax, { month: formatCompetence(param('max'), locale) });
-    // Erro devolvido pelo backend (`code` do contrato): traduzido pelo `code`, nunca pela mensagem dele.
     case 'server':
       return serverCodes[String(detail)] ?? messages.invalid;
     case 'maxlength':
@@ -49,10 +47,6 @@ export function errorMessage(
   }
 }
 
-/**
- * Mensagem de erro de um campo (FE 02): só aparece depois que o controle foi tocado (inclusive pelo
- * `markAllAsTouched()` do salvar). O campo aponta para `errorId` no `aria-describedby`.
- */
 @Component({
   selector: 'app-field-error',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -76,9 +70,7 @@ export function errorMessage(
 export class FieldErrorComponent {
   private readonly i18n = inject(I18nService);
 
-  /** Controle observado (`null` enquanto o campo ainda não está ligado ao formulário). */
   readonly control = input.required<AbstractControl | null>();
-  /** Id do parágrafo de erro, o mesmo usado no `aria-describedby` do campo. */
   readonly errorId = input.required<string>();
 
   private readonly state = watchControl(this.control);

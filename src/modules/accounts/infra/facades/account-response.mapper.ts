@@ -7,10 +7,6 @@ import type {
   AccountUpdateRequest,
 } from '~/modules/accounts/infra/responses/account.response';
 
-/**
- * Resposta → tipo do core. Só copia campos: `currentBalance`, `openingEditable` e `archivable`
- * chegam como a API calculou (nada é somado nem recalculado no front).
- */
 export function toAccount(response: AccountResponse): Account {
   return {
     id: response.id,
@@ -50,7 +46,6 @@ export function toCreateRequest(input: AccountInput): AccountCreateRequest {
   };
 }
 
-/** Só leva os campos de abertura quando a tela os enviou (`openingEditable = true`). */
 export function toUpdateRequest(input: AccountUpdate): AccountUpdateRequest {
   return {
     name: input.name,

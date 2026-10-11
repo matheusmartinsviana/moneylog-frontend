@@ -59,7 +59,6 @@ describe('AccountsPage', () => {
         name: 'Nubank',
         type: 'CHECKING',
         institution: 'Nu Pagamentos',
-        // Diferente do inicial de propósito: o front exibe o saldo recebido, sem recalcular.
         currentBalance: brl('1234.56'),
       }),
       anAccount({

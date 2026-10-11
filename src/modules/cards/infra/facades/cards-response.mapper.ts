@@ -30,10 +30,6 @@ import type {
 } from '~/modules/cards/infra/responses/card.response';
 import type { Money } from '~/util/money';
 
-/**
- * Resposta → tipos do core. Só copia campos: nenhum valor é somado, subtraído, arredondado nem
- * convertido para `number` (arquitetura §1). `usedRatio` é a única razão numérica e vem pronta.
- */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,

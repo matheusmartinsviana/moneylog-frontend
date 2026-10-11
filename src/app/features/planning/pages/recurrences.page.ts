@@ -28,12 +28,6 @@ import { RecurrenceRowComponent } from '~/app/features/planning/components/recur
 import { RecurrencesListFacade } from '~/modules/recurrences/core/facades/recurrences-list.facade';
 import type { Recurrence } from '~/modules/recurrences/core/types/recurrence';
 
-/**
- * Recorrências (smart, T87): o custo fixo e a receita recorrente mensais (**estimativa**, do backend) e a
- * lista com frequência, próxima ocorrência e valor. Encerrar pede uma data e desativar pede confirmação;
- * ambos usam a recorrência da resposta e recarregam a estimativa. Estados: carregando, vazio (com ação),
- * erro (com "tentar de novo") e a estimativa com estado próprio.
- */
 @Component({
   selector: 'app-recurrences-page',
   imports: [
@@ -82,12 +76,10 @@ export class RecurrencesPage implements OnInit {
   });
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('recurrences')
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.recurrences.load());
-    // Encerrar ou desativar deu certo: fecha e avisa (a lista já tem a recorrência da resposta).
     this.recurrences.done$.pipe(takeUntilDestroyed()).subscribe(({ action }) => {
       const copy = this.t().recurrences.toast;
       if (action === 'end') {

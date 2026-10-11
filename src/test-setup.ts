@@ -3,9 +3,6 @@ import { configure } from '@testing-library/angular';
 import { configure as configureDom } from '@testing-library/dom';
 import { afterEach } from 'vitest';
 
-// Os testes localizam elementos por `data-cy` (FE 07), nunca por texto que muda com o idioma.
-// O render() da Angular Testing Library reaplica a config `dom`; testes sem render() usam a do DOM.
-// Movimento desligado nos testes (sem flakiness de timing); os testes do sistema de movimento religam.
 document.documentElement.setAttribute('data-motion', 'off');
 
 configure({ dom: { testIdAttribute: 'data-cy' } });
@@ -15,9 +12,7 @@ afterEach(() => {
   try {
     window.localStorage.clear();
     window.sessionStorage.clear();
-  } catch {
-    // storage indisponível no ambiente
-  }
+  } catch {}
   document.documentElement.removeAttribute('data-theme');
   document.documentElement.lang = '';
 });

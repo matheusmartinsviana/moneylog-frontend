@@ -6,7 +6,6 @@ import type {
 } from '~/modules/debts/infra/responses/debt.response';
 import type { Money } from '~/util/money';
 
-/** Resposta → tipos do core. Só copia campos: nenhum valor é somado nem convertido para `number`. */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,
@@ -44,7 +43,6 @@ export function toDebt(response: DebtResponse): Debt {
   };
 }
 
-/** Corpo do `POST /v1/debts`: `categoryId` só vai em `PAYABLE` (S-137). */
 export function toCreateRequest(input: DebtInput): DebtCreateRequest {
   return {
     ...(input.personId ? { personId: input.personId } : {}),

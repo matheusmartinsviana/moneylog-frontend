@@ -55,7 +55,6 @@ describe('FileDownloadService', () => {
     ]);
     expect(clicks[0]?.href).not.toMatch(/token|access|bearer/i);
     expect(document.querySelector('a[download]')).toBeNull();
-    // Salvar não revoga: o usuário ainda pode salvar de novo ou compartilhar.
     expect(revoked).toEqual([]);
   });
 

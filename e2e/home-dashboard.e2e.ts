@@ -21,13 +21,7 @@ import {
   spendingByCategory,
 } from './support/home-fixtures';
 
-/**
- * Novo Início (fatia C1) em `mock` e `prod`: sem backend, com as respostas do contrato 2.6.0 deixadas em
- * `window.__MONEYLOG_MOCK_RESPONSES__` (`support/home-fixtures.ts`, tipadas pelos schemas gerados). **O front não
- * soma nada**, então toda asserção compara a tela com o JSON: se o valor na tela difere do JSON, o front calculou.
- */
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-/** O que a tela deve mostrar para uma string decimal do backend (formatação, nunca conta). */
 const fmt = (amount: string): string =>
   brl
     .format(amount as unknown as number)
@@ -63,7 +57,6 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
     );
     await expect(page.locator('[data-cy="kpi-spending-value"]')).toHaveText(fmt(CONSUMPTION));
     await expect(page.locator('[data-cy="kpi-income-value"]')).toHaveText(fmt('12000.00'));
-    // O resultado é o `month.net` do dashboard: o front não faz receita menos gasto.
     await expect(page.locator('[data-cy="kpi-result-value"]')).toHaveText(fmt('10379.50'));
     await expect(page.locator('[data-cy="kpi-savings-value"]')).toHaveText('41,2%');
   });
@@ -84,19 +77,16 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
       await expect(page.locator(`[data-cy="${id}"]`), id).toHaveCount(0);
     }
 
-    // Contas: o saldo de cada conta e a fatura de cada cartão.
     await page.goto('/accounts');
     await expect(
       page.locator('[data-cy="page-content"]').getByText(fmt('12345.67')).first(),
     ).toBeVisible();
 
-    // Panorama (Planejamento): o que o Início tinha em "Compromissos e patrimônio", com os mesmos data-cy.
     await page.goto('/planning/overview');
     const overview = page.locator('[data-cy="home-legacy"]');
     for (const id of ['home-available', 'home-commitments']) {
       await expect(overview.locator(`[data-cy="${id}"]`), id).toBeVisible();
     }
-    // Mês, patrimônio e cartões moram em "Mais" (recolhido por padrão).
     await page.locator('[data-cy="overview-more-toggle"]').click();
     await expect(overview.locator('[data-cy="home-month-income"]')).toBeVisible();
     await expect(page.locator('[data-cy="planning-tab-overview"]')).toHaveAttribute(
@@ -113,7 +103,6 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
     await expect(page.locator('[data-cy="home-categories-total"]')).toContainText(
       fmt(spendingByCategory.total.amount),
     );
-    // O mesmo número do consumo do Início: uma fonte só (o servidor).
     expect(spendingByCategory.total.amount).toBe(CONSUMPTION);
 
     const food = page.locator(`[data-cy="home-categories-item-${CATEGORY_FOOD}"]`);
@@ -143,7 +132,6 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
 
     await page.locator('[data-cy="home-overview-period-D7"]').click();
     await expect(rows).toHaveCount(incomeExpensesD7.points.length);
-    // O dia de reembolso (despesa negativa) vem com o sinal.
     const refund = incomeExpensesD7.points[5]!;
     expect(norm(await rows.nth(5).textContent())).toContain(fmt(refund.expenses.amount));
     expect(fmt(refund.expenses.amount)).toBe('−R$ 50,00');
@@ -258,7 +246,6 @@ test.describe('busca global (T209)', () => {
     await expect(page.locator('[data-cy="global-search-option-transactions"]')).toContainText(
       fmt('87.30'),
     );
-    // Texto puro: a marcação do snippet aparece como caracteres, nunca como elemento.
     await expect(page.locator('[data-cy="global-search-snippet"]')).toHaveText(
       '<b>Comprar</b> leite **e** pão <img src=x onerror=alert(1)>',
     );
@@ -289,7 +276,6 @@ test.describe('busca global (T209)', () => {
     await expect(field).toBeFocused();
     await expect(field).toHaveAttribute('aria-expanded', 'false');
 
-    // Dentro do próprio campo a barra é um caractere comum.
     await page.keyboard.type('a/b');
     await expect(field).toHaveValue('mercadoa/b');
   });
@@ -327,7 +313,6 @@ test.describe('Início em 375 px (mobile)', () => {
     for (let i = 1; i < tops.length; i++)
       expect(tops[i]!, `bloco ${i}`).toBeGreaterThan(tops[i - 1]!);
 
-    // Gasto e receita do mês dividem a linha.
     const spending = await page.locator('[data-cy="kpi-spending"]').boundingBox();
     const income = await page.locator('[data-cy="kpi-income"]').boundingBox();
     expect(Math.abs(spending!.y - income!.y)).toBeLessThan(2);

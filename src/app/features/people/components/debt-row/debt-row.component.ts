@@ -8,11 +8,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { formatIsoDate } from '~/util/date';
 import { type DebtSummary, isOpenStatus } from '~/util/debt';
 
-/**
- * Uma dívida na lista da pessoa. Presentational: valor original, quitado e o que falta são os que o
- * backend calculou; o status aparece **em texto** (a cor só reforça), e "Atrasada" é o `overdue` dele.
- * Leva ao detalhe da dívida.
- */
 @Component({
   selector: 'li[app-debt-row]',
   imports: [RouterLink, MoneyComponent],

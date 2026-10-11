@@ -13,8 +13,6 @@ const routes: Routes = [
     component: TransactionsPage,
     providers: TRANSACTIONS_PROVIDERS,
     title: pageTitle('transactions'),
-    // Detalhe: painel lateral sobre a lista no desktop, página no celular.
-    // Editar abre em modal sobre o detalhe (`TransactionDetailPage` tem o `<router-outlet>`).
     children: [
       {
         path: ':id',

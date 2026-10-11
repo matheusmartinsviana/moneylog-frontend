@@ -36,17 +36,6 @@ import {
 } from '~/modules/notes/core/types/note';
 import type { Problem } from '~/util/api/problem';
 
-/**
- * Exportar e importar o vault (T119), em Notas e em Configurações → Seus dados. Honesto sobre o
- * armazenamento: as notas moram no servidor e o zip é a cópia em Markdown (S-157). **Exportar**: o zip vem de
- * uma requisição autenticada e fica em "Arquivo pronto" com Salvar e Compartilhar, que rodam no clique do
- * usuário (FE-S-168, iPhone/PWA). **Importar**: o `FilePicker` próprio (o único `<input type="file">` do app,
- * escondido dentro dele) aceita `.zip` até 20 MB; o usuário escolhe o que fazer com um caminho que já existe
- * (`SKIP` ou `RENAME`: o backend **nunca sobrescreve** uma nota) e confirma num diálogo que diz isso com
- * clareza antes de enviar; depois vê o relatório (criadas, puladas, pendentes, ignoradas, renomeadas, avisos).
- * Tudo ou nada: falha (`VAULT_IMPORT_INVALID`, `VAULT_IMPORT_TOO_LARGE`, 413, 429) não muda nada. Escopo de
- * componente.
- */
 @Component({
   selector: 'app-vault-section',
   imports: [
@@ -303,9 +292,7 @@ export class VaultSectionComponent {
   protected readonly vault = inject(VaultFacade);
   protected readonly maxBytes = MAX_IMPORT_BYTES;
 
-  /** Mostra o título da seção (a tela que hospeda pode já ter o seu). */
   readonly showTitle = input(true);
-  /** A importação terminou (a tela que hospeda recarrega a lista). */
   readonly imported = output<void>();
 
   protected readonly form = new FormGroup({
@@ -332,7 +319,6 @@ export class VaultSectionComponent {
     return state.status === 'done' ? state.report : null;
   });
 
-  // Exportar: "Arquivo pronto" (FE-S-168).
   protected readonly ready = signal<{
     readonly file: DownloadedFile;
     readonly prepared: PreparedFile;
@@ -346,20 +332,17 @@ export class VaultSectionComponent {
     return ready ? interpolate(this.t().exports.ready.hint, { name: ready.file.filename }) : '';
   });
 
-  // Falhas e "tentar de novo" com o `Retry-After` do 429.
   protected readonly exportMessage = computed(() => this.message(this.vault.exportProblem()));
   protected readonly importProblem = computed<Problem | null>(() => {
     const state = this.vault.importStatus();
     return state.status === 'error' ? state.problem : null;
   });
   protected readonly importMessage = computed(() => this.message(this.importProblem()));
-  /** O mesmo zip falharia igual (inválido ou grande demais): só escolher outro arquivo ajuda. */
   protected readonly canRetryImport = computed(() => {
     const code = this.importProblem()?.code;
     return (
       code !== 'VAULT_IMPORT_INVALID' &&
       code !== 'VAULT_IMPORT_TOO_LARGE' &&
-      // `RENAME` sem resposta: repetir pode duplicar o vault (F5); o usuário confere antes.
       !this.vault.importUncertain()
     );
   });
@@ -387,7 +370,6 @@ export class VaultSectionComponent {
       untracked(() => this.count(this.importWait, seconds, 1));
     });
     this.vault.file$.pipe(takeUntilDestroyed()).subscribe((file) => {
-      // Só guarda o arquivo: quem salva ou compartilha é o usuário, num clique.
       this.discard();
       this.ready.set({ file, prepared: this.download.prepare(file) });
     });
@@ -441,7 +423,6 @@ export class VaultSectionComponent {
     this.ready.set(null);
   }
 
-  /** "Importar": só abre a confirmação (nada é enviado antes de o usuário confirmar). */
   protected askImport(): void {
     if (this.chosenFile() === null || this.vault.importing()) return;
     this.confirming.set(true);
@@ -464,7 +445,6 @@ export class VaultSectionComponent {
     this.form.controls.file.setValue(null);
   }
 
-  /** "Concluir": volta ao formulário vazio. */
   protected finish(): void {
     this.resetImport();
   }

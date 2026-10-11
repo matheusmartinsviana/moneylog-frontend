@@ -3,13 +3,6 @@ import type { Page } from '@playwright/test';
 import { expect, seedMockResponses, seedPreferences, test, waitForApp } from './support';
 import { homeResponses, upcoming } from './support/home-fixtures';
 
-/**
- * Regra "tela sucinta" (`src/styles/README.md`, ADR-011): o Início cabe na tela **sem rolar a página** nem
- * cortar valores, em 1280×720, 1440×800 e no celular 390×844, nos temas claro e escuro, em português. Roda em
- * `mock`, `prod` (respostas do contrato semeadas, com 3 compromissos para o pior caso) e `demo` (o backend de exemplo,
- * dados sintéticos). Falha se o documento passa da viewport (vertical ou horizontal), se algum elemento do conteúdo
- * tem rolagem ou corte horizontal ou se o painel do Início precisou de rolagem própria.
- */
 const SCREENS = [
   { name: '1280x720', width: 1280, height: 720 },
   { name: '1440x800', width: 1440, height: 800 },
@@ -17,7 +10,6 @@ const SCREENS = [
 ] as const;
 const THEMES = ['light', 'dark'] as const;
 
-/** Três compromissos dos próximos 7 dias (sintéticos): o máximo que o Início mostra. */
 const UPCOMING_THREE = {
   ...upcoming,
   items: [
@@ -37,16 +29,13 @@ const UPCOMING_THREE = {
   })),
 };
 
-/** Mede o que o teste cobra: o documento, os elementos do conteúdo e o painel do Início. */
 async function measure(page: Page) {
   return page.evaluate(() => {
     const doc = document.documentElement;
     const content = document.querySelector('main') ?? document.body;
     const scrollsX = (el: Element): boolean => {
       const overflow = getComputedStyle(el).overflowX;
-      // Elementos só para leitores de tela (1 px, recortados) não são conteúdo cortado.
       if (el.clientWidth <= 1) return false;
-      // Folga de 4 px: o `Disclosure` ("Mais") sobra 4 px de cada lado para o anel de foco (margem negativa).
       return el.scrollWidth > el.clientWidth + 4 && overflow !== 'auto' && overflow !== 'scroll';
     };
     const dash = document.querySelector('[data-cy="home-dashboard"]');
@@ -80,7 +69,6 @@ for (const screen of SCREENS) {
       await waitForApp(page);
       await expect(page.locator('[data-cy="home-dashboard"]')).toBeVisible();
       await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
-      // Dá tempo de a fila de leituras terminar (as últimas a chegar mexem na altura dos blocos).
       await page.waitForTimeout(600);
 
       const m = await measure(page);
@@ -95,11 +83,6 @@ for (const screen of SCREENS) {
   }
 }
 
-/**
- * As demais telas (auditoria "tela sucinta"): em 1280×720, com os dados sintéticos do modo demo, a página não rola nem na
- * vertical nem na horizontal; a lista principal rola dentro do próprio painel. Só roda no projeto `demo` (os projetos
- * `mock` partem do banco vazio, o que não exercita as listas).
- */
 const OTHER_SCREENS = [
   '/transactions',
   '/accounts',
@@ -123,7 +106,6 @@ const OTHER_SCREENS = [
   '/notifications',
   '/budgets',
   '/insights',
-  // Detalhes (ids determinísticos do mundo de exemplo do modo demo): cartão, fatura, meta, pessoa e compromisso.
   '/cards/00000003-0000-4000-8000-000000000001',
   '/cards/00000003-0000-4000-8000-000000000001/invoices/00000004-0000-4000-8000-000000000014',
   '/goals/00000008-0000-4000-8000-000000000001',
@@ -140,7 +122,6 @@ for (const route of OTHER_SCREENS) {
     await seedPreferences(page, { language: 'pt', theme: 'dark' });
     await page.goto(route);
     await waitForApp(page);
-    // Dá tempo de o backend de exemplo responder e de a lista aparecer.
     await page.waitForTimeout(2500);
 
     const m = await measure(page);

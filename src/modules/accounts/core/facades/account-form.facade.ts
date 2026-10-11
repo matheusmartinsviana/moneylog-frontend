@@ -27,13 +27,6 @@ export type AccountLoadState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly account: Account };
 
-/**
- * Facade do formulário de conta (criar e editar). O salvar usa `exhaustMap` (clique duplo = uma
- * requisição) e devolve **o recurso da resposta**: nada de chutar o estado (FE 05). Falhas chegam
- * tipadas (`code` + `fieldErrors`) em `problem`, para a tela traduzir e marcar os campos.
- *
- * Escopo de componente (`providers: [AccountFormFacade]`).
- */
 @Injectable()
 export class AccountFormFacade {
   private readonly gateway = inject(AccountsGateway);
@@ -46,12 +39,9 @@ export class AccountFormFacade {
   private readonly loaded = signal<Account | null>(null);
 
   readonly saving = this.savingState.asReadonly();
-  /** Última falha do salvar (limpa quando um novo envio começa). */
   readonly problem = this.problemState.asReadonly();
   readonly loadStatus = this.loadState.asReadonly();
-  /** A conta carregada; durante uma recarga (ex.: depois de um 409) continua a anterior. */
   readonly account = this.loaded.asReadonly();
-  /** Emite a conta devolvida pela API quando o salvar dá certo. */
   readonly saved$ = this.savedEvents.asObservable();
 
   constructor() {
@@ -93,7 +83,6 @@ export class AccountFormFacade {
       });
   }
 
-  /** Carrega a conta para edição (também recarrega depois de um `409 VERSION_CONFLICT`). */
   load(id: string): void {
     this.loads.next(id);
   }

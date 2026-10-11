@@ -13,18 +13,16 @@ import {
   toMoney,
 } from '~/modules/reports/mock-data/demo-support';
 
-/** Entradas e saídas de um dia em centavos (determinístico, com dia só de reembolso e dias sem nada). */
 export function demoDay(iso: string): { income: number; expenses: number } {
   const day = Number(iso.slice(8, 10));
   const n = dayNumber(iso);
   let income = 0;
-  if (day === 1) income += 550_000; // salário
-  if (day === 20) income += 120_000; // freela
+  if (day === 1) income += 550_000;
+  if (day === 20) income += 120_000;
   if (n % 11 === 4) income += 18_000;
-  // Consumo: dia sim, dia não; fim de semana um pouco maior; um dia só de reembolso.
   let expenses = n % 4 === 0 ? 0 : 3_500 + ((n * 7919) % 9_000) + (n % 7 >= 5 ? 6_500 : 0);
-  if (day === 5) expenses += 82_000; // moradia
-  if (n % 29 === 13) expenses = -4_990; // reembolso: o dia fica negativo
+  if (day === 5) expenses += 82_000;
+  if (n % 29 === 13) expenses = -4_990;
   return { income, expenses };
 }
 
@@ -83,16 +81,10 @@ function build(
   };
 }
 
-/** Segunda-feira da semana de `day` (dia absoluto; 1970-01-01 foi quinta). */
 function mondayOf(day: number): number {
   return day - ((day + 3) % 7);
 }
 
-/**
- * Série de DEMONSTRAÇÃO no formato do contrato futuro (plano 5.1): D7 e D30 diários terminando hoje; M3 por
- * semanas (segunda a domingo) **recortadas** na janela (13 ou 14 pontos); M12 por competência, a corrente
- * inteira e `partial`. O balde de hoje é `partial`. Totais = soma dos pontos; `net` = receita − consumo.
- */
 export function demoIncomeExpenseSeries(period: ReportPeriod): IncomeExpenseSeries {
   const today = dayNumber(DEMO_TODAY);
   if (period === 'D7' || period === 'D30') {

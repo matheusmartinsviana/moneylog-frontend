@@ -21,11 +21,6 @@ import type {
 import { IdempotencyTracker, isAmbiguousFailure } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Facade do envio do extrato. `exhaustMap`: clique duplo = um envio só. Uma `Idempotency-Key` por tentativa,
- * reaproveitada depois de falha ambígua com o mesmo arquivo. Cancelar aborta a requisição (nada é criado:
- * o lote só nasce na resposta). Emite o lote devolvido pelo backend em `uploaded$`. Escopo de componente.
- */
 @Injectable()
 export class ImportUploadFacade {
   private readonly gateway = inject(ImportsGateway);
@@ -42,7 +37,6 @@ export class ImportUploadFacade {
   private last: ImportUploadInput | null = null;
 
   readonly uploading = this.uploadingState.asReadonly();
-  /** Progresso do envio em % (`null` = o navegador não informou o total). */
   readonly percent = this.percentState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly cancelled = this.cancelledState.asReadonly();
@@ -128,7 +122,6 @@ export class ImportUploadFacade {
     this.problemState.set(null);
   }
 
-  /** Busca o mapeamento salvo da conta/cartão (a última busca vence). */
   loadSavedMapping(sourceId: string): void {
     this.mappingState.set(null);
     this.mappingLoads.next(sourceId);
