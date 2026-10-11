@@ -149,3 +149,19 @@
     gap: var(--space-1);
   }
 }
+
+/*
+ * Celular (<= 40 rem, a mesma tela "compacta" do app): a Início não tenta caber na altura da janela. A página rola
+ * normalmente, cada bloco tem a altura do próprio conteúdo e o gráfico não fica espremido numa altura mínima.
+ */
+@media (width <= 40rem) {
+  .home {
+    grid-template-rows: none;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .home__chart {
+    min-height: 0;
+  }
+}

@@ -1,4 +1,4 @@
-<app-page-layout fit [heading]="t().nav.home" [description]="asOf()">
+<app-page-layout [fit]="fit()" [heading]="t().nav.home" [description]="asOf()">
   <div pageActions class="actions">
     @if (dashboard.data()?.summary?.isProjection) {
       <span class="tag" data-cy="home-projection">{{ t().home.projection }}</span>
