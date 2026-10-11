@@ -39,7 +39,7 @@ import { formatCompetence } from '~/util/date';
           <p role="status" data-cy="ai-ask-preparing">{{ t().ai.consent.preparing }}</p>
         }
         @case ('error') {
-          <p role="alert" class="ask__error" data-cy="ai-ask-error">{{ errorText() }}</p>
+          <p role="alert" class="ask__error" data-toast data-cy="ai-ask-error">{{ errorText() }}</p>
           <div class="ask__actions">
             <button type="button" class="button" data-cy="ai-ask-close" (click)="close()">
               {{ t().ai.result.close }}
@@ -147,7 +147,9 @@ import { formatCompetence } from '~/util/date';
             }}</pre>
           </app-disclosure>
           @if (consentProblem(); as message) {
-            <p role="alert" class="ask__error" data-cy="ai-ask-send-error">{{ message }}</p>
+            <p role="alert" class="ask__error" data-toast data-cy="ai-ask-send-error">
+              {{ message }}
+            </p>
           }
           <div class="ask__actions">
             <button

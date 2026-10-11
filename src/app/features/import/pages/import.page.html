@@ -48,12 +48,12 @@
           <p class="note" data-cy="import-privacy">{{ t().imports.privacy }}</p>
 
           @if (submitted() && !sourceControl.value) {
-            <p class="error" role="alert" data-cy="import-source-required">
+            <p class="error" role="alert" data-toast data-cy="import-source-required">
               {{ t().imports.upload.chooseSource }}
             </p>
           }
           @if (submitted() && !fileControl.value) {
-            <p class="error" role="alert" data-cy="import-file-required">
+            <p class="error" role="alert" data-toast data-cy="import-file-required">
               {{ t().imports.upload.chooseFile }}
             </p>
           }
@@ -72,7 +72,7 @@
             </p>
           }
           @if (uploadError(); as message) {
-            <p class="error" role="alert" data-cy="import-error">
+            <p class="error" role="alert" data-toast data-cy="import-error">
               {{ message }} {{ t().imports.upload.nothingCreated }}
             </p>
           }

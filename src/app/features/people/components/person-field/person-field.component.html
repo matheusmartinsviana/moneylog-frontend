@@ -25,7 +25,9 @@
       </p>
     }
     @if (failure(); as message) {
-      <p class="new__error" role="alert" [attr.data-cy]="fieldId() + '-new-error'">{{ message }}</p>
+      <p class="new__error" role="alert" data-toast [attr.data-cy]="fieldId() + '-new-error'">
+        {{ message }}
+      </p>
     }
     <div class="new__actions">
       <button

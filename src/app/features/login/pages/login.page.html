@@ -151,7 +151,7 @@
       }
 
       @if (errorMessage(); as message) {
-        <p class="login__error" role="alert" data-cy="login-error">{{ message }}</p>
+        <p class="login__error" role="alert" data-toast data-cy="login-error">{{ message }}</p>
       }
 
       <button

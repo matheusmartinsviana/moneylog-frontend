@@ -128,7 +128,7 @@ function usesCommandKey(document: Document): boolean {
         </p>
       </div>
       @if (tooLarge()) {
-        <p class="editor__error" role="alert" data-cy="editor-too-large">
+        <p class="editor__error" role="alert" data-toast data-cy="editor-too-large">
           {{ t().notes.editor.tooLarge }}
         </p>
       }

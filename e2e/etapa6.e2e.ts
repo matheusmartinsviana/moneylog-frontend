@@ -47,7 +47,7 @@ test.describe('/notes vazio', () => {
     await expect(page.locator('[data-cy="new-note-name"]')).toHaveAttribute('aria-invalid', 'true');
     await page.locator('[data-cy="new-note-name"]').fill('a:b');
     await page.locator('[data-cy="new-note-submit"]').click();
-    await expect(page.locator('[data-cy="new-note-error"]')).toBeVisible();
+    await expect(page.locator('[data-cy="toast-error"]').first()).toBeVisible();
 
     await page.locator('[data-cy="new-note-name"]').fill('Revisão de outubro');
     await page.locator('[data-cy="new-note-folder"]').fill('reviews');
