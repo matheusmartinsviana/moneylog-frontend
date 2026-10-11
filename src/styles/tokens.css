@@ -87,6 +87,9 @@
   --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 45%) 0%, rgb(255 255 255 / 0%) 42%);
   --glass-edge-top: var(--glass-border);
   /* Esqueleto de carregamento: base quase no tom do cartão + brilho lento e de baixa opacidade. */
+  /* Logo da interface: o recibo escuro no tema claro e o branco no escuro (um <img> de cada; o CSS mostra um). */
+  --logo-on-light-display: block;
+  --logo-on-dark-display: none;
   --skeleton-bg: color-mix(in oklab, var(--color-surface-muted) 55%, var(--color-surface));
   --gradient-shimmer: linear-gradient(
     90deg,
@@ -280,7 +283,7 @@
     --color-surface-muted: #1c1c2a;
     --color-surface-inset: #0f0f18;
     --color-border: rgb(255 255 255 / 8%);
-    --color-control-border: #6c6a86;
+    --color-control-border: #68667f;
     --color-text: #f2f1fb;
     --color-text-muted: #a5a3c0;
     --color-accent: #7bc5ea;
@@ -336,6 +339,8 @@
     --glass-shadow: 0 12px 38px -12px rgb(0 0 0 / 60%), inset 0 1px 0 0 rgb(255 255 255 / 4%);
     --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 4%) 0%, rgb(255 255 255 / 0%) 42%);
     --glass-edge-top: var(--glass-border);
+    --logo-on-light-display: none;
+    --logo-on-dark-display: block;
     --skeleton-bg: color-mix(in oklab, var(--color-surface-muted) 45%, var(--color-surface));
     --gradient-shimmer: linear-gradient(
       90deg,
@@ -356,7 +361,7 @@
   --color-surface-muted: #1c1c2a;
   --color-surface-inset: #0f0f18;
   --color-border: rgb(255 255 255 / 8%);
-  --color-control-border: #6c6a86;
+  --color-control-border: #68667f;
   --color-text: #f2f1fb;
   --color-text-muted: #a5a3c0;
   --color-accent: #7bc5ea;
@@ -412,6 +417,8 @@
   --glass-shadow: 0 12px 38px -12px rgb(0 0 0 / 60%), inset 0 1px 0 0 rgb(255 255 255 / 4%);
   --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 4%) 0%, rgb(255 255 255 / 0%) 42%);
   --glass-edge-top: var(--glass-border);
+  --logo-on-light-display: none;
+  --logo-on-dark-display: block;
   --skeleton-bg: color-mix(in oklab, var(--color-surface-muted) 45%, var(--color-surface));
   --gradient-shimmer: linear-gradient(
     90deg,

@@ -11,7 +11,6 @@ import {
   provideRouter,
   TitleStrategy,
   withComponentInputBinding,
-  withInMemoryScrolling,
   withViewTransitions,
 } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -23,6 +22,7 @@ import { authInterceptor } from '~/app/common/interceptors/auth.interceptor';
 import { unauthorizedInterceptor } from '~/app/common/interceptors/unauthorized.interceptor';
 import { motionEnabled } from '~/app/common/motion/motion';
 import { isModalNavigation } from '~/app/common/routing/modal-route';
+import { provideRouteScroll } from '~/app/common/routing/route-scroll';
 import { I18nTitleStrategy } from '~/app/common/services/i18n-title.strategy';
 import { provideTheme } from '~/app/common/services/theme.providers';
 import { provideDemoMode } from '~/app/config/demo-mode';
@@ -49,7 +49,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
-      withInMemoryScrolling({ scrollPositionRestoration: 'top' }),
       // Troca de página com cross-fade só no <main> (`.m-page`), sem animar o primeiro carregamento. Com movimento
       // desligado no início (preferência do sistema ou `data-motion="off"`) a transição nem é criada: pular uma
       // transição já criada faz o Angular logar o `AbortError` no console em desenvolvimento.
@@ -88,6 +87,7 @@ export const appConfig: ApplicationConfig = {
     provideSearch(),
     // Restaura a sessão pelo cookie de refresh antes de ativar as rotas (T33 CA5). Nunca lança.
     provideAppInitializer(() => trackInputModality(inject(DOCUMENT))),
+    provideRouteScroll(),
     provideAppInitializer(() => inject(SessionFacade).restore()),
     provideServiceWorker('sw-push.js', {
       enabled: !isDevMode(),

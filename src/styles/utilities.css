@@ -384,10 +384,18 @@ html[data-glass] .glass-lens {
   border-radius: var(--radius-control);
   background-color: var(--color-surface-inset);
   color: var(--color-text);
-  font-size: 1rem;
+  font-size: var(--text-md);
   transition:
     border-color var(--duration-fast) var(--ease-standard),
     box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+/* Onde se digita no toque o campo precisa de 16px (abaixo disso o Safari do iPhone dá zoom ao focar). */
+@media (pointer: coarse) {
+  input.input,
+  textarea.input {
+    font-size: 1rem;
+  }
 }
 
 .input::placeholder {
@@ -610,6 +618,20 @@ html[data-glass] .glass-lens {
 .list-skeleton__row {
   height: 3.5rem;
   border-radius: var(--radius-control);
+}
+
+/* Cabeçalho de página no celular com 2+ ações: os botões dividem a linha (ver `page-layout.component.ts`). */
+@media (width < 40rem) {
+  .page__header:has(.page__actions .button ~ .button) .page__actions > .button,
+  .page__header:has(.page__actions .button ~ .button) .page__actions > .actions {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .page__header:has(.page__actions .button ~ .button) .page__actions .actions > .button {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
 }
 
 /* Tooltip próprio (appTooltip): criado no `body`, fora de qualquer componente. */

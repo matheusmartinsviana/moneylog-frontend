@@ -46,6 +46,11 @@
   transform: rotate(180deg);
 }
 
+/* Filtros e seletores compactos: texto menor, no mesmo tamanho dos chips e botões. */
+.select__trigger--compact {
+  font-size: var(--text-sm);
+}
+
 @media (width >= 768px) {
   .select__trigger--compact {
     min-height: 2.5rem;

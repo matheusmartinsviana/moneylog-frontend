@@ -70,22 +70,14 @@
         [mandatory]="false"
         [label]="t().goals.form.deadline"
       />
-      <app-disclosure
-        fieldId="goal-more"
-        [headingLevel]="3"
-        [heading]="t().goals.form.moreOptions"
-        [(open)]="moreOpen"
-      >
-        <div class="form__more">
-          <app-segmented-control
-            formControlName="priority"
-            fieldId="goal-priority"
-            [mandatory]="false"
-            [options]="priorityOptions()"
-            [label]="t().goals.form.priority"
-          />
-        </div>
-      </app-disclosure>
+      <app-segmented-control
+        formControlName="priority"
+        fieldId="goal-priority"
+        [mandatory]="false"
+        [options]="priorityOptions()"
+        [label]="t().goals.form.priority"
+      />
+
       <app-text-field
         formControlName="description"
         fieldId="goal-description"

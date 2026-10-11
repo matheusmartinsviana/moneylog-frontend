@@ -24,10 +24,20 @@
 }
 
 .login__logo {
-  display: block;
   width: 3rem;
   height: 3rem;
   margin-bottom: var(--space-2);
+  object-fit: contain;
+  object-position: left center;
+}
+
+/* Um logo por tema (tokens `--logo-on-*-display`): o escuro no claro, o branco no escuro. */
+.login__logo--on-light {
+  display: var(--logo-on-light-display);
+}
+
+.login__logo--on-dark {
+  display: var(--logo-on-dark-display);
 }
 
 .login__brand {

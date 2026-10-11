@@ -13,7 +13,6 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 
 import { ConfirmDialogComponent } from '~/app/common/components/confirm-dialog/confirm-dialog.component';
-import { DisclosureComponent } from '~/app/common/components/disclosure/disclosure.component';
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
@@ -72,7 +71,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
     MoneyInputComponent,
     DatePickerComponent,
     SegmentedControlComponent,
-    DisclosureComponent,
     ConfirmDialogComponent,
     GoalPhotoManagerComponent,
     GoalFeaturedSwitchComponent,
@@ -88,7 +86,7 @@ export class GoalFormPage {
     'field',
     'field',
     'field-date',
-    { disclosure: ['field-segmented'] },
+    'field-segmented',
     'field',
     'photos',
     'switch-2',
@@ -107,7 +105,6 @@ export class GoalFormPage {
 
   protected readonly editing = computed(() => this.id() !== undefined);
   /** Prioridade fica recolhida em "Mais opções" (e omitida se não escolhida). */
-  protected readonly moreOpen = signal(false);
   protected readonly goal = this.facade.goal;
   protected readonly archived = computed(() => this.goal()?.status === 'ARCHIVED');
   /** Meta de medida: nome opcional e alvo que aceita zero (ADR-016). */
@@ -187,7 +184,6 @@ export class GoalFormPage {
         return;
       }
       untracked(() => {
-        this.moreOpen.set(true);
         const keep = this.keepTyped;
         this.keepTyped = false;
         const name = this.form.controls.name;

@@ -68,8 +68,35 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       color: var(--color-text-muted);
     }
 
+    /* Ações da página: botões lado a lado com a mesma folga, quebrando de linha se faltar espaço. */
+    .page__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      justify-content: flex-end;
+    }
+
     .page__actions:empty {
       display: none;
+    }
+
+    /*
+     * Celular: com duas ou mais ações, o título fica numa linha e as ações descem para outra, em largura total
+     * (lado a lado no mesmo bloco do título os botões se amontoavam). Com uma ação só, ela segue ao lado do título.
+     */
+    @media (width < 40rem) {
+      .page__header:has(.page__actions .button ~ .button),
+      :host(.fit) .page__header:has(.page__actions .button ~ .button) {
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        gap: var(--space-2);
+      }
+
+      .page__header:has(.page__actions .button ~ .button) .page__actions {
+        justify-content: stretch;
+        width: 100%;
+      }
     }
 
     /* Uma coluna que nunca passa da largura da página: tabelas e abas largas rolam por dentro (sem rolar a página). */

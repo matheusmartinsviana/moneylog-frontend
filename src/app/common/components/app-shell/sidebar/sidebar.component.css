@@ -147,9 +147,8 @@
   color: var(--color-on-accent);
 }
 
-/* Logo: a arte já traz o próprio quadrado arredondado; ocupa o ladrilho inteiro, sem moldura. */
+/* Logo: o recibo (arte com fundo transparente) fica contido no ladrilho, sem moldura. */
 .sidebar__sq--brand {
-  overflow: hidden;
   border-color: transparent;
   background-color: transparent;
 }
@@ -173,10 +172,19 @@
 }
 
 .sidebar__logo {
-  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  padding: 0.3125rem;
+  object-fit: contain;
+}
+
+/* Um logo por tema (tokens `--logo-on-*-display`): o escuro no claro, o branco no escuro. */
+.sidebar__logo--on-light {
+  display: var(--logo-on-light-display);
+}
+
+.sidebar__logo--on-dark {
+  display: var(--logo-on-dark-display);
 }
 
 /* Alto contraste: sem cor de fundo, o item ativo se distingue por um contorno de sistema. */

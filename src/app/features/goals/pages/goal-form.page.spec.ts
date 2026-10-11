@@ -86,7 +86,6 @@ describe('GoalFormPage', () => {
 
     await type('goal-name', 'Reserva de emergência');
     await type('goal-target', '20000,00');
-    await userEvent.click(screen.getByTestId('goal-more-toggle'));
     await userEvent.click(screen.getByTestId('goal-priority-HIGH'));
     await userEvent.click(screen.getByTestId('goal-form-save'));
     await fixture.whenStable();

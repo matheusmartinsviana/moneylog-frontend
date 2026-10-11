@@ -762,7 +762,6 @@ export abstract class AppI18n {
       readonly optional: string;
       readonly openingBalance: string;
       readonly openingDate: string;
-      readonly moreOptions: string;
       readonly lockedHint: string;
       readonly save: string;
       readonly saving: string;
@@ -2064,7 +2063,6 @@ export abstract class AppI18n {
       readonly target: string;
       readonly deadline: string;
       readonly priority: string;
-      readonly moreOptions: string;
       readonly description: string;
       readonly save: string;
       readonly saving: string;
