@@ -208,7 +208,8 @@
     radial-gradient(farthest-side at 0 50%, var(--color-shadow-strong), transparent),
     radial-gradient(farthest-side at 100% 50%, var(--color-shadow-strong), transparent);
   --mask-fade-down: linear-gradient(to bottom, #000 0%, transparent 100%);
-  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
+  --focus-ring-keyboard: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
+  --focus-ring: var(--focus-ring-keyboard);
 }
 
 @media (width >= 768px) {

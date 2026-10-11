@@ -25,6 +25,8 @@ export function playGhostExit(
     node.removeAttribute('data-cy');
   }
   ghost.classList.add('m-ghost');
+  // O clone nasce com as classes do original: sem isto a animação de entrada reiniciaria por baixo da saída.
+  ghost.style.animation = 'none';
   ghost.setAttribute('aria-hidden', 'true');
   ghost.setAttribute('inert', '');
   ghost
@@ -45,16 +47,27 @@ export function playGhostExit(
     side: { opacity: 0, transform: 'translateX(24px)' },
     popover: { opacity: 0, transform: 'translateY(-4px)' },
   };
-  target?.animate([{ opacity: 1, transform: 'none' }, frames[kind]], {
+  if (target) target.style.animation = 'none';
+  const panelOut = target?.animate([{ opacity: 1, transform: 'none' }, frames[kind]], {
     duration,
     easing: ease,
     fill: 'forwards',
   });
-  const fade = ghost.animate([{ opacity: 1 }, { opacity: 0 }], {
-    duration,
-    easing: ease,
-    fill: 'forwards',
-  });
+  // Com painel, o contêiner NÃO perde opacidade (ele é "raiz de backdrop" do vidro do painel): só o fundo
+  // escurecido clareia. Sem painel (caso raro), cai no fade do contêiner.
+  const fade = panelOut
+    ? ghost.animate(
+        [
+          { backgroundColor: getComputedStyle(ghost).backgroundColor },
+          { backgroundColor: 'transparent' },
+        ],
+        {
+          duration,
+          easing: ease,
+          fill: 'forwards',
+        },
+      )
+    : ghost.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing: ease, fill: 'forwards' });
   const remove = () => ghost.remove();
   fade.onfinish = remove;
   fade.oncancel = remove;

@@ -22,7 +22,7 @@ body {
   flex-direction: column;
   min-height: 100dvh;
   background-color: var(--color-canvas);
-  /* Halo lilás difuso no topo do canvas (DS 03): decorativo, só por token; nenhum texto crítico depende dele. */
+  /* Halo azul difuso no topo do canvas (DS 03): decorativo, só por token; nenhum texto crítico depende dele. */
   background-image: var(--gradient-glow-top);
   background-repeat: no-repeat;
   background-size: 100% 36rem;
@@ -125,6 +125,26 @@ a {
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+/*
+ * Foco por mouse/toque não desenha anel (`data-input` vem de `input-modality.ts`): o anel é de quem usa o teclado.
+ * Campos de texto mantêm o anel (o foco neles é o próprio feedback). Contêineres focados por script
+ * (`tabindex="-1"`: painel do modal, `<main>`, títulos) nunca mostram anel; itens com foco móvel por seta mantêm.
+ */
+html[data-input='pointer'] {
+  --focus-ring: 0 0 0 0 transparent;
+}
+
+html[data-input='pointer']
+  :is(input, textarea, select, [contenteditable='true'], [role='textbox']) {
+  --focus-ring: var(--focus-ring-keyboard);
+}
+
+main[tabindex='-1']:focus-visible,
+:is(h1, h2, h3)[tabindex='-1']:focus-visible,
+:is([role='dialog'], [role='alertdialog'])[tabindex='-1']:focus-visible {
+  --focus-ring: 0 0 0 0 transparent;
 }
 
 /*

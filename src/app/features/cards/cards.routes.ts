@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { MODAL_ROUTE } from '~/app/common/routing/modal-route';
 import { pageTitle } from '~/app/common/services/i18n-title.strategy';
 import { CardFormPage } from '~/app/features/cards/pages/card-form.page';
 import { CardPage } from '~/app/features/cards/pages/card.page';
@@ -13,14 +14,14 @@ const routes: Routes = [
     path: '',
     component: CardsPage,
     title: pageTitle('cards'),
-    children: [{ path: 'new', component: CardFormPage }],
+    children: [{ path: 'new', component: CardFormPage, data: MODAL_ROUTE }],
   },
   {
     path: ':id',
     providers: CARD_DETAIL_PROVIDERS,
     component: CardPage,
     title: pageTitle('cards'),
-    children: [{ path: 'edit', component: CardFormPage }],
+    children: [{ path: 'edit', component: CardFormPage, data: MODAL_ROUTE }],
   },
   {
     path: ':id/invoices/:invoiceId',

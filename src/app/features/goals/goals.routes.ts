@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { MODAL_ROUTE } from '~/app/common/routing/modal-route';
 import { pageTitle } from '~/app/common/services/i18n-title.strategy';
 import { GoalFormPage } from '~/app/features/goals/pages/goal-form.page';
 import { GoalSmartFormPage } from '~/app/features/goals/pages/goal-smart-form.page';
@@ -18,15 +19,15 @@ const routes: Routes = [
         component: GoalsPage,
         title: pageTitle('goals'),
         children: [
-          { path: 'new', component: GoalFormPage },
-          { path: 'new-smart', component: GoalSmartFormPage },
+          { path: 'new', component: GoalFormPage, data: MODAL_ROUTE },
+          { path: 'new-smart', component: GoalSmartFormPage, data: MODAL_ROUTE },
         ],
       },
       {
         path: ':id',
         component: GoalPage,
         title: pageTitle('goals'),
-        children: [{ path: 'edit', component: GoalFormPage }],
+        children: [{ path: 'edit', component: GoalFormPage, data: MODAL_ROUTE }],
       },
     ],
   },

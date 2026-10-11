@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { MODAL_ROUTE } from '~/app/common/routing/modal-route';
 import { pageTitle } from '~/app/common/services/i18n-title.strategy';
 import { CommitmentFormPage } from '~/app/features/planning/pages/commitment-form.page';
 import { CommitmentPage } from '~/app/features/planning/pages/commitment.page';
@@ -26,8 +27,8 @@ const routes: Routes = [
         component: RecurrencesPage,
         title: pageTitle('planning'),
         children: [
-          { path: 'new', component: RecurrenceFormPage },
-          { path: ':id/edit', component: RecurrenceFormPage },
+          { path: 'new', component: RecurrenceFormPage, data: MODAL_ROUTE },
+          { path: ':id/edit', component: RecurrenceFormPage, data: MODAL_ROUTE },
         ],
       },
       { path: 'occurrences', component: OccurrencesPage, title: pageTitle('planning') },
@@ -42,7 +43,7 @@ const routes: Routes = [
         path: 'commitments',
         component: CommitmentsPage,
         title: pageTitle('planning'),
-        children: [{ path: 'new', component: CommitmentFormPage }],
+        children: [{ path: 'new', component: CommitmentFormPage, data: MODAL_ROUTE }],
       },
       { path: 'commitments/:id', component: CommitmentPage, title: pageTitle('planning') },
     ],
