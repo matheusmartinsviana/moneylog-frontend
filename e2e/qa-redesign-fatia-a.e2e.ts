@@ -247,7 +247,7 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
     });
   }
 
-  test('sem IA ligada não há atalho de IA, o chip é "IA desligada" e não há logo nem dado de demonstração', async ({
+  test('sem IA ligada não há atalho de IA, o chip é "IA desligada" e não há dado de demonstração', async ({
     page,
   }) => {
     for (const path of ROUTE_PATHS) {
@@ -257,10 +257,8 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
     }
     await open(page, '/');
     await expect(page.locator('[data-cy="header-ai-status"]')).toHaveText('IA desligada');
-    // Nenhuma imagem de marca: o espaço do logo é vazio e o wordmark vem de BRAND_NAME.
-    await expect(
-      page.locator('[data-cy="sidebar-brand"] img, [data-cy="sidebar-brand"] svg'),
-    ).toHaveCount(0);
+    // O logo é uma imagem decorativa (alt vazio); o nome acessível vem de BRAND_NAME.
+    await expect(page.locator('[data-cy="sidebar-brand"] img')).toHaveCount(1);
     await expect(page.locator('[data-cy="sidebar-brand"]')).toHaveText('moneylog');
     await expect(page).toHaveTitle(/moneylog/);
   });

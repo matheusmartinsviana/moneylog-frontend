@@ -23,11 +23,11 @@
   gap: var(--space-1);
 }
 
-/* Espaço reservado do logo: vazio de propósito até o dono definir a marca. */
-.login__logo-slot {
+.login__logo {
   display: block;
-  width: 2rem;
-  height: 2rem;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: var(--space-2);
 }
 
 .login__brand {

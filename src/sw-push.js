@@ -12,6 +12,8 @@ const PREFS_CACHE = 'moneylog-prefs';
 const PREFS_KEY = '/__language';
 const DEFAULT_LANGUAGE = 'pt';
 const NOTIFICATIONS_URL = '/notifications';
+const ICON_URL = '/assets/icons/icon-192.png';
+const BADGE_URL = '/assets/icons/badge-96.png';
 
 const TEXTS = {
   pt: {
@@ -99,6 +101,9 @@ self.addEventListener('push', (event) => {
         : table.DEFAULT;
       return self.registration.showNotification(title, {
         body,
+        // Logo colorido (iOS, desktop) e silhueta branca para a barra de status do Android.
+        icon: ICON_URL,
+        badge: BADGE_URL,
         tag: typeof payload.id === 'string' ? payload.id : undefined,
         data: { url: NOTIFICATIONS_URL },
       });
