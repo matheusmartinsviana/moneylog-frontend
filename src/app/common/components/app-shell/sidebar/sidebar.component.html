@@ -3,9 +3,16 @@
   <nav class="sidebar__nav" [attr.aria-label]="t().shell.primaryNavigation">
     <div class="sidebar__top">
       <a class="sidebar__link sidebar__brand" routerLink="/" data-cy="sidebar-brand">
-        <!-- Espaço reservado do logo (ainda não definido). Não colocar marca aqui sem decisão do dono. -->
-        <!-- prettier-ignore -->
-        <span class="sidebar__sq sidebar__sq--brand"><span class="sidebar__logo-slot" aria-hidden="true"></span></span>
+        <span class="sidebar__sq sidebar__sq--brand">
+          <img
+            class="sidebar__logo"
+            src="assets/icons/icon-192.png"
+            alt=""
+            width="40"
+            height="40"
+            decoding="async"
+          />
+        </span>
         <span class="visually-hidden">{{ t().shell.brand }}</span>
       </a>
     </div>

@@ -17,6 +17,10 @@ import { merge } from 'rxjs';
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
+import {
+  FormSkeletonComponent,
+  type FormSkeletonPiece,
+} from '~/app/common/components/form-skeleton/form-skeleton.component';
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { MoneyInputComponent } from '~/app/common/components/forms/money-input/money-input.component';
 import { NumberStepperComponent } from '~/app/common/components/forms/number-stepper/number-stepper.component';
@@ -61,6 +65,7 @@ const MAX_DAY = 31;
 @Component({
   selector: 'app-card-form-page',
   imports: [
+    FormSkeletonComponent,
     ReactiveFormsModule,
     FormModalComponent,
     EmptyStateComponent,
@@ -77,6 +82,17 @@ const MAX_DAY = 31;
   styleUrl: './card-form.page.css',
 })
 export class CardFormPage {
+  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
+  protected readonly skeleton: readonly FormSkeletonPiece[] = [
+    'field',
+    'field-hint',
+    'field-hint',
+    'pair',
+    'note',
+    'field-hint',
+    'note',
+  ];
+
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly changes = inject(EntityChanges);

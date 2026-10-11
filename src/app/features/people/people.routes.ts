@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { MODAL_ROUTE } from '~/app/common/routing/modal-route';
 import { pageTitle } from '~/app/common/services/i18n-title.strategy';
 import { PeoplePage } from '~/app/features/people/pages/people.page';
 import { PersonFormPage } from '~/app/features/people/pages/person-form.page';
@@ -16,13 +17,13 @@ const routes: Routes = [
         path: '',
         component: PeoplePage,
         title: pageTitle('people'),
-        children: [{ path: 'new', component: PersonFormPage }],
+        children: [{ path: 'new', component: PersonFormPage, data: MODAL_ROUTE }],
       },
       {
         path: ':id',
         component: PersonPage,
         title: pageTitle('people'),
-        children: [{ path: 'edit', component: PersonFormPage }],
+        children: [{ path: 'edit', component: PersonFormPage, data: MODAL_ROUTE }],
       },
     ],
   },

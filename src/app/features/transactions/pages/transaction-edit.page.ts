@@ -18,6 +18,10 @@ import {
 } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
+import {
+  FormSkeletonComponent,
+  type FormSkeletonPiece,
+} from '~/app/common/components/form-skeleton/form-skeleton.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { ToastService } from '~/app/common/services/toast.service';
 import { AdjustmentFormComponent } from '~/app/features/quick-add/components/adjustment-form/adjustment-form.component';
@@ -60,6 +64,7 @@ import { Problem, problemOf } from '~/util/api/problem';
 @Component({
   selector: 'app-transaction-edit-page',
   imports: [
+    FormSkeletonComponent,
     FormModalComponent,
     EmptyStateComponent,
     ErrorStateComponent,
@@ -85,6 +90,16 @@ import { Problem, problemOf } from '~/util/api/problem';
   templateUrl: './transaction-edit.page.html',
 })
 export class TransactionEditPage {
+  /** Esqueleto do carregamento: o formulário de despesa/receita, o mais comum (valor, descrição, contas, data). */
+  protected readonly skeleton: readonly FormSkeletonPiece[] = [
+    'field',
+    'field-hint',
+    'field',
+    'field',
+    'field-date',
+    'field',
+  ];
+
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);

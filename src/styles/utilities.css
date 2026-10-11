@@ -79,19 +79,19 @@ html[data-glass] .glass-lens {
   }
 }
 
-/* Painel em destaque (gráfico, saldo): o mesmo cartão com o halo lilás por baixo (token). */
+/* Painel em destaque (gráfico, saldo): o mesmo cartão com o halo azul por baixo (token). */
 .surface--glow {
   background-image: var(--gradient-panel-glow);
 }
 
-/* Vidro com halo: película de luz no topo + halo lilás embaixo (gráfico e painéis de destaque). */
+/* Vidro com halo: película de luz no topo + halo azul embaixo (gráfico e painéis de destaque). */
 .glass--halo {
   background-image: var(--glass-sheen), var(--gradient-panel-glow);
 }
 
 /*
  * Botão de ícone quadrado arredondado (DS 03): borda sutil; o ativo (`is-active`, `aria-current`,
- * `aria-pressed`) é preenchido em lilás com o ícone escuro. O nome acessível vai em `aria-label`.
+ * `aria-pressed`) é preenchido no acento com o ícone escuro. O nome acessível vai em `aria-label`.
  */
 .icon-button {
   position: relative;

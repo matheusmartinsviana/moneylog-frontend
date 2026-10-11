@@ -16,6 +16,10 @@ import { Router } from '@angular/router';
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
+import {
+  FormSkeletonComponent,
+  type FormSkeletonPiece,
+} from '~/app/common/components/form-skeleton/form-skeleton.component';
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { DatePickerComponent } from '~/app/common/components/forms/date-picker/date-picker.component';
 import { MoneyInputComponent } from '~/app/common/components/forms/money-input/money-input.component';
@@ -89,6 +93,7 @@ const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
 @Component({
   selector: 'app-recurrence-form-page',
   imports: [
+    FormSkeletonComponent,
     ReactiveFormsModule,
     FormModalComponent,
     EmptyStateComponent,
@@ -107,6 +112,21 @@ const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
   styleUrl: './recurrence-form.page.css',
 })
 export class RecurrenceFormPage {
+  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
+  protected readonly skeleton: readonly FormSkeletonPiece[] = [
+    'note-2',
+    'field-segmented',
+    'field',
+    'field-hint',
+    'field',
+    'field-hint-2',
+    'field',
+    'field',
+    'switch',
+    'field-date',
+    'field-date',
+  ];
+
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
   private readonly changes = inject(EntityChanges);

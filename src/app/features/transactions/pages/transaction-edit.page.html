@@ -126,10 +126,7 @@
   } @else {
     <div data-cy="transaction-edit-loading">
       <p class="visually-hidden" role="status">{{ t().transactions.detail.loading }}</p>
-      <div class="list-skeleton" aria-hidden="true">
-        <div class="list-skeleton__row"></div>
-        <div class="list-skeleton__row"></div>
-      </div>
+      <app-form-skeleton [pieces]="skeleton" [dense]="true" />
     </div>
   }
 </app-form-modal>

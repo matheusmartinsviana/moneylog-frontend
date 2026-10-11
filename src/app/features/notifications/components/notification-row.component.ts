@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
+import { NotificationIconComponent } from '~/app/features/notifications/components/notification-icon.component';
 import { notificationLink, notificationText } from '~/app/features/notifications/notification-text';
 import type { AppNotification } from '~/modules/notifications/core/types/notification';
 
@@ -12,80 +13,87 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
  */
 @Component({
   selector: 'li[app-notification-row]',
-  imports: [RouterLink],
+  imports: [NotificationIconComponent, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'row', '[class.row--unread]': 'unread()', '[attr.data-cy]': '"notification-row"' },
   template: `
+    @if (unread()) {
+      <span class="row__dot" aria-hidden="true"></span>
+    }
+    <app-notification-icon [kind]="notification().kind" />
     <div class="row__main">
       <p class="row__kind">
         {{ kindLabel() }}
         @if (unread()) {
-          <span class="row__badge" data-cy="notification-unread">{{
+          <span class="row__badge visually-hidden" data-cy="notification-unread">{{
             t().notifications.center.unreadMark
           }}</span>
         }
       </p>
       <p class="row__title" data-cy="notification-title">{{ text().title }}</p>
       <p class="row__body" data-cy="notification-body">{{ text().body }}</p>
-    </div>
-    <div class="row__actions">
-      <a class="button" [routerLink]="link()" data-cy="notification-open">
-        {{ t().notifications.center.open }}
-      </a>
-      @if (unread()) {
-        <button
-          type="button"
-          class="button"
-          data-cy="notification-mark-read"
-          (click)="markRead.emit()"
+      <div class="row__actions">
+        <a
+          class="row__action row__action--primary"
+          [routerLink]="link()"
+          data-cy="notification-open"
         >
-          {{ t().notifications.center.markRead }}
-        </button>
-      }
+          {{ t().notifications.center.open }}
+        </a>
+        @if (unread()) {
+          <button
+            type="button"
+            class="row__action"
+            data-cy="notification-mark-read"
+            (click)="markRead.emit()"
+          >
+            {{ t().notifications.center.markRead }}
+          </button>
+        }
+      </div>
     </div>
   `,
   styles: `
+    /* Linha de uma lista agrupada (o contêiner arredondado e as divisórias são da página): sem caixa própria. */
     :host {
+      position: relative;
       display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: start;
       gap: var(--space-3);
-      padding: var(--space-4);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-card);
-      background-color: var(--color-surface);
+      padding: var(--space-3) var(--space-4);
       list-style: none;
     }
 
-    /* Não lida: só um fundo suave (a palavra "Não lida" também está no selo); sem contorno forte. */
-    :host(.row--unread) {
-      background-color: var(--color-surface-inset);
+    /* Não lida: bolinha de acento à esquerda (como no Mail). A palavra "Não lida" segue no texto, oculta. */
+    .row__dot {
+      position: absolute;
+      top: 1.25rem;
+      left: 0.3125rem;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-accent);
     }
 
     .row__main {
       display: grid;
-      gap: var(--space-1);
+      gap: 2px;
       min-width: 0;
     }
 
     .row__kind {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-2);
       color: var(--color-text-muted);
       font-size: var(--text-xs);
     }
 
-    .row__badge {
-      padding: 0 var(--space-2);
-      border-radius: var(--radius-pill);
-      background-color: var(--color-accent-soft);
-      color: var(--color-accent);
+    .row__title {
       font-weight: var(--weight-medium);
+      overflow-wrap: anywhere;
     }
 
-    .row__title {
+    :host(.row--unread) .row__title {
       font-weight: var(--weight-semibold);
-      overflow-wrap: anywhere;
     }
 
     .row__body {
@@ -98,6 +106,36 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
       display: flex;
       flex-wrap: wrap;
       gap: var(--space-2);
+      margin-top: var(--space-2);
+    }
+
+    /* Ações discretas em pílula: "Abrir" na tinta do acento, "Marcar como lida" só texto. */
+    .row__action {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.25rem;
+      padding: 0 var(--space-3);
+      border: 0;
+      border-radius: var(--radius-pill);
+      background: transparent;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      text-decoration: none;
+      transition: background-color var(--duration-fast) var(--ease-standard);
+    }
+
+    .row__action:hover {
+      background-color: var(--color-hover-soft);
+    }
+
+    .row__action--primary {
+      background-color: var(--color-accent-soft);
+      color: var(--color-accent);
+    }
+
+    .row__action--primary:hover {
+      background-color: var(--color-accent-soft-hover);
     }
   `,
 })

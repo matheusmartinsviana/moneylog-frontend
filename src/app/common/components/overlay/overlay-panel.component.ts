@@ -136,7 +136,7 @@ const stack: object[] = [];
     .backdrop--modal {
       background-color: var(--color-scrim);
       pointer-events: auto;
-      animation: overlay-fade var(--duration-base) var(--ease-standard);
+      animation: overlay-scrim var(--duration-base) var(--ease-standard);
     }
 
     /* Diálogo, folha como diálogo e painel lateral: abaixo do popover (um Select dentro do diálogo
@@ -262,9 +262,12 @@ const stack: object[] = [];
       min-height: 0;
     }
 
-    @keyframes overlay-fade {
+    /* Só a cor do fundo anima, nunca a \`opacity\` do contêiner: um ancestral com opacidade < 1 vira "raiz de
+       backdrop" e o desfoque do painel (vidro) passaria a ver só o fundo escurecido, saltando para a página
+       real ao fim da animação (o "pisca" na abertura e no fechamento). */
+    @keyframes overlay-scrim {
       from {
-        opacity: 0;
+        background-color: transparent;
       }
     }
 

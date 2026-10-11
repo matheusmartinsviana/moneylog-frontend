@@ -13,7 +13,14 @@
       data-cy="setup-form"
     >
       <header class="login__header">
-        <span class="login__logo-slot" aria-hidden="true"></span>
+        <img
+          class="login__logo"
+          src="assets/icons/icon-192.png"
+          alt=""
+          width="48"
+          height="48"
+          decoding="async"
+        />
         <p class="login__brand">{{ t().shell.brand }}</p>
         <h1 class="login__title" data-cy="page-title">{{ t().auth.setup.title }}</h1>
         <p class="login__description">{{ t().auth.setup.description }}</p>
@@ -92,8 +99,14 @@
   } @else {
     <form class="login__card surface" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
       <header class="login__header">
-        <!-- Espaço reservado para o logo (ainda não definido). -->
-        <span class="login__logo-slot" aria-hidden="true"></span>
+        <img
+          class="login__logo"
+          src="assets/icons/icon-192.png"
+          alt=""
+          width="48"
+          height="48"
+          decoding="async"
+        />
         <p class="login__brand" data-cy="login-brand">{{ t().shell.brand }}</p>
         <h1 class="login__title" data-cy="page-title">{{ t().auth.login.title }}</h1>
         <p class="login__description">{{ t().auth.login.description }}</p>

@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import {
   ApplicationConfig,
@@ -16,10 +17,12 @@ import {
 import { provideServiceWorker } from '@angular/service-worker';
 
 import { routes } from '~/app/app.routes';
+import { trackInputModality } from '~/app/common/a11y/input-modality';
 import { provideI18n } from '~/app/common/i18n/i18n.providers';
 import { authInterceptor } from '~/app/common/interceptors/auth.interceptor';
 import { unauthorizedInterceptor } from '~/app/common/interceptors/unauthorized.interceptor';
 import { motionEnabled } from '~/app/common/motion/motion';
+import { isModalNavigation } from '~/app/common/routing/modal-route';
 import { I18nTitleStrategy } from '~/app/common/services/i18n-title.strategy';
 import { provideTheme } from '~/app/common/services/theme.providers';
 import { provideDemoMode } from '~/app/config/demo-mode';
@@ -50,7 +53,20 @@ export const appConfig: ApplicationConfig = {
       // Troca de página com cross-fade só no <main> (`.m-page`), sem animar o primeiro carregamento. Com movimento
       // desligado no início (preferência do sistema ou `data-motion="off"`) a transição nem é criada: pular uma
       // transição já criada faz o Angular logar o `AbortError` no console em desenvolvimento.
-      ...(motionEnabled() ? [withViewTransitions({ skipInitialTransition: true })] : []),
+      // Abrir/fechar um modal por rota (`MODAL_ROUTE`) não é troca de página: sem transição, a página de trás não pisca.
+      ...(motionEnabled()
+        ? [
+            withViewTransitions({
+              skipInitialTransition: true,
+              onViewTransitionCreated: ({ transition, from, to }) => {
+                if (!isModalNavigation(from, to)) return;
+                // Pular rejeita `ready` com `AbortError` (esperado): sem o `catch` vira erro não tratado no console.
+                transition.ready.catch(() => undefined);
+                transition.skipTransition();
+              },
+            }),
+          ]
+        : []),
     ),
     { provide: TitleStrategy, useExisting: I18nTitleStrategy },
     provideI18n(),
@@ -71,6 +87,7 @@ export const appConfig: ApplicationConfig = {
     provideAi(),
     provideSearch(),
     // Restaura a sessão pelo cookie de refresh antes de ativar as rotas (T33 CA5). Nunca lança.
+    provideAppInitializer(() => trackInputModality(inject(DOCUMENT))),
     provideAppInitializer(() => inject(SessionFacade).restore()),
     provideServiceWorker('sw-push.js', {
       enabled: !isDevMode(),

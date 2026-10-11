@@ -55,11 +55,21 @@
         @case ('loading') {
           <div data-cy="notifications-loading">
             <p class="visually-hidden" role="status">{{ t().notifications.center.loading }}</p>
-            <div class="list-skeleton" aria-hidden="true">
-              <div class="list-skeleton__row"></div>
-              <div class="list-skeleton__row"></div>
-              <div class="list-skeleton__row"></div>
-            </div>
+            <section class="day" aria-hidden="true">
+              <ul class="list" data-cy="notifications-skeleton">
+                @for (row of [1, 2, 3]; track row) {
+                  <li class="sk-row">
+                    <span class="sk sk-row__tile"></span>
+                    <span class="sk-row__text">
+                      <span class="sk sk-row__line sk-row__line--kind">&nbsp;</span>
+                      <span class="sk sk-row__line sk-row__line--title">&nbsp;</span>
+                      <span class="sk sk-row__line">&nbsp;</span>
+                      <span class="sk sk-row__pill"></span>
+                    </span>
+                  </li>
+                }
+              </ul>
+            </section>
           </div>
         }
         @case ('empty') {

@@ -175,13 +175,16 @@ Gerado por `npm run contrast`.
 | escuro | `focus` #2dd4bf          | `surface` #161618           | 9.71:1    | ok (3:1)   |
 | escuro | `focus` #2dd4bf          | `surface-muted` #212124     | 8.63:1    | ok (3:1)   |
 
-## Linguagem "glass" lilás, dark-first (DS 03, ADR-011)
+## Linguagem "glass" azul, dark-first (DS 03, ADR-011)
+
+> A cor principal passou de lilás (`#6948d2`) para azul `#094360` (tema claro) e `#7bc5ea` (escuro, a mesma matiz mais clara
+> para dar contraste). Os neutros seguem com o leve tom lavanda original.
 
 - **Paleta final.** Escuro (protagonista): `canvas` `#0b0b12`, `surface` `#14141e`, `surface-muted` `#1c1c2a`, `surface-inset`
-  `#0f0f18` (linhas de lista e campos), `text` `#f2f1fb`, `text-muted` `#a5a3c0`, `accent` `#b7a3fb` (texto sobre ele
-  `#1a1236`), `chart-2` (comparação tracejada) `#d8d3ee`, borda translúcida lilás 13%, `control-border` `#7a7896`. Claro:
+  `#0f0f18` (linhas de lista e campos), `text` `#f2f1fb`, `text-muted` `#a5a3c0`, `accent` `#7bc5ea` (texto sobre ele
+  `#04202e`), `chart-2` (comparação tracejada) `#d8d3ee`, borda translúcida lilás 13%, `control-border` `#7a7896`. Claro:
   `canvas` `#f6f5fb`, `surface` `#ffffff`, `surface-muted` `#f1effa`, `surface-inset` `#f8f7fd`, borda `#e3dff3`, `text` `#1a1830`,
-  `accent` `#6948d2`, `control-border` `#85809f`. Positivo/alerta/risco seguem os mesmos tons, com tintas sólidas novas.
+  `accent` `#094360`, `control-border` `#85809f`. Positivo/alerta/risco seguem os mesmos tons, com tintas sólidas novas.
 - **Gradientes só por token** (`--gradient-glow-top`, `--gradient-panel-glow`, `--gradient-panel-glow-soft`, `--gradient-gauge`,
   `--gradient-stripes`) e máscaras (`--mask-scroll-fade`, `--mask-fade-down`). O halo é decorativo: nenhum texto crítico depende
   dele e o `check-contrast` é calculado sobre a cor sólida do token. Raios: cartão 20, painel 24, controle 12, `--radius-icon` 14.

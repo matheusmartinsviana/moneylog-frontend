@@ -7,11 +7,9 @@
  *   sozinha ("moneylog" entre aspas ou entre tags) nem **no meio de uma frase** (`\bmoneylog\b` dentro de uma
  *   string ou de uma linha de tradução). As traduções interpolam `BRAND_NAME`. Exceção documentada: a **chave
  *   reservada do frontmatter** das notas, que se chama "moneylog" e não é a marca (ver `RESERVED_KEY`);
- * - os espaços reservados do logo (`.sidebar__logo-slot`, `.login__logo-slot`) continuam vazios: sem
- *   decisão do dono, nenhuma marca entra neles, nem como filho, nem por `background-image`, `content:` ou
- *   `url(...)` no CSS do componente.
+ * - o logo (arte do dono, `brand/`) aparece na sidebar e no login e os PNGs gerados por `npm run icons` existem.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
 const root = new URL('..', import.meta.url).pathname;
@@ -73,25 +71,25 @@ for (const file of walk(join(src, 'app'))) {
     });
 }
 
-for (const [file, cls] of [
-  ['src/app/common/components/app-shell/sidebar/sidebar.component.html', 'sidebar__logo-slot'],
-  ['src/app/features/login/pages/login.page.html', 'login__logo-slot'],
+for (const file of [
+  'src/app/common/components/app-shell/sidebar/sidebar.component.html',
+  'src/app/features/login/pages/login.page.html',
 ]) {
   const text = readFileSync(join(root, file), 'utf8');
-  if (!new RegExp(`<span class="${cls}" aria-hidden="true"></span>`).test(text))
-    problems.push(`${file}: o espaço do logo (.${cls}) precisa continuar vazio (sem marca)`);
-  // O logo também não pode entrar pelo CSS: imagem de fundo, `content:` ou `url(...)` no slot.
-  const css = readFileSync(join(root, file.replace(/\.html$/, '.css')), 'utf8');
-  for (const [, body] of css.matchAll(new RegExp(`\\.${cls}[^{]*\\{([^}]*)\\}`, 'g'))) {
-    if (
-      /background(-image)?\s*:[^;]*(url\(|image-set|gradient)|content\s*:|url\(|mask(-image)?\s*:/i.test(
-        body,
-      )
-    )
-      problems.push(
-        `${file.replace(/\.html$/, '.css')}: .${cls} não pode ter imagem de fundo, content ou url() (logo sem decisão do dono)`,
-      );
-  }
+  if (!text.includes('assets/icons/icon-192.png'))
+    problems.push(`${file}: falta o logo (assets/icons/icon-192.png)`);
+}
+for (const icon of [
+  'icon-32',
+  'icon-192',
+  'icon-512',
+  'icon-maskable-192',
+  'icon-maskable-512',
+  'apple-touch-icon',
+  'badge-96',
+]) {
+  if (!existsSync(join(src, 'assets/icons', `${icon}.png`)))
+    problems.push(`src/assets/icons/${icon}.png não existe (rode npm run icons)`);
 }
 
 if (problems.length > 0) {
@@ -99,4 +97,4 @@ if (problems.length > 0) {
   console.error(`\n${problems.length} problema(s) de marca.`);
   process.exit(1);
 }
-console.log(`check-brand: marca "${brand}" em um só lugar; espaços de logo vazios.`);
+console.log(`check-brand: marca "${brand}" em um só lugar; logo e ícones presentes.`);

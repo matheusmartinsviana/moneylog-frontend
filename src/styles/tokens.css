@@ -19,55 +19,57 @@
   --color-control-border: #8a86a5;
   --color-text: #1a1830;
   --color-text-muted: #5a5775;
-  --color-accent: #6948d2;
+  --color-accent: #094360;
   --color-on-accent: #ffffff;
   --color-positive: #137a38;
   --color-warning: #a85108;
   --color-risk: #be123c;
   /* Tintas sólidas (10% do tom sobre `surface`): hex porque o `check-contrast` só lê #rrggbb. */
-  --color-accent-soft: #efeafe;
-  --color-accent-soft-hover: #e7e1fc;
+  --color-accent-soft: #e6ecef;
+  --color-accent-soft-hover: #d8e1e6;
   --color-positive-soft: #e9f6ee;
   --color-warning-soft: #fbefdb;
   --color-risk-soft: #fce8ed;
   /* Gráficos: série 1 (entradas) = acento; série 2 (saídas/comparação) = neutro lavanda, sempre tracejada. */
-  --color-chart-1: #6948d2;
+  --color-chart-1: #094360;
   --color-chart-2: #7c7897;
-  --color-focus: #6948d2;
-  /* Hover e realce interativo: azul frio e suave (o lilás fica só para ativo/primário/foco; verde é valor positivo). */
+  --color-focus: #094360;
+  /* Hover e realce interativo: azul frio e suave (o acento fica só para ativo/primário/foco; verde é valor positivo). */
   --color-hover: #2563eb;
   --color-hover-soft: rgb(37 99 235 / 8%);
   --color-hover-border: rgb(37 99 235 / 30%);
   --gradient-hover: linear-gradient(var(--color-hover-soft), var(--color-hover-soft));
+  /* Divisória fina de listas agrupadas (pintada como fundo para começar no texto, não na borda). */
+  --gradient-hairline: linear-gradient(var(--color-border), var(--color-border));
   --color-shadow: rgb(60 40 120 / 6%);
   --color-shadow-strong: rgb(60 40 120 / 14%);
   --color-scrim: rgb(246 245 251 / 88%);
   /* Fundo de superfícies com brilho: ver "Gradientes" abaixo. O texto crítico nunca depende do halo. */
   --gradient-glow-top: radial-gradient(
     ellipse 70% 100% at 50% 0%,
-    rgb(124 92 240 / 16%) 0%,
-    rgb(124 92 240 / 5%) 45%,
+    rgb(25 127 179 / 16%) 0%,
+    rgb(25 127 179 / 5%) 45%,
     transparent 75%
   );
   --gradient-panel-glow: radial-gradient(
     ellipse 80% 70% at 50% 115%,
-    rgb(124 92 240 / 16%) 0%,
+    rgb(25 127 179 / 16%) 0%,
     transparent 70%
   );
   --gradient-panel-glow-soft: radial-gradient(
     ellipse 70% 90% at 12% 0%,
-    rgb(124 92 240 / 12%),
+    rgb(25 127 179 / 12%),
     transparent 70%
   );
   --gradient-gauge: radial-gradient(
     ellipse 70% 90% at 50% 100%,
-    rgb(124 92 240 / 40%) 0%,
-    rgb(124 92 240 / 10%) 55%,
+    rgb(25 127 179 / 40%) 0%,
+    rgb(25 127 179 / 10%) 55%,
     transparent 75%
   );
   --gradient-stripes: repeating-linear-gradient(
     90deg,
-    rgb(109 79 214 / 9%) 0 1px,
+    rgb(25 127 179 / 9%) 0 1px,
     transparent 1px 7px
   );
 
@@ -89,7 +91,7 @@
   --gradient-shimmer: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(124 92 240 / 7%) 50%,
+    rgb(25 127 179 / 7%) 50%,
     transparent 100%
   );
   --glass-lens-bg: rgb(255 255 255 / 45%);
@@ -208,7 +210,8 @@
     radial-gradient(farthest-side at 0 50%, var(--color-shadow-strong), transparent),
     radial-gradient(farthest-side at 100% 50%, var(--color-shadow-strong), transparent);
   --mask-fade-down: linear-gradient(to bottom, #000 0%, transparent 100%);
-  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
+  --focus-ring-keyboard: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
+  --focus-ring: var(--focus-ring-keyboard);
 }
 
 @media (width >= 768px) {
@@ -280,19 +283,19 @@
     --color-control-border: #6c6a86;
     --color-text: #f2f1fb;
     --color-text-muted: #a5a3c0;
-    --color-accent: #b7a3fb;
-    --color-on-accent: #1a1236;
+    --color-accent: #7bc5ea;
+    --color-on-accent: #04202e;
     --color-positive: #4ade80;
     --color-warning: #fbbf24;
     --color-risk: #fb7185;
-    --color-accent-soft: #231d3d;
-    --color-accent-soft-hover: #2b2449;
+    --color-accent-soft: #222d3b;
+    --color-accent-soft-hover: #293747;
     --color-positive-soft: #14281f;
     --color-warning-soft: #2e2412;
     --color-risk-soft: #331a26;
-    --color-chart-1: #b7a3fb;
+    --color-chart-1: #7bc5ea;
     --color-chart-2: #d8d3ee;
-    --color-focus: #c4b5fd;
+    --color-focus: #a1daf7;
     --color-hover: #7cb7ff;
     --color-hover-soft: rgb(124 183 255 / 10%);
     --color-hover-border: rgb(124 183 255 / 32%);
@@ -301,29 +304,29 @@
     --color-scrim: rgb(11 11 18 / 88%);
     --gradient-glow-top: radial-gradient(
       ellipse 70% 100% at 50% 0%,
-      rgb(167 139 250 / 26%) 0%,
-      rgb(167 139 250 / 8%) 45%,
+      rgb(81 184 236 / 26%) 0%,
+      rgb(81 184 236 / 8%) 45%,
       transparent 75%
     );
     --gradient-panel-glow: radial-gradient(
       ellipse 80% 70% at 50% 115%,
-      rgb(167 139 250 / 28%) 0%,
+      rgb(81 184 236 / 28%) 0%,
       transparent 70%
     );
     --gradient-panel-glow-soft: radial-gradient(
       ellipse 70% 90% at 12% 0%,
-      rgb(167 139 250 / 20%),
+      rgb(81 184 236 / 20%),
       transparent 70%
     );
     --gradient-gauge: radial-gradient(
       ellipse 70% 90% at 50% 100%,
-      rgb(167 139 250 / 55%) 0%,
-      rgb(167 139 250 / 12%) 55%,
+      rgb(81 184 236 / 55%) 0%,
+      rgb(81 184 236 / 12%) 55%,
       transparent 75%
     );
     --gradient-stripes: repeating-linear-gradient(
       90deg,
-      rgb(196 181 253 / 9%) 0 1px,
+      rgb(161 218 247 / 9%) 0 1px,
       transparent 1px 7px
     );
     --glass-solid: var(--color-surface);
@@ -337,7 +340,7 @@
     --gradient-shimmer: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(196 181 253 / 6%) 50%,
+      rgb(161 218 247 / 6%) 50%,
       transparent 100%
     );
     --glass-lens-bg: rgb(255 255 255 / 5%);
@@ -356,19 +359,19 @@
   --color-control-border: #6c6a86;
   --color-text: #f2f1fb;
   --color-text-muted: #a5a3c0;
-  --color-accent: #b7a3fb;
-  --color-on-accent: #1a1236;
+  --color-accent: #7bc5ea;
+  --color-on-accent: #04202e;
   --color-positive: #4ade80;
   --color-warning: #fbbf24;
   --color-risk: #fb7185;
-  --color-accent-soft: #231d3d;
-  --color-accent-soft-hover: #2b2449;
+  --color-accent-soft: #222d3b;
+  --color-accent-soft-hover: #293747;
   --color-positive-soft: #14281f;
   --color-warning-soft: #2e2412;
   --color-risk-soft: #331a26;
-  --color-chart-1: #b7a3fb;
+  --color-chart-1: #7bc5ea;
   --color-chart-2: #d8d3ee;
-  --color-focus: #c4b5fd;
+  --color-focus: #a1daf7;
   --color-hover: #7cb7ff;
   --color-hover-soft: rgb(124 183 255 / 10%);
   --color-hover-border: rgb(124 183 255 / 32%);
@@ -377,29 +380,29 @@
   --color-scrim: rgb(11 11 18 / 88%);
   --gradient-glow-top: radial-gradient(
     ellipse 70% 100% at 50% 0%,
-    rgb(167 139 250 / 26%) 0%,
-    rgb(167 139 250 / 8%) 45%,
+    rgb(81 184 236 / 26%) 0%,
+    rgb(81 184 236 / 8%) 45%,
     transparent 75%
   );
   --gradient-panel-glow: radial-gradient(
     ellipse 80% 70% at 50% 115%,
-    rgb(167 139 250 / 28%) 0%,
+    rgb(81 184 236 / 28%) 0%,
     transparent 70%
   );
   --gradient-panel-glow-soft: radial-gradient(
     ellipse 70% 90% at 12% 0%,
-    rgb(167 139 250 / 20%),
+    rgb(81 184 236 / 20%),
     transparent 70%
   );
   --gradient-gauge: radial-gradient(
     ellipse 70% 90% at 50% 100%,
-    rgb(167 139 250 / 55%) 0%,
-    rgb(167 139 250 / 12%) 55%,
+    rgb(81 184 236 / 55%) 0%,
+    rgb(81 184 236 / 12%) 55%,
     transparent 75%
   );
   --gradient-stripes: repeating-linear-gradient(
     90deg,
-    rgb(196 181 253 / 9%) 0 1px,
+    rgb(161 218 247 / 9%) 0 1px,
     transparent 1px 7px
   );
   --glass-solid: var(--color-surface);
@@ -413,7 +416,7 @@
   --gradient-shimmer: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(196 181 253 / 6%) 50%,
+    rgb(161 218 247 / 6%) 50%,
     transparent 100%
   );
   --glass-lens-bg: rgb(255 255 255 / 5%);
