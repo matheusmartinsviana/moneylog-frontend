@@ -115,6 +115,45 @@ describe('sw-push.js (T137 CA1)', () => {
   });
 
   it.each([
+    ['pt', 'security.login_blocked', 'Tentativas de login bloqueadas'],
+    ['en', 'security.new_login', 'New sign-in'],
+    ['es', 'security.password_reset', 'Contraseña restablecida'],
+    ['pt', 'security.setup_completed', 'Senha definida'],
+    ['pt', 'security.desconhecido', 'Alerta de segurança'],
+  ])(
+    'Dado um alerta de segurança (%s, %s), então o título é "%s" e o toque abre o início',
+    async (language, titleKey, title) => {
+      const worker = loadWorker(language);
+      const { event, done } = pushEvent({
+        id: 's-1',
+        kind: 'SECURITY_ALERT',
+        titleKey,
+        params: {},
+      });
+      worker.listeners.get('push')!(event);
+      await done();
+
+      expect(worker.shown[0]?.title).toBe(title);
+      expect(worker.shown[0]?.options.data.url).toBe('/');
+    },
+  );
+
+  it('Dado um alerta de segurança com o IP mascarado, então o corpo traz o IP e nunca um e-mail', async () => {
+    const worker = loadWorker('pt');
+    const { event, done } = pushEvent({
+      id: 's-2',
+      kind: 'SECURITY_ALERT',
+      titleKey: 'security.new_login',
+      params: { ip: '203.0.x.x' },
+    });
+    worker.listeners.get('push')!(event);
+    await done();
+
+    expect(worker.shown[0]?.options.body).toContain('203.0.x.x');
+    expect(worker.shown[0]?.options.body).not.toContain('@');
+  });
+
+  it.each([
     ['JSON inválido', pushEvent(null, true)],
     ['payload nulo', pushEvent(null)],
     ['sem kind', pushEvent({ id: 'x' })],
