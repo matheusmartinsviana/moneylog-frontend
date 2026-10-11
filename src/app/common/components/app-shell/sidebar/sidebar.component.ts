@@ -33,7 +33,7 @@ import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 
 /**
  * Sidebar em trilho de ícones (DS 03), **sempre recolhida** em todas as larguras: botões quadrados arredondados com o
- * rótulo como tooltip e nome acessível. O item ativo é um indicador lilás que desliza entre os itens (só `transform`).
+ * rótulo como tooltip e nome acessível. O item ativo é um indicador de acento que desliza entre os itens (só `transform`).
  * Só o essencial fica à vista; "Mais" abre um popover com os atalhos secundários (Orçamentos, Vault, Insights, IA,
  * MCP, Importar, Notificações). Configurações e Sair ficam fixos no rodapé. "Sair" usa `SessionFacade.logout`
  * (`exhaustMap`: toque duplo = uma chamada).

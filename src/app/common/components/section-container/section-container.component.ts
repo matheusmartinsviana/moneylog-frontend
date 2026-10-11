@@ -58,7 +58,7 @@ let nextId = 0;
       box-shadow: var(--shadow-1);
     }
 
-    /* Painel em destaque (gráfico): halo lilás por trás, decorativo (token). */
+    /* Painel em destaque (gráfico): halo azul por trás, decorativo (token). */
     .section--glow {
       background-image: var(--glass-sheen), var(--gradient-panel-glow);
     }
@@ -153,7 +153,7 @@ export class SectionContainerComponent {
   readonly heading = input.required<string>();
   readonly description = input<string>();
   readonly interactive = input(false, { transform: booleanAttribute });
-  /** Halo lilás de destaque (gráfico principal). */
+  /** Halo azul de destaque (gráfico principal). */
   readonly glow = input(false, { transform: booleanAttribute });
   /** Ocupa a altura do pai e dá ao corpo o que sobra (páginas "sucintas"). */
   readonly fill = input(false, { transform: booleanAttribute });

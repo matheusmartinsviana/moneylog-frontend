@@ -78,7 +78,7 @@
   color: var(--color-text);
 }
 
-/* Ícone em quadrado arredondado; o ativo é preenchido em lilás com o ícone escuro (DS 03). */
+/* Ícone em quadrado arredondado; o ativo é preenchido no acento com o ícone escuro (DS 03). */
 .bottom-nav__sq {
   display: inline-flex;
   align-items: center;
