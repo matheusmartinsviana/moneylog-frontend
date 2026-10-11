@@ -24,6 +24,7 @@ body {
   background-size: 100% 36rem;
   color: var(--color-text);
   overflow-x: hidden;
+  overscroll-behavior-x: none;
 }
 
 app-root {
