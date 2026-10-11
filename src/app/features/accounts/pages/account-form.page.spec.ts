@@ -50,7 +50,7 @@ describe('AccountFormPage', () => {
       expect(input('account-name')).toBeInTheDocument();
       expect(screen.getByTestId('account-type')).toBeInTheDocument();
       expect(screen.getByTestId('account-institution')).toBeInTheDocument();
-      expect(screen.getByTestId('account-more-toggle')).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByTestId('account-more-toggle')).not.toBeInTheDocument();
       expect(input('account-opening-balance').value).toBe('');
       expect(input('account-opening-date').value).toBe('');
     });

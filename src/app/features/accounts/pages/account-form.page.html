@@ -60,31 +60,23 @@
         [label]="t().accounts.form.institution"
         [hint]="t().accounts.form.optional"
       />
-      <app-disclosure
-        fieldId="account-more"
-        [headingLevel]="3"
-        [heading]="t().accounts.form.moreOptions"
-        [(open)]="moreOpen"
-      >
-        <div class="form__more">
-          <app-money-input
-            formControlName="openingBalance"
-            fieldId="account-opening-balance"
-            [currency]="currency"
-            [allowNegative]="true"
-            [allowZero]="true"
-            [mandatory]="false"
-            [hint]="t().accounts.form.optional"
-            [label]="t().accounts.form.openingBalance"
-          />
-          <app-date-picker
-            formControlName="openingDate"
-            fieldId="account-opening-date"
-            [mandatory]="false"
-            [label]="t().accounts.form.openingDate"
-          />
-        </div>
-      </app-disclosure>
+      <app-money-input
+        formControlName="openingBalance"
+        fieldId="account-opening-balance"
+        [currency]="currency"
+        [allowNegative]="true"
+        [allowZero]="true"
+        [mandatory]="false"
+        [hint]="t().accounts.form.optional"
+        [label]="t().accounts.form.openingBalance"
+      />
+      <app-date-picker
+        formControlName="openingDate"
+        fieldId="account-opening-date"
+        [mandatory]="false"
+        [label]="t().accounts.form.openingDate"
+      />
+
       @if (locked()) {
         <p class="form__locked" data-cy="account-opening-locked">
           {{ t().accounts.form.lockedHint }}
