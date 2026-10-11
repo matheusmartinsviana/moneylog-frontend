@@ -4,6 +4,7 @@ const PREFS_CACHE = 'moneylog-prefs';
 const PREFS_KEY = '/__language';
 const DEFAULT_LANGUAGE = 'pt';
 const NOTIFICATIONS_URL = '/notifications';
+const SECURITY_URL = '/';
 const ICON_URL = '/assets/icons/icon-192.png?v=3';
 const BADGE_URL = '/assets/icons/badge-96.png?v=3';
 
@@ -46,6 +47,52 @@ const TEXTS = {
   },
 };
 
+const SECURITY_TEXTS = {
+  pt: {
+    login_blocked: [
+      'Tentativas de login bloqueadas',
+      'Houve muitas tentativas de entrada e o acesso foi bloqueado por um tempo.',
+    ],
+    new_login: ['Novo acesso', 'Alguém entrou na sua conta a partir de um novo local.'],
+    setup_completed: ['Senha definida', 'O primeiro acesso foi concluído.'],
+    password_reset: ['Senha redefinida', 'A senha do dono foi redefinida.'],
+    DEFAULT: ['Alerta de segurança', 'Abra o app para conferir.'],
+  },
+  en: {
+    login_blocked: [
+      'Login attempts blocked',
+      'There were too many sign-in attempts and access was blocked for a while.',
+    ],
+    new_login: ['New sign-in', 'Someone signed in to your account from a new location.'],
+    setup_completed: ['Password set', 'The first access was completed.'],
+    password_reset: ['Password reset', "The owner's password was reset."],
+    DEFAULT: ['Security alert', 'Open the app to check.'],
+  },
+  es: {
+    login_blocked: [
+      'Intentos de acceso bloqueados',
+      'Hubo demasiados intentos de entrada y el acceso se bloqueó por un tiempo.',
+    ],
+    new_login: ['Nuevo acceso', 'Alguien entró en tu cuenta desde un lugar nuevo.'],
+    setup_completed: ['Contraseña definida', 'Se completó el primer acceso.'],
+    password_reset: ['Contraseña restablecida', 'Se restableció la contraseña del dueño.'],
+    DEFAULT: ['Alerta de seguridad', 'Abre la app para revisar.'],
+  },
+};
+
+function securityText(language, payload) {
+  const table = SECURITY_TEXTS[language];
+  const key =
+    typeof payload.titleKey === 'string' && payload.titleKey.startsWith('security.')
+      ? payload.titleKey.slice(9)
+      : '';
+  const [title, body] = Object.prototype.hasOwnProperty.call(table, key)
+    ? table[key]
+    : table.DEFAULT;
+  const ip = payload.params && typeof payload.params.ip === 'string' ? payload.params.ip : '';
+  return [title, ip ? body + ' (' + ip + ')' : body];
+}
+
 function parsePayload(event) {
   if (!event.data) return null;
   try {
@@ -87,15 +134,18 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     storedLanguage().then((language) => {
       const table = TEXTS[language];
-      const [title, body] = Object.prototype.hasOwnProperty.call(table, payload.kind)
-        ? table[payload.kind]
-        : table.DEFAULT;
+      const security = payload.kind === 'SECURITY_ALERT';
+      const [title, body] = security
+        ? securityText(language, payload)
+        : Object.prototype.hasOwnProperty.call(table, payload.kind)
+          ? table[payload.kind]
+          : table.DEFAULT;
       return self.registration.showNotification(title, {
         body,
         icon: ICON_URL,
         badge: BADGE_URL,
         tag: typeof payload.id === 'string' ? payload.id : undefined,
-        data: { url: NOTIFICATIONS_URL },
+        data: { url: security ? SECURITY_URL : NOTIFICATIONS_URL },
       });
     }),
   );
