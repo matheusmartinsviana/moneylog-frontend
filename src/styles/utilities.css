@@ -530,6 +530,10 @@ html[data-glass] .glass-lens {
   transition: transform var(--duration-base) var(--ease-emphasized);
 }
 
+[data-toasted] {
+  display: none !important;
+}
+
 .banner {
   padding: var(--space-3) var(--space-4);
   border: var(--border-width) solid var(--color-risk);

@@ -496,6 +496,7 @@ export abstract class AppI18n {
   };
 
   abstract readonly form: {
+    readonly reviewFields: string;
     readonly amountCurrency: string;
     readonly selectPlaceholder: string;
     readonly noOptions: string;

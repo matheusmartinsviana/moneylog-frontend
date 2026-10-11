@@ -36,7 +36,7 @@
     </div>
   }
   @if (serverMessage(); as message) {
-    <p class="shares__error" role="alert" data-cy="entry-shares-error">{{ message }}</p>
+    <p class="shares__error" role="alert" data-toast data-cy="entry-shares-error">{{ message }}</p>
   }
   <button
     type="button"

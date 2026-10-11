@@ -44,7 +44,7 @@
           [mandatory]="false"
         />
         @if (missingCounterpart()) {
-          <p class="error" role="alert" data-cy="decision-counterpart-required">
+          <p class="error" role="alert" data-toast data-cy="decision-counterpart-required">
             {{ t().imports.decision.counterpartRequired }}
           </p>
         }
@@ -59,7 +59,7 @@
           [mandatory]="false"
         />
         @if (missingCategory()) {
-          <p class="error" role="alert" data-cy="decision-category-required">
+          <p class="error" role="alert" data-toast data-cy="decision-category-required">
             {{ t().imports.decision.categoryRequired }}
           </p>
         }

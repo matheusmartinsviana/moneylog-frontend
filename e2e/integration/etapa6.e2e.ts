@@ -344,7 +344,7 @@ test('Idempotency-Key: o "tentar de novo" depois de uma resposta perdida reusa a
   await cy(page, 'notes-new').click();
   await cy(page, 'new-note-name').fill('Uma só vez');
   await cy(page, 'new-note-submit').click();
-  await expect(cy(page, 'new-note-error')).toBeVisible();
+  await expect(cy(page, 'toast-error').first()).toBeVisible();
   await cy(page, 'new-note-submit').click();
   await expect(page).toHaveURL(/\/notes\/[0-9a-f-]{36}$/);
 

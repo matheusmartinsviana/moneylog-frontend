@@ -57,7 +57,8 @@ import type { Toast, ToastAction } from '~/app/common/services/toast.service';
     }
 
     .toast--error {
-      border-color: var(--color-risk);
+      border-color: color-mix(in oklab, var(--color-risk) 38%, var(--color-border));
+      background-color: color-mix(in oklab, var(--color-risk-soft) 70%, var(--color-surface));
     }
 
     .toast__message {

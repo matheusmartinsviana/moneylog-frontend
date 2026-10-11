@@ -118,7 +118,7 @@ type DelimiterKey = keyof typeof DELIMITERS;
           [options]="delimiterOptions()"
         />
         @if (!valid()) {
-          <p class="mapping__error" role="alert" data-cy="mapping-invalid">
+          <p class="mapping__error" role="alert" data-toast data-cy="mapping-invalid">
             {{ t().imports.mapping.invalid }}
           </p>
         }

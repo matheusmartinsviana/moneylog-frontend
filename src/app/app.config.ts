@@ -23,6 +23,7 @@ import { unauthorizedInterceptor } from '~/app/common/interceptors/unauthorized.
 import { motionEnabled } from '~/app/common/motion/motion';
 import { isModalNavigation } from '~/app/common/routing/modal-route';
 import { provideRouteScroll } from '~/app/common/routing/route-scroll';
+import { FeedbackToastService } from '~/app/common/services/feedback-toast.service';
 import { I18nTitleStrategy } from '~/app/common/services/i18n-title.strategy';
 import { provideTheme } from '~/app/common/services/theme.providers';
 import { provideDemoMode } from '~/app/config/demo-mode';
@@ -75,6 +76,7 @@ export const appConfig: ApplicationConfig = {
     provideSearch(),
     provideAppInitializer(() => trackInputModality(inject(DOCUMENT))),
     provideRouteScroll(),
+    provideAppInitializer(() => inject(FeedbackToastService).start()),
     provideAppInitializer(() => inject(SessionFacade).restore()),
     provideServiceWorker('sw-push.js', {
       enabled: !isDevMode(),

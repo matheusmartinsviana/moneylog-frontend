@@ -29,10 +29,10 @@
   </div>
 
   @if (problem(); as message) {
-    <p class="pm__error" role="alert" data-cy="goal-photos-error">{{ message }}</p>
+    <p class="pm__error" role="alert" data-toast data-cy="goal-photos-error">{{ message }}</p>
   }
   @if (rejectionTexts().length > 0) {
-    <ul class="pm__rejections" role="alert" data-cy="goal-photos-rejected">
+    <ul class="pm__rejections" role="alert" data-toast data-cy="goal-photos-rejected">
       @for (text of rejectionTexts(); track $index) {
         <li class="pm__error">{{ text }}</li>
       }

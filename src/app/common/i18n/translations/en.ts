@@ -558,6 +558,7 @@ export const en: AppI18n = {
     languageNames: { pt: 'Português (Brasil)', en: 'English', es: 'Español' },
   },
   form: {
+    reviewFields: 'Review the highlighted fields.',
     amountCurrency: 'Amount in {currency}.',
     selectPlaceholder: 'Select',
     noOptions: 'No options available.',

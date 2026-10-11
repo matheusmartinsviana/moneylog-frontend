@@ -52,18 +52,14 @@ export function errorMessage(
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (message(); as text) {
-      <p class="field-error" [id]="errorId()" [attr.data-cy]="errorId()">{{ text }}</p>
+      <p class="field-error visually-hidden" [id]="errorId()" [attr.data-cy]="errorId()">
+        {{ text }}
+      </p>
     }
   `,
   styles: `
     :host {
       display: contents;
-    }
-
-    .field-error {
-      color: var(--color-risk);
-      font-size: var(--text-xs);
-      line-height: var(--leading-normal);
     }
   `,
 })
