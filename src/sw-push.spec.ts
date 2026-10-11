@@ -180,7 +180,7 @@ describe('manifest (T137 CA3)', () => {
     expect(urls).toEqual(['./quick-add', './quick-add?mode=pix', './quick-add?mode=credit']);
     for (const shortcut of manifest.shortcuts) {
       expect(shortcut.name).toBeTruthy();
-      expect(shortcut.icons[0].src).toMatch(/^assets\/icons\/.*\.png$/);
+      expect(shortcut.icons[0].src).toMatch(/^assets\/icons\/.*\.png(\?v=\d+)?$/);
     }
   });
 

@@ -10,3 +10,5 @@ Arquivos estáticos servidos em `/assets` (os README são ignorados no build).
   `apple-touch-icon` (180×180) e `badge-96` (silhueta branca da barra de status do Android nas notificações push).
 
 As imagens ficam em cache `lazy` no service worker; o app shell, o CSS, o JS e as fontes latinas em `prefetch`.
+
+Os ícones são referenciados com `?v=N` (index.html, manifest, sw-push.js). Ao trocar a arte, aumente o N: o Safari e a Cloudflare guardam o ícone por horas e só buscam de novo com uma URL nova.

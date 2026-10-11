@@ -12,8 +12,8 @@ const PREFS_CACHE = 'moneylog-prefs';
 const PREFS_KEY = '/__language';
 const DEFAULT_LANGUAGE = 'pt';
 const NOTIFICATIONS_URL = '/notifications';
-const ICON_URL = '/assets/icons/icon-192.png';
-const BADGE_URL = '/assets/icons/badge-96.png';
+const ICON_URL = '/assets/icons/icon-192.png?v=3';
+const BADGE_URL = '/assets/icons/badge-96.png?v=3';
 
 const TEXTS = {
   pt: {
