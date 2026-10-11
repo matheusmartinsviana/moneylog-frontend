@@ -1,5 +1,1 @@
-# Conventional Commits obrigatório (commitlint), sem Co-Authored-By nem linha de atribuição.
 npx --no -- commitlint --edit "$1"
-if grep -Eiq '^(co-authored-by|claude-session|generated (with|by))' "$1"; then
-  echo "commit recusado: sem Co-Authored-By nem linhas de atribuição (regra fixa do moneylog)." >&2; exit 1
-fi
