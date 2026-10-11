@@ -12,6 +12,7 @@ import {
   EmptyStateAction,
   EmptyStateComponent,
 } from '~/app/common/components/empty-state/empty-state.component';
+import { ViewportService } from '~/app/common/components/overlay/viewport.service';
 import { PageLayoutComponent } from '~/app/common/components/page-layout/page-layout.component';
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
@@ -74,6 +75,10 @@ export class HomePage implements OnInit {
   protected readonly goals = inject(GoalsListFacade);
   protected readonly monthly = inject(MonthlySummaryFacade);
   protected readonly overview = inject(SpendingOverviewFacade);
+  private readonly viewport = inject(ViewportService);
+
+  /** "Cabe sem rolar" só em tela maior; no celular a Início rola como uma página normal (sem rolagem por dentro). */
+  protected readonly fit = computed(() => !this.viewport.compact());
 
   /** Estado vazio: "Adicionar conta" leva ao cadastro; importar segue indisponível (S-33). */
   protected readonly emptyActions = computed<readonly EmptyStateAction[]>(() => {
