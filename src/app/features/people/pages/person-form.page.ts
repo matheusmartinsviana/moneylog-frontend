@@ -15,6 +15,10 @@ import { Router } from '@angular/router';
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
+import {
+  FormSkeletonComponent,
+  type FormSkeletonPiece,
+} from '~/app/common/components/form-skeleton/form-skeleton.component';
 import { TextFieldComponent } from '~/app/common/components/forms/text-field/text-field.component';
 import { dirtySignal } from '~/app/common/forms/dirty-signal';
 import { applyProblemToForm } from '~/app/common/forms/problem-form';
@@ -39,6 +43,7 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-person-form-page',
   imports: [
+    FormSkeletonComponent,
     ReactiveFormsModule,
     FormModalComponent,
     EmptyStateComponent,
@@ -51,6 +56,9 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   styleUrl: './person-form.page.css',
 })
 export class PersonFormPage {
+  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
+  protected readonly skeleton: readonly FormSkeletonPiece[] = ['field', 'field-hint'];
+
   private readonly router = inject(Router);
   private readonly changes = inject(EntityChanges);
   private readonly toast = inject(ToastService);

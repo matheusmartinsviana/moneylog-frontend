@@ -17,6 +17,10 @@ import { DisclosureComponent } from '~/app/common/components/disclosure/disclosu
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
+import {
+  FormSkeletonComponent,
+  type FormSkeletonPiece,
+} from '~/app/common/components/form-skeleton/form-skeleton.component';
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { DatePickerComponent } from '~/app/common/components/forms/date-picker/date-picker.component';
 import { MoneyInputComponent } from '~/app/common/components/forms/money-input/money-input.component';
@@ -59,6 +63,7 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
 @Component({
   selector: 'app-goal-form-page',
   imports: [
+    FormSkeletonComponent,
     ReactiveFormsModule,
     FormModalComponent,
     EmptyStateComponent,
@@ -78,6 +83,17 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   styleUrl: './goal-form.page.css',
 })
 export class GoalFormPage {
+  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
+  protected readonly skeleton: readonly FormSkeletonPiece[] = [
+    'field',
+    'field',
+    'field-date',
+    { disclosure: ['field-segmented'] },
+    'field',
+    'photos',
+    'switch-2',
+  ];
+
   private readonly router = inject(Router);
   private readonly changes = inject(EntityChanges);
   private readonly toast = inject(ToastService);

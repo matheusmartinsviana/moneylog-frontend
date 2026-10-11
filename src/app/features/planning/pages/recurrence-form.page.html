@@ -10,10 +10,7 @@
   ) {
     <div data-cy="recurrence-form-loading">
       <p class="visually-hidden" role="status">{{ t().recurrences.loading }}</p>
-      <div class="list-skeleton" aria-hidden="true">
-        <div class="list-skeleton__row"></div>
-        <div class="list-skeleton__row"></div>
-      </div>
+      <app-form-skeleton [pieces]="skeleton" />
     </div>
   } @else if (notFound()) {
     <app-empty-state

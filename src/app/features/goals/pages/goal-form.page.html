@@ -8,10 +8,7 @@
   @if (editing() && !goal() && facade.loadStatus().status !== 'error') {
     <div data-cy="goal-form-loading">
       <p class="visually-hidden" role="status">{{ t().goals.loading }}</p>
-      <div class="list-skeleton" aria-hidden="true">
-        <div class="list-skeleton__row"></div>
-        <div class="list-skeleton__row"></div>
-      </div>
+      <app-form-skeleton [pieces]="skeleton" />
     </div>
   } @else if (notFound()) {
     <app-empty-state
