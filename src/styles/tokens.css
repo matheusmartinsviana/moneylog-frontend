@@ -39,6 +39,8 @@
   --color-hover-soft: rgb(37 99 235 / 8%);
   --color-hover-border: rgb(37 99 235 / 30%);
   --gradient-hover: linear-gradient(var(--color-hover-soft), var(--color-hover-soft));
+  /* Divisória fina de listas agrupadas (pintada como fundo para começar no texto, não na borda). */
+  --gradient-hairline: linear-gradient(var(--color-border), var(--color-border));
   --color-shadow: rgb(60 40 120 / 6%);
   --color-shadow-strong: rgb(60 40 120 / 14%);
   --color-scrim: rgb(246 245 251 / 88%);

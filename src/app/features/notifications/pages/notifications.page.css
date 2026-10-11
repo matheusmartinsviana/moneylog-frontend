@@ -23,39 +23,54 @@
 .day {
   display: grid;
   gap: var(--space-2);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
+/* Título do dia: legenda discreta alinhada ao texto das linhas, como nas listas agrupadas do iOS. */
 .day__title {
+  padding-inline: var(--space-4);
   color: var(--color-text-muted);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
 }
 
+/*
+ * Lista agrupada (iOS): um bloco arredondado por dia, sem caixa por linha. As divisórias são linhas finas que
+ * começam no texto (depois do ícone), pintadas no fundo de cada item a partir do segundo.
+ */
 .list {
+  --inset: calc(var(--space-4) + 2.5rem + var(--space-3));
   display: grid;
-  gap: var(--space-3);
+  gap: 0;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface);
+}
+
+.list > li + li {
+  background-image: var(--gradient-hairline);
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: calc(100% - var(--inset)) var(--border-width);
 }
 
 .reminder {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-card);
-  background-color: var(--color-surface);
+  padding: var(--space-3) var(--space-4);
   list-style: none;
 }
 
 .reminder__main {
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
   min-width: 0;
 }
 
 .reminder__title {
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
 }
 
@@ -78,11 +93,66 @@
   gap: var(--space-2);
 }
 
+/* Lembretes: o início do texto é o da própria linha (sem ícone). */
+.list:has(> .reminder) {
+  --inset: var(--space-4);
+}
+
 .more {
   padding-top: var(--space-3);
 }
 
+/* Resumo do dia: cartão de tinta suave (acento) no topo da lista. */
 .daily {
-  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background-color: var(--color-accent-soft);
+  color: var(--color-text);
   font-size: var(--text-sm);
+}
+
+/* Esqueleto do carregamento: mesmo bloco agrupado e a mesma linha (ícone + três linhas de texto + ação). */
+.sk-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+}
+
+.sk-row__tile {
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-icon);
+}
+
+.sk-row__text {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-sm);
+}
+
+.sk-row__line {
+  display: block;
+  width: 60%;
+  max-width: 100%;
+}
+
+.sk-row__line--title {
+  width: 45%;
+  font-size: var(--text-md);
+}
+
+.sk-row__line--kind {
+  width: 25%;
+  font-size: var(--text-xs);
+}
+
+.sk-row__pill {
+  display: block;
+  width: 4.5rem;
+  height: 2.25rem;
+  margin-top: var(--space-2);
+  border-radius: var(--radius-pill);
 }

@@ -17,6 +17,7 @@ import { OverlayPanelComponent } from '~/app/common/components/overlay/overlay-p
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
+import { NotificationIconComponent } from '~/app/features/notifications/components/notification-icon.component';
 import { notificationLink, notificationText } from '~/app/features/notifications/notification-text';
 import { NotificationsCenterFacade } from '~/modules/notifications/core/facades/notifications-center.facade';
 import { UnreadCountFacade } from '~/modules/notifications/core/facades/unread-count.facade';
@@ -33,7 +34,13 @@ export const POPOVER_LIMIT = 8;
  */
 @Component({
   selector: 'app-notifications-popover',
-  imports: [IconComponent, LiquidGlassDirective, OverlayPanelComponent, RouterLink],
+  imports: [
+    IconComponent,
+    LiquidGlassDirective,
+    NotificationIconComponent,
+    OverlayPanelComponent,
+    RouterLink,
+  ],
   providers: [NotificationsCenterFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -90,9 +97,16 @@ export const POPOVER_LIMIT = 8;
                     {{ t().notifications.center.loading }}
                   </p>
                   <div class="np__skeleton" aria-hidden="true">
-                    <div class="sk np__sk"></div>
-                    <div class="sk np__sk"></div>
-                    <div class="sk np__sk"></div>
+                    @for (row of [1, 2, 3]; track row) {
+                      <div class="np__sk-row">
+                        <span class="sk np__sk-tile"></span>
+                        <span class="np__sk-text">
+                          <span class="sk np__sk-line np__sk-line--kind">&nbsp;</span>
+                          <span class="sk np__sk-line np__sk-line--title">&nbsp;</span>
+                          <span class="sk np__sk-line np__sk-line--body">&nbsp;</span>
+                        </span>
+                      </div>
+                    }
                   </div>
                 </div>
               }
@@ -125,13 +139,19 @@ export const POPOVER_LIMIT = 8;
                         data-cy="notifications-popover-item"
                         (click)="close(false)"
                       >
+                        @if (item.unread) {
+                          <span class="np__dot" aria-hidden="true"></span>
+                        }
+                        <app-notification-icon [kind]="item.rawKind" />
                         <span class="np__main">
                           <span class="np__kind">
                             {{ item.kind }}
                             @if (item.unread) {
-                              <span class="np__badge" data-cy="notifications-popover-unread">{{
-                                t().notifications.center.unreadMark
-                              }}</span>
+                              <span
+                                class="np__badge visually-hidden"
+                                data-cy="notifications-popover-unread"
+                                >{{ t().notifications.center.unreadMark }}</span
+                              >
                             }
                           </span>
                           <span class="np__item-title">{{ item.title }}</span>
@@ -146,7 +166,7 @@ export const POPOVER_LIMIT = 8;
 
             <footer class="np__footer">
               <a
-                class="button np__all"
+                class="np__all"
                 routerLink="/notifications"
                 data-autofocus
                 data-cy="notifications-popover-all"
@@ -241,7 +261,7 @@ export const POPOVER_LIMIT = 8;
     .np__list {
       display: grid;
       gap: 2px;
-      max-height: min(16rem, 36dvh);
+      max-height: min(13.5rem, 34dvh);
       overflow-y: auto;
     }
 
@@ -253,16 +273,27 @@ export const POPOVER_LIMIT = 8;
       }
     }
 
+    /* Item: ícone em azulejo + texto, como na Central de Notificações do iOS. Sem fundo fixo: só o hover. */
     .np__item {
-      display: block;
-      padding: var(--space-2) var(--space-3);
-      border-radius: var(--radius-control);
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+      border-radius: var(--radius-icon);
       color: inherit;
       text-decoration: none;
     }
 
-    .np__item.is-unread {
-      background-color: var(--color-accent-soft);
+    /* Não lida: bolinha de acento à esquerda (a palavra "Não lida" segue no texto, oculta). */
+    .np__dot {
+      position: absolute;
+      top: 1.375rem;
+      left: 0.3125rem;
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: var(--radius-pill);
+      background-color: var(--color-accent);
     }
 
     .np__main {
@@ -272,30 +303,18 @@ export const POPOVER_LIMIT = 8;
     }
 
     .np__kind {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--space-2);
       color: var(--color-text-muted);
       font-size: var(--text-xs);
     }
 
-    .np__badge {
-      padding: 0 var(--space-2);
-      border-radius: var(--radius-pill);
-      background-color: var(--color-accent-soft);
-      color: var(--color-accent);
-      font-weight: var(--weight-medium);
-    }
-
-    .np__item.is-unread .np__badge {
-      background-color: var(--color-surface);
-    }
-
     .np__item-title {
       font-size: var(--text-sm);
-      font-weight: var(--weight-semibold);
+      font-weight: var(--weight-medium);
       overflow-wrap: anywhere;
+    }
+
+    .np__item.is-unread .np__item-title {
+      font-weight: var(--weight-semibold);
     }
 
     .np__item-body {
@@ -317,21 +336,76 @@ export const POPOVER_LIMIT = 8;
       gap: var(--space-3);
     }
 
+    /* Esqueleto: a mesma linha do item (ícone + três linhas de texto). */
     .np__skeleton {
       display: grid;
-      gap: var(--space-2);
+      gap: 2px;
     }
 
-    .np__sk {
-      height: 3.5rem;
+    .np__sk-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+    }
+
+    .np__sk-tile {
+      display: block;
+      flex: none;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: var(--radius-icon);
+    }
+
+    .np__sk-text {
+      display: grid;
+      flex: 1;
+      gap: 2px;
+      min-width: 0;
+      font-size: var(--text-sm);
+    }
+
+    .np__sk-line {
+      display: block;
+      width: 70%;
+    }
+
+    .np__sk-line--kind {
+      width: 30%;
+      font-size: var(--text-xs);
+    }
+
+    .np__sk-line--title {
+      width: 50%;
+      font-size: var(--text-sm);
+    }
+
+    .np__sk-line--body {
+      font-size: var(--text-xs);
     }
 
     .np__footer {
       display: grid;
     }
 
+    /* "Ver todas": pílula de tinta suave, sem a caixa de botão. */
     .np__all {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
+      min-height: var(--touch-min);
+      border-radius: var(--radius-control);
+      background-color: var(--color-accent-soft);
+      color: var(--color-accent);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      text-decoration: none;
+      transition: background-color var(--duration-fast) var(--ease-standard);
+    }
+
+    .np__all:hover {
+      background-color: var(--color-accent-soft-hover);
     }
   `,
 })
@@ -370,6 +444,7 @@ export class NotificationsPopoverComponent {
         return {
           id: n.id,
           kind: copy.kinds[n.kind],
+          rawKind: n.kind,
           title: text.title,
           body: text.body,
           unread: n.readAt === null,
