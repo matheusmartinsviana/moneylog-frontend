@@ -18,11 +18,6 @@ interface ImageRequest {
   readonly variant: GoalPhotoVariant;
 }
 
-/**
- * Facade de UMA imagem de foto na tela: busca os bytes pela porta (com o Bearer do interceptor), guarda no
- * cache em memória e expõe o `blob:` URL. Trocar de foto cancela a busca anterior (`switchMap`) e solta a
- * imagem antiga; ao destruir, solta a atual (o cache revoga quando ninguém mais usa). Escopo de componente.
- */
 @Injectable()
 export class GoalPhotoImageFacade {
   private readonly gateway = inject(GoalPhotosGateway);
@@ -66,12 +61,10 @@ export class GoalPhotoImageFacade {
     this.requests.next(this.last);
   }
 
-  /** "Tentar de novo" depois de uma falha. */
   retry(): void {
     if (this.last) this.requests.next(this.last);
   }
 
-  /** Aquece o cache com a próxima imagem (melhor esforço: falha em silêncio). */
   preload(goalId: string, photoId: string, variant: GoalPhotoVariant): void {
     this.fetch({ goalId, photoId, variant })
       .pipe(

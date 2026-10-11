@@ -6,11 +6,6 @@ import { CardsGateway } from '~/modules/cards/core/interfaces/cards.gateway';
 import type { Card } from '~/modules/cards/core/types/card';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Confirmar o fechamento do cartão (`POST /v1/cards/{id}/closing-confirmation`). Não muda calendário nem
- * faturas: só tira a marca de "provisório". `exhaustMap` (clique duplo = uma requisição); devolve o cartão
- * da resposta e, em `409`, quem usa recarrega do backend. Escopo de componente.
- */
 @Injectable()
 export class CardClosingFacade {
   private readonly gateway = inject(CardsGateway);
@@ -21,7 +16,6 @@ export class CardClosingFacade {
 
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
-  /** Emite o cartão devolvido pela API. */
   readonly confirmed$ = this.doneEvents.asObservable();
 
   constructor() {

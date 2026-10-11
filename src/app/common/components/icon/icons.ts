@@ -1,9 +1,3 @@
-/**
- * Ícones de traço fino (1.5px, 24×24, `currentColor`) desenhados para o moneylog.
- * Proibido pelo DS 00: moeda, cifrão, banco, cofrinho, cadeado, escudo.
- */
-
-/** Círculo como path (mantém todos os ícones como lista de paths). */
 function circle(cx: number, cy: number, r: number): string {
   return `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
 }

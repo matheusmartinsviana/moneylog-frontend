@@ -21,18 +21,6 @@ import { formatBytes } from '~/util/format-bytes';
 
 export type FilePickerProblem = 'tooLarge' | 'wrongType' | 'empty';
 
-/**
- * Seletor de arquivo próprio (ADR-007, FE-S-119): a **única** exceção nativa do projeto. O seletor de arquivos
- * é do sistema operacional e não existe como substituir; por isso o `<input type="file">` fica **escondido**
- * (`hidden`, fora da ordem de tabulação e da árvore de acessibilidade) dentro deste componente e é acionado
- * pelo clique do botão "Escolher arquivo" (um gesto do usuário, o que o iOS exige). A guarda de controles
- * nativos só aceita esse `input` neste arquivo (`scripts/check-native-controls.mjs`).
- *
- * Valor: `File | null` (CVA). Valida extensão (`accept`), tamanho (`maxBytes`) e arquivo vazio **antes** de
- * entregar: um arquivo recusado nunca vira valor, o motivo aparece como erro do campo (`role="alert"`, sem
- * `alert()`) e sai em `rejected`. Aceita arrastar e soltar (1 arquivo) e anuncia "arquivo recebido" para
- * leitor de tela. Mostra nome e tamanho e permite remover. Presentational.
- */
 @Component({
   selector: 'app-file-picker',
   imports: [FieldErrorComponent],
@@ -176,12 +164,9 @@ export class FilePickerComponent extends FieldControl<File | null> {
   private readonly i18n = inject(I18nService);
   protected readonly t = this.i18n.t;
 
-  /** Extensões aceitas, no formato do atributo `accept` (`.zip`). */
   readonly accept = input<string>();
-  /** Tamanho máximo em bytes; `undefined` = sem limite no front. */
   readonly maxBytes = input<number>();
 
-  /** O arquivo escolhido foi recusado (tipo, tamanho ou vazio). */
   readonly rejected = output<FilePickerProblem>();
 
   private readonly native = viewChild.required<ElementRef<HTMLInputElement>>('native');
@@ -217,7 +202,6 @@ export class FilePickerComponent extends FieldControl<File | null> {
     this.problemKey.set(null);
   }
 
-  /** Abre o seletor do sistema. Só chamar de dentro de um clique (gesto do usuário). */
   open(): void {
     if (!this.disabled()) this.native().nativeElement.click();
   }
@@ -231,7 +215,6 @@ export class FilePickerComponent extends FieldControl<File | null> {
   protected onNative(event: Event): void {
     const input = event.target as HTMLInputElement;
     const chosen = input.files?.item(0) ?? null;
-    // Permite escolher o mesmo arquivo de novo depois de remover.
     input.value = '';
     if (chosen) this.take(chosen);
     this.onTouched();
@@ -252,7 +235,6 @@ export class FilePickerComponent extends FieldControl<File | null> {
     this.onTouched();
   }
 
-  /** Valida e entrega: arquivo recusado nunca vira valor. */
   private take(chosen: File | null): void {
     if (chosen === null) {
       this.problemKey.set(null);

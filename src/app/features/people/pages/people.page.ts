@@ -38,11 +38,6 @@ interface RowAction {
   readonly person: Person;
 }
 
-/**
- * Pessoas (smart, T84): lista ativas ou arquivadas (`?status=ARCHIVED` na URL) com a frase do saldo que o
- * backend calculou ("João deve R$ 150,00" / "Você deve R$ 80,00 a João"), busca pelo nome (300 ms, cancela
- * a anterior) e cards no celular / tabela no desktop. Fala só com a facade de negócio (FE 01).
- */
 @Component({
   selector: 'app-people-page',
   imports: [
@@ -69,7 +64,6 @@ export class PeoplePage {
   protected readonly t = inject(I18nService).t;
   protected readonly people = inject(PeopleListFacade);
 
-  /** Filtro da URL (`?status=ARCHIVED`); qualquer outro valor mostra as ativas. */
   readonly status = input<string>();
 
   protected readonly filter = computed<PersonStatus>(() =>
@@ -94,7 +88,6 @@ export class PeoplePage {
   );
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('people')
       .pipe(takeUntilDestroyed())
@@ -110,7 +103,6 @@ export class PeoplePage {
       .pipe(takeUntilDestroyed())
       .subscribe((value) => this.people.search(value));
 
-    // exhaustMap: um toque duplo em "Arquivar" faz uma chamada só.
     this.actions
       .pipe(
         exhaustMap(({ kind, person }) => {

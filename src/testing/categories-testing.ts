@@ -23,7 +23,6 @@ export function aCategory(overrides: Partial<Category> = {}): Category {
   };
 }
 
-/** Porta falsa de categorias: guarda as chamadas e devolve o que o teste configurar. */
 export class CategoriesGatewayStub extends CategoriesGateway {
   categories: Category[] = [];
   readonly queries: CategoriesQuery[] = [];

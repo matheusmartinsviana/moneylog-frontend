@@ -166,7 +166,6 @@ describe('ProjectionsPage', () => {
       'Com base em julho de 2026, agosto de 2026, setembro de 2026',
     );
     expect(text(screen.getByTestId('projection-trend-row-2026-11'))).toContain('R$ 20.698,00');
-    // A base continua a mesma.
     expect(text(screen.getByTestId('projection-balance-2026-11'))).toBe('R$ 21.598,00');
     expect(screen.getByTestId('sparkline-trend')).toBeInTheDocument();
     expect(screen.getByTestId('sparkline-base')).toBeInTheDocument();

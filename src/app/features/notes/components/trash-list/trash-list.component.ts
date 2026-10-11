@@ -7,7 +7,6 @@ import { DisplayTextPipe } from '~/app/common/pipes/display-text.pipe';
 import type { NoteSummary } from '~/modules/notes/core/types/note';
 import { formatInstant } from '~/util/date';
 
-/** Notas na lixeira, cada uma com "Restaurar". Nada some em silêncio (S-161). Presentational. */
 @Component({
   selector: 'app-trash-list',
   imports: [DisplayTextPipe],
@@ -86,7 +85,6 @@ export class TrashListComponent {
   protected readonly t = this.i18n.t;
 
   readonly notes = input.required<readonly NoteSummary[]>();
-  /** Uma restauração em andamento: bloqueia os botões. */
   readonly busy = input(false);
 
   readonly restore = output<string>();

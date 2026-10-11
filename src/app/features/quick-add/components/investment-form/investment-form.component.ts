@@ -26,12 +26,6 @@ import type {
 } from '~/modules/transactions/core/types/transaction-input';
 import { todayIso } from '~/util/date';
 
-/**
- * Formulário de aplicação e resgate (presentational): valor → conta (só `CASH`) → conta de
- * investimento (só `INVESTMENT`) → operação → data (→ descrição opcional). As duas listas já chegam
- * filtradas por quem usa (A19, S-91); o backend continua recusando contas trocadas
- * (`INVESTMENT_ACCOUNTS_MISMATCH`). Serve ao `/quick-add` e à edição.
- */
 @Component({
   selector: 'app-investment-form',
   imports: [
@@ -80,7 +74,6 @@ export class InvestmentFormComponent extends TransactionFormBase {
       { value: 'REDEMPTION', label: labels.REDEMPTION },
     ];
   });
-  /** Descrição usada quando o campo fica vazio: o nome da operação. */
   protected readonly defaultDescription = computed(() => {
     const direction = this.form.controls.direction.value as InvestmentDirection | null;
     return this.t().transactions.directions[direction ?? 'CONTRIBUTION'];

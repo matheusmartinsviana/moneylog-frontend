@@ -35,12 +35,6 @@ interface RowAction {
   readonly card: Card;
 }
 
-/**
- * Cartões (smart, T64): lista ativos ou arquivados (`?status=ARCHIVED` na URL), com cards no celular e
- * tabela no desktop. Fala só com a facade de negócio (FE 01). Limite, disponível e fatura atual são os
- * que a API calculou; arquivar pede confirmação e usa o recurso devolvido. `CARD_HAS_PENDING_BALANCE`
- * explica o que falta e leva à tela do cartão (faturas e parcelas).
- */
 @Component({
   selector: 'app-cards-page',
   imports: [
@@ -64,7 +58,6 @@ export class CardsPage {
   protected readonly t = inject(I18nService).t;
   protected readonly cards = inject(CardsListFacade);
 
-  /** Filtro da URL (`?status=ARCHIVED`); qualquer outro valor mostra os ativos. */
   readonly status = input<string>();
 
   protected readonly filter = computed<CardStatus>(() =>
@@ -95,7 +88,6 @@ export class CardsPage {
   );
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('cards')
       .pipe(takeUntilDestroyed())
@@ -108,7 +100,6 @@ export class CardsPage {
       });
     });
 
-    // exhaustMap: um toque duplo em "Arquivar" faz uma chamada só.
     this.actions
       .pipe(
         exhaustMap(({ kind, card }) => {

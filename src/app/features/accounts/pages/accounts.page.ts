@@ -35,11 +35,6 @@ interface RowAction {
   readonly account: Account;
 }
 
-/**
- * Contas (smart): lista ativas ou arquivadas (filtro `?status=ARCHIVED` na URL), com cards no
- * celular e tabela no desktop. Fala só com a facade de negócio (FE 01). Os saldos são os que a API
- * calculou; arquivar pede confirmação e usa o recurso devolvido.
- */
 @Component({
   selector: 'app-accounts-page',
   imports: [
@@ -63,7 +58,6 @@ export class AccountsPage {
   protected readonly t = inject(I18nService).t;
   protected readonly accounts = inject(AccountsListFacade);
 
-  /** Filtro da URL (`?status=ARCHIVED`); qualquer outro valor mostra as ativas. */
   readonly status = input<string>();
 
   protected readonly filter = computed<AccountStatus>(() =>
@@ -71,7 +65,6 @@ export class AccountsPage {
   );
   protected readonly pendingArchive = signal<Account | null>(null);
   protected readonly busy = signal(false);
-  /** Arquivar recusado por reserva ativa (422, FE-S-178): aviso fixo com atalho para as metas. */
   protected readonly reservationsBlocked = signal(false);
   private readonly actions = new Subject<RowAction>();
 
@@ -92,7 +85,6 @@ export class AccountsPage {
   );
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('accounts')
       .pipe(takeUntilDestroyed())
@@ -102,7 +94,6 @@ export class AccountsPage {
       untracked(() => this.accounts.load(filter));
     });
 
-    // exhaustMap: um toque duplo em "Arquivar" faz uma chamada só.
     this.actions
       .pipe(
         exhaustMap(({ kind, account }) => {

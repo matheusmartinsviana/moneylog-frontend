@@ -8,18 +8,12 @@ import { Problem, problemOf } from '~/util/api/problem';
 
 export type DebtOverviewState =
   | { readonly status: 'loading' }
-  /** Nada cadastrado (`hasRecords = false`): não é "livre de dívidas". */
   | { readonly status: 'empty'; readonly data: DebtOverview }
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: DebtOverview };
 
 const DEFAULT_MONTHS = 12;
 
-/**
- * Facade da visão total de dívidas: o horizonte (`months`) vai na requisição e mudar o horizonte ou
- * recarregar **cancela** a anterior (`switchMap`). Nada é calculado aqui: o estado é o que o backend
- * devolveu. Escopo de componente.
- */
 @Injectable()
 export class DebtOverviewFacade {
   private readonly gateway = inject(DebtOverviewGateway);
@@ -44,7 +38,6 @@ export class DebtOverviewFacade {
         switchMap((months) =>
           this.gateway.get(months).pipe(
             map((data): DebtOverviewState => ({
-              // Só compromissos acompanhados (sem cartão nem dívida) também não é "vazio": o bloco aparece.
               status: data.hasRecords || data.tracked.items.length > 0 ? 'ready' : 'empty',
               data,
             })),

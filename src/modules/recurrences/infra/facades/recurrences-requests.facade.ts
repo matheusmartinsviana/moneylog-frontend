@@ -44,12 +44,10 @@ import { Problem, ProblemError, toProblem } from '~/util/api/problem';
 import type { OccurrenceSlice, Slice } from '~/util/api/slice';
 import { API_MOCKS } from '~/util/api-mocks';
 
-/** Falha de rede/HTTP → `ProblemError` tipado (o core nunca vê `HttpErrorResponse`). */
 function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então qualquer recorrência pedida por id não existe. */
 function notFound(): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -61,10 +59,6 @@ function notFound(): Observable<never> {
   return throwError(() => new ProblemError(problem));
 }
 
-/**
- * Facade de requisições de recorrências (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS`
- * ligado, responde com `mock-data` vazio e não faz requisição; desligado, chama `/v1`.
- */
 @Injectable({ providedIn: 'root' })
 export class RecurrencesRequestsFacade extends RecurrencesGateway {
   private readonly http = inject(HttpClient);

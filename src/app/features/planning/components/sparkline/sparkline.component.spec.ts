@@ -13,7 +13,6 @@ describe('SparklineComponent', () => {
 
     const coordinates = points('base').split(' ');
     expect(coordinates).toHaveLength(3);
-    // Maior valor = mais alto (y menor).
     const y = coordinates.map((c) => Number(c.split(',')[1]));
     expect(y[1]).toBeLessThan(y[0]!);
     expect(y[1]).toBeLessThan(y[2]!);

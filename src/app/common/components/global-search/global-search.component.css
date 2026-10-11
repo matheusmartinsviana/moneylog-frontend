@@ -69,7 +69,6 @@
   cursor: pointer;
 }
 
-/* A opção ativa do combobox: o foco real fica no campo, então a opção precisa de um sinal próprio. */
 .gs__option.is-active {
   background-color: var(--color-accent-soft);
   box-shadow: inset 0 0 0 2px var(--color-focus);

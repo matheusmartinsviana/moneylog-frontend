@@ -13,12 +13,6 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
 
 let nextId = 0;
 
-/**
- * Seção recolhível própria (padrão disclosure do APG), no lugar de `<details>`. O cabeçalho é um
- * `button` com `aria-expanded`/`aria-controls`; a região some do foco quando fechada (`inert`) e a
- * altura anima por `grid-template-rows` (sem medir em JS; sem animação com `prefers-reduced-motion`).
- * `open` é two-way (`[(open)]`). Com `lazy`, o conteúdo só é montado enquanto aberto.
- */
 @Component({
   selector: 'app-disclosure',
   imports: [IconComponent],
@@ -116,12 +110,8 @@ let nextId = 0;
       transition-delay: 0s;
     }
 
-    /*
-     * O overflow: hidden é o que esconde o conteúdo com a linha em 0fr, mas cortaria o anel de foco de 4 px dos
-     * campos de dentro. Folga de 4 px em todos os lados, compensada por margem negativa (o layout não muda).
-     */
     .disclosure__inner {
-      position: relative; /* contém (e corta) os elementos só para leitores de tela de dentro: sem altura fantasma na página */
+      position: relative;
       min-height: 0;
       margin: calc(var(--space-1) * -1);
       padding: var(--space-1);
@@ -130,18 +120,12 @@ let nextId = 0;
   `,
 })
 export class DisclosureComponent {
-  /** Título do cabeçalho (já traduzido). */
   readonly heading = input.required<string>();
-  /** Texto curto à direita do título (ex.: "3 ativos"). */
   readonly summary = input<string>();
-  /** Base do `data-cy` (o botão é `<fieldId>-toggle`). */
   readonly fieldId = input.required<string>();
   readonly open = model(false);
-  /** Nível do título (APG: o botão fica dentro de um heading). */
   readonly headingLevel = input(2);
-  /** Monta o conteúdo só enquanto aberto (e o mantém depois da primeira abertura). */
   readonly lazy = input(false);
-  /** Sem cabeçalho próprio: quem hospeda controla `open` com outro botão (pílulas de filtro). */
   readonly hideHeader = input(false);
 
   private readonly uid = ++nextId;
@@ -151,7 +135,6 @@ export class DisclosureComponent {
   protected readonly rendered = computed(() => this.everOpened());
 
   constructor() {
-    // Aberto por fora (`[(open)]`) também conta: fechar depois não destrói o conteúdo `lazy`.
     effect(() => {
       if (this.open()) untracked(() => this.everOpened.set(true));
     });

@@ -6,15 +6,6 @@ export type ProgressTone = 'default' | 'warning' | 'risk';
 
 let nextId = 0;
 
-/**
- * Barra de progresso própria (`role="progressbar"`; nunca `<progress>` nem `<meter>`, que o
- * navegador desenha). Mostra uma razão que **vem do backend** (`value`, de 0 a 1: limite usado,
- * meta, importação); o componente não calcula dinheiro nem a razão, só a desenha e a anuncia.
- * `valueText` é o texto formatado por quem usa (ex.: "R$ 1.200,00 de R$ 2.000,00"). `warning` e
- * `risk` sempre vêm com texto ("Atenção", "Risco"), nunca só cor. `value=null` é indeterminado
- * (importação em andamento): sem `aria-valuenow`, sem animação com `prefers-reduced-motion`.
- * Preenchimento sólido, sem gradiente (FE-S-121); `forced-colors` legível. Presentational.
- */
 @Component({
   selector: 'app-progress-bar',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,7 +35,6 @@ let nextId = 0;
         [attr.aria-busy]="indeterminate() || null"
         [attr.data-cy]="fieldId() + '-track'"
       >
-        <!-- Largura = razão do backend (0 a 1): valor dinâmico, não cabe em classe CSS. -->
         <!-- eslint-disable-next-line @angular-eslint/template/no-inline-styles -->
         <div
           class="progress__fill"
@@ -157,21 +147,15 @@ let nextId = 0;
 export class ProgressBarComponent {
   private readonly t = inject(I18nService).t;
 
-  /** Nome da barra (o que ela mede). Já traduzido. */
   readonly label = input.required<string>();
-  /** Base do `data-cy` (`<fieldId>`, `-track`, `-text`). */
   readonly fieldId = input.required<string>();
-  /** Razão de 0 a 1 vinda do backend; `null` = indeterminado. */
   readonly value = input<number | null>(null);
-  /** Texto do valor, formatado por quem usa (moeda do dado). */
   readonly valueText = input<string>();
   readonly tone = input<ProgressTone>('default');
-  /** Esconde o rótulo visualmente (continua sendo o nome acessível). */
   readonly hideLabel = input(false);
 
   protected readonly labelId = `progress-label-${++nextId}`;
   protected readonly indeterminate = computed(() => this.value() === null);
-  /** Largura do preenchimento, de 0 a 100 (só desenho: a razão já veio pronta). */
   protected readonly percent = computed(() => {
     const value = this.value();
     return value === null ? 0 : Math.min(100, Math.max(0, value * 100));

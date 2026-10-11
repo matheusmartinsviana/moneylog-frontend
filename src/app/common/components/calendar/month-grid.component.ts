@@ -18,11 +18,6 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/**
- * Grade de meses de um ano (`YYYY-MM`), com navegação de ano. Usada pelo `MonthPicker` e pela troca
- * de mês/ano do calendário. Teclado: setas (±1 mês, ±3 meses), Home/End (início/fim do ano),
- * PageUp/PageDown (ano), Enter/Espaço escolhe. Roving tabindex.
- */
 @Component({
   selector: 'app-month-grid',
   imports: [IconComponent],
@@ -161,14 +156,11 @@ export class MonthGridComponent {
   private readonly i18n = inject(I18nService);
   protected readonly t = this.i18n.t;
 
-  /** Mês escolhido (`YYYY-MM`). */
   readonly value = input<string | null>(null);
-  /** Mês de "hoje" (`YYYY-MM`). */
   readonly today = input<string | null>(null);
   readonly min = input('2000-01');
   readonly max = input('2100-12');
   readonly cy = input('month-grid');
-  /** Mês em que a grade abre (padrão: o escolhido ou hoje). */
   readonly start = input<string | null>(null);
 
   readonly picked = output<string>();
@@ -201,7 +193,6 @@ export class MonthGridComponent {
     });
   }
 
-  /** Foca o mês atual da grade (chamado pelo painel ao abrir). */
   focusGrid(): void {
     afterNextRender(
       () =>

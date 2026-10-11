@@ -12,12 +12,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { DebtOverview } from '~/modules/debt-overview/core/types/debt-overview';
 import { formatCompetence, formatCompetenceShort } from '~/util/date';
 
-/**
- * Cronograma de vencimentos por mês (presentational): linha do que vence e linha do restante, as duas
- * **como o servidor devolveu** (`schedule.points`), com a tabela equivalente do próprio gráfico. Vencido,
- * sem data e depois do horizonte ficam fora do eixo, como chips. Sem previsão de quitação, o motivo vem do
- * servidor (`payoffReason`). Nada é somado aqui.
- */
 @Component({
   selector: 'app-debt-schedule',
   imports: [LineChartComponent, MoneyComponent],
@@ -41,7 +35,6 @@ import { formatCompetence, formatCompetenceShort } from '~/util/date';
     @if (schedule().points.length === 0) {
       <p class="note" data-cy="debt-schedule-empty">{{ t().debtOverview.schedule.empty }}</p>
     } @else {
-      <!-- O gráfico (SVG próprio) é um chunk à parte, como no Início. -->
       @defer (on immediate) {
         <app-line-chart
           [label]="t().debtOverview.schedule.chartLabel"

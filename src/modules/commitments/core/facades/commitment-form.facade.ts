@@ -7,11 +7,6 @@ import type { Commitment, CommitmentInput } from '~/modules/commitments/core/typ
 import { IdempotencyTracker } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Cadastro de compromisso. `exhaustMap` no salvar (clique duplo = uma requisição); a criação leva
- * `Idempotency-Key` (uma por tentativa, reutilizada depois de falha ambígua). O compromisso da resposta
- * sai em `saved$`. Falhas chegam tipadas (`COMMITMENT_INVALID` + `fieldErrors`). Escopo de componente.
- */
 @Injectable()
 export class CommitmentFormFacade {
   private readonly gateway = inject(CommitmentsGateway);

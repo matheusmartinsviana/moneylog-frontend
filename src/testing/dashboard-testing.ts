@@ -11,10 +11,6 @@ import type { Money } from '~/util/money';
 
 const brl = (amount: string): Money => ({ amount, currency: 'BRL' });
 
-/**
- * Resumo com dados, como o backend devolveria (valores arbitrários, mas com 2 casas e em BRL).
- * Os testes conferem que a tela exibe exatamente estes valores, sem recalcular.
- */
 export function aDashboardSummary(overrides: Partial<DashboardSummary> = {}): DashboardSummary {
   return {
     asOf: '2026-10-10',
@@ -83,7 +79,6 @@ export function aDashboardSummary(overrides: Partial<DashboardSummary> = {}): Da
   };
 }
 
-/** Próximos compromissos com fatura vencida (com parcela aninhada), dívida a receber e item sem data. */
 export function anUpcoming(overrides: Partial<Upcoming> = {}): Upcoming {
   return {
     items: [
@@ -146,7 +141,6 @@ export function anEmptyUpcoming(): Upcoming {
   };
 }
 
-/** Porta falsa e configurável: cada método devolve o observable informado. */
 export class DashboardGatewayStub extends DashboardGateway {
   summary$: Observable<DashboardSummary> = of(aDashboardSummary());
   upcoming$: Observable<Upcoming> = of(anUpcoming());
@@ -164,7 +158,6 @@ export function provideDashboardStub(stub: DashboardGatewayStub): Provider[] {
   return [{ provide: DashboardGateway, useValue: stub }];
 }
 
-/** A mesma ligação do bootstrap (porta → infra em modo mock), para testar o app de ponta a ponta. */
 export function provideDashboardMock(): (Provider | EnvironmentProviders)[] {
   return [provideHttpClient(), { provide: API_MOCKS, useValue: true }, provideDashboard()];
 }

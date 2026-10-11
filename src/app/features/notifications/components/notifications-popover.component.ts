@@ -23,15 +23,8 @@ import { NotificationsCenterFacade } from '~/modules/notifications/core/facades/
 import { UnreadCountFacade } from '~/modules/notifications/core/facades/unread-count.facade';
 import type { AppNotification } from '~/modules/notifications/core/types/notification';
 
-/** Quantas notificações o pop-up mostra (as mais recentes, lidas e não lidas). */
 export const POPOVER_LIMIT = 8;
 
-/**
- * Sino do cabeçalho: um clique abre um pop-up com as últimas notificações (em vez de navegar). A lista só é
- * carregada ao abrir (lazy). `Esc` e clique fora fecham (o `OverlayPanel` cuida) e o foco volta ao botão.
- * "Marcar todas como lidas" e "Ver todas" (`/notifications`) ficam no rodapé. Em tela compacta vira folha.
- * Smart: usa a facade da central (escopo do componente) e o contador compartilhado.
- */
 @Component({
   selector: 'app-notifications-popover',
   imports: [
@@ -231,7 +224,6 @@ export const POPOVER_LIMIT = 8;
       font-weight: var(--weight-semibold);
     }
 
-    /* Em tela compacta o pop-up vira folha e ela já tem o título. */
     @media (width <= 640px) {
       .np__title {
         display: none;
@@ -265,7 +257,6 @@ export const POPOVER_LIMIT = 8;
       overflow-y: auto;
     }
 
-    /* Paisagem (pouca altura): a lista não tem rolagem própria; o corpo do painel rola por inteiro. */
     @media (max-height: 500px) {
       .np__list {
         max-height: none;
@@ -273,7 +264,6 @@ export const POPOVER_LIMIT = 8;
       }
     }
 
-    /* Item: ícone em azulejo + texto, como na Central de Notificações do iOS. Sem fundo fixo: só o hover. */
     .np__item {
       position: relative;
       display: flex;
@@ -285,7 +275,6 @@ export const POPOVER_LIMIT = 8;
       text-decoration: none;
     }
 
-    /* Não lida: bolinha de acento à esquerda (a palavra "Não lida" segue no texto, oculta). */
     .np__dot {
       position: absolute;
       top: 1.375rem;
@@ -336,7 +325,6 @@ export const POPOVER_LIMIT = 8;
       gap: var(--space-3);
     }
 
-    /* Esqueleto: a mesma linha do item (ícone + três linhas de texto). */
     .np__skeleton {
       display: grid;
       gap: 2px;
@@ -388,7 +376,6 @@ export const POPOVER_LIMIT = 8;
       display: grid;
     }
 
-    /* "Ver todas": pílula de tinta suave, sem a caixa de botão. */
     .np__all {
       display: inline-flex;
       align-items: center;
@@ -458,12 +445,10 @@ export class NotificationsPopoverComponent {
       this.close();
       return;
     }
-    // Lazy: a lista só é pedida ao abrir.
     this.center.load({ status: 'ALL', kind: null });
     this.open.set(true);
   }
 
-  /** `restoreFocus` falso quando o clique já leva a outra tela (o foco vai para ela). */
   protected close(restoreFocus = true): void {
     if (!this.open()) return;
     this.open.set(false);

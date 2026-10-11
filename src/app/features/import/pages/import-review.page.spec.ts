@@ -176,7 +176,6 @@ describe('ImportReviewPage (T134)', () => {
     const gateway = new ImportsGatewayStub();
     gateway.batch = aBatch({ status: 'PARTIALLY_UNDONE' });
     await setup(gateway);
-    // O estado "parcial" vem do backend; os bloqueados chegam na resposta do desfazer.
     expect(screen.getByTestId('import-partially-undone')).toHaveTextContent(
       'Importação desfeita em parte',
     );

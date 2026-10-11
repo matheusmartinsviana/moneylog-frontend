@@ -8,18 +8,10 @@ import { routeOfLink } from '~/app/features/notes/services/link-routes';
 import type { BacklinksState } from '~/modules/notes/core/facades/note-editor.facade';
 import type { Note, NoteLink } from '~/modules/notes/core/types/note';
 
-/** Texto de um alvo: o rótulo que o backend conhece, ou o tipo quando não há rótulo (alvo sem nome). */
 function labelOf(link: NoteLink, fallback: string): string {
   return link.target?.label ?? link.text ?? fallback;
 }
 
-/**
- * Vínculos e backlinks da nota (T117): "Vinculada a" (vínculos explícitos, com o estado do alvo: estornada,
- * arquivada, cancelada, na lixeira, nunca some; pendente quando veio de uma importação e o alvo não existe),
- * "Links no texto" (os `[[wikilinks]]`, com "Criar nota" nos pendentes) e "Quem aponta para esta nota" (os
- * backlinks, com o trecho em texto puro). Quem decide as gravações é a página: este componente só emite. Os
- * vínculos nunca alteram valores. Presentational.
- */
 @Component({
   selector: 'app-note-links-panel',
   imports: [RouterLink, DisplayTextPipe],
@@ -283,13 +275,11 @@ export class NoteLinksPanelComponent {
 
   readonly note = input.required<Note>();
   readonly backlinks = input.required<BacklinksState>();
-  /** Nota na lixeira: nada se altera. */
   readonly readonly = input(false);
   readonly busy = input(false);
 
   readonly addLink = output<void>();
   readonly removeLink = output<NoteLink>();
-  /** O texto de um `[[link]]` pendente, para criar a nota. */
   readonly createNote = output<string>();
   readonly retryBacklinks = output<void>();
 
@@ -299,7 +289,6 @@ export class NoteLinksPanelComponent {
   protected readonly hasPendingExplicit = computed(() =>
     this.explicit().some((link) => link.state === 'PENDING'),
   );
-  /** Um item por alvo escrito no texto (o mesmo `[[nome]]` repetido aparece uma vez). */
   protected readonly wikilinks = computed(() => {
     const seen = new Set<string>();
     return this.note().links.filter((link) => {
@@ -325,7 +314,6 @@ export class NoteLinksPanelComponent {
     return interpolate(this.t().notes.links.removeNamed, { name: this.label(link) });
   }
 
-  /** Estado do alvo (estornada, arquivada, cancelada, na lixeira): o vínculo continua e o diz. */
   protected statusText(link: NoteLink): string | null {
     const status = link.target?.status;
     if (!status || status === 'ACTIVE') return null;

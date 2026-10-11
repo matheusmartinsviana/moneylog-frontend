@@ -10,7 +10,6 @@ import type {
 import { brl } from '~/testing/accounts-testing';
 import type { Slice } from '~/util/api/slice';
 
-/** Projeto de longo prazo sintético: sinal pago, duas parcelas pendentes e financiamento. */
 export function aProject(overrides: Partial<Commitment> = {}): Commitment {
   return {
     id: 'c-project',
@@ -63,7 +62,6 @@ export function aProject(overrides: Partial<Commitment> = {}): Commitment {
   };
 }
 
-/** Empréstimo no nome de terceiro: só o informado, sem saldo. */
 export function aLoan(overrides: Partial<Commitment> = {}): Commitment {
   return {
     id: 'c-loan',
@@ -88,7 +86,6 @@ export function aLoan(overrides: Partial<Commitment> = {}): Commitment {
   };
 }
 
-/** Porta falsa: guarda as chamadas e devolve o que o teste configurar. */
 export class CommitmentsGatewayStub extends CommitmentsGateway {
   commitments: Commitment[] = [aLoan(), aProject()];
   list$: Observable<Slice<Commitment>> | null = null;

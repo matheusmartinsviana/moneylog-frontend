@@ -13,10 +13,8 @@ export type CommitmentsListState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: readonly Commitment[] };
 
-/** Segurança contra laço: no máximo 10 páginas de 50 compromissos. */
 const MAX_PAGES = 10;
 
-/** Facade da lista de compromissos acompanhados (ordem do backend). Recarregar cancela a anterior. */
 @Injectable()
 export class CommitmentsListFacade {
   private readonly gateway = inject(CommitmentsGateway);

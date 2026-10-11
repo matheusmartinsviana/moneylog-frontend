@@ -7,7 +7,6 @@ import { PageLayoutComponent } from '~/app/common/components/page-layout/page-la
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
 
-/** "Mais" (mobile): as seções que não cabem na barra inferior, sob os três grupos da sidebar, em listas no estilo Ajustes do macOS. */
 @Component({
   selector: 'app-more-page',
   imports: [PageLayoutComponent, IconComponent, RouterLink],

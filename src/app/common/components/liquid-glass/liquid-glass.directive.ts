@@ -2,13 +2,6 @@ import { DestroyRef, Directive, ElementRef, afterNextRender, inject, input } fro
 
 import { refractionFilter } from '~/app/common/components/liquid-glass/liquid-glass-filter';
 
-/**
- * Lente de vidro líquido (DS 03): em Chromium desktop (`<html data-glass="refract">`) mede o elemento e aplica o
- * `backdrop-filter` de deslocamento, que refrata o fundo na borda arredondada (ResizeObserver + cache por tamanho).
- * Nos demais modos nada acontece: o CSS de `.glass-lens` já cai em desfoque barato ou em superfície sólida.
- * Use só em elementos **pequenos e isolados** (item ativo da sidebar, botões de ícone, tooltip); nunca empilhe
- * várias lentes grandes. Sem lógica financeira.
- */
 @Directive({
   selector: '[appLiquidGlass]',
   host: { class: 'glass-lens' },

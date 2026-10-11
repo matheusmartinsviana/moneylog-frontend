@@ -9,7 +9,6 @@ import { InvoicePage } from '~/app/features/cards/pages/invoice.page';
 import { CARD_DETAIL_PROVIDERS } from '~/app/lazy-providers';
 
 const routes: Routes = [
-  // Criar abre em modal sobre a lista; editar, sobre o detalhe do cartão (ambos com `<router-outlet>`).
   {
     path: '',
     component: CardsPage,

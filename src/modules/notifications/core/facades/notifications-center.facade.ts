@@ -22,10 +22,6 @@ export type CenterState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: readonly AppNotification[] };
 
-/**
- * Facade da central de notificações: lista paginada ("carregar mais"), filtro por tipo e leitura. Depois de
- * marcar como lida relê a lista e o contador do backend (nada é decidido no front). Escopo de componente.
- */
 @Injectable()
 export class NotificationsCenterFacade {
   private readonly gateway = inject(NotificationsGateway);
@@ -44,9 +40,7 @@ export class NotificationsCenterFacade {
   readonly filter = this.filterState.asReadonly();
   readonly hasMore = this.hasMoreState.asReadonly();
   readonly loadingMore = this.moreLoading.asReadonly();
-  /** A lista mostrada é a última carregada (a releitura falhou sem rede). */
   readonly stale = this.staleState.asReadonly();
-  /** Falha de "marcar como lida" (a lista segue como estava). */
   readonly actionProblem = this.problemState.asReadonly();
   readonly error = computed(() => {
     const state = this.current();
@@ -72,7 +66,6 @@ export class NotificationsCenterFacade {
             startWith<CenterState>({ status: 'loading' }),
             catchError((error: unknown) => {
               const problem = problemOf(error);
-              // Sem rede e com uma lista já carregada: mostra a última lista, com aviso.
               if (problem.status === 0 && previous.status === 'ready') {
                 this.staleState.set(true);
                 return of<CenterState>(previous);

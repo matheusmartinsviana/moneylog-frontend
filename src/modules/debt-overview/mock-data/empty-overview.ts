@@ -1,6 +1,5 @@
 import type { DebtOverviewResponse } from '~/modules/debt-overview/infra/responses/debt-overview.response';
 
-/** Ambiente mock (S-67): nada cadastrado. Mesmo formato bruto da API. */
 export function emptyOverview(months: number): DebtOverviewResponse {
   const zero = { amount: '0.00', currency: 'BRL' as const };
   return {

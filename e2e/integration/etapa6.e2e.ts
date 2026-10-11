@@ -7,18 +7,6 @@ import { todayInSaoPaulo } from '../support/api';
 
 import { cy, expect, open, resetDatabase, test } from './fixtures';
 
-/**
- * Etapa 6 com o backend real (T114 a T119 do front): o vault de notas Markdown. A jornada do plano: criar a
- * nota → vincular à compra do notebook e ao resumo do mês → `[[` para outra nota → renomear (links reescritos nas
- * outras notas) → backlinks → lixeira → restaurar → exportar → esvaziar o vault e importar o zip de volta. O
- * teste **compara a tela com a API** e confere que o vault nunca muda saldo, razão nem dashboard (invariante do
- * D1 §5). Também cobre XSS por Markdown, `VERSION_CONFLICT` sem sobrescrever o digitado, `Idempotency-Key`
- * reutilizada no retry depois de falha ambígua, importação inválida e os blocos "Notas vinculadas".
- *
- * Limitação declarada: o app tem um único usuário (o dono), então "importar em outro usuário" vira "esvaziar o
- * vault e importar o zip exportado" (o mesmo caminho de código no backend). **Escrito, não executado pelo
- * dev-frontend** (o stack do backend estava com o tester): a QA roda `npm run e2e:integration`.
- */
 test.describe.configure({ mode: 'serial' });
 
 test.beforeEach(() => resetDatabase());
@@ -37,7 +25,6 @@ async function createNote(api: any, path: string, body: string, links: unknown[]
   );
 }
 
-/** Zip mínimo (método "stored", sem compressão) com as entradas dadas: o bastante para o importador. */
 function makeZip(entries: { name: string; content: string }[]): Buffer {
   const locals: Buffer[] = [];
   const centrals: Buffer[] = [];
@@ -78,7 +65,6 @@ function makeZip(entries: { name: string; content: string }[]): Buffer {
   return Buffer.concat([...locals, ...centrals, end]);
 }
 
-/** O que o vault não pode tocar: saldo da conta e resumo do dashboard (antes e depois têm de ser iguais). */
 async function financialSnapshot(api: any, accountId: string) {
   return {
     account: await api.get(`/v1/accounts/${accountId}`).then((r: any) => r.body),
@@ -116,12 +102,10 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
   const before = await financialSnapshot(api, nubank.id);
   await signIn(page);
 
-  // 1. A lista mostra as notas e a indicação honesta de armazenamento.
   await open(page, '/notes');
   await expect(cy(page, 'notes-storage')).toContainText('servidor do moneylog');
   await expect(cy(page, `note-row-${macbook.id}`)).toBeVisible();
 
-  // 2. Cria a nota pela folha (nome + pasta): POST com Idempotency-Key e a nota nasce na versão 0.
   await cy(page, 'notes-new').click();
   await cy(page, 'new-note-name').fill('Revisão de outubro');
   await cy(page, 'new-note-folder').fill('reviews');
@@ -133,7 +117,6 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
   expect(created.version).toBe(0);
   const noteId: string = created.id;
 
-  // 3. `[[` abre as sugestões; Enter insere o caminho da nota; salvar manda a version e o backend resolve o link.
   const area = cy(page, 'note-text');
   await area.click();
   await area.press('End');
@@ -153,7 +136,6 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
   });
   await expect(cy(page, 'md-wikilink')).toHaveAttribute('href', `/notes/${macbook.id}`);
 
-  // 4. Vincula à compra do notebook e ao resumo do mês pelo seletor próprio.
   await cy(page, 'link-add').click();
   await cy(page, 'picker-search').fill('Notebook');
   await cy(page, `picker-option-${notebook.id}`).click();
@@ -178,14 +160,12 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
   );
   await expect(cy(page, 'link-0')).toContainText('Notebook');
 
-  // 5. As telas financeiras mostram a nota vinculada (o valor da compra não muda).
   await open(page, `/transactions/${notebook.id}`);
   await expect(cy(page, 'detail-notes-block')).toContainText('Revisão de outubro');
   await open(page, `/planning/summary/${MONTH()}`);
   await expect(cy(page, 'summary-notes-block')).toContainText('Vinculada à revisão mensal');
   await expect(cy(page, 'summary-notes-block')).toContainText('Revisão de outubro');
 
-  // 6. Renomeia: o backend reescreve os `[[Revisão de outubro]]` das outras notas na mesma transação.
   await open(page, `/notes/${noteId}`);
   await cy(page, 'note-menu').click();
   await cy(page, 'note-menu-item-rename').click();
@@ -198,11 +178,9 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
   const reindexed = await api.get(`/v1/notes/${index.id}`).then((r: any) => r.body);
   expect(reindexed.body).toBe('Veja [[Outubro 2026]] e [[Outubro 2026|a revisão]].');
 
-  // 7. Backlinks: a nota MacBook recebe a revisão (com o trecho em texto puro).
   await open(page, `/notes/${macbook.id}`);
   await expect(cy(page, 'backlinks')).toContainText('Outubro 2026');
 
-  // 8. Lixeira: mover, ver na aba, restaurar.
   await open(page, `/notes/${noteId}`);
   await cy(page, 'note-menu').click();
   await cy(page, 'note-menu-item-trash').click();
@@ -216,7 +194,6 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
   const restored = await api.get(`/v1/notes/${noteId}`).then((r: any) => r.body);
   expect(restored.trashedAt).toBeNull();
 
-  // 9. Exporta: o zip tem as notas nos caminhos delas.
   await open(page, '/settings');
   await cy(page, 'vault-export-action').click();
   await expect(cy(page, 'vault-export-ready')).toBeVisible();
@@ -231,7 +208,6 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
     expect(zip.includes(Buffer.from(name, 'utf8')), `zip contém ${name}`).toBe(true);
   }
 
-  // 10. Esvazia o vault (lixeira + esvaziar, ações explícitas) e importa o zip de volta.
   for (const id of [macbook.id, index.id, noteId])
     await api.ok(api.call('POST', `/v1/notes/${id}/trash`));
   await api.ok(api.call('DELETE', '/v1/notes/trash'), [204]);
@@ -256,7 +232,6 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
     'reviews/Outubro 2026.md',
     'Índice.md',
   ]);
-  // Os vínculos explícitos voltaram pelo frontmatter `moneylog.links`.
   const importedReview = imported.items.find((n: any) => n.path === 'reviews/Outubro 2026.md');
   const full = await api.get(`/v1/notes/${importedReview.id}`).then((r: any) => r.body);
   expect(
@@ -266,7 +241,6 @@ test('jornada: criar → vincular à compra e ao resumo do mês → [[ ]] → re
       .sort(),
   ).toEqual(['MONTHLY_SUMMARY', 'TRANSACTION']);
 
-  // 11. O vault nunca mexeu em saldo, razão nem dashboard.
   expect(await financialSnapshot(api, nubank.id)).toEqual(before);
 });
 
@@ -318,7 +292,6 @@ test('XSS: nota com Markdown malicioso não executa nada no navegador (nem alert
   expect(await page.evaluate(() => (window as any).__pwned)).toBeUndefined();
   expect(dialogs).toEqual([]);
   expect(errors).toEqual([]);
-  // O texto literal continua visível para o autor.
   await expect(preview).toContainText('<script>window.__pwned = 1</script>');
 });
 
@@ -334,7 +307,6 @@ test('VERSION_CONFLICT: a nota mudou em outro lugar; o texto digitado fica e as 
   await signIn(page);
   await open(page, `/notes/${note.id}`);
 
-  // Outro dispositivo salva primeiro.
   await api.ok(
     api.call('PUT', `/v1/notes/${note.id}`, { body: 'do outro dispositivo', version: 0 }),
   );
@@ -410,7 +382,6 @@ test('importar: arquivo que não é zip → VAULT_IMPORT_INVALID com mensagem cl
   await expect(cy(page, 'vault-import-retry')).toHaveCount(0);
   expect((await api.get('/v1/notes').then((r: any) => r.body)).items).toHaveLength(1);
 
-  // Zip bom com um caminho que já existe, um anexo e uma nota nova: SKIP pula a repetida.
   await cy(page, 'vault-import-reset').click();
   const zip = makeZip([
     { name: 'existente.md', content: 'do zip' },

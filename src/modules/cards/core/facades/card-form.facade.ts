@@ -26,12 +26,6 @@ export type CardLoadState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly card: Card };
 
-/**
- * Facade do formulário de cartão (criar e editar). O salvar usa `exhaustMap` (clique duplo = uma
- * requisição) e devolve **o recurso da resposta**: nada de chutar o estado (FE 05). Falhas chegam
- * tipadas (`code` + `fieldErrors`) em `problem`, para a tela traduzir e marcar os campos. Nunca recebe
- * número de cartão, CVV ou bandeira: o contrato não os tem. Escopo de componente.
- */
 @Injectable()
 export class CardFormFacade {
   private readonly gateway = inject(CardsGateway);
@@ -44,12 +38,9 @@ export class CardFormFacade {
   private readonly loaded = signal<Card | null>(null);
 
   readonly saving = this.savingState.asReadonly();
-  /** Última falha do salvar (limpa quando um novo envio começa). */
   readonly problem = this.problemState.asReadonly();
   readonly loadStatus = this.loadState.asReadonly();
-  /** O cartão carregado; durante uma recarga (ex.: depois de um 409) continua o anterior. */
   readonly card = this.loaded.asReadonly();
-  /** Emite o cartão devolvido pela API quando o salvar dá certo. */
   readonly saved$ = this.savedEvents.asObservable();
 
   constructor() {
@@ -91,7 +82,6 @@ export class CardFormFacade {
       });
   }
 
-  /** Carrega o cartão para edição (também recarrega depois de um `409 VERSION_CONFLICT`). */
   load(id: string): void {
     this.loads.next(id);
   }

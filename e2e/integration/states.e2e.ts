@@ -3,11 +3,6 @@ import { expense } from '../support/api';
 
 import { cy, cyText, expect, fmt, open, resetDatabase, test } from './fixtures';
 
-/**
- * T44: estados de carregamento/erro/vazio e paginação com o backend real. As falhas de servidor são
- * injetadas na rede (`failNext`: resposta 500 no formato do contrato, sem chamar o backend); o resto
- * (404 de movimentação, paginação, totais do filtro inteiro) é o backend de verdade.
- */
 test.beforeEach(() => resetDatabase());
 
 test('erro de servidor no Início, na lista e no /quick-add: mensagem com "Tentar de novo" e recuperação', async ({
@@ -52,7 +47,6 @@ test('falha em GET /v1/cards: despesa abre normal; Crédito mostra erro com "Ten
   await signIn(page);
   net.allow(500);
 
-  // Despesa não usa cartão: nem pede a lista.
   await open(page, '/quick-add');
   await expect(cy(page, 'expense-form')).toBeVisible();
   expect(net.find('GET', '/v1/cards')).toHaveLength(0);
@@ -95,7 +89,7 @@ test('lista paginada: "carregar mais" traz a 2ª página e o rodapé continua se
   await signIn(page);
   await open(page, '/transactions');
   await expect(cy(page, 'transactions-load-more')).toBeVisible();
-  expect(await cyText(page, 'totals-footer-count')).toBe('53'); // totais do filtro, não da página
+  expect(await cyText(page, 'totals-footer-count')).toBe('53');
   expect(await cyText(page, 'totals-footer-out')).toBe(fmt('106.00'));
   expect(await page.locator('[data-cy^="transaction-row-"]').count()).toBe(50);
   await evidence(page, 'e2e-41-lista-paginada');

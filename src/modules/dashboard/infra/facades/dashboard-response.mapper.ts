@@ -13,10 +13,6 @@ import type {
 } from '~/modules/dashboard/infra/responses/dashboard-summary.response';
 import type { Money } from '~/util/money';
 
-/**
- * Resposta → tipo do core. Só copia campos: nenhum valor é somado, subtraído, arredondado ou
- * convertido para `number` (arquitetura §1). O único ajuste é normalizar campos opcionais.
- */
 function money(value: MoneyResponse): Money {
   return { amount: value.amount, currency: value.currency };
 }

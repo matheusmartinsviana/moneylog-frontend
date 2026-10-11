@@ -18,13 +18,11 @@ export type SaveTransaction =
       readonly version: number;
     };
 
-/** Um envio: o comando e a chave de idempotência dele (só na criação). */
 interface Attempt {
   readonly command: SaveTransaction;
   readonly key: string | null;
 }
 
-/** Falha em que repetir o mesmo envio é seguro e útil: sem resposta (rede) ou erro do servidor. */
 export function isRetryable(problem: Problem | null): boolean {
   return (
     problem !== null &&
@@ -32,17 +30,6 @@ export function isRetryable(problem: Problem | null): boolean {
   );
 }
 
-/**
- * Facade do formulário de movimentação (criar e editar). Regras:
- * - a `Idempotency-Key` é gerada **por tentativa de envio** (`submit`) e **reutilizada** no
- *   `retry()` depois de um erro de rede no mesmo envio; um envio novo gera chave nova (S-72, S-87);
- * - o salvar usa `exhaustMap` (clique duplo = uma requisição);
- * - a resposta do backend é o novo estado: emite a movimentação devolvida e avisa os que listam
- *   (`TransactionsEvents`) para recarregarem;
- * - falhas chegam tipadas (`code` + `fieldErrors`) para marcar os campos sem perder o digitado.
- *
- * Escopo de componente (`providers: [TransactionFormFacade]`).
- */
 @Injectable()
 export class TransactionFormFacade {
   private readonly gateway = inject(TransactionsGateway);
@@ -52,14 +39,11 @@ export class TransactionFormFacade {
   private readonly savingState = signal(false);
   private readonly problemState = signal<Problem | null>(null);
   private last: Attempt | null = null;
-  /** Envio de falha ambígua (o servidor pode ter gravado): sua chave é reaproveitada na mesma entrada. */
   private pending: Attempt | null = null;
 
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
-  /** O último envio falhou de um jeito que o "tentar de novo" (mesma chave) resolve? */
   readonly canRetry = computed(() => isRetryable(this.problemState()));
-  /** Emite a movimentação devolvida pela API quando o salvar dá certo. */
   readonly saved$ = this.savedEvents.asObservable();
 
   constructor() {
@@ -83,17 +67,11 @@ export class TransactionFormFacade {
       )
       .subscribe((problem) => {
         this.savingState.set(false);
-        // Falha ambígua (rede, 5xx, CONFLICT): a tentativa fica pendente, o servidor pode ter gravado.
         this.pending = isRetryable(problem) ? this.last : null;
         this.problemState.set(problem);
       });
   }
 
-  /**
-   * Novo envio. A criação usa uma chave de idempotência nova, **exceto** quando a tentativa anterior
-   * ficou pendente por falha ambígua (resposta perdida) e a entrada é a mesma: aí reaproveita a chave,
-   * para o backend devolver a movimentação já gravada em vez de duplicá-la.
-   */
   submit(command: SaveTransaction): void {
     const pending = this.pending;
     const reuse =
@@ -110,16 +88,11 @@ export class TransactionFormFacade {
     this.attempts.next(attempt);
   }
 
-  /**
-   * Descarta a falha e o envio pendente (ex.: o usuário trocou de modo no `/quick-add`). A chave da
-   * tentativa ambígua continua guardada: se a mesma entrada for enviada de novo, vai com a mesma chave.
-   */
   dismissProblem(): void {
     this.last = null;
     this.problemState.set(null);
   }
 
-  /** "Tentar de novo" depois de um erro de rede: reenvia o mesmo comando com a **mesma** chave. */
   retry(): void {
     if (this.last) this.attempts.next(this.last);
   }

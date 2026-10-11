@@ -36,14 +36,8 @@ import { ACCOUNT_TYPES, AccountType } from '~/modules/accounts/core/types/accoun
 import { ACCOUNT_CURRENCY } from '~/modules/accounts/core/types/account-input';
 import { todayIso } from '~/util/date';
 
-/** Códigos de regra que o backend atribui a um campo do formulário. */
 const CODE_TO_FIELD = { ACCOUNT_OPENING_LOCKED: 'type' } as const;
 
-/**
- * Criar (`/accounts/new`) e editar (`/accounts/:id/edit`) uma conta. Com `openingEditable: false`,
- * tipo, saldo inicial e data ficam desabilitados com a explicação (T36 CA4). `409 VERSION_CONFLICT`
- * avisa e recarrega. Salvar usa a conta devolvida pela API. Smart: só a facade de negócio (FE 01).
- */
 @Component({
   selector: 'app-account-form-page',
   imports: [
@@ -63,7 +57,6 @@ const CODE_TO_FIELD = { ACCOUNT_OPENING_LOCKED: 'type' } as const;
   styleUrl: './account-form.page.css',
 })
 export class AccountFormPage {
-  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
   protected readonly skeleton: readonly FormSkeletonPiece[] = [
     'field',
     'field',
@@ -79,11 +72,9 @@ export class AccountFormPage {
   protected readonly facade = inject(AccountFormFacade);
   protected readonly currency = ACCOUNT_CURRENCY;
 
-  /** `:id` da rota; ausente em `/accounts/new`. */
   readonly id = input<string>();
 
   protected readonly editing = computed(() => this.id() !== undefined);
-  /** Saldo inicial e data de abertura ficam recolhidos ao criar (omitidos se vazios). */
   protected readonly account = this.facade.account;
   protected readonly locked = computed(() => {
     const account = this.account();
@@ -104,14 +95,12 @@ export class AccountFormPage {
     openingDate: new FormControl<string | null>(null),
   });
 
-  /** Alterações digitadas e não salvas: fechar pede confirmação. */
   protected readonly dirty = dirtySignal(this.form);
 
   protected readonly typeOptions = computed<readonly ChoiceOption[]>(() =>
     ACCOUNT_TYPES.map((type) => ({ value: type, label: this.t().accounts.types[type] })),
   );
 
-  /** A falha do salvar já foi para os campos (então não precisa do aviso geral)? */
   private readonly fieldHandled = signal(false);
 
   protected readonly banner = computed(() => {
@@ -132,7 +121,6 @@ export class AccountFormPage {
   );
 
   constructor() {
-    // Edição: carrega a conta; a cada versão nova (inclusive depois de um conflito) repõe o formulário.
     effect(() => {
       const id = this.id();
       if (id !== undefined) untracked(() => this.facade.load(id));
@@ -151,7 +139,6 @@ export class AccountFormPage {
         this.setOpeningLocked(!account.openingEditable);
       });
     });
-    // Falha do salvar: marca os campos que o backend apontou; 409 recarrega a conta.
     effect(() => {
       const problem = this.facade.problem();
       if (!problem) {
@@ -177,12 +164,10 @@ export class AccountFormPage {
     });
   }
 
-  /** Para onde o modal volta: a lista (criar) ou a página de origem (editar). */
   private backUrl(): string[] {
     return this.editing() ? ['/accounts'] : ['/accounts'];
   }
 
-  /** Fechar sem salvar (já confirmado, se havia alterações). */
   protected close(): void {
     void this.router.navigate(this.backUrl());
   }
@@ -203,7 +188,6 @@ export class AccountFormPage {
           name: value.name.trim(),
           institution,
           version: account.version,
-          // Só leva a abertura quando ela ainda pode ser corrigida (senão, 422 ACCOUNT_OPENING_LOCKED).
           ...(account.openingEditable
             ? {
                 type: value.type as AccountType,
@@ -221,7 +205,6 @@ export class AccountFormPage {
         name: value.name.trim(),
         type: value.type as AccountType,
         institution,
-        // Vazios são omitidos: o servidor usa saldo zero e a data de hoje.
         ...(value.openingBalance ? { openingBalance: value.openingBalance } : {}),
         ...(value.openingDate ? { openingDate: value.openingDate } : {}),
       },

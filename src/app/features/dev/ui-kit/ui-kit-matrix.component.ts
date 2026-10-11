@@ -29,14 +29,12 @@ import { TooltipDirective } from '~/app/common/components/tooltip/tooltip.direct
 import { ToastService } from '~/app/common/services/toast.service';
 import { UiKitChartsComponent } from '~/app/features/dev/ui-kit/ui-kit-charts.component';
 
-/** Controle já "tocado" (mostra o erro de validação) ou desabilitado, para as colunas do UI Kit. */
 function control<T>(value: T, state: { disabled?: boolean; touched?: boolean } = {}) {
   const c = new FormControl<T>({ value, disabled: state.disabled ?? false });
   if (state.touched) c.markAsTouched();
   return c;
 }
 
-/** Controle com `required`: já tocado e vazio, mostra o erro de verdade. */
 function withRequired<T>(c: FormControl<T>): FormControl<T> {
   c.addValidators(Validators.required);
   c.updateValueAndValidity();
@@ -84,13 +82,6 @@ const MANY_TABS: readonly TabItem[] = Array.from({ length: 10 }, (_, i) => ({
 const LONG =
   'Um texto bem comprido para conferir o corte, a quebra de linha e o espaço do campo quando o conteúdo passa do que cabe';
 
-/**
- * Matriz de estados (padrão, foco, desabilitado, erro, cheio, vazio) de cada componente de base num
- * único tema (`data-theme-scope`). O foco é desenhado com o anel de foco do token (`.kit-focus`),
- * porque `:focus-visible` não pode ficar ligado em dezenas de campos ao mesmo tempo; o foco real
- * (teclado) é conferido nos testes e2e e no botão "Focar" de cada coluna.
- * Só existe nos builds de desenvolvimento/mock (`config/dev-routes.dev.ts`).
- */
 @Component({
   selector: 'app-ui-kit-matrix',
   imports: [
@@ -128,7 +119,6 @@ const LONG =
 export class UiKitMatrixComponent {
   private readonly toast = inject(ToastService);
 
-  /** Tema mostrado nesta matriz. */
   readonly scope = input.required<'light' | 'dark'>();
 
   protected readonly few = FEW;
@@ -143,19 +133,16 @@ export class UiKitMatrixComponent {
     n === 1 ? '1 parcela' : `${n} parcelas`;
   protected readonly dayText = (n: number): string => `dia ${n}`;
 
-  // Select
   protected readonly selectDefault = control<string | null>('pix');
   protected readonly selectDisabled = control<string | null>('pix', { disabled: true });
   protected readonly selectError = control<string | null>(null, { touched: true });
   protected readonly selectFull = control<string | null>('account-17');
   protected readonly selectEmpty = control<string | null>(null);
-  // TextField
   protected readonly textDefault = control<string | null>('Mercado');
   protected readonly textDisabled = control<string | null>('Mercado', { disabled: true });
   protected readonly textError = control<string | null>('', { touched: true });
   protected readonly textFull = control<string | null>(LONG);
   protected readonly textEmpty = control<string | null>('');
-  // TextArea
   protected readonly areaDefault = control<string | null>(
     '# Revisão de outubro\n\nComprei o [[MacBook]].',
   );
@@ -163,63 +150,52 @@ export class UiKitMatrixComponent {
   protected readonly areaError = withRequired(control<string | null>('', { touched: true }));
   protected readonly areaFull = control<string | null>(`${LONG}\n${LONG}\n${LONG}`);
   protected readonly areaEmpty = control<string | null>('');
-  // FilePicker
   protected readonly fileEmpty = control<File | null>(null);
   protected readonly fileChosen = control<File | null>(
     new File([new Uint8Array(1536)], 'moneylog-vault.zip'),
   );
   protected readonly fileDisabled = control<File | null>(null, { disabled: true });
   protected readonly fileError = withRequired(control<File | null>(null, { touched: true }));
-  // Chip
   protected readonly chipOn = signal(true);
   protected readonly chipOff = signal(false);
   protected readonly chipRemoved = signal(false);
-  // MoneyInput
   protected readonly moneyDefault = control<string | null>('1234.56');
   protected readonly moneyDisabled = control<string | null>('1234.56', { disabled: true });
   protected readonly moneyError = control<string | null>('', { touched: true });
   protected readonly moneyFull = control<string | null>('9999999.99');
   protected readonly moneyEmpty = control<string | null>('');
-  // DatePicker
   protected readonly dateDefault = control<string | null>('2026-10-05');
   protected readonly dateDisabled = control<string | null>('2026-10-05', { disabled: true });
   protected readonly dateError = control<string | null>('1999-01-01', { touched: true });
   protected readonly dateFull = control<string | null>('2100-12-31');
   protected readonly dateEmpty = control<string | null>(null);
-  // MonthPicker
   protected readonly monthDefault = control<string | null>('2026-10');
   protected readonly monthDisabled = control<string | null>('2026-10', { disabled: true });
   protected readonly monthError = control<string | null>(null, { touched: true });
   protected readonly monthFull = control<string | null>('2100-12');
   protected readonly monthEmpty = control<string | null>(null);
-  // SegmentedControl
   protected readonly segDefault = control<string | null>('EXPENSE');
   protected readonly segDisabled = control<string | null>('EXPENSE', { disabled: true });
   protected readonly segError = control<string | null>(null, { touched: true });
   protected readonly segEmpty = control<string | null>(null);
-  // RadioGroup
   protected readonly radioDefault = control<string | null>('full');
   protected readonly radioDisabled = control<string | null>('min', { disabled: true });
   protected readonly radioError = control<string | null>(null, { touched: true });
   protected readonly radioEmpty = control<string | null>(null);
-  // NumberStepper
   protected readonly stepDefault = control<number | null>(6);
   protected readonly stepDisabled = control<number | null>(6, { disabled: true });
   protected readonly stepError = control<number | null>(null, { touched: true });
   protected readonly stepFull = control<number | null>(36);
   protected readonly stepEmpty = control<number | null>(null);
   protected readonly stepDay = control<number | null>(31);
-  // Tabs
   protected readonly tabsActive = signal<string | null>('invoice');
   protected readonly tabsManyActive = signal<string | null>('t1');
-  // Menu
   protected readonly menuLast = signal('nenhum');
   protected readonly menuChecks = signal<readonly MenuItem[]>([
     { id: 'paid', label: 'Mostrar pagas', checked: true },
     { id: 'open', label: 'Mostrar abertas', checked: false },
     { id: 'archived', label: 'Mostrar arquivadas', checked: false },
   ]);
-  // Checkbox e Switch
   protected readonly checkOn = control<boolean>(true);
   protected readonly checkOff = control<boolean>(false);
   protected readonly checkDisabled = control<boolean>(true, { disabled: true });
@@ -229,7 +205,6 @@ export class UiKitMatrixComponent {
   protected readonly switchDisabled = control<boolean>(true, { disabled: true });
   protected readonly switchDisabledOff = control<boolean>(false, { disabled: true });
 
-  // Disclosure, diálogos, avisos
   protected readonly disclosureOpen = signal(true);
   protected readonly disclosureClosed = signal(false);
   protected readonly dialogOpen = signal(false);

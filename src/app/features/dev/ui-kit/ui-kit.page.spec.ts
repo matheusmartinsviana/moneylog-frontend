@@ -116,6 +116,5 @@ describe('UiKitPage', () => {
 
     const violations = await axeViolations(container);
     expect(violations, describeViolations(violations)).toEqual([]);
-    // O axe percorre a página inteira da ui-kit (DOM grande): sob carga passou de 3 minutos.
   }, 240_000);
 });

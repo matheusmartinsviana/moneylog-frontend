@@ -5,14 +5,8 @@ import type {
 
 const zero = () => ({ amount: '0.00', currency: 'BRL' as const });
 
-/** Data fixa: o mock não lê o relógio do aparelho (como `empty-dashboard`). */
 const AS_OF = '2026-10-10';
 
-/**
- * Ambiente mock (S-67): usuário sem lançamentos. Mesmo formato bruto da API e **sem nenhum dado de
- * demonstração** (os de demonstração moram nas fixtures de `features/dev`, fora do bundle de produção).
- * O `E2E` coloca séries com valores em `window.__MONEYLOG_MOCK_RESPONSES__` quando precisa de dados.
- */
 export function emptyIncomeExpenseSeries(
   period: IncomeExpenseSeriesResponse['period'],
 ): IncomeExpenseSeriesResponse {

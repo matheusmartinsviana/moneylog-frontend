@@ -55,7 +55,6 @@ describe('LineChartComponent (T198)', () => {
     expect(screen.getByTestId('chart-line-income').getAttribute('d')).toMatch(/^M[\d. -]+C/);
     expect(screen.getByTestId('chart-line-expenses')).toHaveClass('lc__line--secondary');
     expect(screen.getByTestId('chart-area-income')).toBeInTheDocument();
-    // Só a série primária tem área por padrão.
     expect(screen.queryByTestId('chart-area-expenses')).not.toBeInTheDocument();
     expect(document.body.innerHTML).not.toMatch(/gradient\(/i);
     expect(screen.getByTestId('chart-legend')).toHaveTextContent('Entradas');
@@ -68,7 +67,6 @@ describe('LineChartComponent (T198)', () => {
     expect(screen.getByTestId('chart-y-max')).toHaveTextContent('R$ 5.500,00');
     expect(screen.getByTestId('chart-y-zero')).toHaveTextContent('0');
     expect(screen.queryByTestId('chart-y-min')).not.toBeInTheDocument();
-    // Nada de "tick bonito" inventado: nenhum outro número no eixo.
     expect(document.querySelectorAll('.lc__y')).toHaveLength(2);
   });
 
@@ -116,7 +114,6 @@ describe('LineChartComponent (T198)', () => {
     expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('Dia 11/10');
     expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('R$ 2.500,00');
     expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('−R$ 35,50');
-    // O tooltip é próprio (não é o atributo `title`) e fica fora da árvore de acessibilidade.
     expect(screen.getByTestId('chart-tooltip')).toHaveAttribute('aria-hidden', 'true');
     expect(document.querySelector('[title]')).toBeNull();
   });
@@ -128,7 +125,7 @@ describe('LineChartComponent (T198)', () => {
     await userEvent.keyboard('{End}');
     expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('Dia 14/10');
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('Dia 14/10'); // não passa da ponta
+    expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('Dia 14/10');
     await userEvent.keyboard('{Home}');
     expect(screen.getByTestId('chart-tooltip')).toHaveTextContent('Dia 10/10');
     await userEvent.keyboard('{Escape}');
@@ -169,7 +166,6 @@ describe('LineChartComponent (T198)', () => {
   it('Dado o gráfico, então a área de toque deixa a rolagem vertical da página livre (touch-action: pan-y)', async () => {
     await setup();
 
-    // O estilo é do CSS do componente; o jsdom não o avalia, então confere a regra na folha de estilos.
     const css = Array.from(document.querySelectorAll('style'), (style) => style.textContent).join(
       '',
     );
@@ -199,7 +195,6 @@ describe('LineChartComponent (T198)', () => {
   it('Dado valor negativo (dia só com reembolso), então desenha abaixo do zero e o sinal aparece no tooltip e na tabela', async () => {
     await setup({ series: [expenses] });
 
-    // O zero fica acima do fundo do gráfico (há espaço abaixo para o negativo): a linha do zero não é a última.
     const zeroTop = Number.parseFloat(
       (screen.getByTestId('chart-y-zero') as HTMLElement).style.top,
     );
@@ -341,7 +336,6 @@ describe('LineChartComponent (T198)', () => {
     const widths = [...document.querySelectorAll<HTMLElement>('.lc__tick')].map((tick) =>
       Number.parseFloat(tick.style.maxWidth),
     );
-    // 4 marcas (pontos 1, 2, 4 e 5): o menor vão é de ~24,6% e cada rótulo ocupa no máximo 2/3 dele (16%).
     expect(widths).toHaveLength(4);
     expect(widths.every((w) => w > 0 && w <= 16)).toBe(true);
   });

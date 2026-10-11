@@ -1,10 +1,3 @@
-/*
- * Filtro SVG de deslocamento ("liquid glass"), adaptado do portfólio do dono (nikdelvin/liquid-glass, MIT).
- * Gera um `<filter>` como data URI que refrata o fundo na borda arredondada, com aberração cromática por canal;
- * usado como `backdrop-filter: url("<uri>#displace")`. As cores do mapa de deslocamento (R/G = eixos X/Y) são
- * funcionais, não paleta: este arquivo é a única exceção do `check-styles` para cor literal fora de tokens.css.
- */
-
 export interface DisplacementOptions {
   readonly width: number;
   readonly height: number;
@@ -62,7 +55,6 @@ export function displacementFilterUri(options: DisplacementOptions): string {
   return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg) + '#displace';
 }
 
-/** `backdrop-filter` pronto para uma lente `width` x `height`; cacheado por tamanho e parâmetros (o URI tem ~2 KB). */
 export function refractionFilter(options: DisplacementOptions): string {
   const key = JSON.stringify(options);
   let value = cache.get(key);
@@ -75,7 +67,6 @@ export function refractionFilter(options: DisplacementOptions): string {
 
 export const REFRACTION_FALLBACK = FALLBACK;
 
-/** Só para teste. */
 export function refractionCacheSize(): number {
   return cache.size;
 }

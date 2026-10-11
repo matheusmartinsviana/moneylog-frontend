@@ -7,7 +7,6 @@ import { readStorage, writeStorage } from '~/util/safe-storage';
 
 export const INSTALL_DISMISSED_KEY = 'moneylog.pwa.install-dismissed';
 
-/** Evento do Chrome/Edge/Android que não está nos tipos do DOM. */
 interface BeforeInstallPromptEvent extends Event {
   readonly prompt: () => Promise<void>;
   readonly userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -15,10 +14,6 @@ interface BeforeInstallPromptEvent extends Event {
 
 export type InstallMode = 'prompt' | 'ios' | null;
 
-/**
- * Estado do PWA para a UI: conexão, nova versão do app e convite de instalação. Só reflete o navegador:
- * nada é enfileirado offline (escritas exigem rede) e nenhum dado financeiro passa por aqui.
- */
 @Injectable({ providedIn: 'root' })
 export class PwaService {
   private readonly document = inject(DOCUMENT);
@@ -36,7 +31,6 @@ export class PwaService {
   readonly online = this.onlineState.asReadonly();
   readonly updateAvailable = this.versionReady.asReadonly();
 
-  /** `prompt`: Android/desktop com o evento nativo; `ios`: instrução manual; `null`: não convidar. */
   readonly installMode = computed<InstallMode>(() => {
     if (this.installDismissed() || this.installed() || this.isStandalone()) return null;
     if (this.deferredPrompt()) return 'prompt';
@@ -64,13 +58,10 @@ export class PwaService {
     }
   }
 
-  /** Ativa a versão nova e recarrega. Quem chama deve ter confirmado: o que não foi salvo se perde. */
   async applyUpdate(): Promise<void> {
     try {
       await this.swUpdate?.activateUpdate();
-    } catch {
-      // Sem ativar, o recarregamento ainda pega a versão baixada na próxima abertura.
-    }
+    } catch {}
     this.win?.location.reload();
   }
 
@@ -78,14 +69,12 @@ export class PwaService {
     const prompt = this.deferredPrompt();
     if (!prompt) return;
     this.deferredPrompt.set(null);
-    // Evento nativo de instalação (não é o `prompt()` do navegador); chamado pela referência do método.
     const showInstall = prompt.prompt;
     await showInstall.call(prompt);
     const { outcome } = await prompt.userChoice;
     if (outcome === 'dismissed') this.dismissInstall();
   }
 
-  /** Dispensa o convite; a memória é local e, se o armazenamento falhar, vale só nesta sessão. */
   dismissInstall(): void {
     this.installDismissed.set(true);
     writeStorage(INSTALL_DISMISSED_KEY, '1');
@@ -106,7 +95,6 @@ export class PwaService {
     const ua = nav.userAgent;
     const ios =
       /iPhone|iPad|iPod/.test(ua) || (nav.platform === 'MacIntel' && nav.maxTouchPoints > 1);
-    // Navegadores de terceiros no iOS (Chrome, Firefox, Edge) não oferecem "Adicionar à Tela de Início" igual.
     return ios && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
   }
 }

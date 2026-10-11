@@ -5,11 +5,6 @@ import { PageLayoutComponent } from '~/app/common/components/page-layout/page-la
 import { SectionContainerComponent } from '~/app/common/components/section-container/section-container.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/**
- * `/mcp` (T223): "Em breve". Não existe servidor MCP. A página lista as ferramentas previstas como
- * **"Planejado"** e diz como a escrita funcionará (só pendências a confirmar). Sem toggle, sem status
- * "conectado", sem chave nem URL: nada clicável finge funcionar.
- */
 @Component({
   selector: 'app-mcp-page',
   imports: [DisclosureComponent, PageLayoutComponent, SectionContainerComponent],

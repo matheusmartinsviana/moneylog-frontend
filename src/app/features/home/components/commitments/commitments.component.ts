@@ -15,14 +15,9 @@ const HORIZONS: readonly Horizon[] = ['d7', 'd30', 'd60', 'd90', 'm6', 'm12'];
 interface HorizonRow {
   readonly key: Horizon;
   readonly committed: Money;
-  /** O contrato não traz projeção para 7 e 60 dias. */
   readonly projected: Money | null;
 }
 
-/**
- * "O que está comprometido": tabela de horizontes (linhas) × comprometido e projetado (colunas),
- * no estilo planilha. Cabe no mobile sem rolagem horizontal. Os valores são os recebidos.
- */
 @Component({
   selector: 'app-commitments',
   imports: [MoneyComponent],

@@ -28,7 +28,6 @@ import {
   TransactionsGatewayStub,
 } from '~/testing/transactions-testing';
 
-// Fluxos longos com userEvent e axe: folga para máquinas ocupadas (CI, outros processos).
 vi.setConfig({ testTimeout: 20_000 });
 
 @Component({ selector: 'app-dummy', template: '' })
@@ -86,7 +85,6 @@ describe('TransactionDetailPage', () => {
     const gateway = new TransactionsGatewayStub();
     gateway.get$ = of(
       aTransaction({
-        // Valores que não "fecham" de propósito: o front exibe o recebido, sem recalcular.
         amount: brl('35.00'),
         impact: {
           cash: brl('-35.10'),

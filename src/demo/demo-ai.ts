@@ -1,11 +1,6 @@
 import { addMonthsKey } from '~/demo/demo-dates';
 import { money, type S, type World } from '~/demo/demo-world';
 
-/**
- * IA no modo demonstração: **desligada** por padrão (nada é enviado a terceiros), sem histórico, e os insights
- * determinísticos calculados com os dados de exemplo, no formato do contrato. Aqui há aritmética porque este
- * arquivo simula o backend; no app real o front não calcula nada. Só entra no build `demo`.
- */
 const MIN_DELTA_PERCENT = 10;
 const MIN_DELTA_CENTS = 5000;
 

@@ -31,9 +31,7 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 
 const TYPEAHEAD_RESET_MS = 500;
-/** Acima disso a lista ganha busca (quando `searchable` não foi definido). */
 const AUTO_SEARCH_FROM = 8;
-/** Valor interno do item "todos/nenhum" criado por `emptyLabel` (o controle fica com `null`). */
 const EMPTY_VALUE = '\u0000empty';
 
 function normalize(text: string): string {
@@ -43,13 +41,6 @@ function normalize(text: string): string {
     .toLocaleLowerCase();
 }
 
-/**
- * Seleção de uma opção numa lista (contas, categorias, idioma, tema, filtros): o `<select>` do
- * moneylog. Padrão "select-only combobox" do WAI-ARIA APG: o foco fica no campo e a opção ativa é
- * indicada por `aria-activedescendant`. Em tela larga a lista é um popover; no celular, uma folha
- * inferior. Com muitas opções (ou `searchable`) ganha uma busca. `emptyLabel` cria o item
- * "Todos…" que devolve `null` (filtros).
- */
 @Component({
   selector: 'app-select',
   imports: [FieldErrorComponent, IconComponent, OverlayPanelComponent],
@@ -69,11 +60,8 @@ export class SelectComponent extends FieldControl<string | null> implements Vali
 
   readonly options = input.required<readonly ChoiceOption[]>();
   readonly mandatory = input(true);
-  /** Texto quando nada está escolhido (padrão: "Selecione"). */
   readonly placeholder = input<string>();
-  /** Item que representa "sem valor" (ex.: "Todas as contas"); o controle fica com `null`. */
   readonly emptyLabel = input<string>();
-  /** Busca na lista: `undefined` = automática (mais de 8 opções). */
   readonly searchable = input<boolean | undefined>(undefined);
   readonly size = input<'default' | 'compact'>('default');
 
@@ -93,14 +81,12 @@ export class SelectComponent extends FieldControl<string | null> implements Vali
   protected readonly hasSearch = computed(
     () => this.searchable() ?? this.options().length > AUTO_SEARCH_FROM,
   );
-  /** Com busca, ou na folha do celular, o foco vive dentro do painel (não no campo). */
   protected readonly focusInPanel = computed(() => this.hasSearch() || this.viewport.compact());
   protected readonly visible = computed<readonly ChoiceOption[]>(() => {
     const q = normalize(this.query().trim());
     const items = this.items();
     return this.hasSearch() && q ? items.filter((o) => normalize(o.label).includes(q)) : items;
   });
-  /** `visible` em seções por `group` (opções vizinhas com o mesmo grupo); sem grupo, uma seção só. */
   protected readonly sections = computed(() => {
     const result: { label: string | null; entries: { option: ChoiceOption; index: number }[] }[] =
       [];
@@ -128,13 +114,11 @@ export class SelectComponent extends FieldControl<string | null> implements Vali
 
   constructor() {
     super();
-    // Mantém a opção ativa visível quando a lista rola (teclado).
     afterRenderEffect(() => {
       const id = this.activeId();
       if (!id) return;
       this.document.getElementById(id)?.scrollIntoView?.({ block: 'nearest' });
     });
-    // Anuncia a quantidade de resultados ao filtrar.
     effect(() => {
       const count = this.visible().length;
       if (untracked(() => this.open()) && this.query() !== '') {
@@ -188,7 +172,6 @@ export class SelectComponent extends FieldControl<string | null> implements Vali
     this.close();
   }
 
-  /** Fecha a lista; `restoreFocus` devolve o foco ao campo quando ele estava no painel. */
   protected close(restoreFocus = true): void {
     if (!this.open()) return;
     const inPanel = this.focusInPanel();
@@ -267,7 +250,6 @@ export class SelectComponent extends FieldControl<string | null> implements Vali
         this.close();
         break;
       case 'Tab':
-        // Sai do campo sem escolher: em dinheiro, nada muda sem uma ação explícita.
         if (this.focusInPanel()) this.trigger().nativeElement.focus({ preventScroll: true });
         this.close(false);
         return;
@@ -300,7 +282,6 @@ export class SelectComponent extends FieldControl<string | null> implements Vali
     );
   }
 
-  /** Busca pela digitação: vai para a próxima opção cujo rótulo começa com o que foi digitado. */
   private typeahead(key: string): void {
     clearTimeout(this.typedTimer);
     this.typed += normalize(key);

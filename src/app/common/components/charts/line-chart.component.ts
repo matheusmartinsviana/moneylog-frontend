@@ -16,29 +16,23 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import { formatMoney, type Money } from '~/util/money';
 
-/** Uma série do gráfico: valores do backend (`Money`) na ordem de `keys`. */
 export interface LineChartSeries {
   readonly id: string;
   readonly label: string;
-  /** `primary` = acento (entradas); `secondary` = neutro quente, sempre tracejado e com ponto quadrado. */
   readonly tone: 'primary' | 'secondary';
   readonly values: readonly Money[];
-  /** Área sob a curva (padrão: só a série primária). */
   readonly area?: boolean;
 }
 
-/** Posição do eixo X: rótulos já formatados por quem usa (datas e competências vêm do backend). */
 export interface LineChartKey {
   readonly id: string;
   readonly label: string;
-  /** Rótulo curto do eixo (padrão: `label`). */
   readonly shortLabel?: string;
 }
 
 const W = 1000;
 const H = 300;
 const PAD_X = 16;
-/** Folga acima do máximo: o rótulo do eixo Y fica nela e nunca encosta na curva. */
 const PAD_TOP = 34;
 const PAD_BOTTOM = 10;
 const MAX_POINTS = 400;
@@ -51,23 +45,11 @@ interface Drawn {
   readonly dots: readonly { readonly leftPct: number; readonly topPct: number }[];
 }
 
-/**
- * Gráfico de linhas/área em **SVG próprio** (ADR-011; sem biblioteca). Desenha **o que o backend devolve**:
- * `Number()` só posiciona pontos, nunca exibe nem soma; o eixo Y mostra o **máximo da própria série** (a string do
- * backend) e o zero, sem "tick bonito" calculado. Curva monotônica (não inventa picos), área sólida de baixa
- * opacidade (sem gradiente), saídas tracejadas com ponto quadrado (a diferença nunca é só cor).
- *
- * Acessibilidade: `role="img"` com resumo, **tabela equivalente sempre no DOM** (visível por "Ver como
- * tabela"), tooltip próprio por mouse, toque e teclado (`←/→`, `Home/End`, `Esc`) e anúncio pela região viva. O
- * estado final está no DOM desde o início: a entrada na viewport só revela o traço (`clip-path`, ≤ 300 ms),
- * e é desligada por `prefers-reduced-motion` ou sem `IntersectionObserver`. Presentational.
- */
 @Component({
   selector: 'app-line-chart',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.compact]': 'compact()',
-    // Toque fora do gráfico fecha o tooltip (o Safari iOS não dispara `blur` ao tocar numa área não focável).
     '(document:pointerdown)': 'onDocumentPointerDown($event)',
   },
   templateUrl: './line-chart.component.html',
@@ -78,18 +60,11 @@ export class LineChartComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly t = inject(I18nService).t;
 
-  /** Nome do gráfico (também a legenda da tabela). Já traduzido. */
   readonly label = input.required<string>();
   readonly series = input.required<readonly LineChartSeries[]>();
   readonly keys = input.required<readonly LineChartKey[]>();
-  /** Base do `data-cy`. */
   readonly cy = input('line-chart');
-  /** Painel principal (Início): mais alto, com halo atrás do traço. */
   readonly hero = input(false, { transform: booleanAttribute });
-  /**
-   * Gráfico compacto (telas "sucintas"): preenche a altura que o painel dá (sem altura fixa em px), sem o botão
-   * "Ver como tabela". A tabela equivalente continua no DOM (só para leitores de tela).
-   */
   readonly compact = input(false, { transform: booleanAttribute });
 
   protected readonly uid = ++nextId;
@@ -101,16 +76,13 @@ export class LineChartComponent {
 
   protected readonly active = signal<number | null>(null);
   protected readonly tableOpen = signal(false);
-  /** `true` até o gráfico entrar na viewport (só se há como animar): o traço ainda não foi revelado. */
   protected readonly pending = revealOnEnter();
 
-  /** Quantos pontos são desenhados: as séries e as chaves precisam andar juntas. */
   protected readonly count = computed(() => {
     const lengths = this.series().map((s) => s.values.length);
     return Math.min(this.keys().length, MAX_POINTS, ...(lengths.length ? lengths : [0]));
   });
 
-  /** Valores só para posicionar (`NaN` vira 0): nunca exibidos. */
   private readonly nums = computed(() =>
     this.series().map((s) =>
       s.values.slice(0, this.count()).map((v) => {
@@ -120,7 +92,6 @@ export class LineChartComponent {
     ),
   );
 
-  /** Série vazia ou só de zeros: estado vazio honesto, não uma linha reta fingindo dado. */
   protected readonly empty = computed(
     () => this.count() === 0 || this.nums().every((values) => values.every((n) => n === 0)),
   );
@@ -157,7 +128,6 @@ export class LineChartComponent {
     });
   });
 
-  /** Três linhas finas de grade (máximo, zero e uma terceira), sem número inventado. */
   protected readonly gridY = computed(() => {
     const { min, max } = this.domain();
     const y = this.y();
@@ -167,7 +137,6 @@ export class LineChartComponent {
 
   protected readonly zeroTopPct = computed(() => (this.y()(0) / H) * 100);
 
-  /** Texto do backend do maior (ou menor) valor: seleção, não aritmética. */
   private extreme(kind: 'max' | 'min'): { n: number; money: Money } | null {
     let best: { n: number; money: Money } | null = null;
     this.series().forEach((s, si) => {
@@ -179,7 +148,6 @@ export class LineChartComponent {
     return best;
   }
 
-  /** Rótulo do máximo da própria série: o texto do backend do maior valor (só se positivo). */
   protected readonly maxLabel = computed(() => {
     const found = this.extreme('max');
     return found !== null && found.n > 0
@@ -187,7 +155,6 @@ export class LineChartComponent {
       : null;
   });
 
-  /** Rótulo do menor valor quando há escala negativa (sem ele só o `0` e o máximo davam referência). */
   protected readonly minLabel = computed(() => {
     const found = this.extreme('min');
     return found !== null && found.n < 0
@@ -195,11 +162,9 @@ export class LineChartComponent {
       : null;
   });
 
-  /** Rótulos do eixo X: pontas e até dois do meio (um só no modo compacto) (seleção de posição, nada calculado). */
   protected readonly axisLabels = computed(() => {
     const n = this.count();
     if (n === 0) return [];
-    // Compacto: só as pontas e o meio (3 marcas), para que nenhum rótulo seja cortado em tela estreita.
     const max = this.compact() ? 3 : 4;
     const picks =
       n <= max
@@ -208,9 +173,6 @@ export class LineChartComponent {
           ? [0, Math.round((n - 1) / 2), n - 1]
           : [0, Math.round((n - 1) / 3), Math.round(((n - 1) * 2) / 3), n - 1];
     const ticks = [...new Set(picks)];
-    // Rótulos longos não se sobrepõem: cada marca tem uma largura máxima de 2/3 do menor vão entre marcas
-    // vizinhas (1/2 se só há as duas pontas) e o texto que não cabe vira reticências (o nome inteiro está no
-    // tooltip e na tabela; o eixo é só uma pista). Os vãos não são iguais (pontas e meio): vale o menor.
     const positions = ticks.map((i) => (this.x()(i) / W) * 100);
     const gaps = positions.slice(1).map((p, i) => p - positions[i]!);
     const minGap = gaps.length > 0 ? Math.min(...gaps) : 100;
@@ -245,7 +207,6 @@ export class LineChartComponent {
       })),
   );
 
-  /** O ponto ativo: rótulo e o valor de cada série, para o tooltip e o anúncio. */
   protected readonly tip = computed(() => {
     const i = this.active();
     if (i === null || i >= this.count()) return null;
@@ -285,7 +246,6 @@ export class LineChartComponent {
   }
 
   protected onPointerCancel(): void {
-    // O gesto virou rolagem da página (ou o sistema o cancelou): nada de tooltip preso.
     this.active.set(null);
   }
 
@@ -296,7 +256,6 @@ export class LineChartComponent {
   }
 
   protected onPointerLeave(event: PointerEvent): void {
-    // No toque o tooltip fica depois de soltar o dedo (some ao tocar fora ou com Esc).
     if (event.pointerType === 'mouse') this.active.set(null);
   }
 

@@ -12,7 +12,6 @@ import {
   provideDashboardStub,
 } from '~/testing/dashboard-testing';
 
-/** Hospeda a facade com escopo de componente, como a página Início faz. */
 @Component({ selector: 'app-host', template: '', providers: [DashboardFacade] })
 class HostComponent {
   readonly facade = inject(DashboardFacade);
@@ -60,7 +59,6 @@ describe('DashboardFacade', () => {
 
   it('Dado contas e um resumo, quando carrego, então expõe exatamente o que a porta devolveu, sem recalcular', () => {
     const stub = new DashboardGatewayStub();
-    // Valores propositalmente "incoerentes": se a facade somasse ou subtraísse, o teste quebraria.
     const summary: DashboardSummary = aDashboardSummary({
       balances: {
         inAccounts: { amount: '100.00', currency: 'BRL' },
@@ -173,8 +171,6 @@ describe('DashboardFacade', () => {
 
     facade.load();
 
-    // Cancelar a irmã deixaria uma requisição abortada no navegador (o backend a processa até o fim)
-    // sobreposta à do "tentar de novo".
     expect(cancelled).toBe(false);
     expect(facade.state()).toEqual({ status: 'loading' });
 

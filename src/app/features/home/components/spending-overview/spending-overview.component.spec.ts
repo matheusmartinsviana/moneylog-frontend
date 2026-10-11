@@ -28,7 +28,6 @@ async function setup(
   const periodChange = vi.fn();
   const retry = vi.fn();
   const result = await render(SpendingOverviewComponent, {
-    // O gráfico é um bloco @defer (chunk à parte): o Testing Library o deixa manual por padrão.
     deferBlockBehavior: DeferBlockBehavior.Playthrough,
     providers: [provideI18nTesting(language), provideRouter([])],
     inputs: { state, period },
@@ -78,7 +77,6 @@ describe('SpendingOverviewComponent', () => {
       'href',
       '/transactions',
     );
-    // Compacto: sem descrição, base nem totais (o resumo do mês está nos indicadores).
     expect(screen.queryByTestId('home-overview-basis')).not.toBeInTheDocument();
     expect(screen.queryByTestId('home-overview-totals')).not.toBeInTheDocument();
     expect(screen.queryByText(/^saldo/i)).not.toBeInTheDocument();
@@ -89,7 +87,6 @@ describe('SpendingOverviewComponent', () => {
 
     const table = await screen.findByRole('table', { hidden: true });
     const rows = within(table).getAllByRole('row', { hidden: true });
-    // Cabeçalho + 7 dias; os valores são os do JSON (o 6º dia tem despesa negativa: reembolso).
     expect(rows).toHaveLength(8);
     expect(text(rows[6]!)).toContain('−R$ 50,00');
     expect(text(rows[7]!)).toContain('R$ 300,00');

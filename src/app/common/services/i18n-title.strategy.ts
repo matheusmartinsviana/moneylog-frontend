@@ -7,15 +7,10 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 
 export type PageTitleKey = NavKey | 'notFound' | 'login';
 
-/** Chave tipada para o `title` das rotas: o texto vem do i18n ativo. */
 export function pageTitle(key: PageTitleKey): string {
   return key;
 }
 
-/**
- * Título do documento a partir da chave da rota e do idioma ativo
- * (`Cartões · moneylog`). Atualiza também quando o idioma muda.
- */
 @Injectable({ providedIn: 'root' })
 export class I18nTitleStrategy extends TitleStrategy {
   private readonly title = inject(Title);

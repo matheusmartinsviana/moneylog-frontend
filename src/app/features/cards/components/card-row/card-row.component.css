@@ -3,9 +3,8 @@
   list-style: none;
 }
 
-/* Celular: card empilhado. */
 :host(.row) {
-  position: relative; /* contém o link esticado (cartão inteiro clicável) */
+  position: relative;
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -78,7 +77,6 @@
   font-size: var(--text-xs);
 }
 
-/* Desktop: linha de tabela (nome · limite · fatura atual · ações). */
 @media (width >= 768px) {
   :host(.row) {
     grid-template-columns: minmax(0, 1.5fr) minmax(12rem, 2fr) minmax(0, 2fr) minmax(0, 1.5fr);
@@ -95,7 +93,6 @@
   }
 }
 
-/* Botões do cartão ficam acima do link esticado. */
 .row__actions {
   position: relative;
   z-index: var(--z-content);

@@ -4,13 +4,6 @@ import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 
 import { isModalOnSamePage } from '~/app/common/routing/modal-route';
 
-/**
- * Rolagem entre páginas, no lugar do `scrollPositionRestoration: 'top'` do roteador (que também voltava ao topo ao
- * abrir e fechar um modal por rota, jogando a página de trás para cima):
- * - navegação nova: volta ao topo;
- * - voltar/avançar do navegador: restaura a posição que a página tinha ao sair;
- * - abrir/fechar modal sobre a mesma página: não mexe na rolagem.
- */
 export function provideRouteScroll(): EnvironmentProviders {
   return provideAppInitializer(() => {
     const router = inject(Router);

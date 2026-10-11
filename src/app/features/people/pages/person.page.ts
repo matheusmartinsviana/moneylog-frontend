@@ -42,12 +42,6 @@ interface DebtGroup {
   readonly closed: readonly DebtSummary[];
 }
 
-/**
- * Detalhe da pessoa (smart, T84): o saldo (frase pelo `direction` e `net` do backend), a próxima cobrança
- * e as dívidas em duas abas, "Me devem" e "Eu devo", cada uma com as em aberto e as encerradas (status em
- * texto). Cada dívida leva ao detalhe. As ações de movimentação (emprestar, receber, nova dívida) levam ao
- * `/quick-add` já com a pessoa. Nenhum valor é calculado aqui.
- */
 @Component({
   selector: 'app-person-page',
   imports: [
@@ -76,9 +70,7 @@ export class PersonPage {
   protected readonly t = this.i18n.t;
   protected readonly facade = inject(PersonDetailFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
-  /** `?tab=` da URL; qualquer valor desconhecido abre "Me devem". */
   readonly tab = input<string>();
 
   protected readonly person = this.facade.person;
@@ -122,7 +114,6 @@ export class PersonPage {
     const copy = this.t().people.detail;
     const archived = this.person()?.archived ?? false;
     return [
-      // Pessoa arquivada não recebe dívida nova (`PERSON_ARCHIVED`): a ação fica indisponível.
       { id: 'newDebt', label: copy.newDebt, disabled: archived },
       { id: 'edit', label: copy.edit },
       archived
@@ -150,7 +141,6 @@ export class PersonPage {
   });
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('people')
       .pipe(takeUntilDestroyed())

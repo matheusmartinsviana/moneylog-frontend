@@ -48,7 +48,6 @@
   font-size: var(--text-sm);
 }
 
-/* Celular: o atalho para as movimentações já está na barra inferior; o controle ocupa a linha do título. */
 @container (width < 40rem) {
   .so__link {
     display: none;
@@ -61,7 +60,6 @@
   font-size: var(--text-xs);
 }
 
-/* Pouca altura (<= 740 px): a frase de apoio sai, o gráfico precisa do espaço (o dado segue no gráfico e na legenda). */
 @media (max-height: 740px) {
   .so__basis {
     display: none;

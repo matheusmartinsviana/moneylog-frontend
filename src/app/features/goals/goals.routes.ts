@@ -13,7 +13,6 @@ const routes: Routes = [
     path: '',
     providers: GOALS_PROVIDERS,
     children: [
-      // Criar abre em modal sobre a lista; editar, sobre o detalhe da meta.
       {
         path: '',
         component: GoalsPage,

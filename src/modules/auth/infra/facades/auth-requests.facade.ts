@@ -24,7 +24,6 @@ function toToken(response: AuthTokenResponse): AuthToken {
   return { accessToken: response.accessToken, expiresAt: response.expiresAt };
 }
 
-/** Falha do login: 401 e 429 têm tela própria; o resto é "indisponível" (ou "sem rede"). */
 function loginFailure(error: unknown): Observable<never> {
   const problem = toProblem(error);
   const failure =
@@ -36,7 +35,6 @@ function loginFailure(error: unknown): Observable<never> {
   return throwError(() => failure);
 }
 
-/** Falha do primeiro acesso: o `code` do servidor decide a mensagem (nunca o texto dele). */
 function setupFailure(error: unknown): Observable<never> {
   const problem = toProblem(error);
   let failure: AuthFailure;
@@ -50,7 +48,6 @@ function setupFailure(error: unknown): Observable<never> {
   return throwError(() => failure);
 }
 
-/** Falha do refresh: só 401 diz que a sessão acabou; rede e 5xx não derrubam o usuário (S-93). */
 function refreshFailure(error: unknown): Observable<never> {
   const problem = toProblem(error);
   const reason =
@@ -58,12 +55,6 @@ function refreshFailure(error: unknown): Observable<never> {
   return throwError(() => new AuthFailure(reason));
 }
 
-/**
- * Facade de requisições da auth (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS`
- * ligado (ambiente mock), devolve a sessão falsa e nenhuma requisição sai.
- *
- * O cookie `ml_refresh` (`HttpOnly`, `Path=/v1/auth`) é do navegador: o JS nunca o lê nem o envia.
- */
 @Injectable({ providedIn: 'root' })
 export class AuthRequestsFacade extends AuthGateway {
   private readonly http = inject(HttpClient);

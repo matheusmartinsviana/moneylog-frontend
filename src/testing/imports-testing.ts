@@ -70,7 +70,6 @@ export function aBatch(overrides: Partial<ImportBatch> = {}): ImportBatch {
   };
 }
 
-/** Porta falsa de importação: o lote e as linhas vivem aqui; o teste lê as chamadas. */
 export class ImportsGatewayStub extends ImportsGateway {
   batch: ImportBatch = aBatch();
   batches: ImportBatch[] = [];
@@ -82,7 +81,6 @@ export class ImportsGatewayStub extends ImportsGateway {
   readonly uploads: { input: ImportUploadInput; key: string }[] = [];
   readonly applyKeys: string[] = [];
   readonly lineQueries: ImportLinesQuery[] = [];
-  /** Upload controlado pelo teste (progresso, cancelamento). */
   uploadStream: Subject<ImportUploadEvent> | null = null;
   uploadUnsubscribed = 0;
   applyError: Problem | null = null;

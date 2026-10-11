@@ -5,7 +5,6 @@ import type { IconName } from '~/app/common/components/icon/icons';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { GoalStage } from '~/modules/goals/core/types/goal';
 
-/** Ícone de cada degrau: o degrau nunca é dito só por cor. */
 export const STAGE_ICON: Readonly<Record<GoalStage, IconName>> = {
   FANTASY: 'goals',
   OBJECTIVE: 'calendar',
@@ -14,10 +13,6 @@ export const STAGE_ICON: Readonly<Record<GoalStage, IconName>> = {
   ACHIEVED: 'check',
 };
 
-/**
- * Selo do degrau da meta (presentational): ícone + texto. O `stage` é derivado no servidor; aqui só se
- * mostra. Longo prazo (sem prazo) usa o tom neutro; Consistente e Sucesso, o positivo.
- */
 @Component({
   selector: 'app-goal-stage-badge',
   imports: [IconComponent],

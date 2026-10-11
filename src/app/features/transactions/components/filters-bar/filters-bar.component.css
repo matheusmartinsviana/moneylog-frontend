@@ -25,7 +25,6 @@
   color: var(--color-accent);
 }
 
-/* O painel só ocupa espaço aberto. */
 :host ::ng-deep .disclosure.is-open {
   padding: var(--space-2) var(--space-4);
   border: var(--border-width) solid var(--color-border);

@@ -15,18 +15,10 @@ import {
   test,
 } from './fixtures';
 
-/**
- * Etapa 4 com o backend real, parte de dívidas e pessoas (T90 do front): emprestar → ver a dívida na
- * pessoa → receber a devolução → perdoar o resto; despesa dividida; dívida sem movimentação. O teste só
- * compara o que a tela mostra com o que a API devolveu em cada passo (saldo líquido, compromissos, Início);
- * nunca recalcula. **Escrito, não executado pelo dev-frontend** (o backend estava em teste): a QA roda
- * `npm run e2e:integration`.
- */
 test.describe.configure({ mode: 'serial' });
 
 test.beforeEach(() => resetDatabase());
 
-/** `YYYY-MM-DD` → `dd/mm/aaaa` (a máscara do campo de data em pt). */
 const br = (iso: string): string => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
 test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 100,00 (não é renda) → perdoar o resto', async ({
@@ -40,7 +32,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   await api.createAccount({ name: 'Nubank', openingBalance: '1000.00' });
   await signIn(page);
 
-  // 1. Cadastra o João pela tela.
   await open(page, '/people/new');
   await cy(page, 'person-name').fill('João');
   await cy(page, 'person-form-save').click();
@@ -50,7 +41,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   expect(person.net.amount).toBe('0.00');
   expect(person.direction).toBe('NONE');
 
-  // 2. Empresta 300,00 pelo /quick-add (modo "Dinheiro emprestado"), com previsão em 10 dias.
   const expected = todayInSaoPaulo(10);
   await open(page, `/quick-add?mode=loan&personId=${person.id}`);
   await expect(cy(page, 'loan-person')).toContainText('João');
@@ -71,10 +61,7 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   expect(net.find('POST', '/v1/transactions')[0]?.idempotencyKey).toBeTruthy();
   const debtId = loan.debt.id as string;
 
-  // 3. A pessoa mostra a dívida e o saldo líquido que a API calculou.
   await open(page, `/people/${person.id}`);
-  // Espera a tela da pessoa pintar o saldo: sem isso, a última resposta capturada ainda é a da
-  // criação da pessoa (saldo 0,00), de antes do empréstimo.
   await expect(cy(page, 'person-balance')).toBeVisible();
   const apiPerson = await net.body('GET', `/v1/people/${person.id}`);
   expect(apiPerson.net.amount).toBe('300.00');
@@ -84,7 +71,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   expect(await cyText(page, `debt-outstanding-${debtId}`)).toBe(fmt('300.00'));
   expect(await cyText(page, `debt-status-${debtId}`)).toBe('Em aberto');
 
-  // 4. O Início mostra a cobrança como "a receber" e os totais são os do /upcoming; cobrança não soma ao a pagar.
   await open(page, '/planning/overview');
   await expect(cy(page, 'home-legacy')).toBeVisible();
   const upcoming = await net.body('GET', '/v1/dashboard/upcoming');
@@ -98,7 +84,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   expect(await cyText(page, 'home-upcoming-total-in')).toBe(fmt(upcoming.totals.in.amount));
   expect(await cyText(page, 'home-upcoming-total-out')).toBe(fmt(upcoming.totals.out.amount));
 
-  // 5. Recebe 100,00 da devolução pela folha da dívida: sugestão = outstanding da API; nunca é renda.
   await open(page, `/debts/${debtId}`);
   await cy(page, 'debt-settle').click();
   await expect(cy(page, 'settle-sheet-panel')).toBeVisible();
@@ -112,7 +97,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   expect(received.debt.settled.amount).toBe('100.00');
   expect(received.debt.outstanding.amount).toBe('200.00');
   expect(net.find('POST', '/v1/transactions').at(-1)?.idempotencyKey).toBeTruthy();
-  // A tela recarrega a dívida do backend depois de quitar: espera o status novo antes de ler a resposta.
   await expect(cy(page, 'debt-status')).toHaveText('Parcialmente quitada');
   const apiDebt = await net.body('GET', `/v1/debts/${debtId}`);
   expect(apiDebt.status).toBe('PARTIALLY_SETTLED');
@@ -121,7 +105,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   expect(await cyText(page, 'debt-status')).toBe('Parcialmente quitada');
 
   await open(page, '/planning/overview');
-  // Espera o Início pintar: sem isso a última resposta capturada ainda é a da visita anterior.
   await expect(cy(page, 'home-dashboard')).toBeVisible();
   const summary = await net.body('GET', '/v1/dashboard/summary');
   expect(summary.month.income.amount).toBe('0.00');
@@ -131,7 +114,6 @@ test('emprestar 300,00 ao João → ver a dívida nele e no Início → receber 
   const upcomingAfter = await net.body('GET', '/v1/dashboard/upcoming');
   expect(await cyText(page, 'home-upcoming-total-in')).toBe(fmt(upcomingAfter.totals.in.amount));
 
-  // 6. Perdoa o resto (motivo obrigatório, não pode ser desfeito).
   await open(page, `/debts/${debtId}`);
   await cy(page, 'debt-forgive').click();
   await expect(cy(page, 'confirm-dialog-confirm')).toBeDisabled();
@@ -176,7 +158,6 @@ test('despesa de 200,00 dividida com o João (100,00): consumo 100,00, caixa −
   await cy(page, 'form-save').click();
   await expect(cy(page, 'toast-info')).toBeVisible();
 
-  // O corpo leva só o que foi digitado; o `impact` vem do backend (o front não calcula a divisão).
   const sent = net.find('POST', '/v1/transactions')[0]?.requestBody as any;
   expect(sent.amount).toBe('200.00');
   expect(sent.shares).toEqual([
@@ -189,7 +170,6 @@ test('despesa de 200,00 dividida com o João (100,00): consumo 100,00, caixa −
   const shareDebt = created.shares[0];
   expect(shareDebt.principal.amount).toBe('100.00');
 
-  // O aviso leva ao detalhe: impacto e partes exatamente como a API devolveu.
   await cy(page, 'toast-info').getByRole('button', { name: 'Ver detalhes' }).click();
   await expect(page).toHaveURL(new RegExp(`/transactions/${created.id}$`));
   expect(await cyText(page, 'impact-cash')).toContain(fmt(created.impact.cash.amount));
@@ -198,7 +178,6 @@ test('despesa de 200,00 dividida com o João (100,00): consumo 100,00, caixa −
   ).toContain(fmt(created.impact.consumption[0].amount.amount));
   await expect(cy(page, `detail-share-link-${shareDebt.id}`)).toBeVisible();
 
-  // O Início e a pessoa concordam com a API.
   await open(page, '/planning/overview');
   await expect(cy(page, 'home-legacy')).toBeVisible();
   const summary = await net.body('GET', '/v1/dashboard/summary');
@@ -210,7 +189,6 @@ test('despesa de 200,00 dividida com o João (100,00): consumo 100,00, caixa −
   expect(apiPerson.net.amount).toBe('100.00');
   expect(await cyText(page, 'person-balance')).toBe(`João deve ${fmt(apiPerson.net.amount)}`);
 
-  // João paga 100,00: a dívida quita, o saldo zera e não vira receita.
   await open(page, `/debts/${shareDebt.id}`);
   await cy(page, 'debt-settle').click();
   await expect(cy(page, 'settle-amount')).toHaveValue('100,00');
@@ -251,7 +229,6 @@ test('dívida sem movimentação (eu devo, com categoria): consumo de dívida no
   expect(debt.direction).toBe('PAYABLE');
   expect(debt.category).not.toBeNull();
 
-  // Não mexe no caixa; entra no consumo (e no total do mês) pela dívida.
   const accounts = await api.get('/v1/accounts');
   expect(accounts.body.items[0].currentBalance.amount).toBe('1000.00');
   await open(page, '/planning/overview');
@@ -271,7 +248,6 @@ test('dívida sem movimentação (eu devo, com categoria): consumo de dívida no
   );
   expect(await cyText(page, 'totals-footer-total')).toBe(fmt(entries.totals.total.amount));
 
-  // Sem quitações e sem movimentação de origem, o registro pode ser estornado.
   await cy(page, 'debt-entry-row-0').click();
   await expect(page).toHaveURL(new RegExp(`/debts/${debt.id}$`));
   await expect(cy(page, 'debt-void')).not.toHaveAttribute('aria-disabled', 'true');

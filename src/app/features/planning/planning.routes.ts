@@ -21,7 +21,6 @@ const routes: Routes = [
     providers: PLANNING_PROVIDERS,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'recurrences' },
-      // Criar e editar abrem em modal sobre a lista (`RecurrencesPage` tem o `<router-outlet>`).
       {
         path: 'recurrences',
         component: RecurrencesPage,
@@ -38,7 +37,6 @@ const routes: Routes = [
       { path: 'projections', component: ProjectionsPage, title: pageTitle('planning') },
       { path: 'debts', component: DebtsOverviewPage, title: pageTitle('planning') },
       { path: 'third-parties', component: ThirdPartiesPage, title: pageTitle('planning') },
-      // Cadastrar abre em modal sobre a lista; o detalhe é uma página.
       {
         path: 'commitments',
         component: CommitmentsPage,

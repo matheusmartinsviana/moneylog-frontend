@@ -11,16 +11,10 @@ import {
 
 import { Revealer } from '~/app/common/motion/reveal-engine';
 
-/**
- * Cascata dos filhos diretos: cada filho entra (opacidade + deslocamento) quando aparece na viewport,
- * na ordem de leitura. Filhos que chegam depois (dados do backend, `@if`) animam ao entrar no DOM;
- * os que já existiam não reanimam em refresh. `data-motion-skip` exclui um filho.
- */
 @Directive({ selector: '[appStagger]' })
 export class MotionStaggerDirective implements OnInit {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly revealer = new Revealer(inject(DOCUMENT));
-  /** Posição inicial na cascata. */
   readonly appStaggerOffset = input(0, {
     transform: (value: unknown) => numberAttribute(value, 0),
   });

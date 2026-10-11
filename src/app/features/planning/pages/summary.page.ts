@@ -34,17 +34,10 @@ import { CategorySpendingFacade } from '~/modules/reports/core/facades/category-
 import { formatCompetence, todayIso } from '~/util/date';
 import { formatRatio } from '~/util/ratio';
 
-/** Janela que o backend aceita (`SUMMARY_MONTH_INVALID` fora dela). */
 const MIN_MONTH = '2000-01';
 const MAX_MONTH = '2100-12';
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-/**
- * Resumo do mês (smart, T102): `/planning/summary/:month` (S-154). Todos os campos de S-151 e a comparação com
- * o mês anterior vêm do backend; a tela só formata. O mês vai na URL (o F5 volta ao mesmo mês) e o
- * `MonthPicker` navega mês a mês. Sem mês na URL, abre o mês de hoje (só um ponto de partida de navegação:
- * `partial` e `isProjection` vêm da API). "Analisar com IA" fica desligado e honesto até a Etapa 8.
- */
 @Component({
   selector: 'app-summary-page',
   imports: [
@@ -77,10 +70,8 @@ export class SummaryPage {
   protected readonly minMonth = MIN_MONTH;
   protected readonly maxMonth = MAX_MONTH;
 
-  /** `:month` da rota (`YYYY-MM`); ausente em `/planning/summary`. */
   readonly month = input<string>();
 
-  /** O mês mostrado: o da URL ou, sem ele, o mês de hoje (no fuso do usuário). */
   protected readonly current = computed(() => {
     const month = this.month();
     return month === undefined ? todayIso().slice(0, 7) : month;
@@ -146,7 +137,6 @@ export class SummaryPage {
   ]);
 
   constructor() {
-    // A URL manda: o mês dela é o que o seletor mostra e o que o backend recebe.
     effect(() => {
       const month = this.current();
       const valid = this.validMonth();
@@ -158,7 +148,6 @@ export class SummaryPage {
         }
       });
     });
-    // Escolher outro mês no seletor muda a URL (o F5 volta ao mesmo mês).
     this.picker.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       if (value !== null && MONTH.test(value) && value !== this.current()) {
         void this.router.navigate(['/planning/summary', value]);

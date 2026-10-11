@@ -71,7 +71,6 @@ describe('GoalFormPage', () => {
     ]) {
       expect(screen.getByTestId(id)).toBeInTheDocument();
     }
-    // O único `input` de arquivo é o escondido do botão "Adicionar fotos" (vários arquivos).
     const files = document.querySelectorAll('input[type="file"]');
     expect(files).toHaveLength(1);
     expect(files[0]).toHaveAttribute('hidden');
@@ -265,7 +264,6 @@ describe('GoalFormPage', () => {
   describe('fotos do sonho', () => {
     const jpg = (name: string) => new File(['x'], name, { type: 'image/jpeg' });
 
-    /** O seletor de arquivos é do sistema: o teste entrega os arquivos ao `input` escondido. */
     const pick = (...files: File[]) => {
       const input = screen.getByTestId('goal-photos-add-native') as HTMLInputElement;
       Object.defineProperty(input, 'files', { configurable: true, value: files });

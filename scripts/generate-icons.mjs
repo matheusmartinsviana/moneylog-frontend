@@ -1,15 +1,4 @@
 #!/usr/bin/env node
-/**
- * Gera os PNGs do PWA e das notificações a partir dos mestres da marca em `brand/` (arte do dono).
- * Rode `npm run icons` depois de trocar um mestre; os PNGs gerados em `src/assets/icons` são versionados.
- *
- * - `logo-any.png`      (cantos arredondados transparentes) -> icon-32/192/512, usados no navegador, no manifest e no app;
- * - `logo-maskable.png` (arte na zona segura, borda prolongada) -> icon-maskable-192/512 (o sistema aplica a máscara);
- * - `logo-apple.png`    (quadrado cheio, sem transparência)  -> apple-touch-icon 180 (o iOS arredonda);
- * - `logo-badge.png`    (silhueta branca)                    -> badge-96, o ícone monocromático da barra de status do
- *                                                               Android nas notificações push.
- * Como os mestres foram feitos a partir do PNG original: `brand/make-masters.mjs` (precisa de `npm i --no-save sharp`).
- */
 import { readFileSync, writeFileSync } from 'node:fs';
 
 import { Resvg } from '@resvg/resvg-js';
@@ -26,7 +15,6 @@ const outputs = [
   { master: 'logo-badge.png', file: 'badge-96.png', size: 96 },
 ];
 
-/** O resvg só redimensiona SVG: o mestre PNG entra embutido num SVG do tamanho final. */
 function render(master, size) {
   const base64 = readFileSync(new URL(master, brand)).toString('base64');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><image width="${size}" height="${size}" href="data:image/png;base64,${base64}"/></svg>`;

@@ -2,10 +2,6 @@ import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@an
 
 let nextId = 0;
 
-/**
- * Bloco de conteúdo em superfície elevada, com título `<h2>` e descrição opcional. `interactive` é para o
- * cartão inteiro que leva a algum lugar: sobe até 2px no hover (só com mouse e movimento permitido, `.lift`).
- */
 @Component({
   selector: 'app-section-container',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,25 +47,21 @@ let nextId = 0;
       border-radius: var(--radius-panel);
     }
 
-    /* Painéis comuns: superfície sólida; os de destaque (glow) recebem o vidro global (.glass). */
     .section:not(.glass) {
       border: var(--border-width) solid var(--color-border);
       background-color: var(--color-surface);
       box-shadow: var(--shadow-1);
     }
 
-    /* Painel em destaque (gráfico): halo azul por trás, decorativo (token). */
     .section--glow {
       background-image: var(--glass-sheen), var(--gradient-panel-glow);
     }
 
-    /* Preenche a altura do pai (telas "sucintas"): o corpo reparte o que sobra, sem altura fixa em px. */
     :host(.fill) {
       height: 100%;
       min-height: 0;
     }
 
-    /* Denso (telas "sucintas"): menos respiro e título menor; o resto é igual. */
     .section--dense {
       gap: var(--space-2);
       padding: var(--space-3) var(--space-4);
@@ -83,7 +75,6 @@ let nextId = 0;
       gap: var(--space-2);
     }
 
-    /* Denso e estreito (celular): o título fica só para leitores de tela e o controle sobe para a linha dele. */
     @container (width < 40rem) {
       .section--dense .section__title {
         position: absolute;
@@ -106,14 +97,12 @@ let nextId = 0;
       min-height: 0;
     }
 
-    /* Conteúdo mais alto que o painel rola dentro dele (barra fina do app), não a página. */
     .section--fill.section--scroll .section__body {
       position: relative;
       grid-template-rows: none;
       overflow-y: auto;
     }
 
-    /* O box-shadow de .section empata em especificidade com .lift:hover e vence por ordem. */
     @media (hover: hover) {
       .section.lift:hover {
         box-shadow: var(--shadow-2);
@@ -153,13 +142,9 @@ export class SectionContainerComponent {
   readonly heading = input.required<string>();
   readonly description = input<string>();
   readonly interactive = input(false, { transform: booleanAttribute });
-  /** Halo azul de destaque (gráfico principal). */
   readonly glow = input(false, { transform: booleanAttribute });
-  /** Ocupa a altura do pai e dá ao corpo o que sobra (páginas "sucintas"). */
   readonly fill = input(false, { transform: booleanAttribute });
-  /** Com `fill`, o corpo rola dentro do painel quando o conteúdo é mais alto que o espaço. */
   readonly scroll = input(false, { transform: booleanAttribute });
-  /** Espaçamento e título menores (telas "sucintas"); em tela estreita o título só fica para leitores de tela. */
   readonly dense = input(false, { transform: booleanAttribute });
 
   protected readonly headingId = `section-title-${++nextId}`;

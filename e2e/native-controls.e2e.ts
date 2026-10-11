@@ -2,19 +2,6 @@ import type { Page } from '@playwright/test';
 
 import { expect, ROUTES, seedPreferences, test, VIEWPORTS, waitForApp } from './support';
 
-/**
- * Guarda de runtime "nenhum controle nativo" (T154 CA7, FE-S-112): a contraparte da guarda estática
- * (`scripts/check-native-controls.mjs`). A estática lê o código; esta olha o DOM de verdade, então
- * pega o que só existe em execução (Renderer2, `innerHTML`, atributos dinâmicos, elementos que
- * aparecem e somem). Percorre todas as rotas, abre cada gatilho de overlay (Select, DatePicker,
- * MonthPicker, folha, diálogo) e falha se, a qualquer momento, houver:
- *   select, datalist, details, summary, dialog, progress, meter, [popover], [contenteditable], [title]
- *   (fora de SVG), <input> com type fora de text|email|password (exceto o <input type=file> escondido
- *   dentro do app-file-picker, FE-S-119), alert/confirm/prompt, showPicker/showModal.
- * Um MutationObserver registra o que é inserido ou alterado desde o primeiro quadro, e os métodos
- * de criação (`setAttribute`, `input.type = ...`) são vigiados mesmo em elementos nunca anexados.
- */
-
 declare global {
   interface Window {
     __native: string[];
@@ -45,9 +32,6 @@ async function installDetector(page: Page): Promise<void> {
       if (BANNED_TAGS.includes(el.localName)) problems.push(`tag nativa ${describe(el)}`);
       if (el.localName === 'input') {
         const type = (el.getAttribute('type') ?? 'text').trim().toLowerCase();
-        // FE-S-119: a única exceção é o <input type="file"> escondido dentro do FilePicker. Criado pelo
-        // Angular, o input ainda não está no DOM quando o tipo é escrito: só vale a checagem depois de
-        // anexado (observer e varredura), quando o ancestral existe.
         const pickerInput =
           type === 'file' &&
           (!el.isConnected ||
@@ -73,7 +57,6 @@ async function installDetector(page: Page): Promise<void> {
       return Array.from(new Set(all));
     };
 
-    // Elementos e atributos que aparecem em qualquer momento (inclusive os que somem logo depois).
     const observer = new MutationObserver((records) => {
       for (const record of records) {
         if (record.type === 'attributes' && record.target instanceof Element) {
@@ -86,7 +69,6 @@ async function installDetector(page: Page): Promise<void> {
     });
     observer.observe(document, { subtree: true, childList: true, attributes: true });
 
-    // Elementos criados e configurados sem nunca entrar no DOM (Renderer2/createElement).
     const setAttribute = Element.prototype.setAttribute;
     Element.prototype.setAttribute = function (name: string, value: string) {
       setAttribute.call(this, name, value);
@@ -102,7 +84,6 @@ async function installDetector(page: Page): Promise<void> {
         },
       });
     }
-    // UI nativa por API.
     for (const name of ['alert', 'confirm', 'prompt'] as const) {
       window[name] = ((): never | undefined => {
         found.push(`window.${name}()`);
@@ -124,12 +105,6 @@ async function installDetector(page: Page): Promise<void> {
   });
 }
 
-/**
- * Gate G-UI-E3: no UI Kit, abre cada Dialog, Sheet e Menu e interage com RadioGroup, NumberStepper,
- * Tabs e ProgressBar, para o detector ver o DOM que eles criam (diálogo, folha, menu, `role=radio`,
- * `role=spinbutton`, `role=progressbar`): nenhum deles pode usar `<dialog>`, `<progress>`, `<meter>`,
- * `input[type=number|radio]` nem `title`.
- */
 async function exerciseGateComponents(page: Page): Promise<void> {
   for (const open of [
     'open-dialog-basic',
@@ -145,7 +120,6 @@ async function exerciseGateComponents(page: Page): Promise<void> {
       .click({ timeout: 2_000 })
       .catch(() => undefined);
     await page.waitForTimeout(120);
-    // O alerta não fecha por Esc: a resposta é um botão.
     await page.keyboard.press('Escape');
     await page
       .locator('[data-cy="light-dialog-alert-discard"]')
@@ -176,7 +150,6 @@ async function exerciseGateComponents(page: Page): Promise<void> {
   await page.waitForTimeout(60);
 }
 
-/** Abre e fecha cada gatilho de overlay da página, para que o detector veja o que ele cria. */
 async function exercise(page: Page): Promise<void> {
   const triggers = page.locator(
     '[aria-haspopup]:visible, [role="combobox"]:visible, button[aria-expanded="false"]:visible',
@@ -190,7 +163,6 @@ async function exercise(page: Page): Promise<void> {
     await page.keyboard.press('Escape');
     await page.waitForTimeout(60);
   }
-  // Diálogos de confirmação (arquivar, estornar...): abre e cancela.
   const actions = page.locator(
     'button[data-cy*="archive"]:visible, button[data-cy*="void"]:visible',
   );
@@ -276,7 +248,6 @@ test.describe('guarda de runtime: nenhum controle nativo em nenhuma rota nem ove
         document.body.append(d);
         d.remove();
       },
-      // Intencional: o teste prova que o interceptor registra o diálogo nativo.
       // eslint-disable-next-line no-restricted-properties
       'window.alert': () => window.alert('x'),
     };

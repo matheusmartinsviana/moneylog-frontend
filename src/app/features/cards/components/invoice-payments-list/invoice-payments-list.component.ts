@@ -8,11 +8,6 @@ import type { Account } from '~/modules/accounts/core/types/account';
 import type { InvoicePayment } from '~/modules/cards/core/types/invoice';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Pagamentos da fatura (T66 CA3, presentational): data, conta e valor de cada `payments[]`, com link para
- * a movimentação `INVOICE_PAYMENT` (de onde se estorna). O nome da conta vem da lista de contas; sem ela
- * a linha mostra só data e valor.
- */
 @Component({
   selector: 'app-invoice-payments-list',
   imports: [RouterLink, MoneyComponent],

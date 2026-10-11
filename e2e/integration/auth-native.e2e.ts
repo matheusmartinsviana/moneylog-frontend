@@ -1,10 +1,5 @@
 import { cy, expect, loginViaUi, test, waitForApp } from './fixtures';
 
-/**
- * Mesmo fluxo de sessão, **sem interceptar `/v1`** (rede 100% nativa do Chromium, cookie `Secure` em
- * `http://localhost` guardado pelo próprio navegador). Prova que o cookie real funciona sem o
- * `route.fetch()` do Playwright que as outras specs usam para capturar corpos.
- */
 test.use({ interceptApi: false });
 
 test('login, F5, nova aba, logout e retorno com o cookie nativo do navegador', async ({
@@ -22,7 +17,6 @@ test('login, F5, nova aba, logout e retorno com o cookie nativo do navegador', a
   expect(cookie?.httpOnly).toBe(true);
   expect(cookie?.secure).toBe(true);
   expect(cookie?.sameSite).toBe('Strict');
-  // O JavaScript da página não enxerga o cookie.
   expect(await page.evaluate(() => document.cookie)).not.toContain('ml_refresh');
 
   await page.reload();

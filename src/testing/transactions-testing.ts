@@ -77,7 +77,6 @@ export function anEntry(overrides: Partial<Entry> = {}): Entry {
   };
 }
 
-/** Porta falsa de movimentações: registra as chamadas e devolve o que o teste configurar. */
 export class TransactionsGatewayStub extends TransactionsGateway {
   readonly listCalls: { filters: ListFilters; page: number; pageSize: number }[] = [];
   readonly entryCalls: { filters: ListFilters; page: number; pageSize: number }[] = [];

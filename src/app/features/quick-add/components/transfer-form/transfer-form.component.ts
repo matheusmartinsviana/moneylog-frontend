@@ -24,11 +24,6 @@ import type {
 } from '~/modules/transactions/core/types/transaction-input';
 import { todayIso } from '~/util/date';
 
-/**
- * Formulário de transferência (presentational): valor → de → para → data → descrição. A conta de
- * destino exclui a de origem e só mostra contas da mesma liquidez que ela (o backend continua sendo
- * quem recusa, `TRANSFER_ACROSS_LIQUIDITY`).
- */
 @Component({
   selector: 'app-transfer-form',
   imports: [
@@ -78,7 +73,6 @@ export class TransferFormComponent extends TransactionFormBase {
 
   constructor() {
     super();
-    // Trocar a origem descarta um destino que deixou de servir.
     this.form.controls.fromAccountId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       const to = this.form.controls.toAccountId.value;
       if (to !== null && !this.toOptions().some((option) => option.value === to)) {

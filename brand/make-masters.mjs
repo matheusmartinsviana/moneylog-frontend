@@ -1,14 +1,8 @@
-// Gera os mestres da marca a partir das duas artes do dono (recibo com barras verdes, PNG com fundo transparente):
-//  - recibo-escuro.png  (recibo escuro)  -> para fundo claro: logo da interface no tema claro e o recibo dos ícones;
-//  - recibo-branco.png (recibo branco)  -> para fundo escuro: logo da interface no tema escuro.
-// Limpa pontinhos soltos do alfa, recorta, e produz: logos da interface (src/assets/brand), e os mestres dos ícones
-// (logo-any, logo-maskable, logo-apple, logo-badge) que `npm run icons` redimensiona.
 import sharp from 'sharp';
 import { mkdirSync } from 'node:fs';
 
 mkdirSync('out', { recursive: true });
 
-/** Zera o alfa de componentes conexos pequenos (poeira da remoção de fundo) e recorta no conteúdo. */
 async function clean(file) {
   const { data, info } = await sharp(file)
     .ensureAlpha()
@@ -83,7 +77,6 @@ async function clean(file) {
 const dark = await clean('recibo-escuro.png');
 const white = await clean('recibo-branco.png');
 
-// Logos da interface (altura 256, transparente): escuro sobre fundo claro, branco sobre fundo escuro.
 await sharp(dark)
   .resize({ height: 256 })
   .png({ compressionLevel: 9 })
@@ -93,7 +86,6 @@ await sharp(white)
   .png({ compressionLevel: 9 })
   .toFile('out/logo-on-dark.png');
 
-// Ladrilho dos ícones: gradiente claro (mesma família do canvas claro) com o recibo escuro centralizado.
 const T = 1024;
 const tileSvg = Buffer.from(
   `<svg width="${T}" height="${T}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9e7f3"/></linearGradient></defs><rect width="${T}" height="${T}" fill="url(#g)"/></svg>`,
@@ -124,7 +116,6 @@ await sharp(await tile(0.5))
   .toFile('out/logo-maskable.png');
 await sharp(anyTile).flatten({ background: '#ffffff' }).png().toFile('out/logo-apple.png');
 
-// Badge do Android: silhueta branca (o alfa do próprio recibo), com folga de 10%.
 const { data, info } = await sharp(dark).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
 for (let i = 0; i < info.width * info.height; i++) {
   data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255;

@@ -33,7 +33,6 @@ function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Facade de requisições de terceiros: o único lugar com HTTP do módulo. */
 @Injectable({ providedIn: 'root' })
 export class ThirdPartiesRequestsFacade extends ThirdPartiesGateway {
   private readonly http = inject(HttpClient);

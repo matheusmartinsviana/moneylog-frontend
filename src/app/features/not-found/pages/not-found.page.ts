@@ -7,7 +7,6 @@ import {
 import { PageLayoutComponent } from '~/app/common/components/page-layout/page-layout.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/** Rota desconhecida: explica e leva de volta ao Início. */
 @Component({
   selector: 'app-not-found-page',
   imports: [PageLayoutComponent, EmptyStateComponent],

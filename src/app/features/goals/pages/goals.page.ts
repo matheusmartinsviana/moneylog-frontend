@@ -28,12 +28,6 @@ import { GoalFormFacade } from '~/modules/goals/core/facades/goal-form.facade';
 import { GoalsListFacade } from '~/modules/goals/core/facades/goals-list.facade';
 import type { Goal, GoalStatus } from '~/modules/goals/core/types/goal';
 
-/**
- * Metas (smart, T100): lista as ativas, as atingidas ou as arquivadas (`?status=` na URL; o F5 volta ao
- * mesmo filtro). Cada card mostra o progresso **que o backend calculou**. "Reservar" abre a folha de
- * reserva da meta escolhida; a meta da resposta substitui a do card (sem chute). Estados: carregando, vazio
- * (com "Criar meta"), erro (com "tentar de novo") e dados.
- */
 @Component({
   selector: 'app-goals-page',
   imports: [
@@ -59,7 +53,6 @@ export class GoalsPage {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
-  /** Já existe uma meta de quitar dívidas na lista: não oferece criar outra (o servidor também recusa). */
   protected readonly hasPayoff = computed(
     () => this.goals.data()?.some((goal) => goal.kind === 'DEBT_PAYOFF') ?? false,
   );
@@ -68,7 +61,6 @@ export class GoalsPage {
     return problem ? problemMessage(problem, this.t().errors) : null;
   });
 
-  /** Filtro da URL (`?status=ACHIEVED|ARCHIVED`); qualquer outro valor mostra as ativas. */
   readonly status = input<string>();
 
   protected readonly filter = computed<GoalStatus>(() => {
@@ -90,7 +82,6 @@ export class GoalsPage {
   ]);
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('goals')
       .pipe(takeUntilDestroyed())
@@ -105,7 +96,6 @@ export class GoalsPage {
     });
   }
 
-  /** "Quitar todas as dívidas": sem nome nem alvo, o servidor usa o nome padrão e a meta nasce "montando". */
   protected createPayoff(): void {
     this.creating.dismissProblem();
     this.creating.save({
@@ -123,7 +113,6 @@ export class GoalsPage {
     this.reserveOpen.set(true);
   }
 
-  /** Reservou ou liberou: o backend pode ter mudado o status (atingida), então recarrega a lista. */
   protected afterReserve(): void {
     this.reserveOpen.set(false);
     this.goals.load(this.filter());

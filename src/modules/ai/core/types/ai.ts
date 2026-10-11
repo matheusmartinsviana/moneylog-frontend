@@ -1,4 +1,3 @@
-/** Tipos do domínio de IA (Etapa 8). O front exibe o que a API devolve; nada é calculado aqui. */
 export type AiPurpose =
   | 'CATEGORIZE_IMPORT'
   | 'CATEGORIZE_TRANSACTIONS'
@@ -8,7 +7,6 @@ export type AiPurpose =
   | 'FORECAST'
   | 'DAILY_MESSAGE';
 
-/** Finalidades que já geram prévia no backend. */
 export type AiRunnablePurpose = 'MONTHLY_SUMMARY' | 'INSIGHTS';
 
 export type AiAnalysisStatus =
@@ -25,7 +23,6 @@ export interface AiStatus {
 
 export interface AiPreviewRequest {
   readonly purpose: AiRunnablePurpose;
-  /** Competência `AAAA-MM`; `null` = mês corrente do backend. */
   readonly month: string | null;
   readonly language: 'pt' | 'en' | 'es';
 }
@@ -35,7 +32,6 @@ export interface AiPreview {
   readonly purpose: AiPurpose;
   readonly period: string | null;
   readonly language: string;
-  /** O JSON exato que iria ao provedor. */
   readonly redactedPayload: string;
   readonly counts: Readonly<Record<string, number>>;
   readonly estimatedTokens: number;
@@ -84,7 +80,6 @@ export interface AiAnalysisSummary {
   readonly createdAt: string;
 }
 
-/** Insight determinístico: o backend manda a `key` de i18n e os `params`; a frase é montada na tela. */
 export interface Insight {
   readonly type: 'CATEGORY_DELTA' | 'CARD_COMMITTED';
   readonly key: string;

@@ -3,13 +3,11 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { Insight } from '~/modules/ai/core/types/ai';
 import { formatMoney } from '~/util/money';
 
-/** O backend manda decimais sem moeda; os dados do MVP são todos em BRL (a moeda é a do dado). */
 const DATA_CURRENCY = 'BRL';
 const PERCENT_POINTS = /^-?\d+(?:\.\d+)?$/;
 
 const formatters = new Map<string, Intl.NumberFormat>();
 
-/** `deltaPercent` já vem em pontos percentuais (`23.4`): só formata, sem sinal (o verbo diz subiu/caiu). */
 function formatPercentPoints(value: string, locale: string): string {
   if (!PERCENT_POINTS.test(value)) return value;
   let formatter = formatters.get(locale);
@@ -24,10 +22,6 @@ function formatPercentPoints(value: string, locale: string): string {
 const money = (amount: string | undefined) =>
   formatMoney({ amount: amount ?? '0', currency: DATA_CURRENCY });
 
-/**
- * Traduz um insight pela `key` do contrato (o backend não monta frase). Chave desconhecida ou parâmetro
- * ausente devolve `null`: o front não inventa texto nem mostra a chave crua.
- */
 export function insightText(
   insight: Insight,
   copy: AppI18n['ai']['insights'],
@@ -62,7 +56,6 @@ export interface InsightLine {
   readonly categoryId: string | null;
 }
 
-/** Só os insights que sabemos traduzir; o `id` é estável para o `@for`. */
 export function insightLines(
   insights: readonly Insight[],
   copy: AppI18n['ai']['insights'],

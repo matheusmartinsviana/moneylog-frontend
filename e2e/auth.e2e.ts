@@ -1,10 +1,5 @@
 import { expect, seedPreferences, test, waitForApp } from './support';
 
-/**
- * T33 em modo mock (projetos `mock` e `prod`): a sessão falsa abre o shell direto, "Sair" leva ao
- * login e o login mock volta ao app. Nenhuma chamada a `/v1` (o observador de `support.ts` falha o
- * teste se houver). O fluxo real (401, refresh, cookie) é do projeto `integration` (T44).
- */
 test.describe('autenticação no ambiente mock', () => {
   test('abre o shell direto, sai pelas Configurações e volta pelo login', async ({ page }) => {
     await seedPreferences(page, { language: 'pt' });

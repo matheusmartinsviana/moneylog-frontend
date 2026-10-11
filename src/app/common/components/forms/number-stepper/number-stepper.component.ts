@@ -15,24 +15,11 @@ import { FieldErrorComponent } from '~/app/common/components/forms/field-error/f
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/** Atraso até começar a repetir ao segurar o botão, e intervalos (acelera até o menor). */
 const HOLD_DELAY_MS = 400;
 const HOLD_INTERVALS_MS = [160, 100, 60, 40] as const;
 const HOLD_ACCELERATE_EVERY = 6;
-/** Dígitos aceitos no campo: o contador é de inteiros pequenos (parcelas, dias), nunca dinheiro. */
 const MAX_DIGITS = 9;
 
-/**
- * Contador de números **inteiros** (nº de parcelas de 1 a 36, dia do mês de 1 a 31, intervalos),
- * no lugar de `<input type="number">` (que o navegador desenha e aceita `1e3` e decimais).
- * Padrão spinbutton do APG: campo de texto `inputmode="numeric"` com `role="spinbutton"`
- * (`aria-valuenow/min/max`, `aria-valuetext`), botões "−" e "+" de 44 px; `↑`/`↓` somam e subtraem
- * `step`, `PageUp`/`PageDown` dez passos, `Home`/`End` os limites; segurar o botão repete com
- * aceleração. Digitar só aceita dígitos; um valor fora de `min`/`max` ou vazio volta ao último
- * válido ao sair do campo (vazio vira `null` quando `mandatory=false`). Não faz cálculo financeiro:
- * o valor é um inteiro de contagem (sem `Number()` sobre dinheiro, sem ponto flutuante).
- * O valor do controle é `number | null`.
- */
 @Component({
   selector: 'app-number-stepper',
   imports: [FieldErrorComponent, IconComponent],
@@ -200,19 +187,13 @@ export class NumberStepperComponent extends FieldControl<number | null> implemen
   private readonly destroyRef = inject(DestroyRef);
   protected readonly MAX_DIGITS = MAX_DIGITS;
 
-  /** Menor valor (inteiro). */
   readonly min = input(0);
-  /** Maior valor (inteiro); sem limite superior, deixe `null`. */
   readonly max = input<number | null>(null);
-  /** Passo das setas e dos botões (inteiro positivo). */
   readonly step = input(1);
-  /** Só informa `aria-required` e o erro `required`; vazio vira `null` quando `false`. */
   readonly mandatory = input(true);
-  /** Texto do valor para o leitor de tela ("6 parcelas"); recebe o valor atual. */
   readonly valueText = input<((value: number) => string) | undefined>(undefined);
 
   protected readonly value = signal<number | null>(null);
-  /** O que está escrito no campo (pode estar incompleto enquanto digita). */
   protected readonly draft = signal('');
 
   protected readonly ariaValueText = computed(() => {
@@ -253,7 +234,6 @@ export class NumberStepperComponent extends FieldControl<number | null> implemen
     return Math.min(max ?? value, Math.max(this.min(), value));
   }
 
-  /** Grava um valor novo (já dentro dos limites) no campo e no formulário. */
   private commit(value: number | null): void {
     this.value.set(value);
     this.draft.set(value === null ? '' : String(value));
@@ -277,11 +257,9 @@ export class NumberStepperComponent extends FieldControl<number | null> implemen
     const digits = input.value.replace(/\D/g, '').slice(0, MAX_DIGITS);
     const text = digits === '' ? negative : negative + digits;
     this.draft.set(text);
-    // O DOM pode ter recebido letras: reescreve o campo com o texto limpo.
     input.value = text;
     if (/^-?\d+$/.test(text)) {
       const parsed = Number.parseInt(text, 10);
-      // Só vira valor o que está dentro dos limites; o resto espera o blur para voltar ao último válido.
       if (parsed === this.clamp(parsed)) {
         this.value.set(parsed);
         this.onChange(parsed);
@@ -298,7 +276,6 @@ export class NumberStepperComponent extends FieldControl<number | null> implemen
     this.normalize();
   }
 
-  /** Campo vazio ou fora dos limites volta ao último valor válido (ou fica vazio sem valor). */
   private normalize(): void {
     this.draft.set(this.value() === null ? '' : String(this.value()));
   }
@@ -335,10 +312,6 @@ export class NumberStepperComponent extends FieldControl<number | null> implemen
     event.preventDefault();
   }
 
-  /**
-   * `click` sem ponteiro (teclado, leitor de tela): um passo. O ponteiro já agiu em `startHold`; o
-   * `click` que vem logo depois do soltar é ignorado.
-   */
   protected onButtonClick(direction: 1 | -1): void {
     if (Date.now() - this.pointerEndedAt < 500) return;
     this.stepBy(direction);
@@ -351,7 +324,6 @@ export class NumberStepperComponent extends FieldControl<number | null> implemen
 
   protected startHold(event: PointerEvent, direction: 1 | -1): void {
     if (event.button !== 0 || this.disabled()) return;
-    // O campo não perde o foco ao tocar o botão (o teclado virtual não pisca).
     event.preventDefault();
     this.stopHold();
     let repeats = 0;

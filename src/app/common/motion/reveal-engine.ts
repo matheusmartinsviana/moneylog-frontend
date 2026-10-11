@@ -2,21 +2,14 @@ import { motionEnabled } from '~/app/common/motion/motion';
 
 const PENDING = 'm-pending';
 const ENTER = 'm-enter';
-/** Elementos que já tiveram a sua entrada: dados que chegam depois só animam o que é novo. */
 const seen = new WeakSet<Element>();
 
-/**
- * Motor de entrada: esconde o elemento (`m-pending`, só opacidade/transform, sem mexer no layout) e o revela
- * quando ele entra na viewport, uma única vez, em cascata (`--m-i` × `--motion-stagger`, teto no CSS).
- * Sem `IntersectionObserver` (ou com movimento desligado) não faz nada: o conteúdo nunca fica escondido.
- */
 export class Revealer {
   private observer: IntersectionObserver | null = null;
   private offset = 0;
 
   constructor(private readonly doc: Document) {}
 
-  /** Índice inicial da cascata (ex.: o conteúdo entra depois do cabeçalho). */
   setOffset(offset: number): void {
     this.offset = offset;
   }
@@ -26,7 +19,6 @@ export class Revealer {
     seen.add(element);
     if (element.dataset['motionSkip'] !== undefined) return;
     if (!motionEnabled(this.doc) || typeof IntersectionObserver === 'undefined') return;
-    // `display: contents` não tem caixa: nunca interceptaria a viewport e ficaria escondido.
     if (this.doc.defaultView?.getComputedStyle(element).display === 'contents') return;
     element.classList.add(PENDING);
     this.getObserver().observe(element);
@@ -68,7 +60,6 @@ export class Revealer {
       if (event.target === element) finish();
     };
     element.addEventListener('animationend', onEnd);
-    // Rede de segurança (animação cancelada pelo CSS): atraso máximo + duração + folga.
     setTimeout(finish, 600 + 420 + 200);
   }
 }

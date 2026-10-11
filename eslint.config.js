@@ -46,6 +46,7 @@ module.exports = defineConfig([
       ],
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
       '@angular-eslint/prefer-signals': 'error',
+      'no-empty': ['error', { allowEmptyCatch: true }],
       'import/no-relative-parent-imports': 'error',
       'import/no-cycle': 'error',
       'import/no-duplicates': 'error',
@@ -125,6 +126,7 @@ module.exports = defineConfig([
     files: ['**/*.spec.ts', 'src/test-setup.ts', 'src/testing/**/*.ts'],
     rules: {
       '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
     },
   },
   {

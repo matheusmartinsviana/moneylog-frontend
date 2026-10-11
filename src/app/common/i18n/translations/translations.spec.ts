@@ -10,10 +10,6 @@ function leaves(tree: object, prefix = ''): [string, string][] {
   );
 }
 
-/**
- * Palavras que podem aparecer com maiúscula no meio da frase: nomes próprios, siglas, marcas
- * e nomes de idioma (que se escrevem com maiúscula no próprio idioma).
- */
 const PROPER_NOUNS = new Set([
   'Markdown',
   'Monelog',
@@ -31,7 +27,6 @@ const PROPER_NOUNS = new Set([
   'Pix',
   'Safari',
   'CVV',
-  // Nomes de teclas.
   'Enter',
   'Esc',
   'Tab',
@@ -60,7 +55,6 @@ function sentenceCaseProblems(text: string): string[] {
     .map(({ word }) => word);
 }
 
-/** Nome único da ação e da página `/quick-add` (S-57). */
 const NEW_ENTRY = { pt: 'Novo registro', en: 'New entry', es: 'Nuevo registro' } as const;
 
 describe('Traduções', () => {
@@ -88,7 +82,6 @@ describe('Traduções', () => {
     'Dado %s, então todos os textos estão em sentence case',
     (_, dict) => {
       const problems = leaves(dict)
-        // Máscaras de data (dd/mm/aaaa) são formato, não frase; `shell.aiOn/aiOff` completam "IA (ligada)".
         .filter(
           ([key]) =>
             key !== 'shell.brand' &&

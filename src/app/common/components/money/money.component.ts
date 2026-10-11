@@ -3,7 +3,6 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 import { MoneyPipe } from '~/app/common/pipes/money.pipe';
 import { Money } from '~/util/money';
 
-/** Valor monetário com números tabulares, formatado pela moeda do dado. */
 @Component({
   selector: 'app-money',
   imports: [MoneyPipe],

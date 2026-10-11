@@ -17,12 +17,6 @@ export type ConfirmTone = 'default' | 'risk';
 
 let nextId = 0;
 
-/**
- * Diálogo de confirmação (T32), usado em estornar, arquivar e ações que pedem motivo. Composto
- * sobre o `Dialog` (T164): modal de verdade, foco preso, fundo `inert`, Esc cancela e, ao fechar, o
- * foco volta para quem abriu. Com `requireReason`, o confirmar só habilita com um motivo preenchido.
- * Presentational: quem usa controla `open` e reage a `confirmed`/`cancelled`.
- */
 @Component({
   selector: 'app-confirm-dialog',
   imports: [DialogComponent],
@@ -41,12 +35,9 @@ export class ConfirmDialogComponent {
   readonly requireReason = input(false);
   readonly reasonLabel = input<string>();
   readonly reasonMaxLength = input(200);
-  /** `risk` para ações que mudam saldo (ex.: estornar): botão de confirmar em vermelho discreto. */
   readonly tone = input<ConfirmTone>('default');
-  /** Ação em andamento: bloqueia os botões para evitar envio duplicado. */
   readonly busy = input(false);
 
-  /** Confirmado; emite o motivo sem espaços nas pontas ('' quando não há motivo). */
   readonly confirmed = output<string>();
   readonly cancelled = output<void>();
 

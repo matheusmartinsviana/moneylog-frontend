@@ -50,7 +50,6 @@ function unavailable(): Observable<never> {
   return throwError(() => new ProblemError(problem));
 }
 
-/** Facade de requisições de IA: o único lugar com HTTP do módulo. Com `API_MOCKS`, a IA está desligada. */
 @Injectable({ providedIn: 'root' })
 export class AiRequestsFacade extends AiGateway {
   private readonly http = inject(HttpClient);
@@ -101,7 +100,6 @@ export class AiRequestsFacade extends AiGateway {
   }
 
   insights(month: string | null): Observable<Slice<Insight>> {
-    // Mock: lista vazia, ou o JSON que o E2E deixou em `window.__MONEYLOG_MOCK_RESPONSES__['/v1/insights']`.
     if (this.useMocks) {
       return of(
         toInsights(mockResponse<InsightSliceResponse>(E.insights, { items: [], hasNext: false })),

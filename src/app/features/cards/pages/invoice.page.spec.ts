@@ -33,7 +33,6 @@ class DummyComponent {}
 
 const text = (el: HTMLElement) => el.textContent?.replace(/\s+/g, ' ').trim();
 
-/** A fatura fechada do cenário: 1.283,00 com a parcela do notebook e uma compra à vista. */
 const closedInvoice = (overrides = {}) =>
   anInvoice({
     id: 'inv-nov',
@@ -96,7 +95,6 @@ describe('InvoicePage', () => {
   it('Dado a tela, então mostra o bloco de notas vinculadas ao registro (a página injeta o bloco; nenhum módulo importa notes)', async () => {
     await setup();
 
-    // As notas ligadas moram em "Mais" (recolhido e montado só ao abrir).
     await userEvent.click(await screen.findByTestId('invoice-more-toggle'));
     expect(await screen.findByTestId('invoice-notes-block')).toHaveTextContent('Notas vinculadas');
     expect(screen.getByTestId('invoice-notes-new')).toBeInTheDocument();

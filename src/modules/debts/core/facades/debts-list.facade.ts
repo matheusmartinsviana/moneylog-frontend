@@ -19,7 +19,6 @@ import type { Debt } from '~/modules/debts/core/types/debt';
 import { Problem, problemOf } from '~/util/api/problem';
 import { MAX_PAGE_SIZE } from '~/util/api/slice';
 
-/** Filtros da lista de dívidas (sem paginação: a facade pagina até o fim). */
 export type DebtsFilter = Omit<DebtsQuery, 'page' | 'pageSize'>;
 
 export type DebtsListState =
@@ -30,11 +29,6 @@ export type DebtsListState =
 
 const LOADING: DebtsListState = { status: 'loading' };
 
-/**
- * Facade da lista de dívidas (FE 01): repassa o que a API devolveu (`outstanding`, `status`, `overdue`),
- * sem somar nada. `loadAll` pagina até `hasNext = false` (como S-91): a dívida 51 não pode sumir do
- * seletor. Escopo de componente.
- */
 @Injectable()
 export class DebtsListFacade {
   private readonly gateway = inject(DebtsGateway);
@@ -54,7 +48,6 @@ export class DebtsListFacade {
   constructor() {
     this.loads
       .pipe(
-        // switchMap: trocar o filtro descarta a carga anterior.
         switchMap((filter) =>
           this.loadAll(filter).pipe(
             map((data): DebtsListState =>
@@ -83,11 +76,6 @@ export class DebtsListFacade {
     );
   }
 
-  /**
-   * As dívidas **em aberto** do filtro (`OPEN` e `PARTIALLY_SETTLED`): o filtro de status vai ao
-   * backend (que aceita um valor por vez), então encerradas e quitadas nem trafegam. A ordem do
-   * backend (`date desc`) é mantida dentro de cada status.
-   */
   loadAllOpen(filter: Omit<DebtsFilter, 'status'> = {}): Observable<readonly Debt[]> {
     return forkJoin([
       this.loadAll({ ...filter, status: 'OPEN' }),

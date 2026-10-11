@@ -8,10 +8,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { AiHistoryFacade } from '~/modules/ai/core/facades/ai-history.facade';
 import { formatInstant } from '~/util/date';
 
-/**
- * Histórico de análises (o que foi pedido, quando e com qual provedor). O conteúdo enviado só aparece enquanto
- * não foi apagado pela retenção; depois, a tela diz quando foi apagado. Smart (fala com a facade).
- */
 @Component({
   selector: 'app-ai-history',
   imports: [EmptyStateComponent, ErrorStateComponent],

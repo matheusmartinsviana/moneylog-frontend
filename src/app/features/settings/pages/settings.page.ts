@@ -32,10 +32,6 @@ import { VaultSectionComponent } from '~/app/features/notes/components/vault-sec
 import { ExportSectionComponent } from '~/app/features/settings/components/export-section/export-section.component';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 
-/**
- * Configurações: preferências reais deste dispositivo (idioma e tema) e o estado vazio
- * do que ainda não existe (chaves de IA, armazenamento do vault).
- */
 @Component({
   selector: 'app-settings-page',
   imports: [
@@ -82,7 +78,6 @@ export class SettingsPage {
     this.themes.map((option) => ({ value: option, label: this.themeLabels()[option] })),
   );
 
-  // Preferências valem na hora (sem botão salvar): o controle só espelha o estado dos serviços.
   protected readonly languageControl = new FormControl<string | null>(this.language());
   protected readonly themeControl = new FormControl<string | null>(this.themePreference());
 
@@ -101,7 +96,6 @@ export class SettingsPage {
     this.themeControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       if (isThemePreference(value)) this.theme.set(value);
     });
-    // exhaustMap: um toque duplo em "Sair" faz uma chamada só.
     this.signOuts
       .pipe(
         exhaustMap(() => {

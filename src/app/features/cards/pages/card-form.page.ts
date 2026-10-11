@@ -40,7 +40,6 @@ import { BillingChangePreviewFacade } from '~/modules/cards/core/facades/billing
 import { CardFormFacade } from '~/modules/cards/core/facades/card-form.facade';
 import { CARD_CURRENCY, CardInput } from '~/modules/cards/core/types/card';
 
-/** Códigos de regra que o backend atribui a um campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   CARD_NAME_REQUIRED: 'name',
   CARD_NAME_TOO_LONG: 'name',
@@ -54,14 +53,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
 
 const MAX_DAY = 31;
 
-/**
- * Criar (`/cards/new`) e editar (`/cards/:id/edit`) um cartão (T64, T69). Valida nome, limite e dias só
- * para UX: a regra é do backend, e o erro dele preenche o campo. Nenhum campo para número, validade ou
- * CVV. Ao mudar fechamento ou vencimento (edição), pede a **prévia do backend** (300 ms, cancela a
- * anterior), mostra o efeito e só habilita o salvar com a prévia da combinação atual; o `PUT` leva
- * `confirmedEffectiveFrom` = `effectiveFromClosingDate` recebido. `409 CARD_BILLING_CHANGE_STALE` refaz a
- * prévia; `409 VERSION_CONFLICT` avisa e recarrega. Salvar usa o cartão devolvido e leva à tela dele.
- */
 @Component({
   selector: 'app-card-form-page',
   imports: [
@@ -82,7 +73,6 @@ const MAX_DAY = 31;
   styleUrl: './card-form.page.css',
 })
 export class CardFormPage {
-  /** Esqueleto do carregamento: mesmas peças (e ordem) do formulário. */
   protected readonly skeleton: readonly FormSkeletonPiece[] = [
     'field',
     'field-hint',
@@ -104,7 +94,6 @@ export class CardFormPage {
   protected readonly currency = CARD_CURRENCY;
   protected readonly maxDay = MAX_DAY;
 
-  /** `:id` da rota; ausente em `/cards/new`. */
   readonly id = input<string>();
 
   protected readonly editing = computed(() => this.id() !== undefined);
@@ -125,7 +114,6 @@ export class CardFormPage {
     defaultPaymentAccountId: new FormControl<string | null>(null),
   });
 
-  /** Alterações digitadas e não salvas: fechar pede confirmação. */
   protected readonly dirty = dirtySignal(this.form);
 
   private readonly accounts = signal<readonly Account[]>([]);
@@ -135,7 +123,6 @@ export class CardFormPage {
       .map((account) => ({ value: account.id, label: account.name })),
   );
 
-  /** Os dois dias mudaram em relação ao cartão carregado? (Só na edição.) */
   protected readonly daysChanged = signal(false);
   protected readonly staleBilling = signal(false);
 
@@ -145,7 +132,6 @@ export class CardFormPage {
         interpolate(this.t().cards.form.dayValue, { day: String(day) }),
   );
 
-  /** A falha do salvar já foi para os campos (então não precisa do aviso geral)? */
   private readonly fieldHandled = signal(false);
 
   protected readonly banner = computed(() => {
@@ -167,13 +153,11 @@ export class CardFormPage {
   });
   protected readonly notFound = computed(() => this.loadProblem()?.status === 404);
 
-  /** O salvar espera a prévia da combinação atual quando um dia mudou (T69 CA1). */
   protected readonly waitingPreview = computed(
     () => this.daysChanged() && this.billing.data() === null,
   );
 
   constructor() {
-    // Edição: carrega o cartão; a cada versão nova (inclusive depois de um conflito) repõe o formulário.
     effect(() => {
       const id = this.id();
       if (id !== undefined) untracked(() => this.facade.load(id));
@@ -194,14 +178,12 @@ export class CardFormPage {
         this.updateBillingPreview();
       });
     });
-    // Mudou o fechamento ou o vencimento: pede a prévia (ou limpa, se voltou ao que era).
     merge(this.form.controls.closingDay.valueChanges, this.form.controls.dueDay.valueChanges)
       .pipe(takeUntilDestroyed())
       .subscribe(() => {
         this.staleBilling.set(false);
         this.updateBillingPreview();
       });
-    // Falha do salvar: marca os campos que o backend apontou; 409 recarrega ou refaz a prévia.
     effect(() => {
       const problem = this.facade.problem();
       if (!problem) {
@@ -222,7 +204,6 @@ export class CardFormPage {
     this.accountsFacade
       .loadAll('ACTIVE')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      // Sem a lista de contas o campo fica sem opções: a conta padrão é opcional.
       .subscribe({ next: (accounts) => this.accounts.set(accounts), error: () => undefined });
 
     this.facade.saved$.pipe(takeUntilDestroyed()).subscribe((card) => {
@@ -236,12 +217,10 @@ export class CardFormPage {
     });
   }
 
-  /** Para onde o modal volta: a lista (criar) ou a página de origem (editar). */
   private backUrl(): string[] {
     return this.editing() ? ['/cards', this.id() as string] : ['/cards'];
   }
 
-  /** Fechar sem salvar (já confirmado, se havia alterações). */
   protected close(): void {
     void this.router.navigate(this.backUrl());
   }
@@ -264,7 +243,6 @@ export class CardFormPage {
 
     if (id !== undefined && card) {
       const preview = this.billing.data();
-      // Mudou um dia e a prévia atual não chegou: não envia (o botão já está desabilitado).
       if (this.daysChanged() && preview === null) return;
       this.facade.save({
         kind: 'update',
@@ -291,7 +269,6 @@ export class CardFormPage {
     this.updateBillingPreview();
   }
 
-  /** Dias inteiros 1..31 nos dois campos e diferentes dos do cartão: pede a prévia; senão, limpa. */
   private updateBillingPreview(): void {
     const card = this.card();
     const id = this.id();

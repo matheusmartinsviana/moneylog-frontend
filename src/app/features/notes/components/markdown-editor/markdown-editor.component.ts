@@ -39,21 +39,11 @@ import {
 
 let nextId = 0;
 
-/** Plataforma da Apple usa Cmd; as demais, Ctrl. Só para mostrar o atalho certo no texto de ajuda. */
 function usesCommandKey(document: Document): boolean {
   const nav = document.defaultView?.navigator;
   return /Mac|iPhone|iPad/i.test(nav?.platform || nav?.userAgent || '');
 }
 
-/**
- * Editor de Markdown (textarea própria do design system, sem controle nativo problemático): atalhos
- * `Ctrl/Cmd+B`, `I`, `K` e `S`, `Tab`/`Shift+Tab` para recuar (**sem prender o foco**: `Esc` e depois `Tab` sai
- * do campo, dito no texto de ajuda: WCAG 2.1.2), barra de formatação para quem não usa teclado físico e
- * autocomplete de `[[` com notas existentes (`role="listbox"` + `aria-activedescendant`, setas/Enter/Esc,
- * quantidade de resultados anunciada; o `<textarea>` não aceita `role="combobox"`, ver `TextArea`). A edição preserva o desfazer
- * do navegador. No celular a altura acompanha o `visualViewport`, então o teclado não cobre o cursor. Mostra o
- * tamanho em bytes contra o limite de 200 KB. O texto é **dado**: nada aqui o interpreta como HTML.
- */
 @Component({
   selector: 'app-markdown-editor',
   imports: [ReactiveFormsModule, TextAreaComponent, DisplayTextPipe],
@@ -245,13 +235,10 @@ export class MarkdownEditorComponent {
   protected readonly suggest = inject(NoteSuggestFacade);
   protected readonly t = this.i18n.t;
 
-  /** O texto da nota (Markdown cru). */
   readonly control = input.required<FormControl<string>>();
-  /** Nota na lixeira: nada se edita. */
   readonly readonly = input(false);
   readonly maxBytes = input(MAX_NOTE_BYTES);
 
-  /** `Ctrl/Cmd+S`. */
   readonly saveRequested = output<void>();
 
   private readonly area = viewChild.required<TextAreaComponent>('area');
@@ -296,9 +283,7 @@ export class MarkdownEditorComponent {
     ] as const;
   });
 
-  // Autocomplete de `[[`.
   private readonly wikilink = signal<WikilinkContext | null>(null);
-  /** `start` do `[[` que o usuário dispensou com Esc: não reabre até começar outro. */
   private dismissedAt = -1;
   protected readonly active = signal(0);
   protected readonly suggesting = computed(
@@ -308,10 +293,8 @@ export class MarkdownEditorComponent {
     this.suggesting() ? this.optionId(this.active()) : undefined,
   );
 
-  /** `Esc` apertado: o próximo `Tab` sai do campo em vez de recuar o texto. */
   private escapeArmed = false;
 
-  // Altura no celular: acompanha o `visualViewport` (o teclado virtual não cobre o cursor).
   private readonly view = this.document.defaultView;
   private readonly viewportHeight = signal(
     this.view?.visualViewport?.height ?? this.view?.innerHeight ?? 800,
@@ -322,7 +305,6 @@ export class MarkdownEditorComponent {
   });
 
   constructor() {
-    // O contador de bytes e o autocomplete seguem o valor do controle (digitado ou escrito por fora).
     effect((onCleanup) => {
       const control = this.control();
       untracked(() => this.text.set(control.value));
@@ -333,7 +315,6 @@ export class MarkdownEditorComponent {
       if (this.readonly()) this.control().disable({ emitEvent: false });
       else this.control().enable({ emitEvent: false });
     });
-    // Anuncia a quantidade de sugestões (leitor de tela).
     effect(() => {
       const count = this.suggest.suggestions().length;
       if (this.wikilink() === null) return;
@@ -363,7 +344,6 @@ export class MarkdownEditorComponent {
     return `${this.listboxId}-${index}`;
   }
 
-  /** Foca o campo de texto (a página usa ao abrir o editor). */
   focus(): void {
     this.area().focus();
   }
@@ -406,7 +386,6 @@ export class MarkdownEditorComponent {
   }
 
   protected onKey(event: KeyboardEvent): void {
-    // Composição de IME: as teclas são do IME (confirmar, trocar candidato), não atalhos do editor.
     if (event.isComposing || event.keyCode === 229) return;
     if (this.suggesting() && this.onSuggestKey(event)) return;
     const mod = event.ctrlKey || event.metaKey;
@@ -425,7 +404,6 @@ export class MarkdownEditorComponent {
       }
     }
     if (event.key === 'Tab' && !mod && !event.altKey) {
-      // `Esc` e depois `Tab` deixa o foco sair (nada de armadilha de teclado).
       if (this.escapeArmed) {
         this.escapeArmed = false;
         return;
@@ -437,7 +415,6 @@ export class MarkdownEditorComponent {
     this.escapeArmed = event.key === 'Escape';
   }
 
-  /** Teclas com a lista de sugestões aberta; `true` = a tecla foi tratada. */
   private onSuggestKey(event: KeyboardEvent): boolean {
     const count = this.suggest.suggestions().length;
     switch (event.key) {
@@ -463,7 +440,6 @@ export class MarkdownEditorComponent {
         this.accept(this.active());
         return true;
       case 'Escape': {
-        // Fecha a lista sem sair do campo e sem armar o "Esc, Tab".
         event.preventDefault();
         this.dismissedAt = this.wikilink()?.start ?? -1;
         this.wikilink.set(null);

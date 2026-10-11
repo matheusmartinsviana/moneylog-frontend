@@ -8,12 +8,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { InvoiceItem } from '~/modules/cards/core/types/invoice';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Itens da fatura (T66, presentational): parcelas ("Notebook 1/6") e créditos, ordenados por data, cada um
- * levando ao detalhe da movimentação. `lateEntry` mostra o rótulo "lançamento tardio" com a explicação
- * **visível** (não só em tooltip). `amount` é sempre positivo no backend: o crédito aparece com o
- * rótulo "Crédito" e o sinal `−`, só como apresentação. Lista em todas as larguras (cabe em 375 px).
- */
 @Component({
   selector: 'app-invoice-items-table',
   imports: [RouterLink, MoneyComponent],
@@ -76,7 +70,7 @@ import { formatIsoDate } from '~/util/date';
     }
 
     .item {
-      position: relative; /* contém o link esticado (cartão inteiro clicável) */
+      position: relative;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
@@ -133,7 +127,6 @@ export class InvoiceItemsTableComponent {
 
   readonly items = input.required<readonly InvoiceItem[]>();
 
-  /** Ordem por data (e a original dentro do mesmo dia): só apresentação, `sort` é estável. */
   protected readonly sorted = computed(() =>
     [...this.items()].sort((a, b) => a.date.localeCompare(b.date)),
   );

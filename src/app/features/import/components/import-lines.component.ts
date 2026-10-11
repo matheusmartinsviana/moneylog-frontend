@@ -17,12 +17,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { ImportLine } from '~/modules/imports/core/types/import';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Linhas do extrato (presentational): tabela estilo planilha no desktop e lista de cartões no celular, com as
- * mesmas ações. Teclado: setas mudam de linha; `A` aceita, `R` rejeita e `C` edita a categoria **só quando a
- * própria linha está em foco** (digitar num campo ou usar um botão não dispara atalho). Estado e marcas
- * aparecem em texto, nunca só pela cor; categoria sugerida mostra "confiança alta/média".
- */
 @Component({
   selector: 'app-import-lines',
   imports: [RouterLink, MoneyComponent],
@@ -36,17 +30,13 @@ export class ImportLinesComponent {
   protected readonly t = this.i18n.t;
 
   readonly lines = input.required<readonly ImportLine[]>();
-  /** Nomes das categorias por id (o backend manda só o id). */
   readonly categoryNames = input<Readonly<Record<string, string>>>({});
-  /** Só um lote em revisão aceita decisões. */
   readonly editable = input(true);
   readonly busy = input(false);
 
   readonly accept = output<ImportLine>();
   readonly reject = output<ImportLine>();
-  /** Desfaz a aceitação (`REOPEN`). */
   readonly reopen = output<ImportLine>();
-  /** Abre a folha de edição/decisão (categoria, método, descrição, transferência, parcela, forçar). */
   readonly edit = output<ImportLine>();
 
   protected readonly active = signal(0);
@@ -66,7 +56,6 @@ export class ImportLinesComponent {
     return Object.hasOwn(this.categoryNames(), id) ? (this.categoryNames()[id] ?? null) : null;
   }
 
-  /** A categoria mostrada é só uma sugestão (a linha ainda não tem categoria própria). */
   protected isSuggestion(line: ImportLine): boolean {
     return line.categoryId === null && line.suggestion !== null;
   }
@@ -94,7 +83,6 @@ export class ImportLinesComponent {
 
   protected onKeydown(event: KeyboardEvent, index: number): void {
     const row = event.currentTarget as HTMLElement;
-    // Atalhos só com a própria linha em foco (não dentro de botões, links ou campos).
     if (event.target !== row || event.ctrlKey || event.metaKey || event.altKey) return;
     const line = this.lines()[index];
     if (!line) return;

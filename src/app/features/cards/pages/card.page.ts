@@ -42,13 +42,6 @@ import { isPositive } from '~/util/money';
 type TabId = 'invoices' | 'future';
 type ActionId = 'pay' | 'purchase' | 'ongoing' | 'edit';
 
-/**
- * Tela do cartão (`/cards/:id`, smart, T65): resumo (limite, disponível, **total comprometido** e, à
- * parte, o comprometido em compras futuras, ambos do backend), as abas "Faturas" e "Parcelas futuras"
- * (a aba ativa vai para `?tab=`) e as ações (Pagar fatura, Nova compra, Editar). No celular as ações
- * viram um menu. Cartão de outro usuário ou inexistente: "não encontrado" com voltar. Depois de um
- * pagamento, recarrega o cartão e as faturas do backend.
- */
 @Component({
   selector: 'app-card-page',
   imports: [
@@ -84,9 +77,7 @@ export class CardPage {
   protected readonly facade = inject(CardDetailFacade);
   protected readonly compact = inject(ViewportService).compact;
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
-  /** `?tab=` da URL; qualquer valor desconhecido abre as faturas. */
   readonly tab = input<string>();
 
   protected readonly card = this.facade.card;
@@ -111,12 +102,6 @@ export class CardPage {
     this.accounts().filter((account) => account.liquidity === 'CASH'),
   );
 
-  /**
-   * A fatura que "Pagar fatura" abre: a fechada ou atrasada mais antiga com saldo; sem ela, a corrente
-   * (pagamento antecipado). Escolha só por `status`, vencimento e sinal do `outstanding`: nenhuma conta.
-   * Só decide com a lista de faturas **carregada**: carregando ou em erro devolve `null` (não cai na
-   * corrente, que poderia ser a fatura errada com uma vencida em aberto).
-   */
   protected readonly payTarget = computed<InvoiceSummary | null>(() => {
     const card = this.card();
     if (!card) return null;
@@ -134,7 +119,6 @@ export class CardPage {
     return current && current.status === 'OPEN' && isPositive(current.outstanding) ? current : null;
   });
 
-  /** Por que "Pagar" está desabilitado: a lista de faturas ainda não chegou ou falhou. */
   protected readonly payHint = computed<'loading' | 'error' | 'nothing' | null>(() => {
     if (this.payTarget() !== null) return null;
     const status = this.invoices().status;
@@ -166,7 +150,6 @@ export class CardPage {
   });
 
   constructor() {
-    // Um cadastro foi salvo no modal por cima desta página: relê do backend.
     this.changes
       .of('cards')
       .pipe(takeUntilDestroyed())
@@ -175,7 +158,6 @@ export class CardPage {
       const id = this.id();
       untracked(() => this.facade.load(id));
     });
-    // A aba "Parcelas futuras" carrega na primeira abertura (e quando o cartão muda).
     effect(() => {
       const id = this.id();
       if (this.activeTab() === 'future' && this.facade.future().status === 'idle') {
@@ -185,7 +167,6 @@ export class CardPage {
     this.accountsFacade
       .loadAll('ACTIVE')
       .pipe(takeUntilDestroyed(this.destroyRef))
-      // Sem a lista de contas o pagamento mostra "cadastre uma conta"; o resto da tela segue.
       .subscribe({ next: (accounts) => this.accounts.set(accounts), error: () => undefined });
   }
 
@@ -200,14 +181,12 @@ export class CardPage {
   protected readonly ongoingOpen = signal(false);
   protected readonly closingOpen = signal(false);
 
-  /** Fechamento confirmado: o cartão devolvido pelo backend é relido (selo some). */
   protected afterClosing(): void {
     this.closingOpen.set(false);
     this.toast.show(this.t().cards.closing.toast);
     this.facade.refresh(this.id());
   }
 
-  /** Cadastrou o parcelado em andamento: o cartão relê fatura, limite e parcelas futuras do backend. */
   protected afterOngoing(): void {
     this.ongoingOpen.set(false);
     this.facade.refresh(this.id());
@@ -240,7 +219,6 @@ export class CardPage {
     this.paying.set(false);
   }
 
-  /** Pagou: recarrega o cartão e as faturas do backend (limite, `outstanding`, status). */
   protected onPaid(): void {
     this.paying.set(false);
     this.facade.refresh(this.id());

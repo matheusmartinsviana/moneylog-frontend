@@ -3,18 +3,10 @@ export interface DiffLine {
   readonly text: string;
 }
 
-/** Acima disto (linhas de cada texto) a comparação é recusada, mesmo com o produto pequeno (F6). */
 export const MAX_DIFF_LINES = 20_000;
 
-/** Acima disto (linhas × linhas) a comparação é recusada: a memória cresce com o produto. */
 export const MAX_DIFF_CELLS = 2_000_000;
 
-/**
- * Diferença linha a linha entre o texto **do servidor** (`remote`) e o **digitado** (`mine`), pelo maior
- * subconjunto comum. `added` = só no texto do usuário; `removed` = só no do servidor. Devolve `null` se o
- * texto é grande demais para comparar (a tela oferece as duas escolhas sem a diferença). Só texto: nenhuma
- * linha vira marcação.
- */
 export function lineDiff(remote: string, mine: string): readonly DiffLine[] | null {
   const a = remote.split('\n');
   const b = mine.split('\n');

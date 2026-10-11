@@ -31,13 +31,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 
-/**
- * Sidebar em trilho de ícones (DS 03), **sempre recolhida** em todas as larguras: botões quadrados arredondados com o
- * rótulo como tooltip e nome acessível. O item ativo é um indicador de acento que desliza entre os itens (só `transform`).
- * Só o essencial fica à vista; "Mais" abre um popover com os atalhos secundários (Orçamentos, Vault, Insights, IA,
- * MCP, Importar, Notificações). Configurações e Sair ficam fixos no rodapé. "Sair" usa `SessionFacade.logout`
- * (`exhaustMap`: toque duplo = uma chamada).
- */
 @Component({
   selector: 'app-sidebar',
   imports: [RouterLink, IconComponent, MenuComponent, TooltipDirective],
@@ -65,7 +58,6 @@ export class SidebarComponent {
     { initialValue: this.router.url },
   );
 
-  /** Chave do item do trilho que corresponde à rota (ou `more` quando é um dos atalhos do popover). */
   protected readonly activeKey = computed<string | null>(() => {
     const url = this.url();
     if (isNavActive(this.quickAdd, url)) return this.quickAdd.key;
@@ -79,7 +71,6 @@ export class SidebarComponent {
   protected readonly moreItems = computed<readonly MenuItem[]>(() =>
     SIDEBAR_POPOVER_ITEMS.map((item) => ({
       id: item.key,
-      // A IA é opcional: o estado dela mora aqui, no item (não no cabeçalho).
       label:
         item.key === 'ai'
           ? `${this.t().nav.ai} (${this.aiStatus.enabled() ? this.t().shell.aiOn : this.t().shell.aiOff})`
@@ -89,9 +80,7 @@ export class SidebarComponent {
   );
 
   private readonly scroll = viewChild<ElementRef<HTMLElement>>('scroll');
-  /** Posição vertical do indicador (px, dentro da área rolável); `null` sem item ativo no trilho. */
   protected readonly indicatorY = signal<number | null>(null);
-  /** O indicador só desliza depois da primeira posição (sem voar do topo ao abrir a página). */
   protected readonly indicatorReady = signal(false);
 
   constructor() {
@@ -119,7 +108,6 @@ export class SidebarComponent {
     });
   }
 
-  /** Lê a posição do item ativo (cada item é um `[data-nav-key]` com o tamanho do quadrado do ícone). */
   private measure(): void {
     const container = this.scroll()?.nativeElement;
     const key = this.activeKey();

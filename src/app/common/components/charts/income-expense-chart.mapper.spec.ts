@@ -42,7 +42,6 @@ describe('toIncomeExpenseChart (só apresentação)', () => {
       ['income', 'primary', 'Entradas'],
       ['expenses', 'secondary', 'Saídas'],
     ]);
-    // Os mesmos objetos Money do backend: nenhuma soma, arredondamento ou conversão.
     expect(chart.series[0]!.values[0]).toBe(data.points[0]!.income);
     expect(chart.series[1]!.values[1]).toBe(data.points[1]!.expenses);
     expect(chart.series[1]!.values[1]!.amount).toBe('-35.50');

@@ -17,7 +17,6 @@
   gap: var(--space-3);
 }
 
-/* Celular: tela cheia com "Voltar" no topo (o X só existe no painel do desktop). */
 .detail__back {
   display: inline-flex;
   align-items: center;
@@ -131,7 +130,6 @@
   gap: var(--space-3);
 }
 
-/* Desktop: painel lateral sobre a lista. */
 @media (width >= 1280px) {
   :host {
     position: fixed;

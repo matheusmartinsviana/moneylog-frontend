@@ -15,13 +15,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { GoalPhotoComponent } from '~/app/features/goals/components/goal-photo/goal-photo.component';
 import type { GoalPhoto } from '~/modules/goals/core/types/goal';
 
-/**
- * Galeria da meta (presentational, ADR-018): foto grande (versão de exibição) com miniaturas. Teclado:
- * setas esquerda/direita, Home e End trocam de foto de qualquer ponto da galeria; botões anterior e próxima
- * e miniaturas (`aria-current`) também. Cada imagem tem `alt` descritivo ("Foto n de m da meta …"), e a foto
- * em exibição é anunciada com `aria-live="polite"` quando o usuário navega. Altura fixa pela proporção (sem
- * salto de layout). Sem autoplay: quem quer apresentação automática usa o destaque da tela inicial.
- */
 @Component({
   selector: 'app-goal-gallery',
   imports: [GoalPhotoComponent, IconComponent],
@@ -46,7 +39,6 @@ export class GoalGalleryComponent {
   protected readonly currentAlt = computed(() => this.altOf(this.index()));
 
   constructor() {
-    // A lista encolheu (foto removida) ou outra meta: volta para uma posição válida.
     effect(() => {
       const total = this.photos().length;
       untracked(() => {

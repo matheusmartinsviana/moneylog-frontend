@@ -17,7 +17,6 @@ export const aToken = (accessToken = 'token-1'): AuthToken => ({
   expiresAt: '2026-10-10T12:15:00Z',
 });
 
-/** Porta de auth falsa e configurável, com registro das chamadas. */
 export class AuthGatewayStub extends AuthGateway {
   login$: Observable<AuthToken> = of(aToken());
   refresh$: Observable<AuthToken> = of(aToken('token-2'));
@@ -58,14 +57,12 @@ export function provideAuthStub(stub: AuthGatewayStub = new AuthGatewayStub()): 
   return [{ provide: AuthGateway, useValue: stub }];
 }
 
-/** Sessão já restaurada (como o `provideAppInitializer` do bootstrap), para testar rotas protegidas. */
 export function provideAuthenticatedSession(): (Provider | EnvironmentProviders)[] {
   return [provideAuthStub(), provideAppInitializer(() => inject(SessionFacade).restore())];
 }
 
 export { AUTH_ENDPOINTS };
 
-/** A porta real de auth (infra) falando HTTP de verdade, para testar interceptors com `HttpTestingController`. */
 export function provideAuthOverHttp(): Provider[] {
   return [{ provide: API_MOCKS, useValue: false }, ...provideAuth()];
 }

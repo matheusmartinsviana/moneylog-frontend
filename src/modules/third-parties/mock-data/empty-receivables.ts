@@ -1,6 +1,5 @@
 import type { ThirdPartyReceivablesResponse } from '~/modules/third-parties/infra/responses/third-party.response';
 
-/** Ambiente mock (S-67): nada a receber. Mesmo formato bruto da API. */
 export function emptyReceivables(month: string | null): ThirdPartyReceivablesResponse {
   const zero = { amount: '0.00', currency: 'BRL' as const };
   return {

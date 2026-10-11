@@ -11,10 +11,6 @@ import { emptyProjection } from '~/modules/projections/mock-data/empty-projectio
 import { ProblemError, toProblem } from '~/util/api/problem';
 import { API_MOCKS } from '~/util/api-mocks';
 
-/**
- * Facade de requisições de projeções (FE 05): o único lugar com HTTP do módulo. `horizon` e `includeTrend`
- * viram a query string; com `API_MOCKS` ligado devolve a série vazia, sem requisição.
- */
 @Injectable({ providedIn: 'root' })
 export class ProjectionsRequestsFacade extends ProjectionsGateway {
   private readonly http = inject(HttpClient);

@@ -4,13 +4,10 @@ import { RouterLink } from '@angular/router';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
 export interface EmptyStateAction {
-  /** Identificador estável: vira o `data-cy` e é o valor emitido no clique. */
   readonly id: string;
   readonly label: string;
-  /** Ação ainda não implementada: aparece desabilitada com a dica "disponível em breve" (S-33). */
   readonly available: boolean;
   readonly primary?: boolean;
-  /** Quando informado, a ação é um link de navegação (sempre disponível). */
   readonly link?: string;
 }
 
@@ -18,10 +15,6 @@ export type EmptyStateIllustration = 'log' | 'grid' | 'timeline' | 'document';
 
 let nextId = 0;
 
-/**
- * Estado vazio (DS 01): ilustração abstrata e mínima, título, texto e as ações para começar.
- * Presentational: só `input()`/`output()`; o i18n é usado apenas para a dica de indisponível.
- */
 @Component({
   selector: 'app-empty-state',
   imports: [RouterLink],

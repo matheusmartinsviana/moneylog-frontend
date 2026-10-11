@@ -9,7 +9,6 @@ import type {
 } from '~/modules/debt-overview/core/types/debt-overview';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/** Espera até a digitação parar antes de pedir a prévia. */
 export const ONGOING_PREVIEW_DEBOUNCE_MS = 300;
 
 interface PreviewKey {
@@ -23,11 +22,6 @@ type PreviewState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: OngoingPreview };
 
-/**
- * Cadastro da compra parcelada em andamento. A prévia (`remaining`, `lastDueDate`) vem do servidor: o front
- * não soma parcelas. `switchMap` cancela a prévia anterior; o salvar usa `exhaustMap` (duplo toque = um
- * envio, porque o contrato não tem idempotência). Escopo de componente.
- */
 @Injectable()
 export class OngoingInstallmentsFacade {
   private readonly gateway = inject(DebtOverviewGateway);
@@ -49,7 +43,6 @@ export class OngoingInstallmentsFacade {
   });
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
-  /** Emite o id da compra criada. */
   readonly saved$ = this.savedEvents.asObservable();
 
   constructor() {
@@ -92,7 +85,6 @@ export class OngoingInstallmentsFacade {
       });
   }
 
-  /** Dados completos pedem a prévia; `null` (incompletos) limpa. */
   requestPreview(cardId: string, input: OngoingInstallmentsInput | null): void {
     this.previewState.set(input === null ? { status: 'idle' } : { status: 'loading' });
     this.previews.next(input === null ? null : { cardId, input });

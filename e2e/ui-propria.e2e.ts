@@ -10,11 +10,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * UI própria (FE-S-112): nenhum controle nativo do navegador e os controles próprios por teclado
- * e por toque (375 px: folha inferior). Ambiente mock (sem backend).
- */
-
 const NATIVE =
   'select, datalist, details, summary, dialog, progress, meter, [popover], [title]:not(svg *), ' +
   'input[type=date], input[type=month], input[type=week], input[type=time], input[type=datetime-local], ' +
@@ -36,7 +31,6 @@ test.describe('guarda de runtime: nenhum controle nativo', () => {
           await page.goto(route.path);
           await waitForApp(page);
           expect(await page.locator(NATIVE).count(), `${route.path} tem controle nativo`).toBe(0);
-          // FE-S-119: a única exceção é o `<input type="file">` escondido dentro do FilePicker.
           const strayFiles = await page
             .locator('input[type=file]')
             .evaluateAll(

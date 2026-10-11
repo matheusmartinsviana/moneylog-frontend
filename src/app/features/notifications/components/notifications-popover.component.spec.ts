@@ -23,7 +23,6 @@ import type { Slice } from '~/util/api/slice';
 @Component({ selector: 'app-blank', template: '', changeDetection: ChangeDetectionStrategy.OnPush })
 class BlankComponent {}
 
-/** Porta que nunca responde: mantém o pop-up em "carregando". */
 class PendingGateway extends NotificationsGatewayStub {
   override list(query: NotificationsQuery): Observable<Slice<AppNotification>> {
     this.queries.push(query);

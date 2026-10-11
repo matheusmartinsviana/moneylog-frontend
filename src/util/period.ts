@@ -1,12 +1,7 @@
-/**
- * Períodos de check-in das ações de uma meta (ADR-016): `MONTHLY` = `YYYY-MM`, `WEEKLY` = `YYYY-Www`
- * (semana ISO 8601), `ONE_TIME` = `ONCE`. Só formata datas: nenhuma regra financeira.
- */
 export type PeriodFrequency = 'MONTHLY' | 'WEEKLY' | 'ONE_TIME';
 
 export const ONCE_PERIOD = 'ONCE';
 
-/** Semana ISO 8601 (a que contém a quinta-feira) de uma data `YYYY-MM-DD`, como `2026-W41`. */
 export function isoWeekPeriod(isoDate: string): string {
   const [year, month, day] = isoDate.split('-').map(Number) as [number, number, number];
   const date = new Date(Date.UTC(year, month - 1, day));
@@ -18,7 +13,6 @@ export function isoWeekPeriod(isoDate: string): string {
   return `${weekYear}-W${String(week).padStart(2, '0')}`;
 }
 
-/** O período em curso de uma frequência, a partir de "hoje" (`YYYY-MM-DD`). */
 export function currentPeriod(frequency: PeriodFrequency, today: string): string {
   switch (frequency) {
     case 'MONTHLY':
@@ -33,7 +27,6 @@ export function currentPeriod(frequency: PeriodFrequency, today: string): string
 export interface PeriodParts {
   readonly kind: 'month' | 'week' | 'once' | 'unknown';
   readonly year: number;
-  /** Mês (1-12) ou semana (1-53); 0 em `once`/`unknown`. */
   readonly number: number;
 }
 

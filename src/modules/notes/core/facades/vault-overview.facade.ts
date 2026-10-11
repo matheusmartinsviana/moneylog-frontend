@@ -9,10 +9,6 @@ export type VaultOverviewState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly lastChange: string | null };
 
-/**
- * Visão geral do vault (`/vault`): só a data da última alteração, lida do backend (`sort=UPDATED`, 1 item). Sem
- * contagem de notas (o contrato não traz `total`; contar páginas no front seria calcular). Escopo de componente.
- */
 @Injectable()
 export class VaultOverviewFacade {
   private readonly gateway = inject(NotesGateway);

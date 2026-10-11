@@ -12,7 +12,6 @@ import type {
 } from '~/modules/notifications/core/types/notification';
 import type { Slice } from '~/util/api/slice';
 
-/** Porta de notificações, lembretes, configurações e push. Falha com `ProblemError`. */
 export abstract class NotificationsGateway {
   abstract list(query: NotificationsQuery): Observable<Slice<AppNotification>>;
   abstract unreadCount(): Observable<number>;
@@ -33,7 +32,6 @@ export abstract class NotificationsGateway {
   abstract saveSettings(settings: NotificationSettings): Observable<NotificationSettings>;
 
   abstract pushConfig(): Observable<PushConfig>;
-  /** Devolve o id da assinatura (para o `DELETE`). */
   abstract subscribePush(input: PushSubscriptionInput): Observable<string>;
   abstract unsubscribePush(id: string): Observable<void>;
 

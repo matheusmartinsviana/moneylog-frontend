@@ -1,4 +1,3 @@
-/** Endpoints de notificações (Etapa 7). Contrato: tag Notifications. */
 export const NOTIFICATIONS_ENDPOINTS = {
   collection: '/v1/notifications',
   unreadCount: '/v1/notifications/unread-count',

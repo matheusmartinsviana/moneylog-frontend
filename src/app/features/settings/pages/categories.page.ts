@@ -40,11 +40,6 @@ type Action =
   | { readonly kind: 'archive'; readonly category: Category }
   | { readonly kind: 'unarchive'; readonly category: Category };
 
-/**
- * Configurações → Categorias (smart): abas Despesa/Receita (`?kind=INCOME` na URL), criar, renomear
- * inline, arquivar (com confirmação) e desarquivar. Não existe excluir (S-70). A lista é atualizada
- * a partir do recurso devolvido pela API; `409 CATEGORY_NAME_TAKEN` vai para o campo do nome.
- */
 @Component({
   selector: 'app-categories-page',
   imports: [
@@ -70,7 +65,6 @@ export class CategoriesPage {
   protected readonly t = inject(I18nService).t;
   protected readonly categories = inject(CategoriesManageFacade);
 
-  /** Aba da URL (`?kind=INCOME`); qualquer outro valor mostra as despesas. */
   readonly kind = input<string>();
 
   protected readonly activeKind = computed<CategoryKind>(() =>
@@ -113,7 +107,6 @@ export class CategoriesPage {
       });
     });
 
-    // exhaustMap: um toque duplo faz uma chamada só (FE 02).
     this.actions
       .pipe(
         exhaustMap((action) => {
@@ -214,7 +207,6 @@ export class CategoriesPage {
     }
   }
 
-  /** Nome repetido vai para o campo; o resto vira aviso com a mensagem do `code`. */
   private fail(error: unknown, target: 'create' | 'rename' | 'toast'): Observable<null> {
     const problem: Problem = problemOf(error);
     if (target === 'create' && problem.code === 'CATEGORY_NAME_TAKEN') {

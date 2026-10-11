@@ -20,11 +20,6 @@ import { provideDashboardMock } from '~/testing/dashboard-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
 import { provideBusinessModules } from '~/testing/modules-testing';
 
-/**
- * Monta o app real (rotas lazy + shell) na URL pedida.
- * O jsdom não avalia media queries: a sidebar (só ≥ 768px) fica oculta e a barra inferior visível,
- * então as consultas à sidebar usam `hidden: true`. O layout por largura é validado no navegador (T20).
- */
 async function navigate(url: string, language: 'pt' | 'en' | 'es' = 'pt') {
   const result = await render(App, {
     deferBlockBehavior: DeferBlockBehavior.Playthrough,
@@ -33,20 +28,16 @@ async function navigate(url: string, language: 'pt' | 'en' | 'es' = 'pt') {
     providers: [
       provideI18nTesting(language),
       { provide: TitleStrategy, useExisting: I18nTitleStrategy },
-      // Início usa o dashboard: mesma ligação do bootstrap, em modo mock (resumo vazio).
       provideDashboardMock(),
       provideBusinessModules(),
-      // As rotas ficam atrás do authGuard: a sessão já vem restaurada.
       provideAuthenticatedSession(),
     ],
   });
-  // A busca, o avatar e o "Mais" carregam em blocos @defer: espera chegarem.
   await screen.findByTestId('header-profile');
   await screen.findByTestId('sidebar-more');
   return result;
 }
 
-/** A sidebar fica oculta no jsdom (sem media queries); localiza pelo data-cy e confere o rótulo. */
 function sidebarNav(): HTMLElement {
   const nav = screen.getByTestId('sidebar').querySelector('nav');
   expect(nav).toHaveAttribute('aria-label', pt.shell.primaryNavigation);
@@ -85,7 +76,6 @@ const PATHS: Record<(typeof SECTION_KEYS)[number], string> = {
   budgets: '/budgets',
 };
 
-/** Seções que já têm tela real (estado vazio com ação habilitada); as demais seguem como placeholder. */
 const IMPLEMENTED = new Set<NavKey>([
   'home',
   'accounts',
@@ -96,11 +86,8 @@ const IMPLEMENTED = new Set<NavKey>([
   'planning',
   'goals',
   'notes',
-  // Importar extrato (Etapa 7): tela real (testada em features/import).
   'import',
-  // Insights (Etapa 8): tela real (testada em features/insights).
   'insights',
-  // Orçamentos (T208): página própria "em breve", sem ação (testada em budgets.page.spec).
   'budgets',
 ]);
 
@@ -112,7 +99,6 @@ describe('App shell e rotas', () => {
     const links = within(nav).getAllByRole('link');
     expect(links.map((link) => link.textContent?.trim())).toEqual([
       'Início',
-      // O rótulo curto "Extrato" é só visual (aria-hidden): o nome acessível continua "Movimentações".
       'MovimentaçõesExtrato',
       'Novo registro',
       'Metas',
@@ -193,7 +179,6 @@ describe('App shell e rotas', () => {
       '/settings',
     );
     expect(footer.querySelector('[data-cy="sidebar-signOut"]')).toBeInTheDocument();
-    // Nenhuma rota some: o que saiu do trilho está em "Mais" (`/more`) e em Configurações.
     expect(SIDEBAR_ITEMS).toHaveLength(16);
     expect(screen.queryByText(/dream board/i)).not.toBeInTheDocument();
   });
@@ -242,7 +227,6 @@ describe('App shell e rotas', () => {
       'Notificações',
     ]);
     await userEvent.click(within(menu).getByRole('menuitem', { name: 'Vault' }));
-    // A rota é carregada sob demanda (import dinâmico): com a suíte inteira em paralelo, 1 s do padrão não basta.
     await vi.waitFor(() => expect(TestBed.inject(Router).url).toBe('/vault'), { timeout: 5000 });
   });
 
@@ -297,7 +281,6 @@ describe('App shell e rotas', () => {
         .getAllByRole('link')
         .map((link) => link.textContent?.trim()),
     ).toEqual([
-      // Na ordem dos grupos da sidebar (mudou de propósito, T193).
       'Contas',
       'Cartões',
       'Orçamentos',
@@ -386,9 +369,7 @@ describe('App shell e rotas', () => {
   });
 
   it('Dado as rotas, então toda seção é lazy (loadChildren) dentro do shell', () => {
-    // As rotas `dev/*` (UI Kit) só existem nos builds de desenvolvimento/mock (`config/dev-routes`).
     const children = (routes.find((route) => route.component)?.children ?? []).filter(
-      // A rota auxiliar `modal` (Novo registro) é lazy e tratada à parte.
       (route) => !route.path?.startsWith('dev/') && !route.outlet,
     );
     expect(children).toHaveLength(20);
@@ -445,18 +426,12 @@ describe('App shell e rotas', () => {
   });
 
   it('Dado o teclado (mobile), então o "pular", o cabeçalho e os itens da barra inferior são alcançáveis com Tab', async () => {
-    // Numa seção sem nada focável no conteúdo (Metas já tem "Nova meta" e as abas; Notas, busca e botões).
-    // Mudou de propósito (T194): o cabeçalho do workspace entra na ordem de foco entre o "pular" e a barra
-    // inferior. O jsdom não avalia media queries e mostra todas as ações do cabeçalho; no aparelho, fora do
-    // Início o mobile só tem o avatar. O que vale: o perfil vem antes da barra e a barra segue na ordem.
     await navigate('/import');
 
     await userEvent.tab();
     expect(screen.getByTestId('skip-to-content')).toHaveFocus();
-    // A busca global (T209) vem antes do perfil; em tela compacta ela é o botão de lupa.
     await userEvent.tab();
     expect(screen.getByTestId('global-search-input')).toHaveFocus();
-    // O alternador de tema vem antes do sino de notificações (Etapa 7), que vem antes do perfil.
     await userEvent.tab();
     expect(screen.getByTestId('header-theme-toggle')).toHaveFocus();
     await userEvent.tab();

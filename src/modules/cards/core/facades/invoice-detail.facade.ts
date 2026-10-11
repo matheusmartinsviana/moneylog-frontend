@@ -13,11 +13,6 @@ export type InvoiceState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly invoice: Invoice };
 
-/**
- * Facade do detalhe da fatura (T66): itens (parcelas e créditos), pagamentos, `carryIn`, `creditCarry` e
- * `outstanding`, todos **como o backend os calculou**. `replace` troca a fatura pela resposta de um
- * pagamento (a fatura devolvida é a fonte da verdade). Escopo de componente.
- */
 @Injectable()
 export class InvoiceDetailFacade {
   private readonly gateway = inject(CardsGateway);
@@ -54,12 +49,10 @@ export class InvoiceDetailFacade {
     this.loads.next({ id, silent: false });
   }
 
-  /** Recarrega do backend sem piscar (ex.: depois de estornar um pagamento). */
   refresh(id: string): void {
     this.loads.next({ id, silent: true });
   }
 
-  /** A fatura devolvida por um pagamento substitui a atual. */
   replace(invoice: Invoice): void {
     this.current.set({ status: 'ready', invoice });
   }

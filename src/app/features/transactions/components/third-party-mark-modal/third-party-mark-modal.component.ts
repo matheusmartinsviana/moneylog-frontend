@@ -31,12 +31,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   PERSON_NOT_FOUND: 'personId',
 };
 
-/**
- * "Marcar como despesa de terceiro" (modal): escolhe a pessoa responsável (ou cria uma ali mesmo) e uma
- * observação opcional. A marca não muda o lançamento: o gasto segue no seu bruto até o reembolso. Usa o
- * `ThirdPartyExpenseFacade` da página (`exhaustMap` + `Idempotency-Key`); erros 422 vão para o campo ou
- * para o aviso do formulário.
- */
 @Component({
   selector: 'app-third-party-mark-modal',
   imports: [ReactiveFormsModule, FormModalComponent, PersonFieldComponent, TextFieldComponent],
@@ -123,11 +117,9 @@ export class ThirdPartyMarkModalComponent implements OnInit {
   protected readonly t = inject(I18nService).t;
   protected readonly facade = inject(ThirdPartyExpenseFacade);
 
-  /** A compra ou despesa a marcar. */
   readonly transactionId = input.required<string>();
 
   readonly closed = output<void>();
-  /** Marcada (resposta do backend): quem usa relê a marca e avisa. */
   readonly marked = output<void>();
 
   protected readonly form = new FormGroup({
@@ -144,7 +136,6 @@ export class ThirdPartyMarkModalComponent implements OnInit {
     return problemMessage(problem, this.t().errors);
   });
 
-  /** Cria a pessoa antes da marca e a põe na lista: a resposta do backend é a escolhida. */
   protected readonly createPerson = (name: string): Observable<PersonRef> =>
     this.peopleFacade
       .create({ name, notes: null })

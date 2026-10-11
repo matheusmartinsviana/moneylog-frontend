@@ -37,7 +37,6 @@ export function aReservation(overrides: Partial<GoalReservation> = {}): GoalRese
   };
 }
 
-/** O cenário do plano: Reserva de emergência, 8.500,00 de 20.000,00 (42,5%), prazo 31/12/2027. */
 export function aGoal(overrides: Partial<Goal> = {}): Goal {
   return {
     id: 'goal-1',
@@ -80,7 +79,6 @@ export function aGoal(overrides: Partial<Goal> = {}): Goal {
   };
 }
 
-/** Foto de teste (metadados). */
 export function aGoalPhoto(overrides: Partial<GoalPhoto> = {}): GoalPhoto {
   return {
     id: 'photo-1',
@@ -92,7 +90,6 @@ export function aGoalPhoto(overrides: Partial<GoalPhoto> = {}): GoalPhoto {
   };
 }
 
-/** Meta de sonho (SAVINGS) sintética com fotos; a primeira é a capa. */
 export function aDreamGoal(photoCount = 3, overrides: Partial<Goal> = {}): Goal {
   const photos = Array.from({ length: photoCount }, (_, i) =>
     aGoalPhoto({ id: `photo-${i + 1}`, position: i }),
@@ -111,7 +108,6 @@ export function aDreamGoal(photoCount = 3, overrides: Partial<Goal> = {}): Goal 
   });
 }
 
-/** Meta inteligente (sintética): total de dívidas de 10.000,00 para 4.000,00. */
 export function aMetricGoal(overrides: Partial<Goal> = {}): Goal {
   return aGoal({
     id: 'goal-metric',
@@ -137,7 +133,6 @@ export function aMetricGoal(overrides: Partial<Goal> = {}): Goal {
   });
 }
 
-/** Porta falsa de metas: guarda as chamadas e devolve o que o teste configurar. */
 export class GoalsGatewayStub extends GoalsGateway {
   goals: Goal[] = [];
   readonly queries: GoalsQuery[] = [];
@@ -146,7 +141,6 @@ export class GoalsGatewayStub extends GoalsGateway {
   readonly createKeys: string[] = [];
   readonly updates: GoalUpdate[] = [];
   readonly reservations: { goalId: string; input: ReservationInput; key: string }[] = [];
-  /** Resultado das escritas de meta (`create`, `update`, `archive`, `unarchive`). */
   next: Observable<Goal> | null = null;
   getResult: Observable<Goal> | null = null;
   listError: Observable<never> | null = null;
@@ -239,19 +233,12 @@ export class GoalsGatewayStub extends GoalsGateway {
   }
 }
 
-/**
- * Porta das fotos para os testes. `uploads` registra cada envio; por padrão o envio termina na hora com uma
- * foto nova. Use `uploadResults` para controlar (ex.: um `Subject` por arquivo, falha de rede).
- */
 export class GoalPhotosGatewayStub extends GoalPhotosGateway {
   readonly uploads: { goalId: string; fileName: string; key: string }[] = [];
   readonly contentCalls: string[] = [];
   readonly calls: string[] = [];
-  /** Resultado do próximo envio (consumido em ordem); sem item, termina com sucesso. */
   uploadResults: Observable<PhotoUploadEvent>[] = [];
-  /** Corpo devolvido pelo conteúdo; erro opcional. */
   content$: Observable<Blob> | null = null;
-  /** Meta devolvida pelas escritas; padrão = meta com as fotos pedidas. */
   next: Observable<Goal> | null = null;
   private sequence = 0;
 
@@ -292,7 +279,6 @@ export class GoalPhotosGatewayStub extends GoalPhotosGateway {
     return this.next ?? of(aGoal({ id: goalId }));
   }
 
-  /** Atalho: um envio controlado à mão (emita progresso e `done`/erro quando quiser). */
   controlUpload(): Subject<PhotoUploadEvent> {
     const subject = new Subject<PhotoUploadEvent>();
     this.uploadResults.push(subject);
@@ -310,7 +296,6 @@ export function provideGoalsStub(
   ];
 }
 
-/** Resposta crua da API (como `schema.gen.ts`), para os testes da infra. */
 export function aReservationResponse(
   overrides: Partial<GoalReservationResponse> = {},
 ): GoalReservationResponse {

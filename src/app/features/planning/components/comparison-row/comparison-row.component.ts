@@ -7,12 +7,6 @@ import type { SummaryDelta } from '~/modules/monthly-summary/core/types/monthly-
 import { formatMoney, isNegative, isPositive, withoutSign } from '~/util/money';
 import { formatRatio } from '~/util/ratio';
 
-/**
- * Uma linha da comparação com o mês anterior (presentational): "Subiu R$ 100,00 (66,7%)", "Caiu ..." ou
- * "Igual". O sentido (subiu, caiu) e os valores vêm do backend (`amount` e `percent`); a tela só lê o sinal
- * do texto e formata. Com `percent` nulo (base zero) mostra só o valor, sem inventar percentual. O sentido é
- * sempre uma palavra, nunca só cor.
- */
 @Component({
   selector: 'div[app-comparison-row]',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -64,7 +58,6 @@ export class ComparisonRowComponent {
     }
     return interpolate(direction === 'up' ? copy.up : copy.down, {
       amount: shown,
-      // Só o texto muda: o sentido já está na palavra "Subiu"/"Caiu".
       percent: formatRatio(percent.replace(/^-/, ''), locale),
     });
   });

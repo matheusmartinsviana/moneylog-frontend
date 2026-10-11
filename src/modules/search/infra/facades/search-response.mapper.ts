@@ -1,7 +1,6 @@
 import type { SearchResults } from '~/modules/search/core/types/search';
 import type { SearchResultsResponse } from '~/modules/search/infra/responses/search.response';
 
-/** Resposta → tipo do core. Só copia campos: nenhum valor é somado e o `snippet` segue texto puro. */
 export function toSearchResults(response: SearchResultsResponse): SearchResults {
   return {
     q: response.q,

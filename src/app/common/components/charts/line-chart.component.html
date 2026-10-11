@@ -1,7 +1,3 @@
-<!--
-  Posições (top, left) saem das coordenadas do backend convertidas só para desenhar: valor dinâmico, não cabe
-  em classe CSS. O resto do estilo vem do CSS do componente.
--->
 <!-- eslint-disable @angular-eslint/template/no-inline-styles -->
 <figure class="lc" [attr.data-cy]="cy()">
   @if (empty()) {
@@ -165,7 +161,6 @@
         {{ tableOpen() ? t().charts.hideTable : t().charts.viewAsTable }}
       </button>
     }
-    <!-- A tabela equivalente existe sempre no DOM: escondida para quem vê, aberta pelo botão. -->
     <div
       class="lc__table"
       [id]="tableId"

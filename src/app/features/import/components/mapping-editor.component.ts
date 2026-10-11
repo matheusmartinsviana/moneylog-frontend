@@ -21,7 +21,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { ImportMapping } from '~/modules/imports/core/types/import';
 
 export interface MappingChange {
-  /** `null` = o backend detecta as colunas (ou o mapeamento manual está incompleto). */
   readonly mapping: ImportMapping | null;
   readonly valid: boolean;
 }
@@ -29,11 +28,6 @@ export interface MappingChange {
 const DELIMITERS = { auto: null, semicolon: ';', comma: ',', tab: '\t' } as const;
 type DelimiterKey = keyof typeof DELIMITERS;
 
-/**
- * Editor do mapeamento de colunas do CSV (presentational). A pessoa conta as colunas de 1 em diante; o
- * contrato usa índices a partir de 0. Desligado, o backend detecta o formato. O mapeamento salvo da conta
- * (se houver) entra preenchido. Não há prévia das linhas aqui: o backend só lê o arquivo no envio.
- */
 @Component({
   selector: 'app-mapping-editor',
   imports: [
@@ -162,7 +156,6 @@ type DelimiterKey = keyof typeof DELIMITERS;
 export class MappingEditorComponent {
   protected readonly t = inject(I18nService).t;
 
-  /** Mapeamento salvo da conta/cartão (preenche o formulário). */
   readonly saved = input<ImportMapping | null>(null);
   readonly changed = output<MappingChange>();
 
@@ -229,7 +222,6 @@ export class MappingEditorComponent {
   ]);
 
   constructor() {
-    // Mapeamento salvo → preenche e liga o modo manual.
     effect(() => {
       const saved = this.saved();
       if (!saved) return;

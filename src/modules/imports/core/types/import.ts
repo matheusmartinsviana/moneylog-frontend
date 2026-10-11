@@ -1,6 +1,5 @@
 import type { Money } from '~/util/money';
 
-/** Tipos do negócio de importação de extrato (Etapa 7). Os valores e contadores vêm prontos do backend. */
 export type ImportFormat = 'CSV' | 'OFX';
 export type ImportBatchStatus = 'PENDING_REVIEW' | 'APPLIED' | 'UNDONE' | 'PARTIALLY_UNDONE';
 export type ImportLineStatus =
@@ -30,9 +29,7 @@ export interface ImportBatch {
   readonly cardId: string | null;
   readonly format: ImportFormat;
   readonly status: ImportBatchStatus;
-  /** `SAME_FILE_ALREADY_IMPORTED`, `STATEMENT_KIND_MISMATCH`. */
   readonly warnings: readonly string[];
-  /** Linhas do arquivo ignoradas, no texto do backend ("n: motivo"). */
   readonly skipped: readonly string[];
   readonly counts: ImportCounts;
   readonly createdAt: string;
@@ -64,7 +61,6 @@ export interface ImportLine {
   readonly editedDescription: string | null;
   readonly counterpartAccountId: string | null;
   readonly suggestion: ImportSuggestion | null;
-  /** Ids das movimentações que motivaram `DUPLICATE`/`POSSIBLE_DUPLICATE`. */
   readonly matches: readonly string[];
   readonly transactionId: string | null;
 }
@@ -99,7 +95,6 @@ export interface ImportUndone {
   readonly blocked: readonly ImportBlocked[];
 }
 
-/** Colunas do CSV por índice (0-based). Valor em uma coluna (`amount`) ou em duas (`debit`/`credit`). */
 export interface ImportMapping {
   readonly date: number;
   readonly description: number;
@@ -119,7 +114,6 @@ export interface ImportUploadInput {
   readonly file: File;
   readonly source: ImportSource;
   readonly format: ImportFormat | null;
-  /** Só para CSV; o backend salva para a conta/cartão. */
   readonly mapping: ImportMapping | null;
 }
 
@@ -134,5 +128,4 @@ export interface ImportLinesQuery {
   readonly pageSize: number;
 }
 
-/** Tamanho máximo aceito pelo backend (5 MB): só evita enviar o que seria recusado. */
 export const IMPORT_MAX_BYTES = 5 * 1024 * 1024;

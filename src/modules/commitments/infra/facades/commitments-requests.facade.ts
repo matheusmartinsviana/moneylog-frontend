@@ -46,7 +46,6 @@ function notFound(): Observable<never> {
   );
 }
 
-/** Facade de requisições de compromissos: o único lugar com HTTP do módulo. */
 @Injectable({ providedIn: 'root' })
 export class CommitmentsRequestsFacade extends CommitmentsGateway {
   private readonly http = inject(HttpClient);

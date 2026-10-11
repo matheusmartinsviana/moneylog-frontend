@@ -1,23 +1,13 @@
-/**
- * Posicionamento de painéis ancorados (popover e tooltip): abaixo do gatilho por padrão, vira para
- * cima quando falta espaço (flip) e desloca na horizontal para caber na tela (shift).
- * Coordenadas de `position: fixed`; a altura máxima respeita a área visível (inclusive com o
- * teclado virtual aberto, via `visualViewport`).
- */
 export interface PositionInput {
   readonly anchor: DOMRect;
-  /** Tamanho natural do painel. */
   readonly width: number;
   readonly height: number;
   readonly viewport: { readonly width: number; readonly height: number };
   readonly gap?: number;
   readonly margin?: number;
   readonly maxHeight?: number;
-  /** Preferência vertical; vira se não couber. */
   readonly prefer?: 'below' | 'above';
-  /** Alinha à esquerda ou à direita do gatilho. */
   readonly align?: 'start' | 'end' | 'center';
-  /** `inline`: ao lado do gatilho (à direita; à esquerda se não couber), alinhado ao topo dele (trilho lateral). */
   readonly placement?: 'block' | 'inline';
 }
 

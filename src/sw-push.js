@@ -1,11 +1,3 @@
-/*
- * Service worker do moneylog: o do Angular (`ngsw-worker.js`) mais os handlers de push e de clique na
- * notificação (Etapa 7, T137). Push é preparado e só chega com chaves VAPID no servidor.
- *
- * O payload (`{ id, kind, titleKey, params }`) NÃO traz frase pronta: o título e o corpo saem daqui pelo
- * `kind`, no idioma guardado (o app avisa o idioma por `postMessage({ type: 'LANGUAGE' })`, que fica no Cache
- * Storage porque o worker não lê `localStorage`). Payload malformado é ignorado sem erro.
- */
 importScripts('./ngsw-worker.js');
 
 const PREFS_CACHE = 'moneylog-prefs';
@@ -54,7 +46,6 @@ const TEXTS = {
   },
 };
 
-/** Payload válido: objeto com `kind` texto. Qualquer outra coisa é ignorada. */
 function parsePayload(event) {
   if (!event.data) return null;
   try {
@@ -101,7 +92,6 @@ self.addEventListener('push', (event) => {
         : table.DEFAULT;
       return self.registration.showNotification(title, {
         body,
-        // Logo colorido (iOS, desktop) e silhueta branca para a barra de status do Android.
         icon: ICON_URL,
         badge: BADGE_URL,
         tag: typeof payload.id === 'string' ? payload.id : undefined,

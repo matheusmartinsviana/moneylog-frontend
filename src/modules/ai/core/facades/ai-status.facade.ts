@@ -10,11 +10,6 @@ export type AiStatusState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: AiStatus };
 
-/**
- * Estado da IA no servidor (`GET /v1/ai/status`), compartilhado pelo cabeçalho, pelo Início e por `/ai`.
- * Enquanto não carregou, ou se falhar, `enabled` é falso: a IA é opcional e o app funciona sem ela. Sem
- * gateway (ambientes de teste sem o módulo), fica desligada.
- */
 @Injectable({ providedIn: 'root' })
 export class AiStatusFacade {
   private readonly gateway = inject(AiGateway, { optional: true });
@@ -28,7 +23,6 @@ export class AiStatusFacade {
   });
   readonly enabled = computed(() => this.data()?.enabled === true);
 
-  /** Carrega uma vez; chamadas seguintes são ignoradas. */
   ensureLoaded(): void {
     if (this.started) return;
     this.started = true;

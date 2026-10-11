@@ -21,7 +21,6 @@ const text = (el: HTMLElement) =>
     .replace(/\s+/g, ' ')
     .trim();
 
-/** Mês encerrado: as comparações com o anterior são tendência de verdade. */
 const closedMonth = (overrides: Partial<MonthlySummary> = {}): MonthlySummary =>
   aSummary({
     partial: false,
@@ -135,7 +134,6 @@ describe('KpiCardsComponent', () => {
     expect(screen.getByTestId('kpi-in-accounts-change')).toBeInTheDocument();
     expect(text(screen.getByTestId('kpi-spending-value'))).toBe('R$ 1.620,50');
     expect(text(screen.getByTestId('kpi-income-value'))).toBe('R$ 12.000,00');
-    // O resultado é o `month.net` do dashboard, sem conta no front (receita menos gasto não bate de propósito).
     expect(text(screen.getByTestId('kpi-result-value'))).toBe('R$ 10.379,50');
     expect(text(screen.getByTestId('kpi-savings-value'))).toBe('41,2%');
     expect(screen.getByRole('region', { name: 'Taxa de poupança' })).toBeInTheDocument();

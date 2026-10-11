@@ -3,12 +3,6 @@ import { Api } from '../support/api';
 
 import { cy, expect, test } from './fixtures';
 
-/**
- * T44: rate limit do login (5 falhas por IP em 15 min → 429 `TOO_MANY_ATTEMPTS` com `Retry-After`).
- * O contador é em memória do backend e **bloqueia o IP por 15 min**, inclusive para o login certo:
- * por isso este arquivo roda por último (`z-`) e só uma vez por backend. Com `E2E_STACK=external`,
- * reinicie o backend antes de rodar a suíte de novo.
- */
 test('5 senhas erradas: 6ª tentativa é 429 com Retry-After, a tela avisa em minutos e o login certo também espera', async ({
   page,
   playwright,
@@ -47,7 +41,6 @@ test('5 senhas erradas: 6ª tentativa é 429 com Retry-After, a tela avisa em mi
   expect(sink).toEqual([]);
   await raw.dispose();
 
-  // Pela tela: a mensagem mostra os minutos que faltam, sem mexer na sessão.
   await page.goto('/login');
   await cy(page, 'login-email').fill(email ?? '');
   await cy(page, 'login-password').fill(process.env['E2E_OWNER_PASSWORD'] ?? '');

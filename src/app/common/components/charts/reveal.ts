@@ -7,13 +7,6 @@ import {
   signal,
 } from '@angular/core';
 
-/**
- * Animação de entrada dos gráficos (DS 02: "gráficos animam ao entrar na viewport"). Devolve `pending`:
- * `true` até o elemento entrar na viewport (uma vez só); `false` desde o início quando não há como animar
- * (sem `IntersectionObserver` ou com `prefers-reduced-motion`). O estado final dos gráficos já está no DOM:
- * `pending` só esconde o traço por CSS, então axe e E2E enxergam sempre a mesma coisa.
- * Chamar no construtor (precisa de contexto de injeção).
- */
 export function revealOnEnter(): Signal<boolean> {
   const host = inject<ElementRef<HTMLElement>>(ElementRef);
   const destroyRef = inject(DestroyRef);

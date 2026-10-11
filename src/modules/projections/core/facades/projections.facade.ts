@@ -12,11 +12,6 @@ export type ProjectionState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly data: Projection };
 
-/**
- * Facade das projeções: `horizon` e `includeTrend` vão para a requisição e mudar qualquer um **cancela** a
- * anterior (`switchMap`), então uma resposta atrasada de outro horizonte nunca aparece. Vazio = série sem
- * pontos (sem dados). Nada é calculado aqui. Escopo de componente.
- */
 @Injectable()
 export class ProjectionsFacade {
   private readonly gateway = inject(ProjectionsGateway);

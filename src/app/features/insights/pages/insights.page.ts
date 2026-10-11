@@ -8,10 +8,6 @@ import { AiActionsComponent } from '~/app/features/ai/components/ai-actions/ai-a
 import { InsightListComponent } from '~/app/features/insights/components/insight-list.component';
 import { InsightsFacade } from '~/modules/ai/core/facades/insights.facade';
 
-/**
- * Insights do mês: sempre mostra os calculados pelos dados (valem sem IA) e, quando a IA está ligada, deixa
- * pedir um comentário depois de revisar o que seria enviado. Smart.
- */
 @Component({
   selector: 'app-insights-page',
   imports: [

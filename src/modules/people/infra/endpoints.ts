@@ -1,4 +1,3 @@
-/** Endpoints de pessoas, num lugar só (FE 05). Contrato: tag People. */
 export const PEOPLE_ENDPOINTS = {
   collection: '/v1/people',
   item: (id: string) => `/v1/people/${encodeURIComponent(id)}`,

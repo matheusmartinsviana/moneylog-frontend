@@ -30,11 +30,6 @@ export interface DebtEdit {
   readonly expectedDate: string | null;
 }
 
-/**
- * Editar a descrição e a previsão de uma dívida (presentational). O valor original não muda. `409
- * VERSION_CONFLICT`: quem usa já recarregou a dívida do backend; o formulário se repõe com a versão nova
- * e o aviso pede para revisar e salvar de novo.
- */
 @Component({
   selector: 'app-debt-edit-sheet',
   imports: [ReactiveFormsModule, SheetComponent, TextFieldComponent, DatePickerComponent],
@@ -149,7 +144,6 @@ export class DebtEditSheetComponent {
   });
 
   constructor() {
-    // Abriu (ou chegou uma versão nova, depois de um conflito): o formulário se repõe com a dívida.
     effect(() => {
       const open = this.open();
       const debt = this.debt();

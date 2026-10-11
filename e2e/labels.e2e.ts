@@ -11,15 +11,8 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * T31 (Etapa 2): BUG-02 e BUG-04 do QA da Etapa 1.
- * - S-56: rótulos da barra inferior completos em 375 px, com a tipografia de tab bar (10 px).
- * - S-57: "Novo registro" é o nome único da ação e da página `/quick-add`.
- */
-
 const LANGS: Lang[] = ['pt', 'en', 'es'];
 
-/** Rótulos com texto visível na barra inferior (o "+" só tem nome acessível). */
 const LABELED_KEYS = BOTTOM_NAV_ORDER.filter((key) => key !== 'quickAdd');
 
 test.describe('barra inferior em 375 × 812 (S-56)', () => {

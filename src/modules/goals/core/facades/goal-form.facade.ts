@@ -27,12 +27,6 @@ export type GoalLoadState =
   | { readonly status: 'error'; readonly problem: Problem }
   | { readonly status: 'ready'; readonly goal: Goal };
 
-/**
- * Facade do formulário de meta (criar e editar). `exhaustMap` no salvar (clique duplo = uma requisição) e
- * **a meta da resposta** é o novo estado. A criação leva `Idempotency-Key` (uma por tentativa, reutilizada
- * no "Salvar" da mesma entrada depois de falha ambígua). Falhas chegam tipadas (`code` + `fieldErrors`,
- * `GOAL_ARCHIVED`, `VERSION_CONFLICT`). Escopo de componente.
- */
 @Injectable()
 export class GoalFormFacade {
   private readonly gateway = inject(GoalsGateway);
@@ -48,7 +42,6 @@ export class GoalFormFacade {
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly loadStatus = this.loadState.asReadonly();
-  /** A meta carregada; durante uma recarga (ex.: depois de um 409) continua a anterior. */
   readonly goal = this.loaded.asReadonly();
   readonly saved$ = this.savedEvents.asObservable();
 
@@ -99,7 +92,6 @@ export class GoalFormFacade {
     this.loads.next(id);
   }
 
-  /** A meta devolvida por outra escrita (ex.: fotos) vira a atual, para o próximo "Salvar" usar a versão certa. */
   adopt(goal: Goal): void {
     if (this.loaded()?.id === goal.id) this.loaded.set(goal);
   }

@@ -39,12 +39,10 @@ import { Problem, ProblemError, toProblem } from '~/util/api/problem';
 import type { Slice } from '~/util/api/slice';
 import { API_MOCKS } from '~/util/api-mocks';
 
-/** Falha de rede/HTTP → `ProblemError` tipado (o core nunca vê `HttpErrorResponse`). */
 function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então qualquer nota pedida por id não existe (salvo uma semeada pelo E2E). */
 function notFound(): Observable<never> {
   const problem: Problem = {
     status: 404,
@@ -60,10 +58,6 @@ function summarySlice(slice: NoteSummarySliceResponse): Slice<NoteSummary> {
   return { items: slice.items.map(toSummary), hasNext: slice.hasNext };
 }
 
-/**
- * Facade de requisições de notas (FE 05): o único lugar com HTTP do módulo (junto da do vault). Com
- * `API_MOCKS` ligado, responde com `mock-data` vazio e não faz requisição; desligado, chama `/v1/notes`.
- */
 @Injectable({ providedIn: 'root' })
 export class NotesRequestsFacade extends NotesGateway {
   private readonly http = inject(HttpClient);

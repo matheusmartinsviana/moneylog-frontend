@@ -1,14 +1,8 @@
 import type { Money } from '~/util/money';
 
-/**
- * Apoio das fixtures de DEMONSTRAÇÃO (não é regra de produto): aqui há aritmética de centavos porque este
- * arquivo **simula o backend** que ainda não tem os endpoints (T181 a T185). No app real o front não soma.
- */
 export const DEMO_CURRENCY = 'BRL';
-/** O "hoje" das fixtures (sábado), fixo para o desenho e os testes serem determinísticos. */
 export const DEMO_TODAY = '2026-10-10';
 
-/** Centavos → string decimal da API (`-3500` → `-35.00`). */
 export function toMoney(cents: number): Money {
   const sign = cents < 0 ? '-' : '';
   const abs = Math.abs(cents);
@@ -19,7 +13,6 @@ export function toMoney(cents: number): Money {
 
 const DAY_MS = 86_400_000;
 
-/** `YYYY-MM-DD` → dia absoluto (UTC), só para contar e somar dias nas fixtures. */
 export function dayNumber(iso: string): number {
   const [y, m, d] = iso.split('-').map(Number);
   return Math.floor(Date.UTC(y!, m! - 1, d!) / DAY_MS);

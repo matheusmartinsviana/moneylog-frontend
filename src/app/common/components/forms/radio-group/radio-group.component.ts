@@ -20,15 +20,6 @@ import { FieldErrorComponent } from '~/app/common/components/forms/field-error/f
 
 export type RadioLayout = 'vertical' | 'horizontal' | 'cards';
 
-/**
- * Grupo de rádio próprio (padrão radio group do APG), no lugar de `<input type="radio">`:
- * `role="radiogroup"` nomeado pelo rótulo, itens `button role="radio"` com roving tabindex (Tab
- * entra no marcado ou, sem marcação, no primeiro habilitado), as setas movem **e** marcam, `Home`
- * e `End` vão às pontas, `Espaço` marca o item com foco, opções desabilitadas são puladas.
- * Diferente do `SegmentedControl` (poucas opções, sem descrição), mostra a descrição (`hint`) de
- * cada opção: `vertical` (lista), `horizontal` (quebra linha) ou `cards`. O estado nunca é só cor
- * (círculo preenchido, borda mais grossa no cartão, `forced-colors`). O valor é `string | null`.
- */
 @Component({
   selector: 'app-radio-group',
   imports: [FieldErrorComponent],
@@ -237,12 +228,10 @@ export class RadioGroupComponent extends FieldControl<string | null> implements 
   readonly options = input.required<readonly ChoiceOption[]>();
   readonly layout = input<RadioLayout>('vertical');
   readonly mandatory = input(true);
-  /** Esconde o rótulo visualmente (continua sendo o nome acessível do grupo). */
   readonly hideLabel = input(false);
 
   protected readonly value = signal<string | null>(null);
 
-  /** Item que recebe o Tab: o marcado ou, sem marcação, o primeiro habilitado. */
   protected readonly tabStop = computed(() => {
     const options = this.options();
     const selected = options.find((o) => o.value === this.value() && !o.disabled);

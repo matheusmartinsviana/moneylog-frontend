@@ -22,7 +22,6 @@
   font-weight: var(--weight-semibold);
 }
 
-/* A cor só reforça o texto, que já diz quem deve a quem (DS 00). */
 .summary__balance.is-receivable {
   color: var(--color-positive);
 }

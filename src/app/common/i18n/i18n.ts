@@ -1,17 +1,8 @@
-/**
- * Contrato de traduções (FE 04). Toda chave da UI existe aqui; cada idioma implementa o contrato
- * inteiro, então esquecer uma chave quebra o `npm run typecheck`.
- *
- * Convenções: chaves agrupadas por contexto (`shell`, `nav`, `emptyState`...), textos em sentence case.
- */
-
 export const SUPPORTED_LANGUAGES = ['pt', 'en', 'es'] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
-/** Idioma padrão da UI (S-34). */
 export const DEFAULT_LANGUAGE: Language = 'pt';
 
-/** Valor do atributo `<html lang>` por idioma. */
 export const HTML_LANG: Readonly<Record<Language, string>> = {
   pt: 'pt-BR',
   en: 'en',
@@ -27,18 +18,15 @@ export abstract class AppI18n {
   abstract readonly shell: {
     readonly brand: string;
     readonly skipToContent: string;
-    /** Estado da IA ao lado do item "IA" (sidebar e Mais). */
     readonly aiOn: string;
     readonly aiOff: string;
     readonly primaryNavigation: string;
     readonly bottomNavigation: string;
-    /** Rótulo curto de "Movimentações" na barra inferior de telas estreitas (só visual; o nome acessível é o completo). */
     readonly transactionsShort: string;
     readonly sidebarExpand: string;
     readonly sidebarCollapse: string;
   };
 
-  /** Avisos do PWA: sem conexão, nova versão e instalação. */
   abstract readonly pwa: {
     readonly offlineTitle: string;
     readonly offlineText: string;
@@ -55,14 +43,9 @@ export abstract class AppI18n {
     readonly installDismiss: string;
   };
 
-  /**
-   * Um nome só por destino (S-56, S-57): o mesmo texto vale para o item da navegação, o nome
-   * acessível, o título da página e os atalhos que levam até ela.
-   */
   abstract readonly nav: {
     readonly home: string;
     readonly transactions: string;
-    /** "Novo registro": botão da sidebar, "+" da barra inferior e título de `/quick-add`. */
     readonly quickAdd: string;
     readonly goals: string;
     readonly more: string;
@@ -72,17 +55,13 @@ export abstract class AppI18n {
     readonly people: string;
     readonly notes: string;
     readonly import: string;
-    /** Central de notificações (Etapa 7). */
     readonly notifications: string;
     readonly insights: string;
-    /** Orçamentos (T208): página "em breve" até a fatia G (D3). */
     readonly budgets: string;
-    /** Vault, IA e MCP (fatia F): páginas honestas do espaço de trabalho. */
     readonly vault: string;
     readonly ai: string;
     readonly mcp: string;
     readonly settings: string;
-    /** Títulos dos grupos da sidebar e do `/more` (DS 02). Não são destinos: ficam fora de `NavKey`. */
     readonly groups: {
       readonly overview: string;
       readonly workspace: string;
@@ -90,7 +69,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Páginas do espaço de trabalho (fatia F): vault, IA e MCP, sempre honestas sobre o que existe. */
   abstract readonly workspacePages: {
     readonly vault: {
       readonly subtitle: string;
@@ -147,14 +125,12 @@ export abstract class AppI18n {
     };
   };
 
-  /** Cabeçalho do workspace (T194): saudação sem nome (D4), ações rápidas, chip de IA e menu do perfil. */
   abstract readonly header: {
     readonly greeting: {
       readonly morning: string;
       readonly afternoon: string;
       readonly evening: string;
     };
-    /** Alternador de tema; `toggle` usa `{current}` e `{next}`. */
     readonly theme: {
       readonly toggle: string;
       readonly toLight: string;
@@ -177,18 +153,15 @@ export abstract class AppI18n {
     readonly profile: { readonly label: string; readonly signOut: string };
   };
 
-  /** Gráficos em SVG próprio (fatia B, ADR-011): estados, tabela equivalente, dica de teclado e rótulos. */
   abstract readonly charts: {
     readonly empty: string;
     readonly viewAsTable: string;
     readonly hideTable: string;
     readonly keyboardHint: string;
     readonly periodColumn: string;
-    /** `{count}` categorias agrupadas em "Outras". */
     readonly other: string;
     readonly otherOne: string;
     readonly demo: string;
-    /** `{label}` título do gráfico, `{series}` nomes das séries, `{points}` quantidade de pontos. */
     readonly summary: string;
     readonly segmentedDisabled: string;
   };
@@ -215,13 +188,10 @@ export abstract class AppI18n {
     readonly budgets: EmptyStateCopy;
   };
 
-  /** Início (dashboard, T19). Valores e datas vêm da API; aqui só rótulos. */
   abstract readonly home: {
-    /** `{date}`: data de referência do resumo. */
     readonly asOf: string;
     readonly projection: string;
     readonly loading: string;
-    /** Uma recarga em segundo plano falhou: o Início mostra o último dado bom e este aviso. */
     readonly refreshFailed: string;
     readonly error: EmptyStateCopy & { readonly retry: string };
     readonly forbidden: EmptyStateCopy;
@@ -255,12 +225,10 @@ export abstract class AppI18n {
       readonly description: string;
       readonly empty: string;
       readonly undated: string;
-      /** Havia mais de 500 vencidas: só as mais recentes aparecem (S-240). */
       readonly overdueTruncated: string;
       readonly totalOut: string;
       readonly totalIn: string;
       readonly installments: string;
-      /** `{date}`: vencimento do item. */
       readonly due: string;
       readonly buckets: {
         readonly OVERDUE: string;
@@ -281,7 +249,6 @@ export abstract class AppI18n {
       readonly incoming: string;
       readonly totalInNote: string;
       readonly realize: string;
-      /** `{label}`: descrição do compromisso. */
       readonly realizeLabel: string;
       readonly openDebt: string;
       readonly openPending: string;
@@ -322,12 +289,10 @@ export abstract class AppI18n {
       readonly cardFutureInstallments: string;
       readonly cardFutureInstallmentsNote: string;
     };
-    /** Reservado em metas (T101): o texto da fórmula e o caminho para as metas. */
     readonly reservedNote: {
       readonly formula: string;
       readonly goalsLink: string;
     };
-    /** Cartões no Início (T71): os dois "comprometido" ficam separados, nunca somados. */
     readonly cards: {
       readonly title: string;
       readonly description: string;
@@ -336,7 +301,6 @@ export abstract class AppI18n {
       readonly retry: string;
       readonly empty: string;
       readonly add: string;
-      /** `{name}`: nome do cartão. */
       readonly open: string;
       readonly available: string;
       readonly overLimit: string;
@@ -346,7 +310,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Início redesenhado (fatia C1): KPIs, contas, gráficos, recentes, insight e orçamento "em breve". */
   abstract readonly dashboard: {
     readonly kpis: {
       readonly label: string;
@@ -357,7 +320,6 @@ export abstract class AppI18n {
       readonly spending: { readonly title: string };
       readonly income: { readonly title: string };
       readonly savings: { readonly title: string; readonly noIncome: string };
-      /** `{value}`: a razão do backend, só formatada. */
       readonly delta: {
         readonly lower: string;
         readonly higher: string;
@@ -393,7 +355,6 @@ export abstract class AppI18n {
       readonly title: string;
       readonly description: string;
       readonly total: string;
-      /** `{name}`: nome da categoria. */
       readonly open: string;
       readonly empty: string;
       readonly error: string;
@@ -402,13 +363,10 @@ export abstract class AppI18n {
     };
   };
 
-  /** IA (Etapa 8): estado, prévia e consentimento, resultado, histórico, insights e preferências. */
   abstract readonly ai: {
     readonly status: {
       readonly on: string;
-      /** `{provider}` e `{model}`. */
       readonly providerLine: string;
-      /** `{calls}` e `{tokens}`. */
       readonly remaining: string;
       readonly circuitOpen: string;
       readonly loading: string;
@@ -430,7 +388,6 @@ export abstract class AppI18n {
       readonly period: string;
       readonly counts: string;
       readonly countLabels: Readonly<Record<string, string>>;
-      /** `{tokens}`. */
       readonly tokens: string;
       readonly payload: string;
       readonly redactions: string;
@@ -464,21 +421,17 @@ export abstract class AppI18n {
       readonly retry: string;
       readonly loading: string;
       readonly loadMore: string;
-      /** `{input}` e `{output}`. */
       readonly tokens: string;
       readonly statuses: Readonly<Record<string, string>>;
       readonly viewPayload: string;
       readonly hidePayload: string;
-      /** `{date}`. */
       readonly purged: string;
     };
     readonly insights: {
       readonly title: string;
       readonly source: string;
-      /** `{category}`, `{percent}`, `{previous}`, `{current}`. */
       readonly categoryUp: string;
       readonly categoryDown: string;
-      /** `{amount}`. */
       readonly cardCommitted: string;
       readonly empty: string;
       readonly emptyHint: string;
@@ -499,7 +452,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Busca global do cabeçalho (T209). */
   abstract readonly search: {
     readonly label: string;
     readonly placeholder: string;
@@ -507,9 +459,7 @@ export abstract class AppI18n {
     readonly sheetTitle: string;
     readonly hint: string;
     readonly loading: string;
-    /** `{q}`: o termo buscado. */
     readonly empty: string;
-    /** `{count}`: quantos resultados (anunciado em região viva). */
     readonly count: string;
     readonly countOne: string;
     readonly truncated: string;
@@ -545,44 +495,35 @@ export abstract class AppI18n {
     readonly languageNames: Readonly<Record<Language, string>>;
   };
 
-  /** Componentes de formulário compartilhados (T32): campos, erros, diálogo de confirmação e avisos. */
   abstract readonly form: {
-    /** `{currency}`: nome da moeda do dado, no idioma da UI (ex.: "Real brasileiro"). */
     readonly amountCurrency: string;
     readonly selectPlaceholder: string;
     readonly noOptions: string;
-    /** Controles próprios (UI sem controles nativos do navegador). */
     readonly ui: {
       readonly close: string;
       readonly clear: string;
       readonly search: string;
       readonly noResults: string;
-      /** `{count}`: quantidade de opções visíveis (anunciada ao filtrar). */
       readonly resultsCount: string;
       readonly on: string;
       readonly off: string;
     };
-    /** Fechar um formulário em modal com alterações não salvas. */
     readonly discard: {
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
       readonly stay: string;
     };
-    /** Contador numérico (`NumberStepper`). */
     readonly stepper: {
       readonly decrease: string;
       readonly increase: string;
     };
-    /** Texto de estado da `ProgressBar` (o estado nunca é só cor). */
     readonly progress: {
       readonly warning: string;
       readonly risk: string;
     };
     readonly date: {
-      /** Máscara exibida no campo (ex.: `dd/mm/aaaa`). */
       readonly placeholder: string;
-      /** `{format}`: a máscara. */
       readonly formatHint: string;
       readonly openCalendar: string;
       readonly chooseDate: string;
@@ -592,33 +533,23 @@ export abstract class AppI18n {
       readonly nextMonth: string;
       readonly previousYear: string;
       readonly nextYear: string;
-      /** `{month}`: mês e ano exibidos (nome acessível do botão do título do calendário). */
       readonly chooseMonthYearNamed: string;
-      /** `{month}`: mês e ano (ex.: "outubro de 2026"). */
       readonly calendarOf: string;
       readonly chooseMonth: string;
       readonly monthPlaceholder: string;
     };
-    /** Mensagens de validação: aparecem só depois que o campo é tocado. */
     readonly errors: {
       readonly required: string;
       readonly invalid: string;
-      /** `{example}`: valor de exemplo no formato da moeda (ex.: 1.234,56). */
       readonly moneyFormat: string;
-      /** `{digits}`: casas decimais da moeda. */
       readonly moneyScale: string;
       readonly moneyNegative: string;
       readonly moneyZero: string;
       readonly dateFormat: string;
-      /** `{date}`: data mínima aceita. */
       readonly dateMin: string;
-      /** `{date}`: data máxima aceita. */
       readonly dateMax: string;
-      /** `{month}`: mês mínimo aceito. */
       readonly monthMin: string;
-      /** `{month}`: mês máximo aceito. */
       readonly monthMax: string;
-      /** `{max}`: quantidade máxima de caracteres. */
       readonly maxlength: string;
     };
     readonly dialog: {
@@ -629,23 +560,18 @@ export abstract class AppI18n {
     readonly toast: {
       readonly dismiss: string;
     };
-    /** Seletor de arquivo próprio (`FilePicker`): o `<input type="file">` fica escondido dentro dele. */
     readonly filePicker: {
       readonly choose: string;
       readonly change: string;
       readonly remove: string;
       readonly dropHint: string;
-      /** `{name}`: anunciado quando um arquivo é recebido (por escolha ou por arrastar e soltar). */
       readonly received: string;
-      /** `{max}`: tamanho máximo, já formatado. */
       readonly tooLarge: string;
-      /** `{types}`: extensões aceitas. */
       readonly wrongType: string;
       readonly empty: string;
     };
   };
 
-  /** Autenticação (T33): login e sessão. Mensagens de erro por motivo, nunca o texto do backend. */
   abstract readonly auth: {
     readonly pageTitle: string;
     readonly login: {
@@ -657,16 +583,13 @@ export abstract class AppI18n {
       readonly submitting: string;
       readonly errors: {
         readonly invalid: string;
-        /** `{minutes}`: espera até poder tentar de novo. */
         readonly rateLimited: string;
         readonly network: string;
         readonly unavailable: string;
       };
-      /** Aviso discreto quando não deu para consultar se é o primeiro acesso. */
       readonly statusUnavailable: string;
       readonly checking: string;
     };
-    /** Primeiro acesso: definir a senha com o código de configuração (ADR-015). */
     readonly setup: {
       readonly title: string;
       readonly description: string;
@@ -683,12 +606,10 @@ export abstract class AppI18n {
       readonly ruleNotEmail: string;
       readonly submit: string;
       readonly submitting: string;
-      /** `{seconds}`: espera até poder tentar de novo. */
       readonly retryIn: string;
       readonly errors: {
         readonly invalidCode: string;
         readonly weakPassword: string;
-        /** `{seconds}`: espera até poder tentar de novo. */
         readonly rateLimited: string;
         readonly validation: string;
         readonly network: string;
@@ -703,21 +624,16 @@ export abstract class AppI18n {
     };
   };
 
-  /** Falhas da API, traduzidas pelo `code` (nunca pela mensagem do backend). */
   abstract readonly errors: {
     readonly network: string;
     readonly unavailable: string;
     readonly validation: string;
-    /** 422 com `code` que o front não conhece: a regra recusou, os dados precisam de revisão. */
     readonly unprocessable: string;
     readonly load: EmptyStateCopy & { readonly retry: string };
-    /** Texto por `code` do contrato; `code` fora da lista cai nas mensagens genéricas acima. */
     readonly codes: Readonly<Record<string, string>>;
   };
 
-  /** Contas (T36). */
   abstract readonly accounts: {
-    /** Reserva descoberta (S-148): a conta tem menos saldo que o reservado em metas. Só avisa. */
     readonly uncovered: string;
     readonly tabsLabel: string;
     readonly active: string;
@@ -738,16 +654,13 @@ export abstract class AppI18n {
     readonly archive: string;
     readonly unarchive: string;
     readonly archiveHint: string;
-    /** Atalho do aviso de conta com reserva ativa (422 ACCOUNT_HAS_RESERVATIONS). */
     readonly reservationsGoalsLink: string;
     readonly archiveConfirm: {
-      /** `{name}`: nome da conta. */
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
     };
     readonly toast: {
-      /** `{name}`: nome da conta. */
       readonly created: string;
       readonly updated: string;
       readonly archived: string;
@@ -771,7 +684,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Categorias em Configurações (T37). */
   abstract readonly categories: {
     readonly title: string;
     readonly description: string;
@@ -786,7 +698,6 @@ export abstract class AppI18n {
     readonly create: string;
     readonly cancel: string;
     readonly system: string;
-    /** `{count}`: quantidade de categorias arquivadas. */
     readonly archivedGroup: string;
     readonly rename: string;
     readonly renameLabel: string;
@@ -795,13 +706,11 @@ export abstract class AppI18n {
     readonly archive: string;
     readonly unarchive: string;
     readonly archiveConfirm: {
-      /** `{name}`: nome da categoria. */
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
     };
     readonly toast: {
-      /** `{name}`: nome da categoria. */
       readonly created: string;
       readonly renamed: string;
       readonly archived: string;
@@ -809,13 +718,10 @@ export abstract class AppI18n {
     };
   };
 
-  /** Movimentações: lista, filtros e totais (T39). Valores vêm da API; aqui só rótulos. */
   abstract readonly transactions: {
-    /** Despesa de terceiro (2.14.0): selo, marca e vínculo com o reembolso. */
     readonly incomeOf: string;
     readonly thirdParty: {
       readonly badge: string;
-      /** `{name}`: pessoa responsável. */
       readonly badgeFor: string;
       readonly action: string;
       readonly modal: {
@@ -843,9 +749,7 @@ export abstract class AppI18n {
     readonly voided: string;
     readonly noCategory: string;
     readonly open: string;
-    /** Linha de consumo que nasce de uma dívida sem movimentação (S-137). */
     readonly debtEntry: string;
-    /** `{description}`: a dívida. */
     readonly openDebt: string;
     readonly views: {
       readonly label: string;
@@ -913,7 +817,6 @@ export abstract class AppI18n {
       readonly in: string;
       readonly out: string;
       readonly net: string;
-      /** Com filtro de conta: o líquido é o movimento daquela conta (revisão A25). */
       readonly netAccount: string;
       readonly total: string;
       readonly byCategory: string;
@@ -923,7 +826,6 @@ export abstract class AppI18n {
     readonly loadingMore: string;
     readonly loadMoreFailed: string;
     readonly adjustmentKinds: Readonly<Record<'CORRECTION' | 'YIELD', string>>;
-    /** Detalhe, estorno e edição de uma movimentação (T40). */
     readonly detail: {
       readonly loading: string;
       readonly close: string;
@@ -946,23 +848,18 @@ export abstract class AppI18n {
         readonly refundOf: string;
         readonly notes: string;
         readonly debt: string;
-        /** `{name}`: pessoa da parte (despesa dividida). */
         readonly share: string;
         readonly recurrence: string;
-        /** `{date}`: data da ocorrência realizada. */
         readonly recurrenceOccurrence: string;
       };
       readonly impact: {
         readonly title: string;
         readonly cash: string;
-        /** `{competence}`: mês curto, ex.: `out/2026`. */
         readonly consumption: string;
         readonly netWorth: string;
-        /** Compromisso futuro da compra no cartão (faturas ainda não abertas); nunca se soma ao resto. */
         readonly commitment: string;
       };
       readonly voided: {
-        /** `{date}`: data e hora do estorno. */
         readonly on: string;
         readonly reason: string;
       };
@@ -984,10 +881,8 @@ export abstract class AppI18n {
           >
         >;
       };
-      /** Compra no cartão (T70): parcelas, cancelamento das restantes e fatura. */
       readonly installments: {
         readonly title: string;
-        /** `{month}` e `{date}`: referência e vencimento da fatura da parcela. */
         readonly invoice: string;
         readonly lateEntry: string;
         readonly lateEntryHint: string;
@@ -1010,7 +905,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** `/quick-add` (T38, T41). */
   abstract readonly quickAdd: {
     readonly loading: string;
     readonly modes: {
@@ -1024,11 +918,9 @@ export abstract class AppI18n {
       readonly investment: string;
       readonly adjustment: string;
       readonly refund: string;
-      /** Pessoas e dívidas (Etapa 4): emprestar, receber e registrar dívida. */
       readonly loan: string;
       readonly received: string;
       readonly debt: string;
-      /** Cabeçalhos dos grupos do seletor de tipo. */
       readonly groups: {
         readonly spending: string;
         readonly inflow: string;
@@ -1036,7 +928,6 @@ export abstract class AppI18n {
         readonly people: string;
         readonly other: string;
       };
-      /** Título do modal por tipo. */
       readonly titles: {
         readonly expense: string;
         readonly pix: string;
@@ -1053,7 +944,6 @@ export abstract class AppI18n {
       };
     };
     readonly toast: {
-      /** `{description}` e `{amount}`: o registro como o backend devolveu. */
       readonly saved: string;
       readonly viewTransactions: string;
       readonly viewInvoice: string;
@@ -1069,7 +959,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Campos comuns dos formulários de movimentação (quick-add e edição). */
   abstract readonly entryForm: {
     readonly pixLoanToggle: string;
     readonly amount: string;
@@ -1084,7 +973,6 @@ export abstract class AppI18n {
     readonly saving: string;
     readonly retry: string;
     readonly cancel: string;
-    /** `{default}`: a descrição usada quando o campo fica vazio. */
     readonly descriptionHint: string;
     readonly optionalHint: string;
     readonly incomeMonth: {
@@ -1116,9 +1004,7 @@ export abstract class AppI18n {
       readonly remove: string;
       readonly categoryLocked: string;
       readonly defaultDescription: string;
-      /** `{description}`: a despesa original. */
       readonly defaultDescriptionOf: string;
-      /** Para onde vai o reembolso: conta ou crédito no cartão (T70 CA4). */
       readonly target: string;
       readonly toAccount: string;
       readonly toCard: string;
@@ -1126,7 +1012,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Cartões, faturas, pagamento e compra parcelada (Etapa 3). Valores e datas vêm da API; aqui só rótulos. */
   abstract readonly cards: {
     readonly loading: string;
     readonly tabsLabel: string;
@@ -1142,16 +1027,12 @@ export abstract class AppI18n {
     };
     readonly limit: {
       readonly label: string;
-      /** `{available}` e `{limit}`: valores do backend, já formatados. */
       readonly summary: string;
       readonly overLimit: string;
-      /** `{available}`: disponível (negativo) quando passou do limite. */
       readonly overLimitSummary: string;
       readonly creditBalance: string;
-      /** Cartão sem limite cadastrado: sem barra, sem percentual, sem "disponível". */
       readonly notSet: string;
     };
-    /** Fechamento não confirmado (`closingConfirmed = false`). */
     readonly closing: {
       readonly badge: string;
       readonly hint: string;
@@ -1164,25 +1045,21 @@ export abstract class AppI18n {
       readonly toast: string;
     };
     readonly noInvoice: string;
-    /** `{month}` (ex.: nov/2026) e `{date}`: referência e vencimento da fatura. */
     readonly invoiceLine: string;
     readonly edit: string;
     readonly archive: string;
     readonly unarchive: string;
     readonly archiveHint: string;
     readonly archiveConfirm: {
-      /** `{name}`: nome do cartão. */
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
     };
     readonly pendingBalance: {
-      /** `{name}`: nome do cartão. */
       readonly message: string;
       readonly link: string;
     };
     readonly toast: {
-      /** `{name}`: nome do cartão. */
       readonly created: string;
       readonly updated: string;
       readonly archived: string;
@@ -1202,7 +1079,6 @@ export abstract class AppI18n {
       readonly limitHint: string;
       readonly closingDay: string;
       readonly dueDay: string;
-      /** `{day}`: dia do mês. */
       readonly dayValue: string;
       readonly daysHint: string;
       readonly defaultAccount: string;
@@ -1216,30 +1092,24 @@ export abstract class AppI18n {
       readonly conflict: string;
       readonly notFound: EmptyStateCopy & { readonly back: string };
     };
-    /** Prévia da mudança de fechamento/vencimento (T69). */
     readonly billingChange: {
       readonly title: string;
       readonly loading: string;
-      /** `{closing}` e `{due}`: datas da primeira fatura afetada, no calendário novo. */
       readonly firstInvoice: string;
       readonly keep: string;
-      /** `{installments}` e `{credits}`: quantidades do backend. */
       readonly moved: string;
       readonly movedNone: string;
       readonly stale: string;
       readonly error: string;
       readonly waiting: string;
     };
-    /** Tela do cartão (T65). */
     readonly detail: {
       readonly loading: string;
       readonly notFound: EmptyStateCopy & { readonly back: string };
       readonly limitLabel: string;
       readonly availableLabel: string;
       readonly creditBalanceLabel: string;
-      /** `{closing}` e `{due}`: dias do mês. */
       readonly days: string;
-      /** `{amount}`: `committedFuture` do backend. */
       readonly committedFuture: string;
       readonly committedFutureNote: string;
       readonly totalCommittedLabel: string;
@@ -1261,25 +1131,18 @@ export abstract class AppI18n {
       readonly futureEmpty: string;
       readonly futureTotal: string;
       readonly invoiceRow: {
-        /** `{month}`: referência da fatura. */
         readonly reference: string;
-        /** `{from}` e `{to}`: período da fatura. */
         readonly period: string;
-        /** `{date}`: data de fechamento. */
         readonly closing: string;
-        /** `{date}`: data de vencimento. */
         readonly due: string;
         readonly outstanding: string;
-        /** `{month}`: referência. */
         readonly open: string;
         readonly lateEntry: string;
         readonly lateEntryHint: string;
       };
     };
-    /** Detalhe da fatura (T66). */
     readonly invoice: {
       readonly loading: string;
-      /** `{month}`: referência da fatura. */
       readonly heading: string;
       readonly notFound: EmptyStateCopy & { readonly back: string };
       readonly backToCard: string;
@@ -1303,7 +1166,6 @@ export abstract class AppI18n {
         readonly description: string;
         readonly amount: string;
       };
-      /** `{description}`: o item. */
       readonly openItem: string;
       readonly paymentsTitle: string;
       readonly paymentsEmpty: string;
@@ -1312,9 +1174,7 @@ export abstract class AppI18n {
       readonly pay: string;
       readonly payBlocked: Readonly<Record<'PAID' | 'FUTURE', string>>;
     };
-    /** Pagamento de fatura (T68). */
     readonly pay: {
-      /** `{month}`: referência da fatura. */
       readonly title: string;
       readonly description: string;
       readonly account: string;
@@ -1327,9 +1187,7 @@ export abstract class AppI18n {
       readonly preview: {
         readonly loading: string;
         readonly FULL: string;
-        /** `{amount}`: `outstandingAfter` do backend. */
         readonly PARTIAL: string;
-        /** `{amount}`: `creditCarryAfter` do backend. */
         readonly OVERPAY: string;
         readonly PREPAY: string;
         readonly unavailable: string;
@@ -1340,7 +1198,6 @@ export abstract class AppI18n {
       readonly retry: string;
       readonly toast: string;
     };
-    /** Compra no cartão em `/quick-add` (T67). */
     readonly purchase: {
       readonly card: string;
       readonly amount: string;
@@ -1350,20 +1207,15 @@ export abstract class AppI18n {
       readonly notes: string;
       readonly installments: string;
       readonly installmentsOne: string;
-      /** `{count}`: número de parcelas. */
       readonly installmentsMany: string;
       readonly lockedHint: string;
       readonly preview: {
         readonly title: string;
         readonly loading: string;
-        /** `{month}` e `{date}`: fatura da compra. */
         readonly summaryOne: string;
-        /** `{count}`, `{month}` e `{date}`: parcelas e fatura da 1ª. */
         readonly summaryMany: string;
         readonly list: string;
-        /** `{number}` e `{total}`. */
         readonly installment: string;
-        /** `{month}` e `{date}`. */
         readonly invoice: string;
         readonly total: string;
         readonly availableAfter: string;
@@ -1378,7 +1230,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Pessoas (Etapa 4, T84). Saldos, datas e nomes vêm da API; aqui só rótulos. */
   abstract readonly people: {
     readonly loading: string;
     readonly tabsLabel: string;
@@ -1395,37 +1246,28 @@ export abstract class AppI18n {
       readonly nextDue: string;
       readonly actions: string;
     };
-    /** Frase do saldo, escolhida pelo sinal que o backend devolveu (`direction`). */
     readonly balance: {
-      /** `{name}` e `{amount}`: "João deve R$ 150,00". */
       readonly RECEIVABLE: string;
-      /** `{name}` e `{amount}`: "Você deve R$ 80,00 a João". */
       readonly PAYABLE: string;
-      /** `{name}`: sem pendências. */
       readonly NONE: string;
     };
-    /** `{count}`: dívidas em aberto. */
     readonly openDebtsOne: string;
     readonly openDebtsMany: string;
     readonly noOpenDebts: string;
-    /** `{date}`: próxima cobrança. */
     readonly nextDue: string;
     readonly noNextDue: string;
     readonly row: {
-      /** `{name}`: pessoa. */
       readonly open: string;
       readonly edit: string;
       readonly archive: string;
       readonly unarchive: string;
     };
     readonly archiveConfirm: {
-      /** `{name}`: pessoa. */
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
     };
     readonly toast: {
-      /** `{name}`: pessoa. */
       readonly created: string;
       readonly updated: string;
       readonly archived: string;
@@ -1445,7 +1287,6 @@ export abstract class AppI18n {
       readonly cancel: string;
       readonly notFound: EmptyStateCopy & { readonly back: string };
     };
-    /** Escolher a pessoa (e criar uma nova) dentro de um formulário (S-138). */
     readonly picker: {
       readonly placeholder: string;
       readonly newPerson: string;
@@ -1478,7 +1319,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Dívidas, quitações, perdão e estorno (Etapa 4, T84/T85). Valores, status e datas vêm da API. */
   abstract readonly debts: {
     readonly status: Readonly<
       Record<'OPEN' | 'PARTIALLY_SETTLED' | 'SETTLED' | 'CANCELED' | 'VOIDED', string>
@@ -1490,11 +1330,9 @@ export abstract class AppI18n {
       readonly principal: string;
       readonly settled: string;
       readonly outstanding: string;
-      /** `{date}`: previsão. */
       readonly expected: string;
       readonly noDate: string;
       readonly overdue: string;
-      /** `{title}`: dívida. */
       readonly open: string;
     };
     readonly detail: {
@@ -1517,7 +1355,6 @@ export abstract class AppI18n {
       readonly originValues: Readonly<Record<'WITH_MOVEMENT' | 'WITHOUT_MOVEMENT', string>>;
       readonly viewOrigin: string;
       readonly closure: string;
-      /** `{date}`: data do encerramento. */
       readonly closedOn: string;
       readonly closureReason: string;
       readonly settlements: {
@@ -1525,7 +1362,6 @@ export abstract class AppI18n {
         readonly empty: string;
         readonly reversed: string;
         readonly view: string;
-        /** `{amount}`: valor da quitação. */
         readonly reverse: string;
         readonly reverseTitle: string;
         readonly reverseDescription: string;
@@ -1551,11 +1387,9 @@ export abstract class AppI18n {
       readonly description: string;
       readonly account: string;
       readonly amount: string;
-      /** `{amount}`: saldo restante que o backend devolveu. */
       readonly amountHint: string;
       readonly date: string;
       readonly note: string;
-      /** `{name}`: pessoa. */
       readonly defaultDescriptionReceivable: string;
       readonly defaultDescriptionPayable: string;
       readonly submit: string;
@@ -1594,7 +1428,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Emprestar, receber, nova dívida e divisão de despesa no `/quick-add` (Etapa 4, T85, T86). */
   abstract readonly lending: {
     readonly person: string;
     readonly expectedDate: string;
@@ -1602,10 +1435,8 @@ export abstract class AppI18n {
     readonly noPeopleLoading: string;
     readonly loan: {
       readonly help: string;
-      /** `{name}`: pessoa. */
       readonly defaultDescription: string;
       readonly description: string;
-      /** `{amount}` e `{name}`: o valor e a pessoa como o backend devolveu. */
       readonly toast: string;
     };
     readonly received: {
@@ -1616,16 +1447,12 @@ export abstract class AppI18n {
       readonly debt: string;
       readonly debtPlaceholder: string;
       readonly noOpenDebts: string;
-      /** `{name}`, `{title}` e `{amount}`: a dívida como o backend a devolveu (o saldo que falta). */
       readonly debtOption: string;
-      /** `{amount}`: o que falta, devolvido pelo backend. */
       readonly amountHint: string;
-      /** `{name}`: pessoa. */
       readonly defaultDescriptionRepayment: string;
       readonly defaultDescriptionBorrowed: string;
       readonly description: string;
       readonly toastRepayment: string;
-      /** `{amount}` e `{name}`. */
       readonly toastBorrowed: string;
     };
     readonly debt: {
@@ -1644,27 +1471,22 @@ export abstract class AppI18n {
       readonly creditorName: string;
       readonly creditorHint: string;
       readonly save: string;
-      /** `{amount}` e `{name}`. */
       readonly toast: string;
     };
     readonly shares: {
       readonly toggle: string;
       readonly legend: string;
-      /** `{number}`: posição da parte. */
       readonly row: string;
       readonly person: string;
       readonly amount: string;
       readonly add: string;
-      /** `{name}`: pessoa da parte. */
       readonly remove: string;
-      /** `{number}`: parte sem pessoa escolhida. */
       readonly removeUnnamed: string;
       readonly removeShort: string;
       readonly toast: string;
     };
   };
 
-  /** Recorrências, custo fixo e ocorrências pendentes (Etapa 4, T87, T88). Valores e datas vêm da API. */
   abstract readonly recurrences: {
     readonly loading: string;
     readonly add: string;
@@ -1679,7 +1501,6 @@ export abstract class AppI18n {
       readonly commitments: string;
       readonly overview: string;
     };
-    /** Custo fixo e receita recorrente mensais: sempre rotulados como estimativa (S-146). */
     readonly summary: {
       readonly title: string;
       readonly fixedCosts: string;
@@ -1695,18 +1516,13 @@ export abstract class AppI18n {
       Record<'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY' | 'CUSTOM', string>
     >;
     readonly units: Readonly<Record<'DAYS' | 'WEEKS' | 'MONTHS', string>>;
-    /** `{interval}` e `{unit}`: "A cada 2 semanas". */
     readonly every: string;
     readonly row: {
-      /** `{date}`: próxima ocorrência pendente. */
       readonly next: string;
       readonly noNext: string;
-      /** `{date}`: fim da recorrência. */
       readonly endsOn: string;
       readonly inactive: string;
-      /** Encerrada (`ended`): sem ocorrência hoje nem depois; fora do custo fixo. */
       readonly ended: string;
-      /** `{name}`: conta ou cartão. */
       readonly on: string;
       readonly monthly: string;
       readonly nextMonthIncome: string;
@@ -1714,7 +1530,6 @@ export abstract class AppI18n {
       readonly end: string;
       readonly deactivate: string;
       readonly actionsLabel: string;
-      /** Recorrência sem conta definida (2.14.0). */
       readonly accountTbd: string;
     };
     readonly endSheet: {
@@ -1726,7 +1541,6 @@ export abstract class AppI18n {
       readonly cancel: string;
     };
     readonly deactivateConfirm: {
-      /** `{name}`: recorrência. */
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
@@ -1753,7 +1567,6 @@ export abstract class AppI18n {
       readonly frequency: string;
       readonly interval: string;
       readonly unit: string;
-      /** `{count}`: valor do contador. */
       readonly intervalValue: string;
       readonly startDate: string;
       readonly endMode: string;
@@ -1764,10 +1577,8 @@ export abstract class AppI18n {
       readonly endMax: string;
       readonly endDateField: string;
       readonly maxOccurrences: string;
-      /** `{count}`: nº de ocorrências. */
       readonly maxValue: string;
       readonly locked: string;
-      /** Como reabrir uma recorrência encerrada (S-236). */
       readonly endedHint: string;
       readonly save: string;
       readonly saving: string;
@@ -1782,7 +1593,6 @@ export abstract class AppI18n {
       readonly emptyTitle: string;
       readonly emptyDescription: string;
       readonly overdueSection: string;
-      /** Havia mais de 500 vencidas: só as mais recentes aparecem (S-240). */
       readonly overdueTruncated: string;
       readonly upcomingSection: string;
       readonly viaAccount: string;
@@ -1792,7 +1602,6 @@ export abstract class AppI18n {
       readonly overdue: string;
       readonly realize: string;
       readonly skip: string;
-      /** `{label}`: descrição da ocorrência. */
       readonly realizeLabel: string;
       readonly skipLabel: string;
       readonly skipConfirm: {
@@ -1803,7 +1612,6 @@ export abstract class AppI18n {
       readonly toastSkipped: string;
     };
     readonly realize: {
-      /** `{label}`: descrição da ocorrência. */
       readonly title: string;
       readonly description: string;
       readonly date: string;
@@ -1823,7 +1631,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Metas (T100): reserva lógica; tudo calculado pelo backend, a UI só exibe. */
   abstract readonly goals: {
     readonly loading: string;
     readonly add: string;
@@ -1976,19 +1783,14 @@ export abstract class AppI18n {
     };
     readonly status: Readonly<Record<'ACTIVE' | 'ACHIEVED' | 'ARCHIVED', string>>;
     readonly priority: Readonly<Record<'HIGH' | 'MEDIUM' | 'LOW', string>>;
-    /** `{priority}`. */
     readonly priorityTag: string;
     readonly card: {
-      /** `{name}`. */
       readonly open: string;
-      /** `{name}`: nome acessível da barra. */
       readonly progressLabel: string;
-      /** `{current}` e `{target}`. */
       readonly progressText: string;
       readonly percentLabel: string;
       readonly currentLabel: string;
       readonly remainingLabel: string;
-      /** `{date}`. */
       readonly deadline: string;
       readonly noDeadline: string;
       readonly monthlyLabel: string;
@@ -2008,7 +1810,6 @@ export abstract class AppI18n {
       readonly noReservations: string;
       readonly reservationTag: string;
       readonly releaseTag: string;
-      /** `{account}`. */
       readonly onAccount: string;
       readonly notMoney: string;
       readonly archivedNote: string;
@@ -2020,7 +1821,6 @@ export abstract class AppI18n {
         readonly back: string;
       };
     };
-    /** Meta "quitar todas as dívidas" (`DEBT_PAYOFF`, 2.13.0). */
     readonly payoff: {
       readonly add: string;
       readonly created: string;
@@ -2050,7 +1850,6 @@ export abstract class AppI18n {
       };
     };
     readonly archiveConfirm: {
-      /** `{name}`. */
       readonly title: string;
       readonly description: string;
       readonly confirm: string;
@@ -2069,17 +1868,14 @@ export abstract class AppI18n {
       readonly cancel: string;
       readonly conflict: string;
       readonly reloadLatest: string;
-      /** Conflito de versão: atualiza só a versão e mantém o digitado (FE-S-170). */
       readonly keepTyped: string;
     };
     readonly photos: {
       readonly title: string;
       readonly hint: string;
       readonly add: string;
-      /** `{count}`, `{max}`. */
       readonly counter: string;
       readonly counterLabel: string;
-      /** `{max}`. */
       readonly full: string;
       readonly empty: string;
       readonly editNote: string;
@@ -2093,14 +1889,10 @@ export abstract class AppI18n {
       readonly retry: string;
       readonly retryAll: string;
       readonly waiting: string;
-      /** `{percent}`. */
       readonly uploading: string;
       readonly failed: string;
-      /** `{n}`, `{total}`, `{name}`. */
       readonly alt: string;
-      /** `{n}`, `{file}`. */
       readonly queuedAlt: string;
-      /** `{position}`, `{total}`. */
       readonly moved: string;
       readonly loading: string;
       readonly unavailable: string;
@@ -2110,7 +1902,6 @@ export abstract class AppI18n {
         readonly description: string;
         readonly confirm: string;
       };
-      /** `{name}`, `{max}`. */
       readonly rejected: {
         readonly type: string;
         readonly size: string;
@@ -2126,21 +1917,17 @@ export abstract class AppI18n {
         readonly off: string;
       };
       readonly gallery: {
-        /** `{name}`. */
         readonly label: string;
         readonly previous: string;
         readonly next: string;
         readonly thumbs: string;
-        /** `{n}`. */
         readonly show: string;
         readonly empty: string;
         readonly add: string;
       };
     };
     readonly reserve: {
-      /** `{name}`. */
       readonly reserveTitle: string;
-      /** `{name}`. */
       readonly releaseTitle: string;
       readonly description: string;
       readonly kind: string;
@@ -2168,10 +1955,8 @@ export abstract class AppI18n {
     };
   };
 
-  /** Resumo mensal (T102): tudo vem do backend; "Analisar com IA" fica desligado até a IA existir. */
   abstract readonly summary: {
     readonly loading: string;
-    /** `{month}`: "outubro de 2026". */
     readonly title: string;
     readonly monthPicker: string;
     readonly partial: string;
@@ -2202,22 +1987,18 @@ export abstract class AppI18n {
     readonly futureInstallments: string;
     readonly futureInstallmentsNote: string;
     readonly comparison: {
-      /** `{month}`. */
       readonly title: string;
       readonly partialNote: string;
       readonly noBase: string;
-      /** `{amount}` e `{percent}`. */
       readonly up: string;
       readonly down: string;
       readonly same: string;
-      /** `{amount}`: sem percentual (base zero). */
       readonly upNoPercent: string;
       readonly downNoPercent: string;
     };
     readonly analyzeOff: string;
   };
 
-  /** Projeções (T103): sempre "projeção, não certeza". */
   abstract readonly projections: {
     readonly loading: string;
     readonly horizonLabel: string;
@@ -2235,7 +2016,6 @@ export abstract class AppI18n {
       readonly inflows: string;
       readonly outflows: string;
       readonly balance: string;
-      /** `{date}`: o último ponto termina no fim do horizonte. */
       readonly partialUntil: string;
     };
     readonly trend: {
@@ -2244,7 +2024,6 @@ export abstract class AppI18n {
       readonly title: string;
       readonly estimate: string;
       readonly monthlyAverage: string;
-      /** `{months}`. */
       readonly basedOn: string;
       readonly spending: string;
       readonly balance: string;
@@ -2259,7 +2038,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Exportar (T104): CSV e backup por download autenticado. */
   abstract readonly exports: {
     readonly title: string;
     readonly description: string;
@@ -2272,7 +2050,6 @@ export abstract class AppI18n {
       readonly rangeInvalid: string;
       readonly action: string;
       readonly running: string;
-      /** Idioma sem cabeçalho de CSV próprio no backend (M1, FE-S-167). */
       readonly headerFallback: string;
     };
     readonly backup: {
@@ -2282,27 +2059,20 @@ export abstract class AppI18n {
       readonly action: string;
       readonly running: string;
     };
-    /** `{name}`: o download foi iniciado (a ação final do "Salvar"). */
     readonly saved: string;
-    /** `{name}`: o usuário concluiu o compartilhamento. */
     readonly shared: string;
-    /** Estado "Arquivo pronto": o arquivo já está em memória e a ação final é do usuário (gesto). */
     readonly ready: {
       readonly title: string;
-      /** `{name}`. */
       readonly hint: string;
       readonly save: string;
       readonly dismiss: string;
     };
     readonly share: string;
-    /** `{seconds}`: espera do `Retry-After` (429) antes de liberar "tentar de novo". */
     readonly retryIn: string;
     readonly retry: string;
   };
 
-  /** Vault de notas Markdown (Etapa 6): lista, editor, vínculos, notas nas telas financeiras, importar e exportar. */
   abstract readonly notes: {
-    /** Armazenamento honesto (S-157): as notas moram no servidor, não no aparelho. */
     readonly storage: string;
     readonly editorStorage: string;
     readonly list: {
@@ -2316,22 +2086,17 @@ export abstract class AppI18n {
       readonly tagsLabel: string;
       readonly foldersLabel: string;
       readonly treeLabel: string;
-      /** `{count}`: a árvore de pastas cobre só parte das notas. */
       readonly treePartial: string;
       readonly treeLoadMore: string;
-      /** `{count}`: passou do limite; a árvore fica parcial. */
       readonly treeCapped: string;
       readonly allNotes: string;
       readonly folderSelectLabel: string;
-      /** `{name}` e `{count}`: nome acessível do item da árvore. */
       readonly folderItem: string;
       readonly clearFilters: string;
       readonly noResults: EmptyStateCopy;
       readonly loadMore: string;
       readonly loadingMore: string;
-      /** `{date}`. */
       readonly updated: string;
-      /** `{count}`: resultados anunciados depois de uma busca. */
       readonly resultsCount: string;
       readonly resultsNone: string;
     };
@@ -2340,7 +2105,6 @@ export abstract class AppI18n {
       readonly description: string;
       readonly empty: string;
       readonly restore: string;
-      /** `{title}`. */
       readonly restoreNamed: string;
       readonly emptyTrash: string;
       readonly emptyConfirm: {
@@ -2350,7 +2114,6 @@ export abstract class AppI18n {
       };
       readonly restored: string;
       readonly emptied: string;
-      /** `{date}`. */
       readonly trashedAt: string;
     };
     readonly create: {
@@ -2367,7 +2130,6 @@ export abstract class AppI18n {
       readonly pathInvalid: string;
       readonly pathTooLong: string;
       readonly pathTooDeep: string;
-      /** `{name}`: sugestão de nome para a nota vinculada a uma entidade. */
       readonly suggestion: string;
       readonly created: string;
     };
@@ -2383,17 +2145,14 @@ export abstract class AppI18n {
       readonly write: string;
       readonly read: string;
       readonly textLabel: string;
-      /** `{save}`, `{bold}`, `{italic}`, `{link}`: atalhos já escritos para a plataforma. */
       readonly keyboardHelp: string;
       readonly save: string;
       readonly saving: string;
       readonly saved: string;
       readonly unsaved: string;
       readonly savedToast: string;
-      /** Rascunho local restaurado depois de a aba ser recarregada ou descartada pelo sistema. */
       readonly draftRecovered: string;
       readonly draftDiscard: string;
-      /** `{used}` e `{max}`: tamanho do texto. */
       readonly size: string;
       readonly tooLarge: string;
       readonly toolbarLabel: string;
@@ -2408,7 +2167,6 @@ export abstract class AppI18n {
       readonly previewEmpty: string;
       readonly tagsLabel: string;
       readonly tagsEmpty: string;
-      /** `{date}`. */
       readonly updated: string;
       readonly moreActions: string;
       readonly rename: string;
@@ -2442,16 +2200,13 @@ export abstract class AppI18n {
         readonly moved: string;
         readonly rewrittenNone: string;
         readonly rewrittenOne: string;
-        /** `{count}`. */
         readonly rewrittenMany: string;
         readonly dismiss: string;
       };
       readonly conflict: {
         readonly title: string;
         readonly description: string;
-        /** Conflito ao renomear/mover: a mudança não foi aplicada. */
         readonly descriptionMove: string;
-        /** Conflito ao vincular: a mudança não foi aplicada. */
         readonly descriptionLinks: string;
         readonly viewDiff: string;
         readonly hideDiff: string;
@@ -2463,7 +2218,6 @@ export abstract class AppI18n {
         readonly diffSame: string;
         readonly diffTooBig: string;
         readonly diffShowMore: string;
-        /** `{shown}` de `{total}` linhas. */
         readonly diffCount: string;
         readonly remoteVersion: string;
         readonly remoteLoadFailed: string;
@@ -2475,7 +2229,6 @@ export abstract class AppI18n {
       readonly none: string;
       readonly add: string;
       readonly remove: string;
-      /** `{name}`. */
       readonly removeNamed: string;
       readonly open: string;
       readonly pending: string;
@@ -2503,7 +2256,6 @@ export abstract class AppI18n {
       readonly backlinksError: string;
       readonly backlinksRetry: string;
       readonly saved: string;
-      /** Vínculos pendentes (de uma importação) saem quando os vínculos são trocados. */
       readonly pendingDropHint: string;
     };
     readonly picker: {
@@ -2519,14 +2271,12 @@ export abstract class AppI18n {
       readonly noResults: string;
       readonly error: string;
       readonly retry: string;
-      /** `{count}`: resultados anunciados. */
       readonly resultsCount: string;
       readonly add: string;
       readonly cancel: string;
       readonly alreadyLinked: string;
       readonly chooseCardFirst: string;
       readonly noInvoices: string;
-      /** `{month}`: competência da fatura. */
       readonly invoiceLabel: string;
     };
     readonly linked: {
@@ -2549,10 +2299,8 @@ export abstract class AppI18n {
         readonly action: string;
         readonly running: string;
         readonly ready: string;
-        /** `{name}`. */
         readonly saved: string;
         readonly retry: string;
-        /** `{seconds}`: espera do `Retry-After` (429). */
         readonly retryIn: string;
       };
       readonly import: {
@@ -2568,7 +2316,6 @@ export abstract class AppI18n {
         readonly action: string;
         readonly running: string;
         readonly retry: string;
-        /** Falha sem resposta em `RENAME`: o resultado é incerto e repetir pode duplicar as notas. */
         readonly uncertain: string;
         readonly reset: string;
         readonly confirm: {
@@ -2590,18 +2337,15 @@ export abstract class AppI18n {
         readonly skippedFiles: string;
         readonly ignoredFiles: string;
         readonly renamedFiles: string;
-        /** `{from}` e `{to}`. */
         readonly renamedItem: string;
         readonly warningOther: string;
         readonly warningCodes: Readonly<Record<string, string>>;
         readonly done: string;
         readonly openNotes: string;
-        /** `{count}`: itens que não cabem na lista exibida. */
         readonly more: string;
       };
     };
     readonly markdown: {
-      /** `{alt}`. */
       readonly imageBlocked: string;
       readonly imageBlockedNoAlt: string;
       readonly wikilinkPending: string;
@@ -2610,14 +2354,11 @@ export abstract class AppI18n {
       readonly externalLink: string;
       readonly taskDone: string;
       readonly taskOpen: string;
-      /** A pré-visualização foi cortada por ser grande demais. */
       readonly truncated: string;
-      /** Markdown grande ou complexo demais para formatar: a nota aparece como texto simples. */
       readonly tooComplex: string;
     };
   };
 
-  /** Importar extrato (Etapa 7): envio, mapeamento de colunas, revisão linha a linha, aplicar e desfazer. */
   abstract readonly imports: {
     readonly intro: string;
     readonly formats: string;
@@ -2637,7 +2378,6 @@ export abstract class AppI18n {
       readonly fileHint: string;
       readonly send: string;
       readonly sending: string;
-      /** `{percent}`. */
       readonly progress: string;
       readonly cancel: string;
       readonly cancelled: string;
@@ -2677,9 +2417,7 @@ export abstract class AppI18n {
       readonly loading: string;
       readonly empty: string;
       readonly open: string;
-      /** `{count}`. */
       readonly lines: string;
-      /** `{date}`. */
       readonly createdOn: string;
       readonly target: string;
     };
@@ -2749,12 +2487,9 @@ export abstract class AppI18n {
       readonly viewSimilar: string;
       readonly loadMore: string;
       readonly loadingMore: string;
-      /** `{accepted}`, `{rejected}`, `{decide}`. */
       readonly summary: string;
       readonly acceptAll: string;
-      /** `{updated}`. */
       readonly bulkDone: string;
-      /** `{count}`. */
       readonly bulkSkipped: string;
       readonly skipReasons: Readonly<
         Record<
@@ -2766,17 +2501,14 @@ export abstract class AppI18n {
           string
         >
       >;
-      /** `{count}`. */
       readonly needsDecision: string;
       readonly apply: string;
       readonly applying: string;
       readonly applyConfirm: {
         readonly title: string;
-        /** `{accepted}`. */
         readonly description: string;
         readonly confirm: string;
       };
-      /** `{created}`. */
       readonly applied: string;
       readonly seeTransactions: string;
       readonly undo: string;
@@ -2851,7 +2583,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Notificações, lembretes, configurações de aviso e push (Etapa 7). */
   abstract readonly notifications: {
     readonly popover: {
       readonly title: string;
@@ -2863,7 +2594,6 @@ export abstract class AppI18n {
     readonly bell: {
       readonly label: string;
       readonly one: string;
-      /** `{count}`. */
       readonly many: string;
     };
     readonly center: {
@@ -2900,16 +2630,12 @@ export abstract class AppI18n {
         string
       >
     >;
-    /** Texto por chave de i18n do backend (`titleKey`); o corpo é a chave + `.body`. */
     readonly messages: Readonly<Record<string, { readonly title: string; readonly body: string }>>;
     readonly unknownMessage: { readonly title: string; readonly body: string };
     readonly daily: {
       readonly greeting: string;
-      /** `{name}`. */
       readonly greetingNamed: string;
-      /** `{available}`, `{committed7d}`. */
       readonly summary: string;
-      /** `{goalName}`, `{goalProgress}`. */
       readonly goal: string;
     };
     readonly reminders: {
@@ -2923,9 +2649,7 @@ export abstract class AppI18n {
       readonly doneBadge: string;
       readonly snooze: string;
       readonly showDone: string;
-      /** `{date}`. */
       readonly on: string;
-      /** `{date}`, `{time}`. */
       readonly onAt: string;
       readonly form: {
         readonly addTitle: string;
@@ -2990,21 +2714,16 @@ export abstract class AppI18n {
     };
   };
 
-  /** Visão total de dívidas, parcelado em andamento e cartão do Início (2.13.0). Valores vêm da API. */
   abstract readonly debtOverview: {
-    /** Compromissos acompanhados (2.14.0): bloco à parte, fora do total. */
     readonly tracked: {
       readonly title: string;
       readonly description: string;
       readonly empty: string;
       readonly manage: string;
       readonly add: string;
-      /** `{paid}` e `{total}`. */
       readonly installments: string;
       readonly balanceUnknown: string;
-      /** `{percent}`. */
       readonly progress: string;
-      /** `{date}`. */
       readonly nextDue: string;
       readonly paid: string;
       readonly balance: string;
@@ -3149,7 +2868,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Dinheiro a receber de terceiros (2.14.0). Valores e datas vêm da API; nada é calculado no front. */
   abstract readonly thirdParties: {
     readonly title: string;
     readonly description: string;
@@ -3164,7 +2882,6 @@ export abstract class AppI18n {
       readonly owed: string;
       readonly received: string;
       readonly pending: string;
-      /** `{date}`. */
       readonly asOf: string;
       readonly note: string;
     };
@@ -3175,13 +2892,11 @@ export abstract class AppI18n {
       readonly pending: string;
       readonly none: string;
       readonly noDescription: string;
-      /** `{date}`. */
       readonly expected: string;
       readonly source: Readonly<Record<'DEBT' | 'EXPENSE' | 'RECEIPT', string>>;
     };
     readonly receipts: {
       readonly register: string;
-      /** "Recebido (já refletido no saldo)": o dinheiro já está no saldo observado. */
       readonly reflected: string;
       readonly remove: string;
       readonly removeLabel: string;
@@ -3221,7 +2936,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Compromissos acompanhados (2.14.0): só acompanhamento, sem mexer em contas nem no total de dívidas. */
   abstract readonly commitments: {
     readonly title: string;
     readonly description: string;
@@ -3237,18 +2951,13 @@ export abstract class AppI18n {
       readonly action: string;
     };
     readonly row: {
-      /** `{name}`. */
       readonly counterparty: string;
-      /** `{paid}` e `{total}`. */
       readonly installments: string;
-      /** `{date}`. */
       readonly nextDue: string;
       readonly paid: string;
       readonly balance: string;
-      /** `{percent}`. */
       readonly progress: string;
       readonly balanceUnknown: string;
-      /** `{name}`. */
       readonly open: string;
     };
     readonly detail: {
@@ -3275,18 +2984,14 @@ export abstract class AppI18n {
       readonly schedule: {
         readonly title: string;
         readonly empty: string;
-        /** `{date}`. */
         readonly paidOn: string;
         readonly pending: string;
         readonly noDate: string;
-        /** `{date}`. */
         readonly due: string;
         readonly markPaid: string;
-        /** `{label}`. */
         readonly markPaidFor: string;
         readonly dialog: {
           readonly title: string;
-          /** `{label}`. */
           readonly description: string;
           readonly date: string;
           readonly confirm: string;
@@ -3322,9 +3027,7 @@ export abstract class AppI18n {
         readonly hint: string;
         readonly empty: string;
         readonly add: string;
-        /** `{number}`. */
         readonly item: string;
-        /** `{number}`. */
         readonly remove: string;
         readonly label: string;
         readonly type: string;
@@ -3340,7 +3043,6 @@ export abstract class AppI18n {
     };
   };
 
-  /** Telas "sucintas" (Início e demais): só o essencial acima da dobra. */
   abstract readonly brief: {
     readonly register: string;
     readonly registerMore: string;
@@ -3356,17 +3058,14 @@ export abstract class AppI18n {
       readonly title: string;
       readonly empty: string;
       readonly choose: string;
-      /** `{name}`. */
       readonly open: string;
       readonly price: string;
-      /** `{name}`. */
       readonly photosLabel: string;
       readonly previous: string;
       readonly next: string;
       readonly pause: string;
       readonly play: string;
       readonly indicators: string;
-      /** `{n}`, `{total}`. */
       readonly goTo: string;
     };
     readonly viewTransactions: string;

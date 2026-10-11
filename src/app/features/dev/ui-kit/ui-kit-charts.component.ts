@@ -31,7 +31,6 @@ const PERIODS: readonly ChoiceOption[] = [
   { value: 'M12', label: '12 meses' },
 ];
 
-/** O UI Kit só existe nos builds de desenvolvimento e mock, que sempre ligam a porta de demonstração. */
 function missingDemoGateway(): never {
   throw new Error('DEMO_REPORTS_GATEWAY ausente: o UI Kit só roda em dev e mock.');
 }
@@ -42,11 +41,6 @@ const KEYS: readonly LineChartKey[] = ['seg', 'ter', 'qua', 'qui', 'sex'].map((l
   label,
 }));
 
-/**
- * Gráficos no UI Kit (fatia B): "Spending overview" com os dados de DEMONSTRAÇÃO da porta de relatórios
- * (`ReportsGateway.isDemo`, rotulados), mais os estados do gráfico (vazio, um ponto, valor negativo) e as
- * barras de categoria. Só em desenvolvimento e mock: os textos ficam aqui, fora do contrato de i18n.
- */
 @Component({
   selector: 'app-ui-kit-charts',
   imports: [
@@ -169,11 +163,9 @@ const KEYS: readonly LineChartKey[] = ['seg', 'ter', 'qua', 'qui', 'sex'].map((l
   `,
 })
 export class UiKitChartsComponent {
-  /** Porta de demonstração (dev e mock): no UI Kit os gráficos sempre mostram fixtures rotuladas. */
   private readonly gateway = inject(DEMO_REPORTS_GATEWAY) ?? missingDemoGateway();
   private readonly i18n = inject(I18nService);
   protected readonly t = this.i18n.t;
-  /** Dado de demonstração é sempre rotulado (`charts.demo`); com a porta real, o selo some. */
   protected readonly isDemo = this.gateway.isDemo;
 
   readonly scope = input.required<'light' | 'dark'>();

@@ -37,12 +37,8 @@ describe('Movimento: appStagger e appReveal', () => {
         observe(el: Element) {
           observed.push(el);
         }
-        unobserve() {
-          // stub
-        }
-        disconnect() {
-          // stub
-        }
+        unobserve() {}
+        disconnect() {}
       },
     );
   });

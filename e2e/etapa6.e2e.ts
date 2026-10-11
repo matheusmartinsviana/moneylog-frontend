@@ -9,16 +9,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * Etapa 6 (vault de notas) no ambiente mock: sem backend, o vault está vazio, criar devolve a nota sem
- * persistir e abrir uma nota dá "não encontrada". Os fluxos com dados (criar, vincular à compra do notebook e
- * ao resumo de outubro, `[[` para outra nota, renomear com reescrita de links, lixeira, exportar, importar em
- * outro usuário, XSS e saldos idênticos) são do projeto `integration` (`integration/etapa6.e2e.ts`). Aqui:
- * estado vazio e honesto sobre o armazenamento, folha de nova nota, lixeira, exportar com "Arquivo pronto" (o
- * download só nasce do clique), importar com o `FilePicker` próprio (o único `<input type="file">`, escondido
- * dentro dele) e o relatório, o bloco "Notas vinculadas" ausente de telas sem registro, a11y, 375 px e idiomas.
- */
-
 const ZIP = {
   name: 'moneylog-vault.zip',
   mimeType: 'application/zip',
@@ -53,10 +43,8 @@ test.describe('/notes vazio', () => {
 
     await page.locator('[data-cy="notes-new"]').click();
     await expect(page.locator('[data-cy="new-note-form"]')).toBeVisible();
-    // Nome vazio: erro do campo, nada é enviado.
     await page.locator('[data-cy="new-note-submit"]').click();
     await expect(page.locator('[data-cy="new-note-name"]')).toHaveAttribute('aria-invalid', 'true');
-    // Caractere proibido: avisa antes de enviar.
     await page.locator('[data-cy="new-note-name"]').fill('a:b');
     await page.locator('[data-cy="new-note-submit"]').click();
     await expect(page.locator('[data-cy="new-note-error"]')).toBeVisible();
@@ -133,7 +121,6 @@ test.describe('importar e exportar', () => {
     await expect(page.locator('app-file-picker input[type="file"]')).toHaveCount(1);
     await expect(inputs.first()).toHaveAttribute('accept', '.zip');
 
-    // O botão próprio abre o seletor do sistema (um clique do usuário).
     const chooser = page.waitForEvent('filechooser');
     await page.locator('[data-cy="vault-file"]').click();
     await (await chooser).setFiles(ZIP);
@@ -144,7 +131,6 @@ test.describe('importar e exportar', () => {
 
     await page.locator('[data-cy="vault-mode-RENAME"]').click();
     await page.locator('[data-cy="vault-import-action"]').click();
-    // Confirmação clara antes de enviar: nenhuma nota existente é sobrescrita.
     const dialog = page.getByRole('dialog', { name: 'Importar este arquivo?' });
     await expect(dialog).toContainText('Notas que já existem não mudam');
     await expect(dialog).toContainText('nome (2)');

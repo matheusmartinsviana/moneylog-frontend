@@ -1,7 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import { Observable } from 'rxjs';
 
-/** Quantas leituras do razão o Início deixa em voo ao mesmo tempo (R13, ADR-008). */
 export const LEDGER_MAX_IN_FLIGHT = 2;
 
 interface Job {
@@ -10,13 +9,6 @@ interface Job {
   readonly start: () => void;
 }
 
-/**
- * Porteiro das leituras do razão (R13): cada leitura (dashboard, resumo mensal, relatórios) custa 1,7 a 2,0 s e
- * ~120 MB no backend com 50.000 movimentações (ADR-008), então o Início as roda **por prioridade e no máximo
- * `maxInFlight` por vez**, em vez de disparar todas juntas. A fonte só é assinada quando há vaga; sai da fila
- * (sem nunca ser assinada) se o assinante cancelar antes; e a vaga volta quando a leitura completa, falha ou é
- * cancelada. Menor `priority` vai primeiro; empate sai na ordem de chegada. Não toca nos valores.
- */
 export class LedgerGate {
   private active = 0;
   private counter = 0;
@@ -24,12 +16,10 @@ export class LedgerGate {
 
   constructor(readonly maxInFlight: number = LEDGER_MAX_IN_FLIGHT) {}
 
-  /** Quantas leituras estão em voo agora (para os testes). */
   get inFlight(): number {
     return this.active;
   }
 
-  /** Quantas esperam vaga (para os testes). */
   get waiting(): number {
     return this.queue.length;
   }
@@ -86,5 +76,4 @@ export class LedgerGate {
   }
 }
 
-/** Fornecido pela página do Início; fora dela (`null`) as leituras vão direto, sem fila. */
 export const LEDGER_GATE = new InjectionToken<LedgerGate>('LEDGER_GATE');

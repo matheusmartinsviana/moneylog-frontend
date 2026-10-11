@@ -1,11 +1,6 @@
 import { demoIncomeExpenseSeries } from '~/modules/reports/mock-data/income-expenses.fixture';
 import { demoSpendingByCategory } from '~/modules/reports/mock-data/spending-by-category.fixture';
 
-/**
- * Valores **escritos à mão** (e conferidos na calculadora), não recalculados aqui: um teste que refaz a mesma
- * aritmética da fixture para conferir a própria fixture só repetiria um erro dela (revisão M7). Os casos
- * "regressão" são valores fixados da saída atual (sem derivação manual possível em 12 meses de dias).
- */
 describe('fixtures de demonstração dos relatórios (formato do contrato 2.6.0, plano 5.1 e 5.2)', () => {
   it('Dado D7, então cada dia, o total e o resultado batem com os valores fixos', () => {
     const series = demoIncomeExpenseSeries('D7');
@@ -21,7 +16,6 @@ describe('fixtures de demonstração dos relatórios (formato do contrato 2.6.0,
       ['2026-10-09', '0.00', '79.65', '-79.65'],
       ['2026-10-10', '0.00', '0.00', '0.00'],
     ]);
-    // 43,70 + 942,89 + 166,27 + 90,46 + 79,65 = 1.322,97 (conta feita à mão).
     expect(series.totals).toEqual({
       income: { amount: '0.00', currency: 'BRL' },
       expenses: { amount: '1322.97', currency: 'BRL' },
@@ -45,7 +39,6 @@ describe('fixtures de demonstração dos relatórios (formato do contrato 2.6.0,
       expenses: { amount: '2871.64' },
       net: { amount: '4368.36' },
     });
-    // Regressão: totais dos 12 meses, valores fixados da saída atual.
     expect(totals.income.amount).toBe('86340.00');
     expect(totals.expenses.amount).toBe('34313.97');
     expect(totals.net.amount).toBe('52026.03');
@@ -55,12 +48,12 @@ describe('fixtures de demonstração dos relatórios (formato do contrato 2.6.0,
     expect(demoIncomeExpenseSeries('D30').totals).toMatchObject({
       income: { amount: '7060.00' },
       expenses: { amount: '2788.60' },
-      net: { amount: '4271.40' }, // 7.060,00 − 2.788,60
+      net: { amount: '4271.40' },
     });
     expect(demoIncomeExpenseSeries('M3').totals).toMatchObject({
       income: { amount: '21540.00' },
       expenses: { amount: '8737.90' },
-      net: { amount: '12802.10' }, // 21.540,00 − 8.737,90
+      net: { amount: '12802.10' },
     });
   });
 
@@ -88,7 +81,7 @@ describe('fixtures de demonstração dos relatórios (formato do contrato 2.6.0,
     expect(m3.granularity).toBe('WEEK');
     expect(m3.from).toBe('2026-07-10');
     expect([13, 14]).toContain(m3.points.length);
-    expect(m3.points[0]!.periodStart).toBe('2026-07-10'); // recortado: não começa na segunda anterior
+    expect(m3.points[0]!.periodStart).toBe('2026-07-10');
     expect(m3.points.at(-1)).toMatchObject({ periodEnd: '2026-10-10', partial: true });
     m3.points.slice(1).forEach((point, i) => {
       const previous = new Date(`${m3.points[i]!.periodEnd}T00:00:00Z`).getTime();
@@ -120,17 +113,15 @@ describe('fixtures de demonstração dos relatórios (formato do contrato 2.6.0,
   it('Dado os gastos por categoria, então os valores, a ordem e as razões são os fixos', () => {
     const data = demoSpendingByCategory('2026-10', 5);
 
-    // 1.820,00 + 820,00 + 610,00 + 420,00 + 240,00 + 90,00 + 85,50 = 4.085,50 (conta feita à mão).
     expect(data.total).toEqual({ amount: '4085.50', currency: 'BRL' });
     expect(data.base).toEqual({ amount: '4085.50', currency: 'BRL' });
     expect(data.items.map((i) => [i.category.name, i.amount.amount, i.share])).toEqual([
-      ['Moradia', '1820.00', '0.4455'], // 1820 / 4085,5 = 0,44547
-      ['Alimentação', '820.00', '0.2007'], // 0,20071
-      ['Compras', '610.00', '0.1493'], // 0,14931
-      ['Transporte', '420.00', '0.1028'], // 0,10280
-      ['Assinaturas', '240.00', '0.0587'], // 0,05874
+      ['Moradia', '1820.00', '0.4455'],
+      ['Alimentação', '820.00', '0.2007'],
+      ['Compras', '610.00', '0.1493'],
+      ['Transporte', '420.00', '0.1028'],
+      ['Assinaturas', '240.00', '0.0587'],
     ]);
-    // Lazer 90,00 + Saúde 85,50 = 175,50, 175,5 / 4085,5 = 0,04296
     expect(data.other).toEqual({
       amount: { amount: '175.50', currency: 'BRL' },
       share: '0.0430',

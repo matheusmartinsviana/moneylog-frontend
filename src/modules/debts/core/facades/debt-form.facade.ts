@@ -7,13 +7,6 @@ import type { Debt, DebtInput } from '~/modules/debts/core/types/debt';
 import { IdempotencyTracker, isAmbiguousFailure } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Facade do formulário "Nova dívida" (sem movimentação, não mexe no saldo das contas). `exhaustMap`:
- * clique duplo = uma requisição. Devolve **a dívida da resposta**. `POST /v1/debts` leva
- * `Idempotency-Key`: uma por tentativa, **reutilizada** depois de uma falha ambígua (rede, 5xx,
- * `CONFLICT`) no "tentar de novo" e ao reenviar o mesmo corpo; corpo diferente gera chave nova
- * (S-237). Escopo de componente.
- */
 @Injectable()
 export class DebtFormFacade {
   private readonly gateway = inject(DebtsGateway);
@@ -26,9 +19,7 @@ export class DebtFormFacade {
 
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
-  /** A última falha deixa o "tentar de novo" (mesma chave) seguro e útil? */
   readonly canRetry = computed(() => isAmbiguousFailure(this.problemState()));
-  /** Emite a dívida devolvida pela API quando o salvar dá certo. */
   readonly saved$ = this.savedEvents.asObservable();
 
   constructor() {
@@ -61,7 +52,6 @@ export class DebtFormFacade {
     this.saves.next(input);
   }
 
-  /** Falha de rede/5xx: reenvia o mesmo corpo. */
   retry(): void {
     if (this.last) this.saves.next(this.last);
   }

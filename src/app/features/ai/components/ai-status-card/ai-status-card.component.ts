@@ -4,10 +4,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
 
-/**
- * Estado real da IA no servidor: desligada (com o que fazer, sem campo de chave) ou ligada, com provedor,
- * modelo, o que resta de uso e o disjuntor. A chave nunca passa por aqui. Smart (lê `AiStatusFacade`).
- */
 @Component({
   selector: 'app-ai-status-card',
   changeDetection: ChangeDetectionStrategy.OnPush,

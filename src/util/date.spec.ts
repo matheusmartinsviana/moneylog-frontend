@@ -88,7 +88,6 @@ describe('formatCompetenceShort e formatInstant', () => {
   });
 
   it('Dado um instante UTC de madrugada, então mostra a data no fuso de São Paulo', () => {
-    // 02:30 UTC de 05/10 ainda é 23:30 de 04/10 em São Paulo.
     expect(formatInstant('2026-10-05T02:30:00Z', 'pt-BR')).toMatch(/4 de outubro de 2026/);
   });
 });

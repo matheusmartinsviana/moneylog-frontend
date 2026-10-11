@@ -65,7 +65,6 @@ export function anInvoice(overrides: Partial<Invoice> = {}): Invoice {
   };
 }
 
-/** O cenário padrão do plano: cartão Roxinho, limite 10.000,00, 1.283,00 na fatura e 1.000,00 futuros. */
 export function aCard(overrides: Partial<Card> = {}): Card {
   return {
     id: 'card-1',
@@ -147,7 +146,6 @@ export function aPaymentPreview(overrides: Partial<PaymentPreview> = {}): Paymen
   };
 }
 
-/** Porta falsa de cartões: guarda as chamadas e devolve o que o teste configurar. */
 export class CardsGatewayStub extends CardsGateway {
   cards: Card[] = [];
   invoices: InvoiceSummary[] = [];
@@ -160,7 +158,6 @@ export class CardsGatewayStub extends CardsGateway {
   readonly billingPreviewCalls: { cardId: string; closingDay: number; dueDay: number }[] = [];
   readonly updates: CardUpdate[] = [];
   readonly creates: CardInput[] = [];
-  /** Resultado das escritas de cartão (`create`, `update`, `archive`, `unarchive`). */
   next: Observable<Card> | null = null;
   getResult: Observable<Card> | null = null;
   listError: Observable<never> | null = null;

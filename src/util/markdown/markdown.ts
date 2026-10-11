@@ -3,15 +3,6 @@ import { Marked, type Token, type Tokens } from 'marked';
 import { displayText } from '~/util/display-text';
 import { safeLink } from '~/util/markdown/safe-url';
 
-/**
- * Markdown seguro (S-159, ADR-009): o backend nunca renderiza; o front transforma o texto numa **árvore de
- * dados** (`MdBlock`/`MdInline`) e a tela a desenha com templates do Angular. **Nenhuma string HTML é gerada
- * nem injetada** (nada de `innerHTML`, `DOMParser`, `bypassSecurityTrust*`): HTML bruto (`<script>`, `<img
- * onerror>`, `<svg>`, `<iframe>`...) vira **texto literal**; links só `http(s)`/`mailto`; imagens nunca são
- * carregadas (anti-rastreio) e mostram o texto alternativo. Por construção não existe nó executável a
- * sanitizar (a sanitização estrita é estrutural, mais forte que filtrar uma string HTML).
- */
-
 export type MdInline =
   | { readonly kind: 'text'; readonly text: string }
   | {
@@ -24,27 +15,19 @@ export type MdInline =
       readonly kind: 'link';
       readonly href: string;
       readonly external: boolean;
-      /**
-       * Destino real (host, em punycode se for IDN) quando o texto do link **não** o mostra: `[banco.com](https://evil.com)`
-       * exibe `evil.com` ao lado, para o texto não enganar sobre o destino (F7).
-       */
       readonly host: string | null;
       readonly children: readonly MdInline[];
     }
-  /** Imagem **sempre bloqueada**: só o texto alternativo (e o endereço como texto, sem carregar). */
   | { readonly kind: 'image'; readonly alt: string; readonly source: string }
   | {
       readonly kind: 'wikilink';
-      /** Alvo como escrito (`projetos/MG Tech`), sem alias nem seção. */
       readonly target: string;
       readonly alias: string | null;
       readonly section: string | null;
       readonly embed: boolean;
-      /** Texto visível: o alias, senão o alvo. */
       readonly label: string;
     }
   | { readonly kind: 'checkbox'; readonly checked: boolean }
-  /** Referência de nota de rodapé (`[^1]`). */
   | { readonly kind: 'footnote'; readonly label: string };
 
 export interface MdListItem {
@@ -71,7 +54,6 @@ export type MdBlock =
       readonly items: readonly MdListItem[];
     }
   | { readonly kind: 'hr' }
-  /** Definição de nota de rodapé (`[^1]: texto`). */
   | { readonly kind: 'footnote'; readonly label: string; readonly children: readonly MdInline[] }
   | {
       readonly kind: 'table';
@@ -80,19 +62,9 @@ export type MdBlock =
       readonly rows: readonly (readonly (readonly MdInline[])[])[];
     };
 
-/**
- * Teto de entrada: o limite de nota do backend (200 KB). Acima disto o texto é mostrado como código. O teto
- * **não** protege do custo quadrático do lexer (isso é o Web Worker com tempo limite, `markdown-render.ts`).
- */
 export const MAX_RENDER_CHARS = 200_000;
 const MAX_DEPTH = 8;
-/** Profundidade máxima de `strong`/`em`/`del`/`link` aninhados: abaixo disso vira texto (F2). */
 export const MAX_INLINE_DEPTH = 8;
-/**
- * Orçamento de nós (inline, blocos, itens de lista, linhas e células de tabela) desenhados: protege o aparelho de uma nota patológica (200 KB num
- * parágrafo só gera dezenas de milhares de nós). Passou, a pré-visualização mostra o começo e avisa
- * (`truncated`); o texto completo continua no editor.
- */
 export const MAX_RENDER_NODES = 12_000;
 
 interface Budget {
@@ -100,7 +72,6 @@ interface Budget {
   truncated: boolean;
 }
 
-/** A árvore e se ela foi cortada pelo orçamento de nós. */
 export interface MdDocument {
   readonly blocks: readonly MdBlock[];
   readonly truncated: boolean;
@@ -108,7 +79,6 @@ export interface MdDocument {
 
 const WIKILINK_SOURCE = /^(!?)\[\[([^[\]\n]{1,300})\]\]/;
 
-/** Separa `nome#seção|alias` (a ordem do Obsidian) e `nome|alias` / `nome#seção`. */
 export function parseWikilink(
   inner: string,
 ): { target: string; alias: string | null; section: string | null } | null {
@@ -163,10 +133,6 @@ const NAMED_ENTITIES: Readonly<Record<string, string>> = {
   nbsp: '\u00a0',
 };
 
-/**
- * Entidades de caractere (`&amp;`, `&#39;`) viram o caractere **como texto**. Nada daqui vira marcação:
- * o resultado só é interpolado como texto pelo template.
- */
 export function decodeEntities(text: string): string {
   return text.replace(/&(#x[0-9a-f]{1,6}|#\d{1,7}|[a-z]{2,6});/gi, (whole, entity: string) => {
     if (entity.startsWith('#')) {
@@ -174,7 +140,6 @@ export function decodeEntities(text: string): string {
         entity[1]?.toLowerCase() === 'x'
           ? parseInt(entity.slice(2), 16)
           : parseInt(entity.slice(1), 10);
-      // Nada de controle, surrogate solto ou fora do Unicode.
       if (
         !Number.isFinite(code) ||
         code < 32 ||
@@ -189,16 +154,10 @@ export function decodeEntities(text: string): string {
   });
 }
 
-/** Uma linha plausível de YAML simples: `chave: valor`, item de lista, continuação indentada ou comentário. */
 const FRONTMATTER_LINE = /^(?:\s*|\s*#.*|[\w\-"'. ]{1,80}:(?:\s.*)?|\s+\S.*|-\s.*)$/;
 const FRONTMATTER_KEY = /^[\w\-"'. ]{1,80}:(?:\s.*)?$/;
 const MAX_FRONTMATTER_LINES = 200;
 
-/**
- * Remove o frontmatter YAML do começo (`---` ... `---`): ele não é conteúdo para ler. **Só se parecer YAML**
- * (linhas `chave: valor`/lista/comentário, ao menos uma chave): `---\nAviso importante\n---\ncorpo` é conteúdo
- * do usuário e continua visível (F9).
- */
 export function stripFrontmatter(source: string): string {
   const match = /^\ufeff?---[ \t]*\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)[ \t]*(?:\r?\n|$)/.exec(source);
   if (!match) return source;
@@ -224,7 +183,6 @@ function textOf(nodes: readonly MdInline[]): string {
     .join('');
 }
 
-/** O host do destino, a menos que o próprio texto do link já o mostre. */
 function hostToShow(href: string, children: readonly MdInline[]): string | null {
   let host: string;
   try {
@@ -237,7 +195,6 @@ function hostToShow(href: string, children: readonly MdInline[]): string | null 
   return label.includes(host.toLowerCase().replace(/^www\./, '')) ? null : host;
 }
 
-/** Texto da nota: caracteres bidi/controle/zero-width aparecem como `‹U+XXXX›` (F7), nunca escondidos. */
 function visible(text: string): string {
   return displayText(text, { multiline: true });
 }
@@ -248,7 +205,6 @@ function plain(text: string): MdInline[] {
 
 const FOOTNOTE_REF = /\[\^([^\]\s[]{1,40})\]/g;
 
-/** Texto com as referências `[^1]` viradas em nós de rodapé (o resto continua texto). */
 function withFootnotes(text: string): MdInline[] {
   if (!text.includes('[^')) return plain(text);
   const out: MdInline[] = [];
@@ -262,11 +218,9 @@ function withFootnotes(text: string): MdInline[] {
   return out;
 }
 
-/** `depth` aqui é a profundidade **inline** (strong/em/del/link aninhados), não a de blocos. */
 function inlines(tokens: readonly Token[] | undefined, depth: number, budget: Budget): MdInline[] {
   if (!tokens) return [];
   if (depth >= MAX_INLINE_DEPTH) {
-    // Fundo demais: o resto vira texto, sem recursar (o `~~a ` x 1000 estourava a pilha do Angular).
     return tokens.length === 0 ? [] : plain(tokens.map((token) => token.raw).join(''));
   }
   const out: MdInline[] = [];
@@ -298,7 +252,6 @@ function inline(token: Token, depth: number, budget: Budget): MdInline[] {
       return [{ kind: token.type, children: inlines(t.tokens, depth + 1, budget) }];
     }
     case 'codespan':
-      // Código inline é literal (CommonMark): `&lt;b&gt;` mostra `&lt;b&gt;`, sem decodificar entidades.
       return [{ kind: 'code', text: visible((token as Tokens.Codespan).text) }];
     case 'br':
       return [{ kind: 'br' }];
@@ -308,7 +261,6 @@ function inline(token: Token, depth: number, budget: Budget): MdInline[] {
       const t = token as Tokens.Link;
       const children = inlines(t.tokens, depth + 1, budget);
       const safe = safeLink(decodeEntities(t.href));
-      // Esquema não permitido: o texto fica, sem link (nunca o `javascript:` como href).
       if (!safe) return children.length > 0 ? children : plain(decodeEntities(t.text));
       return [
         {
@@ -347,10 +299,8 @@ function inline(token: Token, depth: number, budget: Budget): MdInline[] {
     }
     case 'html':
     case 'tag':
-      // HTML bruto desabilitado (S-159): vira texto literal, nunca marcação.
       return plain((token as Tokens.HTML).text ?? token.raw);
     default:
-      // Qualquer token desconhecido: o texto cru, como texto.
       return plain(token.raw);
   }
 }
@@ -386,7 +336,6 @@ function blockOf(token: Token, depth: number, budget: Budget): MdBlock | null {
       const t = token as Tokens.Paragraph;
       const footnote = /^\[\^([^\]\s[]{1,40})\]:[ \t]*/.exec(t.text);
       if (footnote) {
-        // Definição de nota de rodapé: o conteúdo aparece (antes era descartado como `def`).
         const first = t.tokens?.[0];
         const rest =
           first?.type === 'text'
@@ -430,7 +379,6 @@ function blockOf(token: Token, depth: number, budget: Budget): MdBlock | null {
       if (depth >= MAX_DEPTH) return { kind: 'paragraph', children: plain(t.raw) };
       const items: MdListItem[] = [];
       for (const item of t.items) {
-        // Cada item é debitado **antes** de ser criado (uma lista de 50 mil itens não escapa do orçamento).
         if (budget.remaining <= 0) {
           budget.truncated = true;
           break;
@@ -439,7 +387,6 @@ function blockOf(token: Token, depth: number, budget: Budget): MdBlock | null {
         items.push({
           task: item.task,
           checked: item.checked === true,
-          // O marcador de tarefa vira o checkbox do item (sem repeti-lo no texto).
           children: blocks(
             item.tokens.filter((child) => child.type !== 'checkbox'),
             depth + 1,
@@ -456,7 +403,6 @@ function blockOf(token: Token, depth: number, budget: Budget): MdBlock | null {
     }
     case 'table': {
       const t = token as Tokens.Table;
-      // Linha e célula são debitadas antes de criadas; ao zerar, para e marca o corte.
       const cells = (row: readonly Tokens.TableCell[]): MdInline[][] => {
         const out: MdInline[][] = [];
         for (const cell of row) {
@@ -482,14 +428,12 @@ function blockOf(token: Token, depth: number, budget: Budget): MdBlock | null {
       return { kind: 'table', align: t.align, header, rows };
     }
     case 'html':
-      // Bloco de HTML bruto: texto literal num parágrafo (o usuário vê o que escreveu).
       return { kind: 'paragraph', children: plain((token as Tokens.HTML).text.trim()) };
     default:
       return { kind: 'paragraph', children: plain(token.raw) };
   }
 }
 
-/** A nota como árvore de dados segura para desenhar, com o aviso de corte. Nunca lança. */
 export function parseMarkdownDocument(source: string): MdDocument {
   const text = stripFrontmatter(source);
   if (text.trim() === '') return { blocks: [], truncated: false };
@@ -504,12 +448,10 @@ export function parseMarkdownDocument(source: string): MdDocument {
     const result = blocks(marked.lexer(text), 0, budget);
     return { blocks: result, truncated: budget.truncated };
   } catch {
-    // Entrada que o parser não aguenta: mostra como texto, nunca falha a tela.
     return { blocks: [{ kind: 'code', lang: null, text }], truncated: false };
   }
 }
 
-/** Só a árvore (sem o aviso de corte). */
 export function parseMarkdown(source: string): readonly MdBlock[] {
   return parseMarkdownDocument(source).blocks;
 }

@@ -36,14 +36,12 @@ async function setup(gateway = new NotesGatewayStub(), compact = false) {
     providers: [
       provideI18nTesting('pt'),
       provideRouter([{ path: '**', children: [] }]),
-      // O seletor de vínculos busca nas portas de outros módulos.
       provideTransactionsStub(),
       providePeopleStub(),
       provideGoalsStub(),
       provideDebtsStub(),
       provideCardsStub(),
       provideNotesStub(gateway),
-      // jsdom não tem Worker: o executor do Markdown é o parser real num worker falso (FE-S-198).
       provideFakeMarkdownWorker(),
       { provide: ViewportService, useValue: { compact: () => compact } },
     ],
@@ -620,7 +618,6 @@ describe('NotePage', () => {
     it('Dado texto não salvo, então pergunta; "Continuar editando" fica e "Sair sem salvar" sai', async () => {
       const { fixture } = await setup();
       await type(' x');
-      // O foco volta ao campo ao fechar o diálogo; tirá-lo antes evita o evento de foco dentro do ciclo do Angular.
       area().blur();
 
       const stay = fixture.componentInstance.confirmLeave();

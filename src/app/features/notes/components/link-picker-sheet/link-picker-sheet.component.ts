@@ -59,14 +59,6 @@ type ResultsState =
 
 const ISO_MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
-/**
- * "Vincular a um registro" (folha): escolhe o tipo (movimentação, meta, pessoa, dívida, cartão, fatura ou resumo
- * mensal) e busca o registro **pelas portas de cada módulo** (`LinkTargetSearchService`; a página injeta, os
- * módulos não se importam). A busca é um combobox (`role="combobox"` no campo, `listbox` de opções,
- * `aria-activedescendant`, setas e Enter, quantidade de resultados anunciada). Fatura: primeiro o cartão. Resumo
- * mensal: o mês. Já vinculado aparece desabilitado com a razão. O vínculo só liga; **nunca altera valores**.
- * Escopo de componente.
- */
 @Component({
   selector: 'app-link-picker-sheet',
   imports: [
@@ -288,10 +280,8 @@ export class LinkPickerSheetComponent {
   protected readonly t = inject(I18nService).t;
 
   readonly open = input.required<boolean>();
-  /** Os vínculos explícitos que a nota já tem (os iguais aparecem como "já vinculada"). */
   readonly existing = input<readonly NoteLinkRef[]>([]);
   readonly busy = input(false);
-  /** Falha da última tentativa (`NOTE_LINK_TARGET_NOT_FOUND`...). */
   readonly problem = input<Problem | null>(null);
 
   readonly closed = output<void>();
@@ -387,7 +377,6 @@ export class LinkPickerSheetComponent {
         this.active.set(0);
       });
     });
-    // A lista de cartões só carrega quando o tipo é "Fatura".
     effect(() => {
       if (!this.open() || this.type() !== 'INVOICE') return;
       untracked(() => {

@@ -142,7 +142,6 @@ describe('RecurrencesPage', () => {
     expect(screen.queryByTestId('recurrence-next-rec-1')).not.toBeInTheDocument();
     expect(screen.queryByTestId('recurrence-ended-rec-2')).not.toBeInTheDocument();
     expect(screen.getByTestId('recurrence-monthly-rec-2')).toBeInTheDocument();
-    // Reabrir é pela edição (nova data de fim), que continua disponível.
     expect(screen.getByTestId('recurrence-edit-rec-1')).toBeInTheDocument();
     await userEvent.click(screen.getByTestId('recurrence-menu-rec-1'));
     expect(screen.queryByTestId('recurrence-menu-rec-1-item-end')).not.toBeInTheDocument();

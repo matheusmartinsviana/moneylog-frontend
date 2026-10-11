@@ -1,4 +1,3 @@
-/** Tamanho legível (`1,5 MB`) no idioma informado. Só exibição: nenhum limite é decidido por este texto. */
 export function formatBytes(bytes: number, locale: string): string {
   const units = ['B', 'KB', 'MB', 'GB'];
   let value = bytes;

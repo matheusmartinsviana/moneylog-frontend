@@ -50,7 +50,6 @@ describe('ReportsRequestsFacade', () => {
     const series = await result;
     expect(series).toMatchObject({ period: 'D7', basis: 'DATE', granularity: 'DAY' });
     expect(series.points).toHaveLength(7);
-    // Negativo legítimo (dia só com reembolso): nada de sanear ou somar.
     expect(series.points[5]?.expenses.amount).toBe('-50.00');
     expect(series.points[6]?.partial).toBe(true);
     expect(series.totals).toEqual({

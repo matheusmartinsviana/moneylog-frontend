@@ -7,10 +7,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { Occurrence } from '~/modules/recurrences/core/types/recurrence';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Uma ocorrência pendente (T88): data, descrição, valor previsto (o do modelo, do backend), se é em conta
- * ou no cartão, e as ações "Realizar" e "Pular". Vencida mostra "Atrasada" em **texto** (e cor).
- */
 @Component({
   selector: 'li[app-occurrence-row]',
   imports: [MoneyComponent],
@@ -34,7 +30,6 @@ export class OccurrenceRowComponent {
     () =>
       this.occurrence().description?.trim() || this.t().recurrences.types[this.occurrence().type],
   );
-  /** Despesa/receita sem conta (2.14.0): a conta e o meio são pedidos ao realizar. */
   protected readonly accountToDefine = computed(() => {
     const o = this.occurrence();
     return o.type !== 'CARD_PURCHASE' && o.accountId === null && o.cardId === null;

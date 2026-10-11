@@ -32,7 +32,6 @@ import {
   TransactionsGatewayStub,
 } from '~/testing/transactions-testing';
 
-// Fluxos longos com userEvent e axe: folga para máquinas ocupadas (CI, outros processos).
 vi.setConfig({ testTimeout: 20_000 });
 
 @Component({ selector: 'app-dummy', template: '' })

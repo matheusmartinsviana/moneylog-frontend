@@ -6,12 +6,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { Card } from '~/modules/cards/core/types/card';
 import { formatMoney } from '~/util/money';
 
-/**
- * Barra do limite (T64 CA5, presentational): "R$ 7.717,00 disponíveis de R$ 10.000,00". A largura vem
- * de `usedRatio`, que o backend calcula (o front não divide dinheiro); os valores são os do `Card`.
- * Acima do limite (`overLimit`), a barra fica em risco **com texto** ("Acima do limite"), nunca só cor,
- * e o disponível negativo aparece como o backend o devolveu.
- */
 @Component({
   selector: 'app-limit-meter',
   imports: [ProgressBarComponent],

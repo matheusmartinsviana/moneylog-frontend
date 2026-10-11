@@ -5,10 +5,6 @@ import { catchError, map, of, Subject, switchMap } from 'rxjs';
 import { NotificationsGateway } from '~/modules/notifications/core/interfaces/notifications.gateway';
 import type { DailyMessage } from '~/modules/notifications/core/types/notification';
 
-/**
- * Mensagem diária do Início: chave + números do dashboard. Falha ou resposta vazia não mostram nada (a
- * mensagem é um complemento, nunca um erro na tela). Escopo de componente.
- */
 @Injectable()
 export class DailyMessageFacade {
   private readonly gateway = inject(NotificationsGateway);

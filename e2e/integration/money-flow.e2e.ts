@@ -18,15 +18,10 @@ import {
   waitForApp,
 } from './fixtures';
 
-/**
- * T44 CA1 e CA2: criar conta, lançar despesa Pix, transferência, receita e estorno, sempre
- * comparando o número da tela (Início, lista, visão por competência, conta) com o da API capturada.
- */
 test.describe.configure({ mode: 'serial' });
 
 const TODAY = todayInSaoPaulo();
 
-/** Soma, em centavos, de strings decimais da API — só para o teste conferir a conta; o front nunca soma. */
 const cents = (v: string): bigint => BigInt(v.replace('.', ''));
 
 const lastSummary = (net: any): Promise<any> => net.body('GET', '/v1/dashboard/summary');
@@ -38,14 +33,12 @@ test('criar conta, lançar despesa Pix e ver o mesmo número no Início, na list
   net,
   evidence,
 }) => {
-  // 1. Sem sessão: vai para o login preservando o destino.
   await page.goto('/accounts/new');
   await expect(page).toHaveURL(/\/login\?returnUrl=%2Faccounts%2Fnew$/);
   await loginViaUi(page);
   await expect(page).toHaveURL(/\/accounts\/new$/);
   await waitForApp(page);
 
-  // 2. Cria a conta Nubank (corrente, 1.000,00, hoje).
   await cy(page, 'account-name').fill('Nubank');
   await pick(page, 'account-type', 'Conta corrente');
   await cy(page, 'account-opening-balance').fill('1.000,00');
@@ -59,13 +52,12 @@ test('criar conta, lançar despesa Pix e ver o mesmo número no Início, na list
   expect((net.find('POST', '/v1/accounts')[0] as any).status).toBe(201);
   expect(await cyText(page, `account-balance-${account.id}`)).toContain(fmt('1000.00'));
 
-  // 3. Lança um Pix de 100,00 "almoço" em Alimentação pelo /quick-add.
   await open(page, '/quick-add?mode=pix');
   await expect(cy(page, 'expense-form')).toBeVisible();
   await fillAmount(page, '100,00');
   await cy(page, 'entry-description').fill('almoço');
   await pick(page, 'entry-category', 'Alimentação');
-  await expect(cy(page, 'entry-account')).toContainText('Nubank'); // única conta CASH: já vem escolhida
+  await expect(cy(page, 'entry-account')).toContainText('Nubank');
   await evidence(page, 'e2e-02-quick-add-pix');
   await cy(page, 'form-save').click();
   await expect(cy(page, 'toast-info')).toBeVisible();
@@ -74,7 +66,6 @@ test('criar conta, lançar despesa Pix e ver o mesmo número no Início, na list
   expect(created.amount.amount).toBe('100.00');
   expect(created.method).toBe('PIX');
 
-  // 4. Início: contas 900, disponível 900, consumo 100, caixa saída 100, líquido -100.
   await open(page, '/planning/overview');
   await expect(cy(page, 'home-legacy')).toBeVisible();
   const s = await lastSummary(net);
@@ -91,7 +82,6 @@ test('criar conta, lançar despesa Pix e ver o mesmo número no Início, na list
   expect(await cyText(page, 'home-month-cash-net')).toBe(fmt('-100.00'));
   await evidence(page, 'e2e-03-inicio-apos-despesa');
 
-  // 5. Lista (Registros, mês corrente): linha de 100,00 e rodapé iguais ao fluxo de caixa do Início.
   await open(page, '/transactions');
   await expect(cy(page, `transaction-row-${created.id}`)).toBeVisible();
   expect(await cyText(page, `transaction-amount-${created.id}`)).toContain(fmt('100.00'));
@@ -108,7 +98,6 @@ test('criar conta, lançar despesa Pix e ver o mesmo número no Início, na list
   expect(list.totals.cashFlow.net.amount).toBe(s.month.cashFlow.net.amount);
   await evidence(page, 'e2e-04-lista-registros');
 
-  // 6. Por competência: total 100 e Alimentação 100, iguais ao consumo do Início.
   await cy(page, 'view-entries').click();
   await expect(cy(page, 'totals-footer-total')).toBeVisible();
   expect(await cyText(page, 'totals-footer-total')).toBe(fmt(s.month.consumption.amount));
@@ -119,7 +108,6 @@ test('criar conta, lançar despesa Pix e ver o mesmo número no Início, na list
   expect(entries.totals.byCategory[0].amount.amount).toBe('100.00');
   await evidence(page, 'e2e-05-lista-competencia');
 
-  // 7. A conta mostra 900,00.
   await open(page, '/accounts');
   expect(await cyText(page, `account-balance-${account.id}`)).toContain(fmt('900.00'));
   const acc = await net.body('GET', '/v1/accounts');
@@ -139,7 +127,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   const salary = await api.categoryId('Salário', 'INCOME');
   await signIn(page);
 
-  // Despesa Pix 100,00 (pela tela).
   await open(page, '/quick-add?mode=pix');
   await fillAmount(page, '100,00');
   await cy(page, 'entry-description').fill('almoço');
@@ -149,7 +136,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   await expect(cy(page, 'toast-info')).toBeVisible();
   const expenseTx = await net.body('POST', '/v1/transactions', 'first');
 
-  // Transferência 200,00 Nubank -> XP.
   await open(page, '/quick-add?mode=transfer');
   await fillAmount(page, '200,00');
   await pick(page, 'entry-from', 'Nubank');
@@ -159,7 +145,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   await cy(page, 'form-save').click();
   await expect(cy(page, 'toast-info')).toBeVisible();
 
-  // Receita 3.000,00 (salário) no Nubank.
   await open(page, '/quick-add?mode=income');
   await fillAmount(page, '3.000,00');
   await cy(page, 'entry-description').fill('salário');
@@ -169,7 +154,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   await cy(page, 'form-save').click();
   await expect(cy(page, 'toast-info')).toBeVisible();
 
-  // Início: em contas 3.900; consumo 100; fluxo entradas 3.000 / saídas 100; líquido 2.900.
   await open(page, '/planning/overview');
   await expect(cy(page, 'home-legacy')).toBeVisible();
   const s = await lastSummary(net);
@@ -186,7 +170,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   expect(await cyText(page, 'home-month-cash-net')).toBe(fmt('2900.00'));
   await evidence(page, 'e2e-07-inicio-apos-transferencia-e-receita');
 
-  // Lista: 3 registros; transferência não entra em saídas nem no líquido.
   await open(page, '/transactions');
   expect(await cyText(page, 'totals-footer-count')).toBe('3');
   expect(await cyText(page, 'totals-footer-in')).toBe(fmt('3000.00'));
@@ -198,7 +181,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
     cents(list.totals.cashFlow.net.amount),
   );
 
-  // Competência (consumo) continua igual ao Início; receita é outra lente.
   await cy(page, 'view-entries').click();
   expect(await cyText(page, 'totals-footer-total')).toBe(fmt('100.00'));
   await page.locator('[data-cy="filter-lens"]').click();
@@ -206,7 +188,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   await expect(cy(page, 'totals-footer-total')).toHaveText(/3\.000,00/);
   expect(await cyText(page, 'totals-footer-total')).toBe(fmt('3000.00'));
 
-  // Contas: Nubank 2.700 (1.000 - 100 - 200 + 3.000 = 3.700?) conferido contra a API.
   await open(page, '/accounts');
   const accounts = (await net.body('GET', '/v1/accounts')).items;
   const byName = (n: string) => accounts.find((a: any) => a.name === n);
@@ -219,7 +200,6 @@ test('transferência, receita e estorno: os números continuam batendo em todas 
   void food;
   void salary;
 
-  // Estorna a despesa: consumo 0,00; a linha só aparece (riscada) com "mostrar estornadas".
   await open(page, `/transactions/${expenseTx.id}`);
   await cy(page, 'void-open').click();
   await cy(page, 'confirm-dialog-reason').fill('lançado por engano');

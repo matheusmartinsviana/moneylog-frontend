@@ -114,7 +114,6 @@
         }
       </ul>
       @if (visible().length === 0) {
-        <!-- Fora do listbox: uma lista só tem opções; a mensagem é um aviso de status. -->
         <p class="select__empty" role="status" [attr.data-cy]="fieldId() + '-empty'">
           {{ query() ? t().form.ui.noResults : t().form.noOptions }}
         </p>

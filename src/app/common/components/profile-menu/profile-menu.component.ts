@@ -7,13 +7,6 @@ import { MenuComponent, MenuItem } from '~/app/common/components/menu/menu.compo
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 
-/**
- * Menu do perfil (DS 02): avatar genérico (ícone, sem foto e sem nome: D4) que abre Configurações e Sair.
- * Usa o `Menu` próprio (teclado, `Esc`, foco devolvido). Aparece no rodapé da sidebar e, no mobile, no
- * cabeçalho. "Sair" usa o mesmo caminho das Configurações (`SessionFacade.logout`, `exhaustMap`: toque
- * duplo = uma chamada) e leva ao login. O seletor de workspace do brief não existe (produto de usuário
- * único, ADR-003).
- */
 @Component({
   selector: 'app-profile-menu',
   imports: [MenuComponent],
@@ -41,7 +34,6 @@ export class ProfileMenuComponent {
   private readonly signOuts = new Subject<void>();
   protected readonly t = inject(I18nService).t;
 
-  /** Base do `data-cy` (o botão é `<cy>`; os itens, `<cy>-item-settings` e `<cy>-item-signOut`). */
   readonly cy = input('profile-menu');
   readonly align = input<'start' | 'end'>('end');
 

@@ -1,10 +1,3 @@
-/**
- * `npm run start:local` (S-85): `ng serve` em HTTPS com o certificado do `mkcert`, para o cookie de
- * refresh (sempre `Secure`) funcionar também no Safari/iPhone. Os certificados ficam FORA do
- * repositório, em `~/.moneylog/certs` (ou na pasta de `MONEYLOG_CERT_DIR`):
- *   moneylog.localhost.pem  e  moneylog.localhost-key.pem
- * O proxy de `/v1` para `http://localhost:8080` vem de `proxy.conf.json`. Passos de instalação no README.
- */
 import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';

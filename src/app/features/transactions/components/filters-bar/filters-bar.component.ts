@@ -43,12 +43,6 @@ export interface FilterOption {
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-/**
- * Filtros da lista (período ou mês, tipo, conta, categoria, método, busca, "só estornadas").
- * Presentational: emite `patch` e `search`; quem usa aplica e espelha na URL. Os campos são os
- * controles próprios do moneylog (nenhum controle nativo do navegador), ligados a um formulário
- * que espelha `filters`; só valores válidos viram `patch`.
- */
 @Component({
   selector: 'app-filters-bar',
   imports: [
@@ -76,7 +70,6 @@ export class FiltersBarComponent {
   readonly clear = output<void>();
 
   protected readonly searchMax = SEARCH_MAX_LENGTH;
-  /** Recolhido por padrão: as pílulas abrem o painel. */
   protected readonly open = signal(false);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
@@ -85,7 +78,6 @@ export class FiltersBarComponent {
     this.open.update((value) => !value);
   }
 
-  /** Abre o painel e leva o foco ao campo da pílula. */
   protected reveal(fieldId: string): void {
     this.open.set(true);
     afterNextRender(
@@ -134,11 +126,9 @@ export class FiltersBarComponent {
   );
 
   private lastEmitted = '';
-  /** Último valor de cada filtro já espelhado no formulário (não sobrescreve o que está sendo digitado). */
   private readonly applied = new Map<string, unknown>();
 
   constructor() {
-    // Mudança externa (URL, "limpar") atualiza os campos; o que o próprio usuário digitou, não.
     effect(() => {
       const f = this.filters();
       untracked(() => {
@@ -166,7 +156,6 @@ export class FiltersBarComponent {
     for (const key of ['from', 'to'] as const) {
       controls[key].valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
         if (value && DATE.test(value)) this.patch.emit({ [key]: value });
-        // Campo esvaziado (sem erro de formato): limpa o filtro. Texto parcial não muda nada.
         else if (!value && controls[key].valid) this.patch.emit({ [key]: null });
       });
     }

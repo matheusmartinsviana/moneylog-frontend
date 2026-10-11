@@ -51,23 +51,13 @@ import { isTooLarge, noteFolder, noteName } from '~/modules/notes/core/types/not
 import { formatInstant } from '~/util/date';
 import { displayText } from '~/util/display-text';
 
-/** Debounce da pré-visualização (T116 CA1). */
 export const PREVIEW_DEBOUNCE_MS = 300;
-/** Debounce do rascunho local (a perda de aba é rara; o `visibilitychange` grava na hora). */
 export const DRAFT_DEBOUNCE_MS = 500;
 
-/** CRLF/CR viram LF (o `<textarea>` faz o mesmo ao digitar). */
 function normalizeEol(text: string): string {
   return text.replace(/\r\n?/g, '\n');
 }
 
-/**
- * Nota (smart): editor de Markdown com pré-visualização segura lado a lado (desktop) ou em abas
- * "Escrever/Ler" (celular). Salvar manda a `version`; `VERSION_CONFLICT` **nunca** sobrescreve o digitado (o
- * painel de conflito oferece as duas escolhas). Alterações não salvas pedem confirmação ao sair (rota e aba do
- * navegador). Renomear mostra quantas notas tiveram links reescritos; mandar para a lixeira é reversível. O
- * texto é dado: o backend não o renderiza e o front o desenha sem HTML. Fala só com a facade (FE 01).
- */
 @Component({
   selector: 'app-note-page',
   imports: [
@@ -106,23 +96,16 @@ export class NotePage {
   protected readonly t = this.i18n.t;
   protected readonly facade = inject(NoteEditorFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
   protected readonly note = this.facade.note;
   protected readonly loadStatus = this.facade.loadStatus;
-  /** O título vindo do front matter pode trazer RLO/controle: aparece com marcas visíveis (F7). */
   protected readonly heading = computed(() => {
     const title = this.note()?.title;
     return title ? displayText(title) : this.t().nav.notes;
   });
   protected readonly trashed = this.facade.trashed;
   protected readonly conflict = this.facade.conflict;
-  /**
-   * "Salvar o meu texto por cima" só existe quando há texto digitado (ou o conflito veio de um salvar). Com o
-   * rascunho limpo e a ação sendo renomear/vincular, o texto "meu" é só o antigo: sobrescrevê-lo apagaria a
-   * edição feita em outro lugar sem o usuário ter digitado nada.
-   */
   protected readonly canKeepMine = computed(() => {
     const conflict = this.conflict();
     return conflict !== null && (conflict.during === 'save' || this.dirty());
@@ -136,19 +119,16 @@ export class NotePage {
     return state.status === 'error' ? state.problem : null;
   });
 
-  /** O texto do editor (o que o usuário digitou). */
   protected readonly text = new FormControl('', { nonNullable: true });
   protected readonly draft = valueSignal(this.text);
   protected readonly previewText = signal('');
   protected readonly mode = signal<string | null>('write');
 
-  /** Rascunho local restaurado ao abrir (aba recarregada/descartada): o aviso com "Descartar". */
   protected readonly draftRecovered = signal(false);
   protected readonly dirty = computed(
     () =>
       this.note() !== null &&
       !this.trashed() &&
-      // O `<textarea>` normaliza CRLF para LF: um zip do Windows não pode deixar a nota "suja" sem edição.
       normalizeEol(this.draft()) !== normalizeEol(this.facade.baseline()),
   );
   protected readonly tooLarge = computed(() => isTooLarge(this.draft()));
@@ -182,9 +162,7 @@ export class NotePage {
   });
   protected readonly problemText = computed(() => {
     const problem = this.facade.problem();
-    // As folhas abertas (renomear, vincular) mostram o próprio erro.
     if (!problem || this.pickerOpen() || this.moveOpen()) return null;
-    // O conflito tem painel próprio; o resto vira um aviso com o motivo.
     if (problem.code === 'VERSION_CONFLICT') {
       return this.conflict() === null ? this.t().notes.editor.conflict.remoteLoadFailed : null;
     }
@@ -192,7 +170,6 @@ export class NotePage {
   });
   protected readonly moveProblem = computed(() => (this.moveOpen() ? this.facade.problem() : null));
 
-  // Estado de UI.
   protected readonly moveOpen = signal(false);
   protected readonly confirmingTrash = signal(false);
   protected readonly leaving = signal(false);
@@ -200,7 +177,6 @@ export class NotePage {
   protected readonly createFromLink = signal<string | null>(null);
   protected readonly pickerOpen = signal(false);
 
-  /** Os vínculos explícitos que o backend resolveu: o que se reenvia ao trocar os vínculos. */
   protected readonly explicitRefs = computed<readonly NoteLinkRef[]>(() =>
     explicitRefs(this.note()?.links ?? []),
   );
@@ -219,7 +195,6 @@ export class NotePage {
         this.facade.load(id);
       });
     });
-    // Nota carregada (ou recarregada): o editor e a pré-visualização partem do texto do backend.
     effect(() => {
       const state = this.loadStatus();
       if (state.status !== 'ready') return;
@@ -228,8 +203,6 @@ export class NotePage {
         this.recoverDraft(state.note);
       });
     });
-    // Conflito de renomear/vincular com o rascunho limpo: nada digitado a perder. Adota a versão do servidor
-    // e refaz a ação pedida (nunca oferece sobrescrever o que outra aba gravou).
     effect(() => {
       const conflict = this.conflict();
       if (!conflict || this.dirty()) return;
@@ -237,12 +210,10 @@ export class NotePage {
         untracked(() => this.facade.adoptRemoteAndRedo());
       }
     });
-    // A pré-visualização acompanha o texto com debounce.
     this.text.valueChanges
       .pipe(debounceTime(PREVIEW_DEBOUNCE_MS), takeUntilDestroyed())
       .subscribe((value) => this.previewText.set(value));
 
-    // Rascunho local: grava com debounce enquanto há alterações e limpa quando não há mais.
     this.text.valueChanges
       .pipe(debounceTime(DRAFT_DEBOUNCE_MS), takeUntilDestroyed())
       .subscribe(() => this.persistDraft());
@@ -256,7 +227,6 @@ export class NotePage {
       this.drafts.clear(note.id);
       this.draftRecovered.set(false);
       this.toast.show(this.t().notes.editor.savedToast);
-      // O destino de um `[[link]]` recém-escrito pode ter sido resolvido: o backend devolve o estado.
       this.previewText.set(this.text.value);
     });
     this.facade.trashed$.pipe(takeUntilDestroyed()).subscribe((note) => {
@@ -278,14 +248,12 @@ export class NotePage {
       this.toast.show(this.t().notes.editor.move.moved);
     });
 
-    // Aba do navegador: avisa de alterações não salvas (o roteador cuida das rotas, `canDeactivate`).
     const view = inject(DestroyRef);
     const handler = (event: BeforeUnloadEvent) => {
       if (!this.dirty()) return;
       event.preventDefault();
     };
     window.addEventListener('beforeunload', handler);
-    // iOS: a aba pode ser morta ao ir para segundo plano; grava o rascunho na hora.
     const hidden = () => {
       if (document.visibilityState === 'hidden') this.persistDraft();
     };
@@ -305,7 +273,6 @@ export class NotePage {
     else this.drafts.clear(note.id);
   }
 
-  /** Só restaura sobre a **mesma versão** (senão salvar sobrescreveria a edição de outra aba). */
   private recoverDraft(note: Note): void {
     const draft = this.drafts.get(note.id);
     if (!draft || note.trashedAt != null) return;
@@ -369,7 +336,6 @@ export class NotePage {
     this.facade.setLinks(applyLinkChange(this.explicitRefs(), { add: ref }), { add: ref });
   }
 
-  /** Remove um vínculo explícito: reenvia os outros (os vínculos pendentes de importação saem junto, dito na tela). */
   protected removeLink(link: NoteLink): void {
     const ref = refOfLink(link);
     this.facade.setLinks(applyLinkChange(this.explicitRefs(), { remove: ref }), { remove: ref });
@@ -395,7 +361,6 @@ export class NotePage {
     return interpolate(this.t().notes.editor.move.rewrittenMany, { count: String(count) });
   }
 
-  /** Para o link pendente do texto: abre a folha com o nome (e a pasta) do alvo preenchidos. */
   protected askCreate(target: string): void {
     this.createFromLink.set(target);
   }
@@ -405,13 +370,8 @@ export class NotePage {
     this.facade.refresh();
   }
 
-  /**
-   * `canDeactivate`: sem alterações segue; com alterações abre o `ConfirmDialog` "Sair sem salvar?" e espera a
-   * resposta. Chamado só pela rota.
-   */
   confirmLeave(): Promise<boolean> {
     if (!this.dirty()) return Promise.resolve(true);
-    // Uma segunda navegação enquanto o diálogo está aberto: a primeira promessa não pode ficar pendente.
     this.leaveResolver?.(false);
     this.leaving.set(true);
     return new Promise<boolean>((resolve) => {
@@ -420,7 +380,6 @@ export class NotePage {
   }
 
   protected answerLeave(leave: boolean): void {
-    // Sair sem salvar é uma escolha: o rascunho local não volta como surpresa depois.
     const note = this.note();
     if (leave && note) this.drafts.clear(note.id);
     this.leaving.set(false);
@@ -432,7 +391,6 @@ export class NotePage {
     void this.router.navigate(['/notes']);
   }
 
-  /** Foca o texto (útil depois de criar a nota). */
   focusEditor(): void {
     this.editor()?.focus();
   }

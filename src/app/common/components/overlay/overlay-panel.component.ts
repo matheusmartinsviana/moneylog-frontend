@@ -27,42 +27,22 @@ import { computePosition } from '~/app/common/components/overlay/popover-positio
 import { ViewportService } from '~/app/common/components/overlay/viewport.service';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/** `modal`: sempre modal (diálogo, folha), nunca popover. `sheet` e `auto` são os de sempre. */
 export type OverlayMode = 'auto' | 'popover' | 'sheet' | 'modal';
 
-/**
- * Onde o modal aparece: `bottom` (folha inferior, largura toda), `center` (diálogo central) ou
- * `side` (painel lateral à direita). Os `responsive-*` são folha inferior em tela compacta
- * (<= 640 px) e `center`/`side` nas demais.
- */
 export type OverlayLayout = 'bottom' | 'center' | 'side' | 'responsive-center' | 'responsive-side';
 
 export type ModalRole = 'dialog' | 'alertdialog';
 
-/** Saída animada: carregada na primeira abertura (fora do bundle inicial) e síncrona ao fechar. */
 let ghostExit: typeof import('~/app/common/motion/ghost-exit') | null = null;
 
-/** Pilha de painéis abertos: `Esc` fecha só o do topo. */
 const stack: object[] = [];
 
-/**
- * Painel flutuante dos controles próprios (lista do `Select`, calendário, meses). Em tela larga é um
- * popover ancorado ao gatilho (portal no `body`, flip e shift pela área visível); em tela compacta
- * vira uma folha inferior modal (foco preso, fundo travado, botão "Fechar"). `Esc` e toque fora
- * pedem o fechamento (`closed`); quem usa controla `open` e devolve o foco ao gatilho.
- * O conteúdo deve ser projetado dentro de `@if (open())` para só existir enquanto aberto.
- * Um elemento com `data-autofocus` recebe o foco na abertura.
- *
- * É também o primitivo de `Dialog`, `Sheet` e `Menu` (compostos a partir dele, sem segunda pilha de
- * overlays): `mode="modal"` + `layout` dão o diálogo central, a folha inferior e o painel lateral.
- */
 @Component({
   selector: 'app-overlay-panel',
   imports: [IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (open()) {
-      <!-- Folga do teclado virtual medida em tempo de execução: não cabe em classe CSS. -->
       <!-- eslint-disable-next-line @angular-eslint/template/no-inline-styles -->
       <div
         class="backdrop"
@@ -77,7 +57,6 @@ const stack: object[] = [];
         "
         (click)="onBackdropClick($event)"
       >
-        <!-- Posição calculada em tempo de execução (flip/shift): não cabe em classe CSS. -->
         <!-- eslint-disable-next-line @angular-eslint/template/no-inline-styles -->
         <div
           #panel
@@ -139,13 +118,10 @@ const stack: object[] = [];
       animation: overlay-scrim var(--duration-base) var(--ease-standard);
     }
 
-    /* Diálogo, folha como diálogo e painel lateral: abaixo do popover (um Select dentro do diálogo
-       abre por cima). A folha dos campos (Select, calendário) segue na camada do popover. */
     .backdrop--dialog {
       z-index: var(--z-dialog);
     }
 
-    /* Modal centralizado: margem lateral de 12 a 16 px (e a área segura), sobre o fundo escurecido. */
     .backdrop--center {
       display: grid;
       place-items: center;
@@ -166,9 +142,6 @@ const stack: object[] = [];
       animation: overlay-pop var(--duration-fast) var(--ease-standard);
     }
 
-    /* Invisível até a primeira posição calculada: sem quadro no canto (0, 0). Opacidade e não
-       visibility: um elemento com visibility hidden recusa o foco, e o autofoco da abertura roda
-       antes de o primeiro quadro posicionado ser pintado. */
     .panel:not(.panel--modal):not([data-positioned]) {
       opacity: 0;
     }
@@ -218,11 +191,9 @@ const stack: object[] = [];
       animation: overlay-side var(--duration-slow) var(--ease-emphasized);
     }
 
-    /* Conteúdo longo do diálogo/folha rola por dentro; cabeçalho e bordas ficam. */
     .panel--scroll .panel__body {
       overflow-y: auto;
       overscroll-behavior: contain;
-      /* O campo focado não fica atrás do rodapé de ações fixo nem do teclado. */
       scroll-padding-block: var(--space-4) 6rem;
     }
 
@@ -262,9 +233,6 @@ const stack: object[] = [];
       min-height: 0;
     }
 
-    /* Só a cor do fundo anima, nunca a \`opacity\` do contêiner: um ancestral com opacidade < 1 vira "raiz de
-       backdrop" e o desfoque do painel (vidro) passaria a ver só o fundo escurecido, saltando para a página
-       real ao fim da animação (o "pisca" na abertura e no fechamento). */
     @keyframes overlay-scrim {
       from {
         background-color: transparent;
@@ -278,7 +246,6 @@ const stack: object[] = [];
       }
     }
 
-    /* Diálogo e folha central: entram como janela do macOS (escala 0,98 → 1 e opacidade). */
     @keyframes overlay-dialog {
       from {
         opacity: 0;
@@ -324,54 +291,36 @@ export class OverlayPanelComponent implements OnDestroy {
 
   readonly open = input.required<boolean>();
   readonly anchor = input<HTMLElement | null>(null);
-  /** Nome acessível do painel (e título da folha). */
   readonly label = input.required<string>();
   readonly mode = input<OverlayMode>('auto');
-  /** Papel do painel em modo popover (modal: `modalRole`); `null` deixa o painel sem papel. */
   readonly popoverRole = input<string | null>('dialog');
-  /** Papel do painel modal. */
   readonly modalRole = input<ModalRole>('dialog');
-  /** Onde o modal aparece (`bottom` é a folha inferior de sempre). */
   readonly layout = input<OverlayLayout>('bottom');
-  /** `id` do texto que descreve o modal (`aria-describedby`). */
   readonly describedBy = input<string | null>(null);
-  /** Modal: `false` ignora `Esc` e o toque no fundo e esconde "Fechar" (ação que exige resposta). */
   readonly dismissable = input(true);
-  /** Modal: mostra o botão "Fechar" no cabeçalho. */
   readonly showClose = input(true);
-  /** Modal: o conteúdo rola por dentro (diálogo e folha com conteúdo longo). */
   readonly scrollBody = input(false);
-  /** `data-cy` do painel, quando precisa diferir de `<cy>-panel`. */
   readonly panelCy = input<string | null>(null);
-  /** Largura do popover igual à do gatilho (listas) ou a natural do conteúdo (calendário). */
   readonly matchWidth = input(false);
-  /** Largura do popover em px quando não acompanha o gatilho (calendário). */
   readonly panelWidth = input<number | null>(null);
-  /** Largura mínima em px do popover que acompanha o gatilho (listas curtas em campos estreitos). */
   readonly minWidth = input(0);
   readonly align = input<'start' | 'end'>('start');
-  /** `inline`: o popover abre ao lado do gatilho (trilho lateral), em vez de abaixo dele. */
   readonly placement = input<'block' | 'inline'>('block');
-  /** Prefixo dos `data-cy` do painel. */
   readonly cy = input('overlay');
 
-  /** Pedido de fechamento: `Esc`, toque fora ou botão "Fechar" da folha. */
   readonly closed = output<void>();
 
   private readonly panel = viewChild<ElementRef<HTMLElement>>('panel');
 
-  /** Modal (folha, diálogo, painel lateral): trava a rolagem, fundo `inert`, foco preso. */
   protected readonly modal = computed(
     () =>
       this.mode() === 'sheet' ||
       this.mode() === 'modal' ||
       (this.mode() === 'auto' && this.viewport.compact()),
   );
-  /** Forma do painel: `popover` ou a do modal (`bottom`, `center`, `side`). */
   protected readonly kind = computed<'popover' | OverlayLayout>(() => {
     if (!this.modal()) return 'popover';
     const layout = this.layout();
-    // Celular: modal de verdade (diálogo centralizado, com margem), nunca a "página que sobe de baixo".
     if (layout === 'responsive-center') return 'center';
     if (layout === 'responsive-side') return this.viewport.compact() ? 'center' : 'side';
     if (layout === 'bottom' && this.viewport.compact()) return 'center';
@@ -386,10 +335,8 @@ export class OverlayPanelComponent implements OnDestroy {
   }>({ top: 0, left: 0, maxHeight: 360, side: 'below' });
   protected readonly width = signal<number | null>(null);
   protected readonly keyboardOffset = signal(0);
-  /** Altura visível (descontado o teclado virtual): limita a folha, que não pode passar dela. */
   protected readonly visibleHeight = signal<number | null>(null);
   protected readonly positioned = signal(false);
-  /** Posição calculada em tempo de execução (única parte que não cabe em classe CSS). */
   protected readonly panelStyle = computed(() => {
     if (this.kind() === 'center') {
       const visible = this.visibleHeight();
@@ -450,8 +397,6 @@ export class OverlayPanelComponent implements OnDestroy {
       });
     });
 
-    // Folha = modal: trava a rolagem e deixa o fundo inerte. Acompanha a troca popover <-> folha
-    // com o painel aberto (rotação, redimensionamento).
     effect((onCleanup) => {
       if (!this.open() || !this.modal()) return;
       this.portal();
@@ -459,7 +404,6 @@ export class OverlayPanelComponent implements OnDestroy {
       onCleanup(release);
     });
 
-    // Recalcula quando o gatilho, o modo ou o tamanho do conteúdo mudam.
     effect(() => {
       this.anchor();
       this.kind();
@@ -468,7 +412,6 @@ export class OverlayPanelComponent implements OnDestroy {
     });
   }
 
-  /** Saída animada (clone do fundo + painel): o conteúdo projetado já é removido pelo consumidor. */
   private exitGhost(): void {
     const panel = this.panel()?.nativeElement;
     const backdrop = panel?.parentElement;
@@ -500,8 +443,6 @@ export class OverlayPanelComponent implements OnDestroy {
     const panel = this.panel()?.nativeElement;
     if (!panel) return;
     if (!this.modal()) {
-      // Popover: Tab fecha e devolve o foco ao gatilho (como o `Select`); Shift+Tab idem, voltando
-      // ao campo. Sem isso o foco sairia para o fim do `body` (portal) e para a UI do navegador.
       event.preventDefault();
       this.closed.emit();
       this.focusTrigger();
@@ -510,7 +451,6 @@ export class OverlayPanelComponent implements OnDestroy {
     trapTab(event, panel, this.document);
   }
 
-  /** Foco de volta ao gatilho: o elemento que o tinha na abertura ou o 1º focável do `anchor`. */
   private focusTrigger(): void {
     const remembered = this.returnFocus;
     const anchor = this.anchor();
@@ -540,7 +480,6 @@ export class OverlayPanelComponent implements OnDestroy {
     );
   }
 
-  /** Portal: o painel sai de qualquer pai com `overflow`/`transform` e vai para o fim do `body`. */
   private portal(): void {
     const host = this.host.nativeElement;
     if (this.marker || !host.parentNode || host.parentNode === this.document.body) return;
@@ -570,9 +509,7 @@ export class OverlayPanelComponent implements OnDestroy {
           },
           { injector: this.injector },
         );
-      } catch {
-        // A view já foi destruída (fechamento por navegação): não há foco a devolver.
-      }
+      } catch {}
     }
   }
 
@@ -584,7 +521,6 @@ export class OverlayPanelComponent implements OnDestroy {
     this.closed.emit();
   }
 
-  /** Rede de segurança: o foco foi para fora do painel e do gatilho (popover): pede o fechamento. */
   private onDocumentFocusIn(event: FocusEvent): void {
     if (this.modal() || stack[stack.length - 1] !== this.token) return;
     const target = event.target as Node | null;
@@ -608,7 +544,6 @@ export class OverlayPanelComponent implements OnDestroy {
     const visual = view.visualViewport;
     if (this.modal()) {
       if (this.kind() !== 'bottom' && this.kind() !== 'center') return;
-      // O teclado virtual do iOS não encolhe a janela: a folha sobe com o `visualViewport`.
       const hidden = visual ? view.innerHeight - (visual.offsetTop + visual.height) : 0;
       this.keyboardOffset.set(Math.max(0, Math.round(hidden)));
       this.visibleHeight.set(visual ? Math.round(visual.height) : null);
@@ -619,8 +554,6 @@ export class OverlayPanelComponent implements OnDestroy {
     const rect = anchor.getBoundingClientRect();
     const width = this.matchWidth() ? Math.max(rect.width, this.minWidth()) : this.panelWidth();
     this.width.set(width);
-    // A largura vem antes da altura: o texto quebra conforme a largura, e a altura natural (usada
-    // no flip) tem de ser medida já com ela aplicada.
     if (width !== null) panel.style.width = `${width}px`;
     const natural = panel.scrollHeight || 0;
     const result = computePosition({

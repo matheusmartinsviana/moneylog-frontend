@@ -9,14 +9,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * Etapa 5 no ambiente mock (sem backend: nenhuma meta, resumo vazio, projeção sem série). Os fluxos com dados
- * (criar meta → reservar 8.500,00 → ver reservado e disponível no Início → liberar → resumo → projeções →
- * exportar) são do projeto `integration` (`integration/etapa5.e2e.ts`). Aqui: estados vazios, formulários,
- * validação, o download autenticado do CSV e do backup (sem `<a download>` com token), rótulos de projeção,
- * a11y, 375 px e idiomas.
- */
-
 test.describe('/goals sem metas', () => {
   test('mostra o estado vazio com "Criar meta" habilitado e leva ao formulário', async ({
     page,
@@ -207,7 +199,6 @@ test.describe('/settings: exportar', () => {
     await waitForApp(page);
 
     await page.locator('[data-cy="export-csv-action"]').click();
-    // Nada baixa sozinho: aparece "Arquivo pronto" e o download só nasce do clique em "Salvar".
     await expect(page.locator('[data-cy="export-ready"]')).toBeVisible();
     await expect(page.locator('[data-cy="export-save"]')).toBeVisible();
     const downloading = page.waitForEvent('download');
@@ -218,7 +209,6 @@ test.describe('/settings: exportar', () => {
     expect(download.suggestedFilename()).toBe('moneylog-transactions.csv');
     expect(download.url()).toMatch(/^blob:/);
     expect(download.url()).not.toMatch(/token|access|bearer/i);
-    // Nenhum <a download> fica na página (o link temporário é removido).
     await expect(page.locator('a[download]')).toHaveCount(0);
   });
 

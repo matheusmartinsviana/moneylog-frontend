@@ -32,7 +32,6 @@ import type { Problem } from '~/util/api/problem';
 import { todayIso } from '~/util/date';
 import type { PersonRef } from '~/util/debt';
 
-/** Códigos de regra do backend → campo do formulário. */
 const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   PERSON_ARCHIVED: 'personId',
   PERSON_NOT_FOUND: 'personId',
@@ -47,12 +46,6 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   DEBT_FIELD_REQUIRED: 'description',
 };
 
-/**
- * "Nova dívida" (presentational, T85): registro **sem movimentação**, que não mexe no saldo das contas.
- * Sentido (me devem / eu devo), pessoa (existente ou nova, S-138), valor, data, previsão e descrição;
- * a categoria só aparece em "Eu devo" ("gasto que alguém pagou por você", S-137). Emite um `DebtInput`;
- * quem usa salva e mostra o erro do backend.
- */
 @Component({
   selector: 'app-debt-form',
   imports: [
@@ -76,7 +69,6 @@ export class DebtFormComponent {
   readonly people = input.required<readonly PersonRef[]>();
   readonly categories = input.required<readonly Category[]>();
   readonly createPerson = input<((name: string) => Observable<PersonRef>) | null>(null);
-  /** `?personId=` da URL: a pessoa já escolhida (o botão "Nova dívida" da tela dela). */
   readonly defaultPersonId = input<string | null>(null);
   readonly saving = input(false);
   readonly problem = input<Problem | null>(null);
@@ -117,7 +109,6 @@ export class DebtFormComponent {
     this.form.controls.direction.valueChanges.pipe(startWith(this.form.controls.direction.value)),
     { initialValue: this.form.controls.direction.value },
   );
-  /** A categoria só existe em "Eu devo" (S-137). */
   protected readonly payable = computed(() => this.directionValue() === 'PAYABLE');
   private readonly creditorKindValue = toSignal(
     this.form.controls.creditorKind.valueChanges.pipe(
@@ -125,7 +116,6 @@ export class DebtFormComponent {
     ),
     { initialValue: this.form.controls.creditorKind.value },
   );
-  /** Credor livre (banco, loja, financiamento): só em "Eu devo" e sem categoria. */
   protected readonly freeCreditor = computed(
     () => this.payable() && this.creditorKindValue() === 'OTHER',
   );
@@ -187,7 +177,6 @@ export class DebtFormComponent {
   }
 
   protected onSubmit(): void {
-    // O campo de pessoa saiu da tela (credor livre): o `required` dele não vale mais.
     if (this.freeCreditor()) this.form.controls.personId.updateValueAndValidity();
     this.form.markAllAsTouched();
     if (this.form.invalid) return;

@@ -8,11 +8,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * Gráficos em SVG próprio (fatia B, T198 e T199): exercitados no UI Kit (`/dev/ui-kit`, só no projeto `mock`),
- * com os dados de DEMONSTRAÇÃO da porta de relatórios. Teclado, ponteiro, toque, tabela equivalente, entrada
- * na viewport e movimento reduzido.
- */
 test.describe('gráficos (UI Kit, mock)', () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(
@@ -62,7 +57,6 @@ test.describe('gráficos (UI Kit, mock)', () => {
     await expect(page.locator('[aria-live="polite"]').last()).toContainText('11 de setembro');
     await page.keyboard.press('Escape');
     await expect(tip).toHaveCount(0);
-    // Foco visível no gráfico.
     expect(await plot.evaluate((el) => getComputedStyle(el).boxShadow)).toMatch(/0px 0px 0px 4px/);
   });
 
@@ -116,7 +110,6 @@ test.describe('gráficos (UI Kit, mock)', () => {
     const first = await tip.innerText();
     await drag(0.9);
     await expect.poll(() => tip.innerText()).not.toBe(first);
-    // Soltar o dedo (pointerleave de toque) não esconde o tooltip.
     await plot.evaluate((el) =>
       el.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'touch', bubbles: true })),
     );
@@ -171,9 +164,8 @@ test.describe('gráficos (UI Kit, mock)', () => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto('/dev/ui-kit');
     await waitForApp(page);
-    const svg = page.locator('[data-cy="light-line-empty"]'); // fora da viewport
+    const svg = page.locator('[data-cy="light-line-empty"]');
     const last = page.locator('[data-cy="light-line-single"] .lc__svg');
-    // Estado final presente (axe e E2E não esperam a animação).
     await expect(page.locator('[data-cy="light-line-chart-line-income"]')).toHaveCount(1);
     await expect(svg).toHaveCount(1);
 
@@ -209,7 +201,6 @@ test.describe('gráficos (UI Kit, mock)', () => {
         expect(await runAxe(page)).toEqual([]);
         await page.locator('[data-cy="light-line-chart-table-toggle"]').click();
         await page.locator('[data-cy="dark-line-chart-table-toggle"]').click();
-        // A barra inferior é translúcida: com a coluna escura do kit por baixo o contraste dela não vale.
         await page.evaluate(() => window.scrollTo(0, 0));
         expect(await runAxe(page)).toEqual([]);
       }

@@ -52,7 +52,6 @@ describe('SearchRequestsFacade', () => {
     expect(data.accounts[0]).toMatchObject({ status: 'ARCHIVED' });
     expect(data.categories[0]).toMatchObject({ archived: false });
     expect(data.cards[0]).toMatchObject({ institution: null });
-    // O snippet é texto puro: a facade não o converte nem o limpa (a tela o interpola, escapado).
     expect(data.notes[0]?.snippet).toBe(
       '<b>Comprar</b> leite **e** pão <img src=x onerror=alert(1)>',
     );

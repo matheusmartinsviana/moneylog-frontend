@@ -1,4 +1,3 @@
-/** Endpoints de cartões e faturas, num lugar só (FE 05). Contrato: tags Cards e Invoices. */
 export const CARDS_ENDPOINTS = {
   collection: '/v1/cards',
   item: (id: string) => `/v1/cards/${encodeURIComponent(id)}`,
@@ -18,5 +17,4 @@ export const INVOICES_ENDPOINTS = {
   payments: (id: string) => `/v1/invoices/${encodeURIComponent(id)}/payments`,
 } as const;
 
-/** Header obrigatório do pagamento de fatura (S-72). */
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';

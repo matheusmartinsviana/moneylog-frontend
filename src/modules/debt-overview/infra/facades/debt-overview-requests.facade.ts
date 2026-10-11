@@ -27,7 +27,6 @@ function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: não há cartões, então qualquer cartão pedido não existe. */
 function cardNotFound(): Observable<never> {
   return throwError(
     () =>
@@ -41,7 +40,6 @@ function cardNotFound(): Observable<never> {
   );
 }
 
-/** Facade de requisições da visão de dívidas: o único lugar com HTTP do módulo. */
 @Injectable({ providedIn: 'root' })
 export class DebtOverviewRequestsFacade extends DebtOverviewGateway {
   private readonly http = inject(HttpClient);

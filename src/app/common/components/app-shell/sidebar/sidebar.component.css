@@ -4,7 +4,6 @@
   min-height: 0;
 }
 
-/* O painel (superfície, borda e raio) fica na coluna do shell (`.shell__aside`). */
 .sidebar {
   --sq: 2.5rem;
 
@@ -29,10 +28,6 @@
   gap: var(--space-1);
 }
 
-/*
- * A região do meio rola por dentro, sem barra visível (roda, teclado e toque seguem funcionando); a máscara
- * (token) esmaece as bordas para indicar que há mais itens. O respiro de 0.75rem mantém tudo legível sem rolagem.
- */
 .sidebar__scroll {
   position: relative;
   display: grid;
@@ -67,7 +62,6 @@
   height: var(--sq);
 }
 
-/* Indicador do item ativo: um quadrado de acento que desliza (só `transform`) por trás dos ícones. */
 .sidebar__indicator {
   position: absolute;
   top: 0;
@@ -92,7 +86,6 @@
     opacity var(--duration-fast) var(--ease-standard);
 }
 
-/* Linha: o quadrado de ícone (o rótulo vive como tooltip e nome acessível). */
 .sidebar__link {
   position: relative;
   display: flex;
@@ -132,7 +125,6 @@
   }
 }
 
-/* Ativo no trilho: o indicador deslizante pinta o fundo; o quadrado fica transparente. */
 .sidebar__scroll .sidebar__link.is-active .sidebar__sq {
   border-color: transparent;
   background-image: none;
@@ -140,14 +132,12 @@
   color: var(--color-on-accent);
 }
 
-/* Configurações (fora da área rolável): sem indicador, o próprio quadrado é preenchido. */
 .sidebar__footer .sidebar__link.is-active .sidebar__sq {
   border-color: var(--color-accent);
   background-color: var(--color-accent);
   color: var(--color-on-accent);
 }
 
-/* Logo: o recibo (arte com fundo transparente) fica contido no ladrilho, sem moldura. */
 .sidebar__sq--brand {
   border-color: transparent;
   background-color: transparent;
@@ -178,7 +168,6 @@
   object-fit: contain;
 }
 
-/* Um logo por tema (tokens `--logo-on-*-display`): o escuro no claro, o branco no escuro. */
 .sidebar__logo--on-light {
   display: var(--logo-on-light-display);
 }
@@ -187,7 +176,6 @@
   display: var(--logo-on-dark-display);
 }
 
-/* Alto contraste: sem cor de fundo, o item ativo se distingue por um contorno de sistema. */
 @media (forced-colors: active) {
   .sidebar__link.is-active .sidebar__sq {
     outline: 2px solid Highlight;
@@ -198,7 +186,6 @@
   }
 }
 
-/* Tablet (toque): os itens do trilho têm 44 px de alvo. */
 @media (pointer: coarse) {
   .sidebar {
     --sq: var(--touch-min);

@@ -41,7 +41,6 @@ describe('AccountsListFacade', () => {
 
   it('Dado contas, então "data" traz saldo atual, openingEditable e archivable exatamente como recebidos', () => {
     const gateway = new AccountsGatewayStub();
-    // O saldo não "fecha" com o inicial de propósito: o front não calcula.
     gateway.accounts = [
       anAccount({
         id: 'a',

@@ -9,11 +9,6 @@ import { InvoiceStatusComponent } from '~/app/features/cards/components/invoice-
 import type { InvoiceSummary } from '~/modules/cards/core/types/invoice';
 import { formatCompetenceShort, formatIsoDate } from '~/util/date';
 
-/**
- * Uma fatura na lista do cartão (T65 CA2, presentational): referência, período, fechamento,
- * vencimento, situação (chip com texto) e o `outstanding` do backend. Com `hasLateEntries`, mostra o
- * indicador "inclui lançamento tardio" **com a explicação visível** (nada essencial fica só em tooltip).
- */
 @Component({
   selector: 'li[app-invoice-summary-row]',
   imports: [RouterLink, MoneyComponent, InvoiceStatusComponent],
@@ -52,7 +47,7 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
   `,
   styles: `
     :host(.row) {
-      position: relative; /* contém o link esticado (cartão inteiro clicável) */
+      position: relative;
       display: grid;
       gap: var(--space-2);
       padding: var(--space-4);

@@ -30,18 +30,11 @@ type Command =
   | { readonly kind: 'pay'; readonly position: number; readonly paidOn: string }
   | { readonly kind: 'progress'; readonly input: Omit<CommitmentProgressInput, 'version'> };
 
-/** Falhas em que o que a tela mostra ficou velho: recarrega do backend em vez de chutar o estado. */
 const STALE_CODES: ReadonlySet<string> = new Set([
   'VERSION_CONFLICT',
   'COMMITMENT_SCHEDULE_ITEM_ALREADY_PAID',
 ]);
 
-/**
- * Detalhe do compromisso: cronograma, "marcar parcela paga" e "atualizar progresso". A resposta do
- * backend (o compromisso inteiro, com pago/saldo/progresso recalculados lá) é o novo estado; o front não
- * soma nada. `concatMap` (as ações seguem a ordem, cada uma com a versão da anterior); em conflito de
- * versão ou item já pago, relê o compromisso. Escopo de componente.
- */
 @Injectable()
 export class CommitmentDetailFacade {
   private readonly gateway = inject(CommitmentsGateway);
@@ -62,7 +55,6 @@ export class CommitmentDetailFacade {
     const state = this.current();
     return state.status === 'error' ? state.problem : null;
   });
-  /** Uma ação em andamento (marcar paga, atualizar progresso). */
   readonly busy = this.busyState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly changed$ = this.changedEvents.asObservable();

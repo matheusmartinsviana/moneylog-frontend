@@ -1,8 +1,3 @@
-/**
- * Geometria dos gráficos: só **desenho** (coordenadas de tela). Nenhuma conta financeira: os valores
- * viram `number` apenas para posicionar pontos (a mesma regra do `Sparkline`).
- */
-
 export interface Point {
   readonly x: number;
   readonly y: number;
@@ -17,7 +12,6 @@ export interface CubicSegment {
 
 const sign = (value: number): number => (value < 0 ? -1 : 1);
 
-/** Tangente de um ponto interno (Fritsch-Carlson/Steffen): 0 em máximos e mínimos locais, nunca estoura. */
 function slope3(a: Point, b: Point, c: Point): number {
   const h0 = b.x - a.x;
   const h1 = c.x - b.x;
@@ -27,16 +21,11 @@ function slope3(a: Point, b: Point, c: Point): number {
   return (sign(s0) + sign(s1)) * Math.min(Math.abs(s0), Math.abs(s1), 0.5 * Math.abs(p)) || 0;
 }
 
-/** Tangente da ponta, a partir da tangente vizinha. */
 function slope2(a: Point, b: Point, t: number): number {
   const h = b.x - a.x;
   return h ? (3 * ((b.y - a.y) / h) - t) / 2 : t;
 }
 
-/**
- * Curva suave por **interpolação monotônica** (Fritsch-Carlson): passa por todos os pontos e nunca ultrapassa o
- * valor dos vizinhos (uma spline comum inventaria picos e vales que não estão nos dados). `x` crescente.
- */
 export function monotoneSegments(points: readonly Point[]): CubicSegment[] {
   const n = points.length;
   if (n < 2) return [];
@@ -68,7 +57,6 @@ export function monotoneSegments(points: readonly Point[]): CubicSegment[] {
 
 const fmt = (value: number): string => String(Math.round(value * 100) / 100);
 
-/** Comandos `M ... C ...` do traço (1 ponto = só o `M`; 0 pontos = vazio). */
 export function curvePath(points: readonly Point[]): string {
   const first = points[0];
   if (!first) return '';
@@ -84,7 +72,6 @@ export function curvePath(points: readonly Point[]): string {
   );
 }
 
-/** Área fechada até a linha de base (`baselineY`): a mesma curva, descendo até o zero. */
 export function areaPath(points: readonly Point[], baselineY: number): string {
   const first = points[0];
   const last = points[points.length - 1];
@@ -92,7 +79,6 @@ export function areaPath(points: readonly Point[], baselineY: number): string {
   return `${curvePath(points)}L${fmt(last.x)} ${fmt(baselineY)}L${fmt(first.x)} ${fmt(baselineY)}Z`;
 }
 
-/** Ponto da curva de Bézier no parâmetro `t` (0 a 1): usado pelos testes para amostrar a curva. */
 export function bezierAt(segment: CubicSegment, t: number): Point {
   const u = 1 - t;
   const a = u * u * u;

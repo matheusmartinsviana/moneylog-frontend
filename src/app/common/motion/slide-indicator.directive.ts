@@ -12,13 +12,6 @@ import { motionEnabled } from '~/app/common/motion/motion';
 const ACTIVE =
   '[aria-checked="true"], [aria-selected="true"], [aria-pressed="true"], [aria-current="page"]';
 
-/**
- * Indicador deslizante de abas e controles segmentados. Mede o item ativo do contêiner (`aria-checked`,
- * `aria-selected`, `aria-pressed` ou `aria-current`) e publica `--ind-x`, `--ind-w`, `--ind-y` e `--ind-h` (px) no
- * contêiner; o CSS desenha a pílula (`::before`) e anima o `transform`. Só leitura de layout: nenhum estado muda
- * aqui. O primeiro posicionamento não anima (`data-ind-ready` só chega depois). Sem movimento (preferência do
- * sistema ou `data-motion="off"`) a pílula salta direto, sem transição.
- */
 @Directive({ selector: '[appSlideIndicator]' })
 export class SlideIndicatorDirective {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);

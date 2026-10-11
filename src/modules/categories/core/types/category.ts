@@ -1,7 +1,6 @@
 export const CATEGORY_KINDS = ['EXPENSE', 'INCOME'] as const;
 export type CategoryKind = (typeof CATEGORY_KINDS)[number];
 
-/** Categoria como a API devolve. `system`: veio do seed (nome em pt-BR, dado do usuário, S-34). */
 export interface Category {
   readonly id: string;
   readonly name: string;

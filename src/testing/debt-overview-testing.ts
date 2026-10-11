@@ -9,7 +9,6 @@ import type {
 } from '~/modules/debt-overview/core/types/debt-overview';
 import { brl } from '~/testing/accounts-testing';
 
-/** O cenário do plano: 6.500,00 (cartão 5.000,00 com 1 compra em andamento, pessoas 500,00, outros 1.000,00). */
 export function aDebtOverview(overrides: Partial<DebtOverview> = {}): DebtOverview {
   return {
     asOf: '2026-10-07',
@@ -193,7 +192,6 @@ export function anOngoingPreview(overrides: Partial<OngoingPreview> = {}): Ongoi
   };
 }
 
-/** Porta falsa: guarda as chamadas e devolve o que o teste configurar. */
 export class DebtOverviewGatewayStub extends DebtOverviewGateway {
   overview$: Observable<DebtOverview> | null = null;
   previewResult: Observable<OngoingPreview> | null = null;

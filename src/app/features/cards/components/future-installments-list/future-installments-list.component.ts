@@ -8,11 +8,6 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { FutureInstallments } from '~/modules/cards/core/types/invoice';
 import { formatCompetenceShort, formatIsoDate } from '~/util/date';
 
-/**
- * Parcelas futuras do cartão (T65 CA3, presentational): uma seção por fatura `FUTURE` com os itens
- * ("Notebook 2/6 · R$ 200,00") e o `total` do backend ("Total em parcelas futuras"). O valor de cada
- * fatura e o total são os que o backend somou; nada é recalculado aqui.
- */
 @Component({
   selector: 'app-future-installments-list',
   imports: [RouterLink, MoneyComponent],

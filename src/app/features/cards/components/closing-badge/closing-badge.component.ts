@@ -3,10 +3,6 @@ import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-/**
- * Selo "Fechamento não confirmado" (presentational): ícone + texto, nunca só cor. Aparece quando o
- * `closingDay` do cartão ainda é um parâmetro provisório (`closingConfirmed === false`).
- */
 @Component({
   selector: 'app-closing-badge',
   imports: [IconComponent],

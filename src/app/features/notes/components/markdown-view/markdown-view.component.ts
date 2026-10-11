@@ -20,15 +20,6 @@ import type { NoteLink } from '~/modules/notes/core/types/note';
 import type { RenderOutcome } from '~/util/markdown/markdown-render';
 import { wikilinkKey } from '~/util/markdown/wikilink-key';
 
-/**
- * Desenha o Markdown de uma nota **sem injetar HTML** (S-159, ADR-009): `parseMarkdown` devolve uma árvore de
- * dados e este componente a desenha com templates do Angular (interpolação = texto escapado). Não existe
- * `innerHTML`, `DOMParser` nem `bypassSecurityTrust*`: HTML bruto (`<script>`, `<img onerror>`) aparece como
- * texto; links só `http(s)`/`mailto` (`rel="noopener noreferrer"`, `target="_blank"` nos externos); imagens
- * nunca carregam (anti-rastreio: aparece o texto alternativo); wikilinks são resolvidos **pelo backend**
- * (`links` da nota): resolvido vira link de navegação, sem alvo aparece "pendente" (nenhum alvo é inventado).
- * Presentational.
- */
 @Component({
   selector: 'app-markdown-view',
   imports: [NgTemplateOutlet, RouterLink, IconComponent],
@@ -524,16 +515,12 @@ import { wikilinkKey } from '~/util/markdown/wikilink-key';
 export class MarkdownViewComponent {
   protected readonly t = inject(I18nService).t;
 
-  /** O texto da nota (Markdown cru, como o usuário escreveu). */
   readonly source = input.required<string>();
-  /** Os vínculos da nota devolvidos pelo backend: é deles que o wikilink sai resolvido ou pendente. */
   readonly links = input<readonly NoteLink[]>([]);
 
-  /** O usuário pediu para criar a nota de um link pendente (`target` = o texto do wikilink). */
   readonly createNote = output<string>();
 
   private readonly renderer = inject(MarkdownRenderService);
-  /** O resultado mais recente (o anterior continua na tela enquanto o novo é calculado, sem piscar). */
   private readonly outcome = signal<RenderOutcome | null>(null);
   protected readonly pending = signal(false);
   private readonly document = computed(() => {
@@ -542,14 +529,12 @@ export class MarkdownViewComponent {
   });
   protected readonly blocks = computed(() => this.document()?.blocks ?? []);
   protected readonly truncated = computed(() => this.document()?.truncated === true);
-  /** Quando o Markdown é pesado demais para formatar: o texto como está, legível. */
   protected readonly plainText = computed(() => {
     const outcome = this.outcome();
     return outcome?.kind === 'plain' ? outcome.text : null;
   });
 
   constructor() {
-    // O parsing roda num Web Worker com tempo limite; um texto novo descarta o resultado do anterior.
     effect(() => {
       const text = this.source();
       untracked(() => {
@@ -579,7 +564,6 @@ export class MarkdownViewComponent {
     return map;
   });
 
-  /** Id da nota que o backend resolveu para este alvo, ou `null` (pendente: nunca se inventa o alvo). */
   protected resolve(target: string): string | null {
     return this.resolved().get(wikilinkKey(target)) ?? null;
   }

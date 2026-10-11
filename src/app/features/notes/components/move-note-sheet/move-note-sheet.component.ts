@@ -19,12 +19,6 @@ import { requiredTrimmed } from '~/app/features/quick-add/components/requirement
 import { pathProblem } from '~/modules/notes/core/types/note-path';
 import type { Problem } from '~/util/api/problem';
 
-/**
- * "Renomear ou mover": o novo caminho `.md`. O backend reescreve, na mesma transação, os `[[wikilinks]]` das
- * outras notas que apontavam para esta; a tela mostra depois quantas notas mudaram. Com texto não salvo o
- * botão fica desabilitado **com a razão** ("Salve as alterações antes de renomear"). O caminho é conferido aqui
- * só para avisar cedo (o backend é a verdade: `NOTE_PATH_INVALID`, `NOTE_PATH_TAKEN`). Presentational.
- */
 @Component({
   selector: 'app-move-note-sheet',
   imports: [ReactiveFormsModule, SheetComponent, TextFieldComponent],
@@ -115,10 +109,8 @@ export class MoveNoteSheetComponent {
 
   readonly open = input.required<boolean>();
   readonly currentPath = input.required<string>();
-  /** Há texto não salvo: renomear fica bloqueado até salvar. */
   readonly dirty = input(false);
   readonly busy = input(false);
-  /** Falha da última tentativa (o backend recusou o caminho, por exemplo). */
   readonly problem = input<Problem | null>(null);
 
   readonly closed = output<void>();

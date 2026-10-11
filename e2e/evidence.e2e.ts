@@ -2,10 +2,6 @@ import { resolve } from 'node:path';
 
 import { expectNoHorizontalScroll, test, VIEWPORTS, ViewportName, waitForApp } from './support';
 
-/**
- * Capturas de evidência do QA (T20 CA 3). Só roda com `E2E_EVIDENCE=1`, para não reescrever
- * arquivos versionados em toda execução: `E2E_EVIDENCE=1 npm run e2e -- --project=prod evidence`.
- */
 const OUT_DIR = resolve(__dirname, '..', '..', 'docs', 'qa', 'evidencias', 'etapa-1');
 
 const PAGES: Record<ViewportName, { path: string; name: string }[]> = {

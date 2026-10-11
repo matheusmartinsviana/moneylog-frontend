@@ -28,7 +28,6 @@ import { todayIso } from '~/util/date';
 import type { PersonRef } from '~/util/debt';
 import { formatMoney, type Money } from '~/util/money';
 
-/** Uma dívida "me devem" em aberto que a devolução pode quitar (o saldo é o do backend). */
 export interface ReceivableOption {
   readonly id: string;
   readonly person: PersonRef;
@@ -38,12 +37,6 @@ export interface ReceivableOption {
 
 type Kind = 'repayment' | 'borrowed';
 
-/**
- * "Dinheiro recebido" (presentational, T85): **nunca é receita**. Ou devolve uma dívida que me devem
- * (`debtId`: o valor sugerido é o `outstanding` do backend; um valor maior é recusado por ele, sem o
- * front calcular, S-143), ou registra um empréstimo recebido (`newDebt`: cria uma dívida minha). Emite
- * um `MONEY_RECEIVED`.
- */
 @Component({
   selector: 'app-received-form',
   imports: [
@@ -66,7 +59,6 @@ export class ReceivedFormComponent extends TransactionFormBase {
   readonly debts = input.required<readonly ReceivableOption[]>();
   readonly createPerson = input<((name: string) => Observable<PersonRef>) | null>(null);
   readonly defaultAccountId = input<string | null>(null);
-  /** `?personId=` da URL: só as dívidas dessa pessoa; com uma única, já vem escolhida. */
   readonly defaultPersonId = input<string | null>(null);
 
   protected readonly currency = ACCOUNT_CURRENCY;
@@ -120,7 +112,6 @@ export class ReceivedFormComponent extends TransactionFormBase {
   private readonly selectedDebt = computed(
     () => this.debts().find((debt) => debt.id === this.debtValue()) ?? null,
   );
-  /** "Falta R$ x nesta dívida": o `outstanding` que o backend devolveu, sem conta. */
   protected readonly amountHint = computed(() => {
     const debt = this.selectedDebt();
     return debt && this.isRepayment()
@@ -137,7 +128,6 @@ export class ReceivedFormComponent extends TransactionFormBase {
         if (accountId && control.value === null) control.setValue(accountId);
       });
     });
-    // Só uma das duas escolhas vale por vez (a outra fica desabilitada e fora da validação).
     effect(() => {
       const repayment = this.isRepayment();
       untracked(() => {
@@ -153,7 +143,6 @@ export class ReceivedFormComponent extends TransactionFormBase {
         }
       });
     });
-    // Uma dívida só (a da pessoa da URL, ou a única): já vem escolhida.
     effect(() => {
       const options = this.visibleDebts();
       untracked(() => {
@@ -161,7 +150,6 @@ export class ReceivedFormComponent extends TransactionFormBase {
         if (options.length === 1 && control.value === null) control.setValue(options[0]!.id);
       });
     });
-    // Escolheu a dívida: o valor sugerido é o `outstanding` do backend (só se o campo ainda está vazio).
     this.form.controls.debtId.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.suggest();
     });

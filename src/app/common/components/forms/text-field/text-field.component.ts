@@ -6,14 +6,8 @@ import { FieldErrorComponent } from '~/app/common/components/forms/field-error/f
 
 export type TextFieldType = 'text' | 'email' | 'password' | 'search';
 
-/** Máscara de digitação: `time` mostra `HH:MM` (só dígitos; o `:` entra sozinho, sem teclado numérico). */
 export type TextFieldMask = 'time';
 
-/**
- * Campo de texto de uma linha (nome, descrição, e-mail, senha, busca). O valor do controle é a
- * string digitada (`''` quando vazio); as regras (`required`, `maxLength`, `email`) vêm dos
- * validators do `FormControl`, e o erro aparece só depois de `touched` (FieldError). Presentational.
- */
 @Component({
   selector: 'app-text-field',
   imports: [FieldErrorComponent],
@@ -89,7 +83,6 @@ export type TextFieldMask = 'time';
       display: grid;
     }
 
-    /* Busca nativa (type search): sem o "x" do navegador (a busca tem o próprio limpar) e sem aparência nativa. */
     .input[type='search'] {
       appearance: none;
     }
@@ -133,25 +126,18 @@ export class TextFieldComponent extends FieldControl<string | null> {
   readonly inputmode = input<string>();
   readonly mask = input<TextFieldMask>();
   readonly enterkeyhint = input<string>();
-  /** Papel próprio (ex.: `searchbox` na busca). */
   readonly role = input<string>();
-  /** Combobox (`role="combobox"`): a lista de opções que o campo controla, se ela está aberta e a opção ativa. */
   readonly ariaControls = input<string>();
   readonly ariaExpanded = input<boolean | null>(null);
   readonly ariaActivedescendant = input<string>();
   readonly placeholder = input<string>();
-  /** Esconde o rótulo visualmente (ele continua sendo o nome acessível do campo). */
   readonly hideLabel = input(false);
-  /** Recebe o foco quando a folha/diálogo que o contém abre (`data-autofocus`). */
   readonly autofocus = input(false);
-  /** Só informa `aria-required`; a regra é o `Validators.required` do controle. */
   readonly mandatory = input(true);
 
-  /** Campo de senha com "Mostrar/Ocultar" (botão próprio, `aria-pressed`). Só faz sentido em `password`. */
   readonly revealable = input(false);
   readonly showLabelText = input('Show');
   readonly hideLabelText = input('Hide');
-  /** Fonte monoespaçada (códigos). */
   readonly mono = input(false);
 
   protected readonly revealed = signal(false);

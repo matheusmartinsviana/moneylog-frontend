@@ -74,9 +74,7 @@ test('burlas conhecidas do regex: todas são pegas (templates)', () => {
   for (const [name, [html, rule]] of Object.entries(cases)) {
     assert.ok(rules('src/x.html', html).includes(rule), `${name}: deveria disparar ${rule}`);
   }
-  // O `title` de SVG e a classe `title` não são o atributo nativo.
   assert.deepEqual(rules('src/x.html', '<svg><title>x</title></svg><b [class.title]="a"></b>'), []);
-  // HTML inválido num .html é falha, não silêncio.
   assert.deepEqual(rules('src/x.html', '<details/>'), ['parse-error']);
 });
 
@@ -225,7 +223,6 @@ test('a lista de permissões exige motivo e é só o necessário', () => {
     rules(textField.file, '@Component({ template: `<input [type]="type()" />` })'),
     [],
   );
-  // A mesma construção em outro arquivo falha.
   assert.deepEqual(
     rules('src/outro.component.ts', '@Component({ template: `<input [type]="type()" />` })'),
     ['dynamic-input-type'],
@@ -237,7 +234,6 @@ test('FilePicker: o input file só passa dentro do componente (FE-S-119)', () =>
   assert.ok(ALLOWLIST.some((entry) => entry.file === picker && entry.rule === 'input-type'));
   const template = '@Component({ template: `<input type="file" hidden />` })';
   assert.deepEqual(rules(picker, template), []);
-  // Em qualquer outro lugar (template, .ts ou outro componente de forms) continua proibido.
   assert.deepEqual(rules('src/app/features/notes/x.component.ts', template), ['input-type']);
   assert.deepEqual(rules('src/app/features/notes/x.html', '<input type="file">'), ['input-type']);
   assert.deepEqual(
@@ -258,13 +254,11 @@ test('FilePicker: a exceção é só para type="file", não para a regra input-t
       `${type} dentro do FilePicker deve falhar`,
     );
   }
-  // Um `<input type="date">` ao lado do `file` no mesmo arquivo também falha; o `file` segue liberado.
   assert.deepEqual(
     rules(picker, '@Component({ template: `<input type="file" hidden /><input type="date" />` })'),
     ['input-type'],
   );
   assert.deepEqual(rules(picker, '@Component({ template: `<input type="file" hidden />` })'), []);
-  // E o tipo dinâmico continua pegando (outra regra, que a exceção nunca cobriu).
   assert.deepEqual(rules(picker, '@Component({ template: `<input [type]="kind()" />` })'), [
     'dynamic-input-type',
   ]);

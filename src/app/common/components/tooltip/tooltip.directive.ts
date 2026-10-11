@@ -6,21 +6,14 @@ import { motionEnabled } from '~/app/common/motion/motion';
 
 const HOVER_DELAY_MS = 400;
 const LONG_PRESS_MS = 500;
-/** Tempo para o ponteiro ir do gatilho ao balão sem ele sumir (WCAG 1.4.13, conteúdo "hoverable"). */
 const HOVER_GRACE_MS = 150;
 const TOUCH_LINGER_MS = 1800;
 const MAX_LENGTH = 120;
 
 let nextId = 0;
-/** Tooltip aberto no momento: só um por vez, e sem atraso ao passar de um para outro. */
 let current: { hide: () => void } | null = null;
 let lastShownAt = 0;
 
-/**
- * Dica de ajuda própria, no lugar do atributo `title`. Aparece no hover (com atraso de 400 ms) e no
- * foco por teclado, some com `Esc`, no blur e ao rolar; no toque, só com pressão longa (não rouba o
- * clique). Só complementa: a informação essencial nunca vive só aqui (FE-S-118). Texto curto, sem HTML.
- */
 @Directive({
   selector: '[appTooltip]',
   host: {
@@ -39,11 +32,8 @@ export class TooltipDirective {
   private readonly document = inject(DOCUMENT);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  /** Texto da dica; vazio ou `null` desliga. */
   readonly text = input<string | null | undefined>(undefined, { alias: 'appTooltip' });
-  /** Liga o balão ao elemento por `aria-describedby` (desligue se o texto já é descrito por outro id). */
   readonly describes = input(true, { alias: 'appTooltipDescribes' });
-  /** Lado preferido do balão: acima do gatilho (padrão) ou à direita dele (itens de uma coluna lateral). */
   readonly side = input<'above' | 'end'>('above', { alias: 'appTooltipSide' });
 
   private readonly id = `tooltip-${++nextId}`;
@@ -82,7 +72,6 @@ export class TooltipDirective {
     this.timer = setTimeout(() => this.show(), quick ? 0 : HOVER_DELAY_MS);
   }
 
-  /** O ponteiro saiu do gatilho: o balão fica um instante para dar tempo de alcançá-lo. */
   protected onLeave(event: PointerEvent): void {
     if (event.pointerType === 'touch' || !this.bubble) {
       this.hide();
@@ -94,7 +83,6 @@ export class TooltipDirective {
   }
 
   protected onFocus(): void {
-    // Só foco de teclado: o clique do mouse não deve abrir a dica.
     if (this.host.nativeElement.matches(':focus-visible')) this.show();
   }
 
@@ -117,7 +105,6 @@ export class TooltipDirective {
   }
 
   protected onContextMenu(event: Event): void {
-    // A pressão longa do toque dispara o menu do sistema: a dica já a substitui.
     if (this.longPressed) event.preventDefault();
   }
 
@@ -130,7 +117,6 @@ export class TooltipDirective {
     bubble.setAttribute('role', 'tooltip');
     bubble.className = 'tooltip';
     bubble.textContent = text;
-    // Balão "hoverable": o ponteiro pode entrar nele sem que ele suma; sair dele fecha.
     bubble.addEventListener('pointerenter', () => clearTimeout(this.graceTimer));
     bubble.addEventListener('pointerleave', () => this.hide());
     this.document.body.appendChild(bubble);
@@ -153,7 +139,6 @@ export class TooltipDirective {
     if (!this.bubble) return;
     const bubble = this.bubble;
     if (motionEnabled(this.document)) {
-      // Saída curta (opacity/transform): o balão já não é o "atual", só termina de sair.
       bubble.classList.add('tooltip--out');
       bubble.removeAttribute('id');
       bubble.removeAttribute('role');

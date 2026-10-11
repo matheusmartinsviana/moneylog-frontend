@@ -50,7 +50,6 @@ export type ImportReviewLoad =
 
 export type ImportBusy = 'line' | 'bulk' | 'apply' | 'undo' | 'discard';
 
-/** O backend aceita até 500 ids por chamada de `lines:bulk`. */
 const BULK_CHUNK = 500;
 
 interface Command {
@@ -58,13 +57,6 @@ interface Command {
   readonly run: () => Observable<unknown>;
 }
 
-/**
- * Facade da revisão de um lote: lote, linhas (páginas de 50, "carregar mais"), decisões, aplicar e desfazer.
- * Nada é calculado aqui: contadores e estados vêm do backend. Depois de cada ação o lote é relido; em falha
- * (inclusive parcial) as linhas são recarregadas do backend. As ações rodam em fila (`concatMap`); aplicar,
- * desfazer e o lote em massa ignoram um segundo clique enquanto rodam. Aplicar leva `Idempotency-Key`
- * (reutilizada se a tentativa anterior falhou de forma ambígua). Escopo de componente.
- */
 @Injectable()
 export class ImportReviewFacade {
   private readonly gateway = inject(ImportsGateway);
@@ -95,24 +87,16 @@ export class ImportReviewFacade {
   readonly loadingMore = this.moreLoading.asReadonly();
   readonly filter = this.filterState.asReadonly();
   readonly busy = this.busyState.asReadonly();
-  /** Falha da última ação (traduzida pela tela pelo `code`). */
   readonly problem = this.problemState.asReadonly();
-  /** Ids das movimentações criadas pelo último "Aplicar". */
   readonly created = this.createdState.asReadonly();
-  /** O que a guarda impediu de estornar no último "Desfazer". */
   readonly blocked = this.blockedState.asReadonly();
-  /** Resultado do último "Aceitar todas as sem decisão" (`skipped` explica o que ficou). */
   readonly bulkResult = this.bulkState.asReadonly();
-  /** `true` depois que o backend descartou o lote (a tela volta à lista). */
   readonly discarded = this.discardedState.asReadonly();
-  /** Linha cuja transferência foi recusada porque a outra ponta já foi lançada (aceitar como está ou rejeitar). */
   readonly legConflictLineId = this.legConflictState.asReadonly();
-  /** Linha e causa de um `IMPORT_APPLY_FAILED`, lidas do `detail`. */
   readonly applyFailure = computed<ImportApplyFailure | null>(() =>
     applyFailureOf(this.problemState()),
   );
   readonly editable = computed(() => this.batchState()?.status === 'PENDING_REVIEW');
-  /** O que o backend diz que falta decidir (`counts.requireDecision`). */
   readonly requireDecision = computed(() => this.batchState()?.counts.requireDecision ?? 0);
 
   constructor() {
@@ -148,7 +132,6 @@ export class ImportReviewFacade {
             defaultIfEmpty(null),
             catchError((error: unknown) => {
               this.problemState.set(problemOf(error));
-              // Falha: o backend é a verdade; recarrega lote e linhas.
               return this.reload().pipe(catchError(() => of(null)));
             }),
             finalize(() => this.busyState.set(null)),
@@ -192,7 +175,6 @@ export class ImportReviewFacade {
     this.problemState.set(null);
   }
 
-  /** Aceitar, rejeitar, forçar ou decidir uma linha: usa a linha devolvida e relê o lote. */
   review(lineId: string, patch: ImportLinePatch): void {
     const id = this.batchId;
     if (!id || !this.editable()) return;
@@ -214,7 +196,6 @@ export class ImportReviewFacade {
     });
   }
 
-  /** "Aceitar todas as sem decisão": ids das linhas `PENDING` sem `requiresDecision`, em lotes de 500. */
   acceptAllWithoutDecision(): void {
     const id = this.batchId;
     if (!id || !this.editable()) return;
@@ -241,7 +222,6 @@ export class ImportReviewFacade {
     });
   }
 
-  /** Descarta o lote em revisão; a resposta (204) marca `discarded` e a tela volta à lista. */
   discardBatch(): void {
     const id = this.batchId;
     if (!id || !this.editable()) return;
@@ -251,7 +231,6 @@ export class ImportReviewFacade {
     });
   }
 
-  /** Rejeita a linha apontada por `IMPORT_APPLY_FAILED` (posição no arquivo, entre as aceitas). */
   rejectAcceptedAt(position: number): void {
     const id = this.batchId;
     if (!id || !this.editable()) return;

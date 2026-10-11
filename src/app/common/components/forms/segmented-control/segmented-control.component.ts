@@ -20,11 +20,6 @@ import { FieldErrorComponent } from '~/app/common/components/forms/field-error/f
 import { TooltipDirective } from '~/app/common/components/tooltip/tooltip.directive';
 import { SlideIndicatorDirective } from '~/app/common/motion/slide-indicator.directive';
 
-/**
- * Controle segmentado (T32) para escolher um entre poucos modos (ex.: Despesa · Pix · Débito ·
- * Receita · Transferência). Semântica de grupo de rádio (WAI-ARIA APG): Tab entra no item marcado,
- * as setas, Home e End movem e marcam, Enter e Espaço marcam o item com foco.
- */
 @Component({
   selector: 'app-segmented-control',
   imports: [FieldErrorComponent, SlideIndicatorDirective, TooltipDirective],
@@ -49,12 +44,10 @@ export class SegmentedControlComponent extends FieldControl<string | null> imple
 
   readonly options = input.required<readonly ChoiceOption[]>();
   readonly mandatory = input(true);
-  /** Esconde o rótulo visualmente (ele continua sendo o nome acessível do grupo). */
   readonly hideLabel = input(false);
 
   protected readonly value = signal<string | null>(null);
 
-  /** Item que recebe o Tab: o marcado ou, sem marcação, o primeiro habilitado. */
   protected readonly tabStop = computed(() => {
     const options = this.options();
     const selected = options.find((o) => o.value === this.value() && !o.disabled);

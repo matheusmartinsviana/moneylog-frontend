@@ -12,7 +12,6 @@ const routes: Routes = [
     path: '',
     providers: PEOPLE_PROVIDERS,
     children: [
-      // Criar abre em modal sobre a lista; editar, sobre o detalhe da pessoa.
       {
         path: '',
         component: PeoplePage,

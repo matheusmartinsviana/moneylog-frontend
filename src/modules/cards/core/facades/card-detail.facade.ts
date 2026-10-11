@@ -39,13 +39,6 @@ interface Load {
 
 const IDLE = { status: 'idle' } as const;
 
-/**
- * Facade da tela do cartão (T65): o cartão (limite, disponível, `totalCommitted` e `committedFuture`
- * **separados**, como o backend os calculou), as faturas (janela padrão de S-131, paginando até o fim)
- * e as parcelas futuras (`byInvoice` e `total` do backend). Cada parte tem o seu estado: uma falha nas
- * parcelas não esconde o cartão. `refresh` recarrega do backend sem piscar (depois de um pagamento).
- * Escopo de componente.
- */
 @Injectable()
 export class CardDetailFacade {
   private readonly gateway = inject(CardsGateway);
@@ -71,7 +64,6 @@ export class CardDetailFacade {
         switchMap(({ id, silent }) =>
           this.gateway.get(id).pipe(
             map((card): CardState => ({ status: 'ready', card })),
-            // Recarga silenciosa: o cartão atual continua na tela até a resposta chegar.
             silent ? (source) => source : startWith<CardState>({ status: 'loading' }),
             catchError((error: unknown) => {
               const problem = problemOf(error);
@@ -123,7 +115,6 @@ export class CardDetailFacade {
       .subscribe((state) => this.futureState.set(state));
   }
 
-  /** Abre o cartão: carrega o cartão e as faturas (a aba padrão). */
   load(id: string): void {
     this.futureWanted = false;
     this.futureState.set(IDLE);
@@ -131,25 +122,21 @@ export class CardDetailFacade {
     this.invoiceLoads.next({ id, silent: false });
   }
 
-  /** Só o cartão (sem faturas nem parcelas): para telas que precisam do nome ou da conta padrão. */
   loadCard(id: string, silent = false): void {
     this.cardLoads.next({ id, silent });
   }
 
-  /** Carrega as parcelas futuras (quando a aba abre ou no "tentar de novo"). */
   loadFuture(id: string): void {
     this.futureWanted = true;
     this.futureLoads.next({ id, silent: false });
   }
 
-  /** Recarrega tudo do backend sem voltar ao esqueleto (ex.: depois de pagar uma fatura). */
   refresh(id: string): void {
     this.cardLoads.next({ id, silent: true });
     this.invoiceLoads.next({ id, silent: true });
     if (this.futureWanted) this.futureLoads.next({ id, silent: true });
   }
 
-  /** Só as faturas (o "tentar de novo" da aba). */
   loadInvoices(id: string): void {
     this.invoiceLoads.next({ id, silent: false });
   }

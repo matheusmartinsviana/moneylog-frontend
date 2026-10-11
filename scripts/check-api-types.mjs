@@ -1,8 +1,3 @@
-/**
- * `npm run api:check`: os tipos gerados (`src/util/api/schema.gen.ts`) precisam estar iguais ao que
- * `contracts/openapi.yaml` produz agora. Falha (exit 1) se o contrato mudou e os tipos não foram
- * regenerados com `npm run api:types` (S-66, T30 CA1).
- */
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';

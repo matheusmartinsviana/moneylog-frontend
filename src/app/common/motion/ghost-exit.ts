@@ -2,11 +2,6 @@ import { motionEnabled } from '~/app/common/motion/motion';
 
 export type GhostKind = 'dialog' | 'sheet' | 'side' | 'popover';
 
-/**
- * Saída animada de um overlay cujo conteúdo já foi removido do DOM: anima um clone (inerte, sem `id`/`data-cy`)
- * e o descarta. O original some na hora (foco, `Esc` e testes não esperam a animação).
- * Só `transform` e `opacity`, via Web Animations; sem efeito com movimento desligado.
- */
 export function playGhostExit(
   backdrop: HTMLElement,
   panel: HTMLElement | null,
@@ -25,7 +20,6 @@ export function playGhostExit(
     node.removeAttribute('data-cy');
   }
   ghost.classList.add('m-ghost');
-  // O clone nasce com as classes do original: sem isto a animação de entrada reiniciaria por baixo da saída.
   ghost.style.animation = 'none';
   ghost.setAttribute('aria-hidden', 'true');
   ghost.setAttribute('inert', '');
@@ -53,8 +47,6 @@ export function playGhostExit(
     easing: ease,
     fill: 'forwards',
   });
-  // Com painel, o contêiner NÃO perde opacidade (ele é "raiz de backdrop" do vidro do painel): só o fundo
-  // escurecido clareia. Sem painel (caso raro), cai no fade do contêiner.
   const fade = panelOut
     ? ghost.animate(
         [

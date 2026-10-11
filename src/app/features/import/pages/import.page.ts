@@ -37,11 +37,6 @@ import { ImportsListFacade } from '~/modules/imports/core/facades/imports-list.f
 import { IMPORT_MAX_BYTES, type ImportSource } from '~/modules/imports/core/types/import';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Importar extrato (smart): escolhe a conta ou o cartão, o arquivo (CSV/OFX) e, para CSV, o mapeamento de
- * colunas; envia com progresso e cancelamento e leva à revisão do lote. Nada vira movimentação aqui: o lote
- * nasce em revisão. Abaixo, as importações recentes.
- */
 @Component({
   selector: 'app-import-page',
   imports: [
@@ -135,7 +130,6 @@ export class ImportPage implements OnInit {
     this.upload.uploaded$.pipe(takeUntilDestroyed()).subscribe((batch) => {
       void this.router.navigate(['/import', batch.id]);
     });
-    // Trocar conta/cartão: zera a escolha e busca o mapeamento salvo.
     this.kindControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
       this.sourceControl.setValue(null);
     });

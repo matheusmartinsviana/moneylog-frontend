@@ -17,18 +17,12 @@ export type LinkedNotesState =
 
 export interface LinkedNotesTarget {
   readonly type: NoteLinkType;
-  /** `id` da entidade, ou `key` (`AAAA-MM`) no resumo mensal. */
   readonly id?: string;
   readonly key?: string;
 }
 
 const PAGE_SIZE = 20;
 
-/**
- * Facade do bloco "Notas vinculadas" das telas financeiras (`GET /v1/links`): só notas ativas, mais recentes
- * primeiro. Trocar o alvo cancela a requisição anterior (`switchMap`). **Não calcula nada financeiro**: a nota
- * nunca altera o valor da entidade. Escopo de componente.
- */
 @Injectable()
 export class LinkedNotesFacade {
   private readonly gateway = inject(NotesGateway);
@@ -78,7 +72,6 @@ export class LinkedNotesFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** Carrega (ou recarrega, no "tentar de novo") as notas ligadas ao alvo. */
   load(target: LinkedNotesTarget): void {
     this.target = target;
     this.commands.next({ target, page: 1 });

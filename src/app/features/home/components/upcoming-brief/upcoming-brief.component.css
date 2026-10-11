@@ -90,7 +90,6 @@
   font-size: var(--text-sm);
 }
 
-/* Celular: cada compromisso numa linha só (nome e data lado a lado) para o gráfico ter altura. */
 @container (width < 40rem) {
   .ub {
     padding: var(--space-2) var(--space-3);

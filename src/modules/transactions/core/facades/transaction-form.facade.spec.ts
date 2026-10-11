@@ -79,7 +79,7 @@ describe('TransactionFormFacade', () => {
     facade.retry();
     pending.next(aTransaction());
     pending.complete();
-    facade.retry(); // nada para repetir: o envio anterior terminou
+    facade.retry();
 
     expect(gateway.creates).toHaveLength(2);
     expect(facade.problem()).toBeNull();

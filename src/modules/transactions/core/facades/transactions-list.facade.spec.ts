@@ -269,7 +269,6 @@ describe('TransactionsListFacade', () => {
       of({
         items: [anEntry({ transactionId: `t${n}` })],
         hasNext: n < 3,
-        // O backend manda as linhas de dívida só em `page = 1`; nas demais, `[]`.
         debtItems: n === 1 ? [debtItem] : [],
         totals: totals(`${n}00.00`),
       });

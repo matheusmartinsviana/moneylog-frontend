@@ -4,13 +4,8 @@ import type {
   GoalSliceResponse,
 } from '~/modules/goals/infra/responses/goal.response';
 
-/** Ambiente mock (S-67): nenhuma meta cadastrada. Mesmo formato bruto da API. */
 export const EMPTY_GOALS: GoalSliceResponse = { items: [], hasNext: false };
 
-/**
- * Ambiente mock: a meta que "nasceu" de uma criação (sem persistir: o "banco" continua vazio, então abrir a
- * meta depois dá "não encontrada"). Valores zerados, como a API devolve numa meta nova (`current` 0,00).
- */
 export function newMockGoal(id: string, body: GoalCreateRequest): GoalResponse {
   const zero = { amount: '0.00', currency: 'BRL' as const };
   return {

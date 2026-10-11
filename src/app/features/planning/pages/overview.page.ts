@@ -33,12 +33,6 @@ import { DashboardFacade } from '~/modules/dashboard/core/facades/dashboard.faca
 import type { UpcomingItem } from '~/modules/dashboard/core/types/upcoming';
 import { formatCompetence } from '~/util/date';
 
-/**
- * Panorama (smart): o que o Início tinha em "Compromissos e patrimônio", agora numa aba de Planejamento. Disponível,
- * comprometido por horizonte, a seguir (com "Realizar"), mês, patrimônio e cartões, todos **como o servidor
- * calculou** (nada é somado aqui), com os mesmos `data-cy` de antes. Trata carregando, vazio, erro (com tentar de
- * novo) e sem permissão.
- */
 @Component({
   selector: 'app-overview-page',
   imports: [
@@ -92,7 +86,6 @@ export class OverviewPage implements OnInit {
     { id: 'retry', label: this.t().home.error.retry, available: true, primary: true },
   ]);
 
-  /** A folha de "Realizar" fica montada depois de fechar (guarda a `Idempotency-Key` pendente). */
   protected readonly realizing = signal<RealizeTarget | null>(null);
   protected readonly realizeOpen = signal(false);
 
@@ -113,7 +106,6 @@ export class OverviewPage implements OnInit {
     });
   }
 
-  /** Depois de realizar (ou de a ocorrência ter mudado), a página volta a ler tudo do backend. */
   protected afterRealized(): void {
     this.realizeOpen.set(false);
     this.dashboard.reload();

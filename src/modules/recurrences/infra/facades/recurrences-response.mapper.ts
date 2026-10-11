@@ -16,7 +16,6 @@ import type {
 } from '~/modules/recurrences/infra/responses/recurrence.response';
 import type { Money } from '~/util/money';
 
-/** Resposta → tipos do core. Só copia campos: nenhum valor é somado nem convertido para `number`. */
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,
@@ -80,7 +79,6 @@ export function toOccurrence(response: OccurrenceResponse): Occurrence {
   };
 }
 
-/** `Transaction` devolvida por `realize`: só o que a tela usa (a fatura alvo vem da 1ª parcela). */
 export function toRealized(response: RealizedTransactionResponse): RealizedTransaction {
   const first = response.installments[0];
   return {
@@ -99,16 +97,11 @@ export function toRealized(response: RealizedTransactionResponse): RealizedTrans
   };
 }
 
-/** Descrição opcional (contrato 2.11): vazia é omitida e o servidor guarda nulo. */
 function optionalText(text: string): { description?: string } {
   const value = text.trim();
   return value !== '' ? { description: value } : {};
 }
 
-/**
- * Só o destino do tipo vai no corpo: conta + meio de pagamento **ou** cartão (nunca os dois), ou nenhum
- * ("conta a definir", 2.14.0: a conta e o meio são informados ao confirmar cada ocorrência).
- */
 function destination(input: {
   readonly accountId: string | null;
   readonly method: RecurrenceInput['method'];
@@ -128,7 +121,6 @@ export function toCreateRequest(input: RecurrenceInput): RecurrenceCreateRequest
     ...(input.categoryId !== '' ? { categoryId: input.categoryId } : {}),
     ...destination(input),
     frequency: input.frequency,
-    // `interval` e `unit` só existem em CUSTOM.
     ...(custom ? { interval: input.interval, unit: input.unit } : {}),
     startDate: input.startDate,
     endDate: input.endDate,

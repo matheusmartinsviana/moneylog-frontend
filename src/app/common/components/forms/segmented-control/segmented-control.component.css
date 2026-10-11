@@ -3,15 +3,10 @@
   min-width: 0;
 }
 
-/*
- * Segmentado no estilo nativo do macOS/iOS: trilho neutro e o item marcado como superfície elevada.
- * Com muitos itens no celular, o trilho rola na horizontal sem gerar scroll na página.
- */
 .segmented {
   position: relative;
   display: flex;
   gap: 2px;
-  /* A largura é a da soma das opções; só no celular o trilho ocupa a linha toda. */
   width: fit-content;
   max-width: 100%;
   padding: 3px;
@@ -22,7 +17,6 @@
 }
 
 .segmented__option {
-  /* Contém o texto `.visually-hidden` (absoluto) da dica: sem isto ele esticava o documento. */
   position: relative;
   flex: 1 0 auto;
   min-height: 2.25rem;
@@ -47,7 +41,6 @@
   color: var(--color-text);
 }
 
-/* A pílula do item marcado desliza entre as opções (diretiva `appSlideIndicator`); sem medida, o próprio item a pinta. */
 .segmented:not([data-ind-on]) .segmented__option.is-checked {
   background-color: var(--color-surface);
   box-shadow: var(--shadow-1);

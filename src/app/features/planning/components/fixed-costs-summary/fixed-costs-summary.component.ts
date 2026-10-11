@@ -4,11 +4,6 @@ import { MoneyComponent } from '~/app/common/components/money/money.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { SummaryState } from '~/modules/recurrences/core/facades/recurrences-list.facade';
 
-/**
- * "Custo fixo mensal" e "Receita recorrente mensal": os dois valores vêm do backend (`summary`) e são
- * **sempre rotulados como estimativa** (S-146), com a nota que diz como são calculados. Presentational: o
- * estado (carregando, erro, pronto) é de quem usa.
- */
 @Component({
   selector: 'app-fixed-costs-summary',
   imports: [MoneyComponent],

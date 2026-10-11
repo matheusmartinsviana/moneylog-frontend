@@ -24,12 +24,10 @@ import type { Slice } from '~/util/api/slice';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 import { todayIso } from '~/util/date';
 
-/** Falha de rede/HTTP → `ProblemError` tipado (o core nunca vê `HttpErrorResponse`). */
 function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
 }
 
-/** Ambiente mock: o "banco" está vazio, então qualquer conta pedida por id não existe. */
 const NOT_FOUND: Problem = {
   status: 404,
   code: 'ACCOUNT_NOT_FOUND',
@@ -38,10 +36,6 @@ const NOT_FOUND: Problem = {
   retryAfterSeconds: null,
 };
 
-/**
- * Facade de requisições de contas (FE 05): o único lugar com HTTP do módulo. Com `API_MOCKS`
- * ligado, responde com `mock-data` vazio e não faz requisição; desligado, chama `/v1/accounts`.
- */
 @Injectable({ providedIn: 'root' })
 export class AccountsRequestsFacade extends AccountsGateway {
   private readonly http = inject(HttpClient);
@@ -68,7 +62,6 @@ export class AccountsRequestsFacade extends AccountsGateway {
 
   create(input: AccountInput): Observable<Account> {
     if (this.useMocks) {
-      // Sem persistência no mock: devolve a conta como o backend a devolveria.
       const openingBalance = input.openingBalance ?? '0.00';
       const openingDate = input.openingDate ?? todayIso();
       return of(

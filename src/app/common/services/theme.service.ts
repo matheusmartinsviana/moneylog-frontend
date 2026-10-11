@@ -12,12 +12,6 @@ export function isThemePreference(value: unknown): value is ThemePreference {
   return typeof value === 'string' && (THEME_PREFERENCES as readonly string[]).includes(value);
 }
 
-/**
- * Tema da UI. `system` segue `prefers-color-scheme` (sem atributo no `<html>`);
- * `light`/`dark` gravam `data-theme` e valem mesmo contra a preferência do sistema, e reescrevem as metas
- * `theme-color` (que o HTML declara por `prefers-color-scheme`) para a barra do navegador seguir a escolha
- * do usuário e não só a do sistema (BUG-QA-04).
- */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
@@ -27,11 +21,9 @@ export class ThemeService {
 
   readonly preference = this.preferenceState.asReadonly();
 
-  /** O sistema está em escuro agora (`prefers-color-scheme`); só conta quando a preferência é `system`. */
   private readonly systemDark = signal(false);
   private mediaWatched = false;
 
-  /** Tema que está de fato na tela (`light` ou `dark`), mesmo com a preferência `system`. */
   readonly effective = computed<'light' | 'dark'>(() => {
     const preference = this.preferenceState();
     if (preference !== 'system') return preference;
@@ -42,14 +34,12 @@ export class ThemeService {
     this.watchSystem();
   }
 
-  /** Aplica a preferência salva (ou `system`). */
   init(): void {
     this.watchSystem();
     const stored = readStorage(THEME_STORAGE_KEY);
     this.apply(isThemePreference(stored) ? stored : 'system');
   }
 
-  /** Troca o tema e persiste a escolha neste dispositivo. */
   set(preference: ThemePreference): void {
     this.apply(preference);
     if (preference === 'system') {
@@ -74,7 +64,6 @@ export class ThemeService {
     this.preferenceState.set(preference);
     const root = this.document.documentElement;
     if (animate && motionEnabled(this.document)) {
-      // Transição curta só nas cores (motion.css), removida logo depois.
       root.classList.add('m-theme-switch');
       setTimeout(() => root.classList.remove('m-theme-switch'), 300);
     }
@@ -86,10 +75,6 @@ export class ThemeService {
     this.syncThemeColor(preference);
   }
 
-  /**
-   * Escolha manual: as duas metas passam a ter a cor do `canvas` do tema escolhido (a que o HTML já declara
-   * para aquele `prefers-color-scheme`; `check-styles` a mantém igual ao token). Sistema: restaura as do HTML.
-   */
   private syncThemeColor(preference: ThemePreference): void {
     const metas = Array.from(
       this.document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]'),

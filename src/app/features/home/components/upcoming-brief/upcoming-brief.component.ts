@@ -12,17 +12,10 @@ import type {
 } from '~/modules/dashboard/core/types/upcoming';
 import { formatIsoDate } from '~/util/date';
 
-/** Quantos compromissos o Início mostra (o resto fica no Panorama). */
 export const BRIEF_LIMIT = 3;
 
-/** Janela do Início: o que o servidor classificou como vencido, de hoje, de amanhã ou dos próximos 7 dias. */
 const NEXT_7_DAYS: readonly UpcomingBucket[] = ['OVERDUE', 'TODAY', 'TOMORROW', 'NEXT_7_DAYS'];
 
-/**
- * "Próximos compromissos" do Início (presentational): no máximo 3 itens dos próximos 7 dias, na ordem e com o
- * `bucket` que o servidor devolveu (nada é recalculado nem somado aqui). A lista completa, com parcelas e o
- * "Realizar", fica no Panorama de Planejamento.
- */
 @Component({
   selector: 'app-upcoming-brief',
   imports: [RouterLink, MoneyComponent],

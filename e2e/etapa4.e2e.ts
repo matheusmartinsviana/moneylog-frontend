@@ -9,13 +9,6 @@ import {
   waitForApp,
 } from './support';
 
-/**
- * Etapa 4 no ambiente mock (sem backend: nenhuma pessoa, dívida ou recorrência). Os fluxos com dados
- * (emprestar → ver a dívida na pessoa → receber a devolução, despesa dividida, recorrência realizada e
- * pulada) são dos testes de componente e do projeto `integration` (`integration/debts.e2e.ts` e
- * `integration/recurrences.e2e.ts`). Aqui: estados vazios, formulários, validação, a11y e 375 px.
- */
-
 test.describe('/people sem pessoas', () => {
   test('mostra o estado vazio com "Adicionar pessoa" habilitado e leva ao formulário', async ({
     page,
@@ -93,7 +86,6 @@ test.describe('/debts/:id', () => {
 test.describe('/quick-add: pessoas e dívidas', () => {
   test('o grupo "Pessoas e dívidas" tem emprestar, receber e nova dívida', async ({ page }) => {
     await seedPreferences(page, { language: 'pt' });
-    // Sem nenhuma conta o /quick-add só abre o modo "Nova dívida" (não usa conta): é por ele que se chega ao grupo.
     await page.goto('/quick-add?mode=debt');
     await waitForApp(page);
 

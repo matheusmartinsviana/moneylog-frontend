@@ -3,9 +3,8 @@
   list-style: none;
 }
 
-/* Celular: card empilhado. */
 :host(.row) {
-  position: relative; /* contém o link esticado (cartão inteiro clicável) */
+  position: relative;
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4);
@@ -40,7 +39,6 @@
   gap: var(--space-1);
 }
 
-/* A cor só reforça o texto, que já diz quem deve a quem (DS 00). */
 .row__balance {
   color: var(--color-text);
   font-weight: var(--weight-medium);
@@ -67,7 +65,6 @@
   gap: var(--space-2);
 }
 
-/* Desktop: linha de tabela (pessoa · saldo · próxima cobrança · ações). */
 @media (width >= 768px) {
   :host(.row) {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
@@ -84,7 +81,6 @@
   }
 }
 
-/* Botões do cartão ficam acima do link esticado. */
 .row__actions {
   position: relative;
   z-index: var(--z-content);

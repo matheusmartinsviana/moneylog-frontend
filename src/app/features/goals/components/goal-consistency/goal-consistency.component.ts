@@ -8,11 +8,6 @@ import type { Goal } from '~/modules/goals/core/types/goal';
 import { formatCompetence } from '~/util/date';
 import { formatRatio } from '~/util/ratio';
 
-/**
- * Consistência da meta (presentational): linha do tempo mensal (esperado x realizado), a sequência
- * (`streak`) e a taxa (`consistencyRate`), tudo como o servidor devolve. Mês sem dado (`actual`/`met`
- * nulos) aparece como "Sem dado", nunca como cumprido; o estado de cada mês é ícone + texto.
- */
 @Component({
   selector: 'app-goal-consistency',
   imports: [IconComponent, MoneyComponent],

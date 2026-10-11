@@ -53,14 +53,6 @@ import type {
 } from '~/modules/transactions/core/types/transaction-input';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/**
- * Edição (`/transactions/:id/edit`, smart): reaproveita os formulários apresentacionais do
- * `/quick-add`, preenchidos pelo mapa de S-90 (`formValue`, montado pela infra). O `PUT` leva a
- * `version`; `409 VERSION_CONFLICT` avisa e recarrega a versão mais recente; os erros de regra
- * (`REFUND_CATEGORY_LOCKED`, `REFUND_EXCEEDS_ORIGINAL`, S-81) vão para o campo, sem perder o digitado.
- * Sem `editable`, o formulário nem aparece (S-88). Na compra no cartão (S-121) só descrição, categoria e
- * observação mudam; valor, data, cartão e parcelas ficam em leitura, com a dica de como corrigir.
- */
 @Component({
   selector: 'app-transaction-edit-page',
   imports: [
@@ -90,7 +82,6 @@ import { Problem, problemOf } from '~/util/api/problem';
   templateUrl: './transaction-edit.page.html',
 })
 export class TransactionEditPage {
-  /** Esqueleto do carregamento: o formulário de despesa/receita, o mais comum (valor, descrição, contas, data). */
   protected readonly skeleton: readonly FormSkeletonPiece[] = [
     'field',
     'field-hint',
@@ -114,10 +105,8 @@ export class TransactionEditPage {
   protected readonly form = inject(TransactionFormFacade);
   protected readonly originSearch = inject(RefundOriginSearchFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
-  /** A última versão carregada: fica na tela enquanto uma recarga (depois de um 409) acontece. */
   protected readonly transaction = signal<Transaction | null>(null);
   protected readonly options = signal<FormOptions | null>(null);
   protected readonly optionsProblem = signal<Problem | null>(null);
@@ -131,7 +120,6 @@ export class TransactionEditPage {
     const tx = this.transaction();
     return tx !== null && tx.status === 'ACTIVE' && tx.editable && tx.formValue !== null;
   });
-  /** Algo foi digitado ou escolhido e não salvo: fechar pede confirmação. */
   protected readonly dirty = signal(false);
   protected readonly backLink = computed(() => `/transactions/${this.id()}`);
   protected readonly backActions = computed<readonly EmptyStateAction[]>(() => [
@@ -188,7 +176,6 @@ export class TransactionEditPage {
       const tx = this.detail.transaction();
       if (tx) untracked(() => this.transaction.set(tx));
     });
-    // 409: a versão do servidor é a que vale; recarrega e o formulário é preenchido de novo.
     effect(() => {
       if (this.form.problem()?.code === 'VERSION_CONFLICT') {
         untracked(() => this.detail.load(this.id()));
@@ -211,12 +198,10 @@ export class TransactionEditPage {
       });
   }
 
-  /** Fechar sem salvar (já confirmado, se havia alterações): volta ao detalhe. */
   protected close(): void {
     void this.router.navigate(['/transactions', this.id()], { queryParamsHandling: 'preserve' });
   }
 
-  /** Marca como sujo por digitação ou escolha dentro do formulário (eventos que sobem). */
   protected markDirty(event: Event): void {
     if (event.type === 'click') {
       const target = event.target as HTMLElement | null;

@@ -13,18 +13,12 @@ import {
   waitForApp,
 } from './support';
 
-/** Espera as animações do elemento acabarem (entradas com `translate`): só então a caixa é a final. */
 async function settleAnimations(locator: Locator): Promise<void> {
   await locator.evaluate((el) =>
     Promise.all(el.getAnimations().map((animation) => animation.finished)),
   );
 }
 
-/**
- * UI Kit (`/dev/ui-kit`): só nos builds de desenvolvimento/mock. O projeto `mock` confere a página
- * (estados, dois temas, acessibilidade, overlays); o projeto `prod` (build de produção) confere que
- * a rota não existe e que nenhum arquivo do bundle carrega o UI Kit.
- */
 test.describe('UI Kit (mock)', () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(
@@ -66,7 +60,6 @@ test.describe('UI Kit (mock)', () => {
             await expect(page.locator(`[data-cy="${scope}-${kind}"]`)).toBeVisible();
           }
         }
-        // Cada tema mostra o seu canvas (tokens por escopo), independente do tema do app.
         const canvas = async (scope: string) =>
           page
             .locator(`[data-cy="kit-${scope}"]`)
@@ -99,11 +92,6 @@ test.describe('UI Kit (mock)', () => {
   });
 });
 
-/**
- * Gate G-UI-E3 (T157, T163, T164, T166): RadioGroup, NumberStepper, Dialog, Sheet, Menu, Tabs e
- * ProgressBar no navegador de verdade (Chromium): teclado, foco preso/devolvido, `inert`, camadas e
- * alvos de toque. O WebKit (iPhone/Safari) está em `webkit.e2e.ts`.
- */
 test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(
@@ -129,7 +117,6 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
 
     await page.keyboard.press('ArrowDown');
     await expect(page.locator('[data-cy="light-menu-default-item-export"]')).toBeFocused();
-    // O item desabilitado ("Fatura fechada") é pulado.
     await page.keyboard.press('ArrowDown');
     await expect(page.locator('[data-cy="light-menu-default-item-archive"]')).toBeFocused();
     await page.keyboard.press('Home');
@@ -188,18 +175,15 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
     await expect(dialog).toHaveAttribute('data-side', 'center');
     expect(await page.evaluate(() => document.body.style.position)).toBe('fixed');
-    // O fundo está inert: nada fora do diálogo recebe foco.
     expect(await page.locator('[data-cy="ui-kit"]').evaluate((el) => !!el.closest('[inert]'))).toBe(
       true,
     );
 
-    // Tab circula só dentro do diálogo.
     for (let i = 0; i < 8; i++) {
       await page.keyboard.press('Tab');
       expect(await dialog.evaluate((el) => el.contains(document.activeElement))).toBe(true);
     }
 
-    // Um Select dentro do diálogo abre por cima dele; o primeiro Esc fecha só a lista.
     await page.locator('[data-cy="light-dialog-select"]').click();
     const list = page.locator('[data-cy="light-dialog-select-panel-panel"]');
     await expect(list).toBeVisible();
@@ -274,7 +258,6 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
     await open.click();
     const panel = page.locator('[data-cy="light-sheet-panel"]');
     await expect(panel).toHaveAttribute('data-side', 'sheet');
-    // A folha entra com `translateY(24px)`: mede só depois de a animação acabar (senão lê 1 px a menos).
     await settleAnimations(panel);
     const box = (await panel.boundingBox())!;
     expect(Math.round(box.x)).toBe(0);
@@ -316,7 +299,6 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
     await expect(limit).toHaveAttribute('aria-selected', 'true');
     await expect(page.locator('[data-cy="light-tabs-default-panel-limit"]')).toBeVisible();
     await expect(page.locator('[data-cy="light-tabs-default-panel-invoice"]')).toBeHidden();
-    // A desabilitada é pulada.
     await page.keyboard.press('ArrowRight');
     await expect(page.locator('[data-cy="light-tabs-default-tab-history"]')).toBeFocused();
 
@@ -445,8 +427,6 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
       await trigger.scrollIntoViewIfNeeded();
       await trigger.click();
       await expect(page.getByRole('menu')).toBeVisible();
-      // Popover de menu no portal do `body` (sem papel de diálogo): o axe acusa só `region` ("conteúdo
-      // fora de marcos") para ele; é o padrão de menu do APG, não um defeito.
       const violations = await runAxe(page);
       expect(
         violations.filter(
@@ -501,8 +481,6 @@ test.describe('UI Kit fora do build de desenvolvimento', () => {
       });
     })(dist).filter((f) => /\.(js|mjs|json|html)$/.test(f));
     expect(files.length).toBeGreaterThan(0);
-    // Ids das fixtures de `modules/reports/mock-data` e a facade demo: só podem existir em dev/mock.
-    // `DEMO_MODE` fica de fora: é o código de erro do backend (ProblemDetails) com a mensagem traduzida, presente em produção.
     const demo =
       /demo-(housing|food|shopping|transport|subscriptions|leisure|health)|ReportsDemoFacade|demoIncomeExpenseSeries|demoSpendingByCategory|reports-demo|DemoHttpBackend|mountDemoBanner|Modo demonstração|Demo mode: changes|buildWorld|demo-banner/;
     for (const file of files) {

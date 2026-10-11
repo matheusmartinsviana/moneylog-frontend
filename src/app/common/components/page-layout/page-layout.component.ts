@@ -3,10 +3,6 @@ import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@an
 import { MotionRevealDirective } from '~/app/common/motion/motion-reveal.directive';
 import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.directive';
 
-/**
- * Esqueleto de toda página: o landmark `<main>` e o único `<h1>` da tela.
- * O shell não renderiza `<main>`; cada página traz o seu por aqui.
- */
 @Component({
   selector: 'app-page-layout',
   imports: [MotionRevealDirective, MotionStaggerDirective],
@@ -68,7 +64,6 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       color: var(--color-text-muted);
     }
 
-    /* Ações da página: botões lado a lado com a mesma folga, quebrando de linha se faltar espaço. */
     .page__actions {
       display: flex;
       flex-wrap: wrap;
@@ -80,10 +75,6 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       display: none;
     }
 
-    /*
-     * Celular: com duas ou mais ações, o título fica numa linha e as ações descem para outra, em largura total
-     * (lado a lado no mesmo bloco do título os botões se amontoavam). Com uma ação só, ela segue ao lado do título.
-     */
     @media (width < 40rem) {
       .page__header:has(.page__actions .button ~ .button),
       :host(.fit) .page__header:has(.page__actions .button ~ .button) {
@@ -99,7 +90,6 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       }
     }
 
-    /* Uma coluna que nunca passa da largura da página: tabelas e abas largas rolam por dentro (sem rolar a página). */
     .page__content {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
@@ -107,14 +97,6 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       min-width: 0;
     }
 
-    /*
-     * Página "sucinta" (fit): ocupa só a altura que sobra na janela (sem altura fixa em px) e o conteúdo se
-     * reparte nela; o título e a descrição ficam numa linha e a página nunca rola (src/styles/README.md).
-     */
-    /*
-     * Tela de texto, formulário ou configuração: a coluna de leitura tem teto (--reading-max-width) e fica
-     * alinhada à esquerda, sob o título e o cabeçalho (a página em si continua com a largura de todas as telas).
-     */
     :host(.reading) .page__content {
       width: 100%;
       max-width: var(--reading-max-width);
@@ -164,7 +146,7 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
 
     :host(.fit) .page__content {
       grid-template-rows: minmax(0, 1fr);
-      row-gap: 0; /* só o primeiro item ocupa a linha; folhas e diálogos (altura 0) não somam espaço */
+      row-gap: 0;
       min-height: 0;
     }
   `,
@@ -172,8 +154,6 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
 export class PageLayoutComponent {
   readonly heading = input.required<string>();
   readonly description = input<string>();
-  /** Página "sucinta": cabe na tela sem rolar a página (a lista principal rola dentro do próprio painel). */
   readonly fit = input(false, { transform: booleanAttribute });
-  /** Coluna de leitura (texto, formulário, configurações): teto de largura, alinhada à esquerda. */
   readonly reading = input(false, { transform: booleanAttribute });
 }

@@ -11,7 +11,6 @@ import type {
 import { IdempotencyTracker } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
-/** A marca de uma movimentação: quem é o responsável e o quanto já foi reembolsado (do backend). */
 export interface ThirdPartyLink {
   readonly person: { readonly id: string; readonly name: string };
   readonly item: ThirdPartyItem;
@@ -21,15 +20,8 @@ export type ThirdPartyLookup =
   | { readonly status: 'idle' }
   | { readonly status: 'loading' }
   | { readonly status: 'done'; readonly link: ThirdPartyLink | null }
-  /** Não deu para saber: a tela não afirma nem nega a marca. */
   | { readonly status: 'unknown' };
 
-/**
- * Marcar uma compra ou despesa como de terceiro e saber se ela já está marcada. A marca **não muda o
- * lançamento** (continua consumo bruto até o reembolso); quem diz se há marca, a pessoa e o reembolso
- * recebido é o `third-party-receivables` do backend, relido depois de marcar (a resposta do `POST` só
- * traz a pessoa). `exhaustMap` no marcar; `Idempotency-Key` por tentativa. Escopo de componente.
- */
 @Injectable()
 export class ThirdPartyExpenseFacade {
   private readonly gateway = inject(ThirdPartiesGateway);
@@ -98,14 +90,12 @@ export class ThirdPartyExpenseFacade {
         this.savingState.set(false);
         if (problem !== null) this.keys.failed(problem);
         this.problemState.set(problem);
-        // Já estava marcada em outro aparelho: relê para a tela mostrar a marca real.
         if (problem?.code === 'THIRD_PARTY_EXPENSE_ALREADY_MARKED' && this.lastId !== null) {
           this.lookups.next(this.lastId);
         }
       });
   }
 
-  /** Procura a marca da movimentação (uma só consulta por abertura). */
   find(transactionId: string): void {
     this.lastId = transactionId;
     this.lookups.next(transactionId);

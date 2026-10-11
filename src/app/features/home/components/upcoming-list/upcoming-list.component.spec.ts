@@ -11,7 +11,6 @@ import { provideI18nTesting } from '~/testing/i18n-testing';
 
 const text = (el: HTMLElement) => el.textContent?.replace(/\s+/g, ' ').trim();
 
-/** O cenário de T81: cobrança do João, internet, dívida atrasada e dívida sem data. */
 const scenario = (): Upcoming => ({
   items: [
     {

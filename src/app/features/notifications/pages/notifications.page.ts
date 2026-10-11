@@ -59,12 +59,6 @@ interface DayGroup {
   readonly items: readonly AppNotification[];
 }
 
-/**
- * Central de notificações e lembretes (smart). A lista é agrupada por dia, traduzida pela chave de i18n e
- * pelos `params`; "marcar como lida" relê a lista e o contador do backend. Sem rede mostra a última lista com
- * aviso. Quando o contador do sino sobe, a lista é relida e uma região viva anuncia uma vez (sem anunciar a
- * cada polling). Lembretes: criar, editar, concluir e adiar.
- */
 @Component({
   selector: 'app-notifications-page',
   imports: [
@@ -93,7 +87,6 @@ export class NotificationsPage implements OnInit {
   protected readonly reminders = inject(RemindersFacade);
   private readonly dailyMessage = inject(DailyMessageFacade);
 
-  /** Mensagem do dia (saiu do Início sucinto): chave + números do backend; sem resposta, nada é mostrado. */
   protected readonly daily = computed(() => {
     const message = this.dailyMessage.message();
     return message
@@ -174,7 +167,6 @@ export class NotificationsPage implements OnInit {
     this.statusControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
     this.kindControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
 
-    // O contador subiu (polling do sino): relê a lista e anuncia uma vez.
     effect(() => {
       const count = this.unread.count();
       untracked(() => {

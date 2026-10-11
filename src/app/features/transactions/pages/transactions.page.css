@@ -8,7 +8,6 @@
   gap: var(--space-2);
 }
 
-/* Celular: resumo fixo acima da lista; a linha de rodapé só existe no desktop. */
 .summary {
   position: sticky;
   top: 0;
@@ -19,24 +18,18 @@
   display: none;
 }
 
-/* O resumo vira o painel de KPIs do topo em toda largura; a linha de rodapé repetiria os mesmos totais. */
 @media (width >= 768px) {
   .summary {
     position: static;
   }
 }
 
-/* Detalhe aberto: no celular ele é a página (a lista some); no desktop é um painel sobre a lista. */
 @media (width < 1280px) {
   :host(.has-detail) .list {
     display: none;
   }
 }
 
-/*
- * Página sucinta: filtros numa linha só, o resumo compacto e a lista rolando DENTRO do próprio painel (barra fina
- * do app); a página não rola. O detalhe aberto mantém o comportamento de antes.
- */
 .tx {
   display: flex;
   flex-direction: column;
@@ -58,7 +51,7 @@
 }
 
 .tx__list {
-  position: relative; /* contém os elementos só para leitores de tela: sem altura fantasma na página */
+  position: relative;
   display: grid;
   flex: 1 1 auto;
   align-content: start;

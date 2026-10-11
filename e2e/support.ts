@@ -1,6 +1,5 @@
 import { expect, Page, test as base } from '@playwright/test';
 
-/** Viewports do T17/T20. */
 export const VIEWPORTS = {
   mobile: { width: 375, height: 812 },
   tablet: { width: 768, height: 1024 },
@@ -8,7 +7,6 @@ export const VIEWPORTS = {
 } as const;
 export type ViewportName = keyof typeof VIEWPORTS;
 
-/** Cor de `--color-canvas` aplicada ao `body` em cada tema (tokens.css). */
 export const CANVAS = {
   light: 'rgb(246, 245, 251)',
   dark: 'rgb(11, 11, 18)',
@@ -18,7 +16,6 @@ export type Lang = 'pt' | 'en' | 'es';
 
 export const HTML_LANG: Record<Lang, string> = { pt: 'pt-BR', en: 'en', es: 'es' };
 
-/** Rótulos de navegação esperados (T17 CA 1–3; T31: "Novo registro", S-57), por idioma. */
 export const NAV_LABELS: Record<Lang, Record<string, string>> = {
   pt: {
     home: 'Início',
@@ -88,11 +85,9 @@ export const NOT_FOUND_TITLE: Record<Lang, string> = {
   es: 'Página no encontrada',
 };
 
-/** Todas as rotas da navegação, com a chave de `nav` que dá o título da página. */
 export const ROUTES = [
   { path: '/', key: 'home' },
   { path: '/transactions', key: 'transactions' },
-  // `/quick-add` não tem página: abre o modal Novo registro sobre a tela de origem (cobertura nos specs dele).
   { path: '/goals', key: 'goals' },
   { path: '/more', key: 'more' },
   { path: '/cards', key: 'cards' },
@@ -111,21 +106,14 @@ export const ROUTES = [
 ] as const;
 
 export const BOTTOM_NAV_ORDER = ['home', 'transactions', 'quickAdd', 'goals', 'more'];
-/**
- * Ordem da sidebar em grupos (DS 02, T193): OVERVIEW, WORKSPACE e SYSTEM. Mudou de propósito: antes era
- * uma lista plana (… cards, accounts, planning, goals, people, notes …). `budgets` entrou com T208 (a
- * página "em breve"); `vault`, `ai` e `mcp` (fatia F) e `notifications` completam os 16 itens.
- */
 export const SIDEBAR_GROUP_ORDER = {
   overview: ['home', 'transactions', 'accounts', 'cards', 'goals', 'budgets', 'planning'],
   workspace: ['vault', 'notes', 'people', 'insights', 'ai', 'mcp'],
   system: ['import', 'notifications', 'settings'],
 } as const;
 export const SIDEBAR_ORDER: string[] = Object.values(SIDEBAR_GROUP_ORDER).flat();
-/** `/more`: a sidebar menos a barra inferior (home, transactions, goals), na ordem dos grupos. */
 export const MORE_ORDER = SIDEBAR_ORDER.filter((key) => !BOTTOM_NAV_ORDER.includes(key));
 
-/** Chave de i18n que vazou crua para a tela (ex.: `emptyState.cards.title`). */
 const RAW_KEY =
   /\b(shell|nav|header|charts|dashboard|search|emptyState|settings|home|more|notFound|quickAdd|money|goals|summary|projections|exports|notes)\.[a-zA-Z]+(\.[a-zA-Z]+)*\b/;
 
@@ -136,10 +124,6 @@ interface Observed {
   failedRequests: string[];
 }
 
-/**
- * `test` com um observador automático: todo teste falha se houver erro/warning no console,
- * exceção não tratada, requisição a outro domínio, chamada a `/v1` ou requisição com falha.
- */
 export const test = base.extend<{ observed: Observed }>({
   observed: [
     async ({ page, baseURL }, use, testInfo) => {
@@ -153,9 +137,6 @@ export const test = base.extend<{ observed: Observed }>({
       const integration = testInfo.project.name === 'integration';
       page.on('console', (msg) => {
         if (msg.type() === 'error' || msg.type() === 'warning') {
-          // O Chromium loga todo 4xx/5xx de rede como erro de console. No projeto `integration` os
-          // erros de API são conferidos por status em `integration/fixtures.ts` (NetLog), que falha
-          // o teste se o status não foi declarado por ele.
           if (
             integration &&
             /Failed to load resource: (the server responded with a status of [45]\d\d|net::ERR_(CONNECTION_RESET|INTERNET_DISCONNECTED))/.test(
@@ -178,9 +159,7 @@ export const test = base.extend<{ observed: Observed }>({
       });
       page.on('requestfailed', (req) => {
         const reason = req.failure()?.errorText ?? '';
-        // Navegação cancelada pelo próprio teste não é defeito do app.
         if (reason.includes('ERR_ABORTED')) return;
-        // `integration`: rede cortada de propósito pelo teste (`NetLog.offline`/`dropNextResponse`).
         if (integration && /ERR_CONNECTION_RESET|ERR_INTERNET_DISCONNECTED/.test(reason)) return;
         observed.failedRequests.push(`${req.url()} (${reason})`);
       });
@@ -189,7 +168,6 @@ export const test = base.extend<{ observed: Observed }>({
 
       expect.soft(observed.consoleProblems, 'console sem erros nem warnings').toEqual([]);
       expect.soft(observed.thirdPartyRequests, 'nenhuma requisição a terceiros').toEqual([]);
-      // Os projetos `mock` e `prod` usam o ambiente mock: nenhuma chamada a /v1. O `integration` usa o backend real.
       if (testInfo.project.name !== 'integration') {
         expect.soft(observed.apiRequests, 'nenhuma chamada a /v1 em modo mock').toEqual([]);
       }
@@ -201,10 +179,6 @@ export const test = base.extend<{ observed: Observed }>({
 
 export { expect };
 
-/**
- * Deixa as respostas brutas do contrato em `window.__MONEYLOG_MOCK_RESPONSES__` antes do app subir: as facades em
- * modo mock (`mock` e `prod`) leem a chave do endpoint no lugar do estado vazio. O E2E compara a tela com o JSON.
- */
 export async function seedMockResponses(
   page: Page,
   responses: Record<string, unknown>,
@@ -214,12 +188,10 @@ export async function seedMockResponses(
   }, responses);
 }
 
-/** Espera o app inicializar (i18n carregado e a página com o `<h1>`). */
 export async function waitForApp(page: Page): Promise<void> {
   await expect(page.locator('[data-cy="page-title"]')).toBeVisible();
 }
 
-/** Grava as preferências antes do primeiro carregamento (mesmas chaves do app). */
 export async function seedPreferences(
   page: Page,
   prefs: { language?: Lang; theme?: 'light' | 'dark' },
@@ -228,13 +200,10 @@ export async function seedPreferences(
     try {
       if (p.language) localStorage.setItem('moneylog.language', p.language);
       if (p.theme) localStorage.setItem('moneylog.theme', p.theme);
-    } catch {
-      // storage indisponível: o app deve seguir com o padrão
-    }
+    } catch {}
   }, prefs);
 }
 
-/** Largura total do documento não pode passar da viewport. */
 export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   const { scrollWidth, clientWidth } = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
@@ -243,21 +212,18 @@ export async function expectNoHorizontalScroll(page: Page): Promise<void> {
   expect(scrollWidth, 'sem scroll horizontal').toBeLessThanOrEqual(clientWidth);
 }
 
-/** Nenhuma chave de i18n crua no texto visível. */
 export async function expectNoRawKeys(page: Page): Promise<void> {
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(RAW_KEY);
 }
 
 export async function bodyBackground(page: Page): Promise<string> {
-  // Duas voltas de quadro: uma mudança de tema (ou de `prefers-color-scheme`) assenta no quadro seguinte.
   return page.evaluate(async () => {
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     return getComputedStyle(document.body).backgroundColor;
   });
 }
 
-// A suíte roda como CommonJS (o package.json não é `type: module`).
 const AXE_PATH = require.resolve('axe-core/axe.min.js');
 
 export interface AxeViolation {
@@ -267,7 +233,6 @@ export interface AxeViolation {
   targets: string[];
 }
 
-/** Roda o axe-core (já é devDependency do projeto) na página e devolve as violações. */
 export async function runAxe(page: Page): Promise<AxeViolation[]> {
   await page.addScriptTag({ path: AXE_PATH });
   return page.evaluate(async () => {
@@ -290,7 +255,6 @@ export async function runAxe(page: Page): Promise<AxeViolation[]> {
   });
 }
 
-/** Markdown hostil (custo quadrático no lexer do `marked`) com `size` caracteres: o que o backend aceita em 200 KB. */
 export const HOSTILE_MARKDOWN: Record<string, { build: (size: number) => string; heavy: boolean }> =
   {
     'asteriscos soltos (*a *a ...)': {
@@ -328,11 +292,6 @@ export const HOSTILE_MARKDOWN: Record<string, { build: (size: number) => string;
     },
   };
 
-/**
- * Abre, no ambiente mock, uma nota com `body` (semeada no `sessionStorage`; ver `seededMockNote`) por uma
- * navegação da SPA (sem recarregar), com um "batimento" na thread principal: um `setInterval` de 50 ms que
- * registra o maior atraso. Devolve o id. Quem chama espera o editor e lê o atraso com `maxMainThreadStallMs`.
- */
 export async function openSeededNote(page: Page, body: string): Promise<string> {
   const id = crypto.randomUUID();
   await page.goto('/notes');
@@ -363,7 +322,6 @@ export async function openSeededNote(page: Page, body: string): Promise<string> 
         w.__maxStall = Math.max(w.__maxStall, t - last - 50);
         last = t;
       }, 50);
-      // Navegação da SPA (o roteador escuta `popstate`): o boot do app não entra na medida.
       history.pushState({}, '', `/notes/${noteId}`);
       dispatchEvent(new PopStateEvent('popstate'));
     },
@@ -372,16 +330,10 @@ export async function openSeededNote(page: Page, body: string): Promise<string> 
   return id;
 }
 
-/** O maior tempo (ms) em que a thread principal ficou presa desde `openSeededNote`. */
 export async function maxMainThreadStallMs(page: Page): Promise<number> {
   return page.evaluate(() => (window as unknown as { __maxStall: number }).__maxStall);
 }
 
-/**
- * Toda a navegação da sidebar (marca, "Novo registro", itens e avatar) é alcançável na altura atual da janela:
- * o avatar fica à vista **sem rolar** e cada item, depois de rolado para a vista, está dentro da viewport e
- * recebe o clique (nada o cobre). Vale para a sidebar recolhida (768 a 1199 px), que antes não rolava.
- */
 export async function expectSidebarReachable(page: Page): Promise<void> {
   const keys = await page
     .locator('[data-cy="sidebar"] a, [data-cy="sidebar"] button')
@@ -411,10 +363,6 @@ export async function expectSidebarReachable(page: Page): Promise<void> {
   }
 }
 
-/**
- * Lados em que o anel de foco (`ring` px de `box-shadow`) do elemento é recortado por um ancestral que
- * não deixa o conteúdo vazar (`overflow` diferente de `visible`). Vazio = o anel cabe inteiro.
- */
 export async function focusRingClippedSides(
   page: Page,
   selector: string,
@@ -443,7 +391,6 @@ export async function focusRingClippedSides(
     }, ring);
 }
 
-/** Contraste WCAG entre duas cores `rgb()/rgba()` computadas (a transparência é ignorada). */
 export function contrastRatio(a: string, b: string): number {
   const channels = (css: string) => (css.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
   const luminance = (css: string) => {

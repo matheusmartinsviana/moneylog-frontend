@@ -31,11 +31,6 @@ import {
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const FREQUENCIES: readonly SummaryFrequency[] = ['DAILY', 'ONLY_DUE', 'OFF'];
 
-/**
- * Configurações de notificação (smart): resumo do dia, tipos, janela de silêncio, nome e opt-in de push.
- * Salvar leva `version` (um conflito recarrega); o push só pede permissão no clique e diz, em texto,
- * por que não está disponível (servidor sem push, navegador sem suporte, iPhone sem instalar, bloqueado).
- */
 @Component({
   selector: 'app-notification-settings-page',
   imports: [
@@ -126,7 +121,6 @@ export class NotificationSettingsPage implements OnInit {
   });
 
   constructor() {
-    // Preenche o formulário com o que o backend devolveu (na carga e depois de salvar/recarregar).
     effect(() => {
       const settings = this.facade.settings();
       if (!settings) return;

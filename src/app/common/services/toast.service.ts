@@ -2,9 +2,7 @@ import { DestroyRef, inject, Injectable, signal } from '@angular/core';
 
 export type ToastTone = 'info' | 'error';
 
-/** Ação curta no aviso (ex.: "Ver movimentações"). O texto já vem traduzido de quem chama. */
 export interface ToastAction {
-  /** Sufixo do `data-cy` do botão. */
   readonly id: string;
   readonly label: string;
   readonly run: () => void;
@@ -12,9 +10,7 @@ export interface ToastAction {
 
 export interface ToastOptions {
   readonly tone?: ToastTone;
-  /** Tempo na tela. Padrão: 5 s (info) e 8 s (erro). */
   readonly durationMs?: number;
-  /** Ações do aviso; usar uma fecha o aviso. Com ações o aviso fica mais tempo na tela. */
   readonly actions?: readonly ToastAction[];
 }
 
@@ -26,15 +22,9 @@ export interface Toast {
 }
 
 const DEFAULT_DURATION: Readonly<Record<ToastTone, number>> = { info: 5000, error: 8000 };
-/** Aviso com ação precisa de tempo para ser lido e tocado. */
 const ACTION_DURATION = 10_000;
-/** Mais que isso empilha demais no celular: o aviso mais antigo sai. */
 const MAX_VISIBLE = 3;
 
-/**
- * Avisos curtos depois de uma ação ("Movimentação registrada."). Estado de UI só: não guarda dado
- * de negócio e não chama API. A mensagem já vem traduzida de quem chama.
- */
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private readonly items = signal<readonly Toast[]>([]);

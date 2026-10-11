@@ -8,11 +8,6 @@ import type { NoteSummary } from '~/modules/notes/core/types/note';
 const SUGGEST_DEBOUNCE_MS = 150;
 const SUGGEST_LIMIT = 8;
 
-/**
- * Sugestões do autocomplete de `[[`: notas ativas que casam com o que foi digitado (busca do backend, sem
- * acento nem caixa). Cada digitação cancela a anterior (`switchMap`); falha vira lista vazia (o autocomplete
- * nunca bloqueia a escrita). Escopo de componente.
- */
 @Injectable()
 export class NoteSuggestFacade {
   private readonly gateway = inject(NotesGateway);

@@ -9,7 +9,6 @@ import {
   wikilinkContext,
 } from '~/util/markdown/markdown-edit';
 
-/** Aplica a edição e devolve o texto e a seleção resultantes (o que o `replaceRange` faz no navegador). */
 function apply(text: string, edit: Edit | null): { text: string; selected: string } {
   if (!edit) return { text, selected: '' };
   const next = text.slice(0, edit.from) + edit.insert + text.slice(edit.to);

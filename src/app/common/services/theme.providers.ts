@@ -9,7 +9,6 @@ import {
 import { applyGlassMode } from '~/app/common/services/glass-support';
 import { ThemeService } from '~/app/common/services/theme.service';
 
-/** Aplica o tema salvo e o modo do vidro (`data-glass`) antes do primeiro render. */
 export function provideTheme(): EnvironmentProviders {
   return makeEnvironmentProviders([
     provideAppInitializer(() => {

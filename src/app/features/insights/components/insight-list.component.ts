@@ -8,7 +8,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { insightLines } from '~/app/features/ai/insight-text';
 import type { InsightsState } from '~/modules/ai/core/facades/insights.facade';
 
-/** Lista dos insights calculados do mês, com os estados de carregando, vazio, erro e pronto. Presentational. */
 @Component({
   selector: 'app-insight-list',
   imports: [RouterLink, EmptyStateComponent, ErrorStateComponent],

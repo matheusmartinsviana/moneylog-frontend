@@ -1,11 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 
-/**
- * Medidor semicircular (DS 03) para **um indicador percentual que o backend já entregou** (ex.: taxa de
- * poupança). O componente só **desenha** a razão recebida (`share`, 0 a 100, já normalizada por quem usa): nenhuma
- * conta financeira. O número e o rótulo vão em texto no conteúdo projetado (o arco é decorativo, `aria-hidden`);
- * sem valor (`share = null`) só o trilho aparece, sem arco inventado. Sem halo: só trilho e arco, em tokens. Presentational.
- */
 @Component({
   selector: 'app-gauge',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,7 +23,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   styles: `
     :host {
       display: block;
-      container-type: inline-size; /* o valor projetado escala com o arco (cqi) e nunca quebra */
+      container-type: inline-size;
     }
 
     .gauge {
@@ -55,7 +49,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
       stroke-linecap: round;
     }
 
-    /* Trilho suave (tom do próprio cartão, um degrau acima) e arco de acento, sem halo nem brilho por trás. */
     .gauge__track {
       stroke: var(--color-surface-muted);
       opacity: 0.9;
@@ -67,7 +60,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 
     .gauge__content {
       position: absolute;
-      /* O texto fica dentro do vão do arco (raio interno = 81 de 200): nunca encosta nas pontas. */
       right: 16%;
       bottom: 0;
       left: 16%;
@@ -88,7 +80,6 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
   `,
 })
 export class GaugeComponent {
-  /** Posição do arco, 0 a 100 (a razão do backend, só para desenhar). `null` = sem valor. */
   readonly share = input<number | null>(null);
 
   protected readonly path = 'M 15 100 A 85 85 0 0 1 185 100';

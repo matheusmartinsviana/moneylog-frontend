@@ -8,12 +8,6 @@ import type { BillingChangePreview } from '~/modules/cards/core/types/billing-ch
 import type { Problem } from '~/util/api/problem';
 import { formatIsoDate } from '~/util/date';
 
-/**
- * Efeito da mudança de fechamento/vencimento (T69, presentational): mostra a primeira fatura afetada e
- * quantas parcelas e créditos mudam de fatura **como o backend devolveu** (S-128), e deixa claro que a
- * fatura atual e as fechadas não mudam (S-42). Avisa quando a prévia ficou velha (`409
- * CARD_BILLING_CHANGE_STALE`) e quando não foi possível calculá-la (com "tentar de novo").
- */
 @Component({
   selector: 'app-billing-change-notice',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -74,9 +68,7 @@ export class BillingChangeNoticeComponent {
   readonly preview = input<BillingChangePreview | null>(null);
   readonly loading = input(false);
   readonly problem = input<Problem | null>(null);
-  /** A confirmação foi recusada porque a prévia ficou velha (`CARD_BILLING_CHANGE_STALE`). */
   readonly stale = input(false);
-  /** "Tentar de novo" quando a prévia falhou: quem usa pede a prévia outra vez. */
   readonly retry = output<void>();
 
   private readonly locale = computed(() => HTML_LANG[this.i18n.language()]);

@@ -24,16 +24,8 @@ import { sameName } from '~/modules/people/core/facades/person-form.facade';
 import { problemOf } from '~/util/api/problem';
 import type { PersonRef } from '~/util/debt';
 
-/** Valor interno da opção "Nova pessoa…": nunca chega ao controle do formulário. */
 const NEW_PERSON = '__new-person__';
 
-/**
- * Escolher a pessoa de uma dívida e, se ela não existe, criá-la ali mesmo (S-138): "Nova pessoa…" abre
- * um nome e o botão chama `POST /v1/people` **antes** da dívida (o backend não cria pessoa implícita).
- * Presentational: quem usa passa as pessoas, o `FormControl` do id escolhido e a função `createPerson`
- * (que devolve a pessoa criada e a põe na lista). Homônimo é só aviso (a lista local já está carregada).
- * O erro de campo do formulário (`required`, `PERSON_ARCHIVED`...) é o do próprio `Select`.
- */
 @Component({
   selector: 'app-person-field',
   imports: [ReactiveFormsModule, SelectComponent, TextFieldComponent],
@@ -46,12 +38,10 @@ export class PersonFieldComponent {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   protected readonly t = inject(I18nService).t;
 
-  /** O controle do id da pessoa (o do formulário que usa o campo). */
   readonly control = input.required<FormControl<string | null>>();
   readonly fieldId = input.required<string>();
   readonly label = input<string>();
   readonly people = input.required<readonly PersonRef[]>();
-  /** Cria a pessoa no backend e devolve a resposta. Sem ela, a opção "Nova pessoa…" some. */
   readonly createPerson = input<((name: string) => Observable<PersonRef>) | null>(null);
   readonly created = output<PersonRef>();
 
@@ -87,7 +77,6 @@ export class PersonFieldComponent {
     this.newName.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((value) => this.typed.set(value));
-    // O campo de nome recebe o foco quando abre.
     effect(() => {
       if (this.creating()) {
         untracked(() =>
@@ -135,7 +124,6 @@ export class PersonFieldComponent {
   }
 
   protected onEnter(event: Event): void {
-    // Dentro de um formulário, o Enter do nome criaria a pessoa, não enviaria o formulário inteiro.
     event.preventDefault();
     this.create();
   }

@@ -4,9 +4,6 @@ import type { AppI18n, Language } from '~/app/common/i18n/i18n';
 
 export type TranslationLoaders = Readonly<Record<Language, () => Promise<AppI18n>>>;
 
-/**
- * Cada idioma fica no seu próprio chunk: só o ativo é baixado.
- */
 export const TRANSLATION_LOADERS = new InjectionToken<TranslationLoaders>('TRANSLATION_LOADERS', {
   providedIn: 'root',
   factory: () => ({

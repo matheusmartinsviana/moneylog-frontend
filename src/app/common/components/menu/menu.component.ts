@@ -17,17 +17,12 @@ import type { IconName } from '~/app/common/components/icon/icons';
 import { OverlayPanelComponent } from '~/app/common/components/overlay/overlay-panel.component';
 import { TooltipDirective } from '~/app/common/components/tooltip/tooltip.directive';
 
-/** Item do `Menu`. `checked` definido faz dele um `menuitemcheckbox` (o menu continua aberto). */
 export interface MenuItem {
-  /** Identificador devolvido em `selected` e sufixo do `data-cy` (`<fieldId>-item-<id>`). */
   readonly id: string;
-  /** Texto já traduzido. Um item destrutivo precisa dizer a ação no texto ("Excluir"), não só na cor. */
   readonly label: string;
   readonly disabled?: boolean;
-  /** Ação que desfaz dados ou muda saldo: estilo de risco. */
   readonly destructive?: boolean;
   readonly checked?: boolean;
-  /** Ícone à esquerda do rótulo (decorativo). */
   readonly icon?: IconName;
 }
 
@@ -39,16 +34,6 @@ const normalize = (text: string): string =>
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
 
-/**
- * Menu de ações (padrão menu button do APG): um botão (`aria-haspopup="menu"`) que abre uma lista
- * `role="menu"`. `Enter`, `Espaço` e `↓` abrem e focam o primeiro item (`↑`, o último); `↑`/`↓`
- * andam em círculo, `Home`/`End`, digitar pula ao item que começa com as letras, `Esc` fecha e
- * devolve o foco ao botão, `Tab` fecha. Itens desabilitados são pulados. Em tela compacta (até
- * 640 px) abre como folha inferior (mesmo `OverlayPanel`), com alvos de 44 px.
- * `selected` emite o `id` do item depois de fechar e devolver o foco ao botão, de modo que a
- * ação escolhida (abrir um diálogo, por exemplo) já encontra o foco no lugar certo.
- * Presentational.
- */
 @Component({
   selector: 'app-menu',
   imports: [IconComponent, OverlayPanelComponent, TooltipDirective],
@@ -160,7 +145,6 @@ const normalize = (text: string): string =>
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Avatar genérico (DS 02): círculo em tinta de acento; não leva nome nem foto (D4). */
     .menu__trigger--avatar {
       min-width: 2.75rem;
       width: 2.75rem;
@@ -179,7 +163,6 @@ const normalize = (text: string): string =>
       color: var(--color-text);
     }
 
-    /* Trilho lateral (sidebar): quadrado de ícone igual aos itens do trilho; ativo = indicador deslizante atrás. */
     .menu__trigger--rail {
       width: 2.5rem;
       min-width: 2.5rem;
@@ -237,7 +220,6 @@ const normalize = (text: string): string =>
       color: var(--color-text);
     }
 
-    /* Trilho: o quadrado segue opaco; o hover só põe uma película azul por cima (igual aos links do trilho). */
     .menu__trigger--rail:hover:not(:disabled),
     .menu__trigger--rail.is-open {
       border-color: var(--color-hover-border);
@@ -342,25 +324,17 @@ const normalize = (text: string): string =>
 export class MenuComponent {
   private readonly injector = inject(Injector);
 
-  /** Nome do menu (e do botão, quando só mostra o ícone). Já traduzido. */
   readonly label = input.required<string>();
-  /** Base do `data-cy`: o botão é `<fieldId>`, os itens `<fieldId>-item-<id>`. */
   readonly fieldId = input.required<string>();
   readonly items = input.required<readonly MenuItem[]>();
-  /** Ícone do botão quando não mostra o `label` (padrão: "mais"). */
   readonly icon = input<IconName>('more');
-  /** Botão redondo de avatar genérico (menu do perfil), em vez de botão de ícone. */
   readonly avatar = input(false);
-  /** Mostra o `label` (com seta) no botão, em vez do ícone de "mais". */
   readonly showLabel = input(false);
-  /** `rail`: botão quadrado do trilho da sidebar; o painel abre ao lado dele. */
   readonly variant = input<'default' | 'rail'>('default');
-  /** Realça o botão (a rota atual está entre os itens do menu). */
   readonly active = input(false);
   readonly align = input<'start' | 'end'>('end');
   readonly disabled = input(false);
 
-  /** Item escolhido (depois de fechar e devolver o foco ao botão; imediato para `checked`). */
   readonly selected = output<string>();
 
   private readonly uid = ++nextId;
@@ -377,7 +351,6 @@ export class MenuComponent {
   private typedAt = 0;
 
   protected readonly hasChecks = computed(() => this.items().some((i) => i.checked !== undefined));
-  /** Índice do item que recebe o foco ao abrir (o 1º ou o último habilitado). */
   protected readonly startIndex = computed(() => {
     const items = this.items();
     const indexes = items.map((_, i) => i).filter((i) => !items[i]?.disabled);
@@ -412,7 +385,6 @@ export class MenuComponent {
       return;
     }
     this.close();
-    // Depois da renderização: antes disso a folha (modal) ainda deixa o botão `inert`.
     afterNextRender(
       () => {
         this.trigger()?.nativeElement.focus();
@@ -446,7 +418,6 @@ export class MenuComponent {
         break;
       default:
         if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-          // Espaço sozinho ativa o item; só vira letra no meio de uma digitação em andamento.
           if (event.key === ' ' && Date.now() - this.typedAt > 500) return;
           target = this.typeahead(items, current, event.key);
           if (target < 0) return;
@@ -458,7 +429,6 @@ export class MenuComponent {
     items[target]?.focus();
   }
 
-  /** Item cujo texto começa com o que foi digitado (letras em sequência, até 500 ms entre elas). */
   private typeahead(items: readonly HTMLElement[], current: number, key: string): number {
     const now = Date.now();
     this.typed = now - this.typedAt > 500 ? key : this.typed + key;
@@ -468,7 +438,6 @@ export class MenuComponent {
     for (let i = 0; i < items.length; i++) {
       const index = (from + i) % items.length;
       if (normalize(items[index]?.textContent?.trim() ?? '').startsWith(query)) {
-        // `event.preventDefault()` no chamador: letra digitada não rola a página.
         return index;
       }
     }

@@ -11,7 +11,6 @@ import { transactionLabel } from '~/app/features/transactions/transaction-label'
 import type { Transaction } from '~/modules/transactions/core/types/transaction';
 import { formatIsoDate } from '~/util/date';
 
-/** Uma movimentação como item de lista (celular). Presentational: o valor é o que a API devolveu. */
 @Component({
   selector: 'li[app-transaction-list-item]',
   imports: [MoneyComponent, IconComponent],
@@ -29,7 +28,6 @@ import { formatIsoDate } from '~/util/date';
   template: `
     @let tx = transaction();
     @if (glyph()) {
-      <!-- Glifo neutro com a inicial da categoria: não há dado de comerciante, então nenhum logotipo (M37). -->
       <span class="item__glyph" aria-hidden="true" data-cy="item-glyph">{{ initial() }}</span>
     }
     <div class="item__main">
@@ -138,11 +136,8 @@ export class TransactionListItemComponent {
 
   readonly transaction = input.required<Transaction>();
   readonly accountId = input<string | null>(null);
-  /** Variante do Início: glifo com a inicial da categoria à esquerda (sem logotipo de comerciante). */
   readonly glyph = input(false);
-  /** Rótulo da data já traduzido ("Hoje", "Ontem"), no lugar da data completa. */
   readonly dateLabel = input<string | null>(null);
-  /** A data já está no título do grupo (lista por dia): a linha não a repete. */
   readonly hideDate = input(false);
   readonly open = output<Transaction>();
 

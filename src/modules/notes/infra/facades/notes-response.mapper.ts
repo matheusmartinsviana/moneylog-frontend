@@ -21,7 +21,6 @@ import type {
   NoteTagCountResponse,
 } from '~/modules/notes/infra/responses/note.response';
 
-/** Resposta → tipos do core. Só copia campos: o corpo é guardado como veio (dado, nunca HTML). */
 function toLink(link: NoteLinkResponse): NoteLink {
   return {
     origin: link.origin,

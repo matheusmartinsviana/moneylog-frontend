@@ -20,11 +20,6 @@ import type { SearchResults } from '~/modules/search/core/types/search';
 import { toSearchResults } from '~/modules/search/infra/facades/search-response.mapper';
 import type { SearchResultsResponse } from '~/modules/search/infra/responses/search.response';
 
-/*
- * Respostas **fiéis ao contrato 2.6.0**: tipadas com os schemas gerados de `contracts/openapi.yaml` (se o
- * contrato mudar, o `typecheck` quebra aqui) e com os exemplos do próprio contrato. Os valores são os que o
- * backend devolveria; as telas só os exibem (o front não soma nada).
- */
 const brl = (amount: string) => ({ amount, currency: 'BRL' as const });
 const day = (date: string, income: string, expenses: string, net: string, partial = false) => ({
   periodStart: date,
@@ -35,7 +30,6 @@ const day = (date: string, income: string, expenses: string, net: string, partia
   net: brl(net),
 });
 
-/** `GET /v1/reports/income-expenses?period=D7`, o exemplo do contrato (dia de reembolso com `expenses` negativo). */
 export function anIncomeExpenseSeriesResponse(
   overrides: Partial<IncomeExpenseSeriesResponse> = {},
 ): IncomeExpenseSeriesResponse {
@@ -65,7 +59,6 @@ export function anIncomeExpenseSeries(
   return toIncomeExpenseSeries(anIncomeExpenseSeriesResponse(overrides));
 }
 
-/** `GET /v1/reports/spending-by-category?month=2026-10`, o exemplo do contrato. */
 export function aSpendingByCategoryResponse(
   overrides: Partial<SpendingByCategoryResponse> = {},
 ): SpendingByCategoryResponse {
@@ -93,7 +86,6 @@ export function aSpendingByCategory(
   return toSpendingByCategory(aSpendingByCategoryResponse(overrides));
 }
 
-/** `GET /v1/search?q=...` com um item de cada grupo (o snippet traz marcação de propósito: é texto puro). */
 export function aSearchResultsResponse(
   overrides: Partial<SearchResultsResponse> = {},
 ): SearchResultsResponse {
@@ -152,7 +144,6 @@ export function aSearchResults(overrides: Partial<SearchResultsResponse> = {}): 
   return toSearchResults(aSearchResultsResponse(overrides));
 }
 
-/** Porta falsa dos relatórios: guarda as chamadas e devolve o que o teste configurar. */
 export class ReportsGatewayStub extends ReportsGateway {
   readonly isDemo = false;
   readonly periods: ReportPeriod[] = [];
@@ -179,7 +170,6 @@ export function provideReportsStub(
   return [{ provide: ReportsGateway, useValue: stub }];
 }
 
-/** Porta falsa da busca global. */
 export class SearchGatewayStub extends SearchGateway {
   readonly queries: string[] = [];
   result: (q: string) => Observable<SearchResults> = (q) => of(aSearchResults({ q }));

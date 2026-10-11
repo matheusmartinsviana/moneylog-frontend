@@ -18,7 +18,6 @@ import type {
 import { brl } from '~/testing/accounts-testing';
 import type { OccurrenceSlice, Slice } from '~/util/api/slice';
 
-/** O cenário do plano: a internet de 119,00, mensal, na conta Nubank. */
 export function aRecurrence(overrides: Partial<Recurrence> = {}): Recurrence {
   return {
     id: 'rec-1',
@@ -84,7 +83,6 @@ export function aSummary(overrides: Partial<RecurrenceSummary> = {}): Recurrence
   };
 }
 
-/** Porta falsa de recorrências: guarda as chamadas e devolve o que o teste configurar. */
 export class RecurrencesGatewayStub extends RecurrencesGateway {
   recurrences: Recurrence[] = [];
   occurrences: Occurrence[] = [];
@@ -100,15 +98,12 @@ export class RecurrencesGatewayStub extends RecurrencesGateway {
     payment: RealizePayment | null;
   }[] = [];
   readonly creates: RecurrenceInput[] = [];
-  /** `Idempotency-Key` de cada `create`, na ordem. */
   readonly createKeys: string[] = [];
   readonly updates: RecurrenceUpdate[] = [];
-  /** Resultado das escritas de recorrência (`create`, `update`, `end`, `deactivate`). */
   next: Observable<Recurrence> | null = null;
   getResult: Observable<Recurrence> | null = null;
   listError: Observable<never> | null = null;
   occurrencesResult: Observable<OccurrenceSlice<Occurrence>> | null = null;
-  /** `overdueTruncated` que as páginas de `listOccurrences` devolvem. */
   overdueTruncated = false;
   realize$: Observable<RealizedTransaction> | null = null;
   skip$: Observable<Occurrence> | null = null;

@@ -49,17 +49,14 @@ export function aPersonDetail(overrides: Partial<PersonDetail> = {}): PersonDeta
   return { ...aPerson(), debts: [aDebtSummary()], ...overrides };
 }
 
-/** Porta falsa de pessoas: guarda as chamadas e devolve o que o teste configurar. */
 export class PeopleGatewayStub extends PeopleGateway {
   people: Person[] = [];
   detail: PersonDetail | null = null;
   readonly queries: PeopleQuery[] = [];
   readonly calls: string[] = [];
   readonly creates: PersonInput[] = [];
-  /** `Idempotency-Key` de cada `create`, na ordem. */
   readonly createKeys: string[] = [];
   readonly updates: PersonUpdate[] = [];
-  /** Resultado das escritas (`create`, `update`, `archive`, `unarchive`). */
   next: Observable<Person> | null = null;
   getResult: Observable<PersonDetail> | null = null;
   listError: Observable<never> | null = null;
@@ -68,7 +65,6 @@ export class PeopleGatewayStub extends PeopleGateway {
     this.queries.push(query);
     if (this.listError) return this.listError;
     const wantsArchived = query.status === 'ARCHIVED';
-    // O backend busca sem diferenciar maiúsculas e acentos.
     const norm = (text: string) =>
       text
         .normalize('NFD')

@@ -13,15 +13,8 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import type { NoteConflict } from '~/modules/notes/core/facades/note-editor.facade';
 import { lineDiff } from '~/util/line-diff';
 
-/** Linhas da diferença desenhadas por vez ("ver mais" mostra o próximo bloco). */
 export const DIFF_PAGE = 300;
 
-/**
- * "Esta nota mudou em outro lugar" (`VERSION_CONFLICT`): **nada é sobrescrito sozinho**. O texto digitado
- * continua no editor; aqui o usuário vê a diferença linha a linha (texto puro, nenhuma linha vira marcação) e
- * escolhe: salvar o texto dele por cima (reenvia com a versão atual do servidor) ou usar a versão do servidor
- * (troca o texto do editor, por escolha explícita). Presentational.
- */
 @Component({
   selector: 'app-conflict-panel',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -187,15 +180,10 @@ export const DIFF_PAGE = 300;
 export class ConflictPanelComponent {
   protected readonly t = inject(I18nService).t;
 
-  /** O texto da versão do servidor. */
   readonly remote = input.required<string>();
-  /** O texto digitado pelo usuário (continua no editor). */
   readonly mine = input.required<string>();
-  /** Qual ação deu o conflito: muda o texto do painel (renomear e vincular não são "salvar o texto"). */
   readonly during = input<NoteConflict['during']>('save');
-  /** `false` quando o usuário não digitou nada: então "salvar o meu texto por cima" não é oferecido. */
   readonly canKeepMine = input(true);
-  /** Uma escrita em andamento: bloqueia as duas escolhas. */
   readonly busy = input(false);
 
   readonly keepMine = output<void>();
@@ -208,7 +196,6 @@ export class ConflictPanelComponent {
     return copy.description;
   });
   protected readonly showDiff = signal(false);
-  /** Quantas linhas da diferença estão desenhadas (o resto vem sob demanda: o DOM não cresce com a nota). */
   protected readonly visible = signal(DIFF_PAGE);
   protected readonly DIFF_PAGE = DIFF_PAGE;
   protected readonly marks = { same: ' ', added: '+', removed: '-' } as const;
@@ -216,7 +203,6 @@ export class ConflictPanelComponent {
     const copy = this.t().notes.editor.conflict;
     return { same: copy.diffSame, added: copy.diffAdded, removed: copy.diffRemoved };
   });
-  /** Só calcula quando o usuário abre a diferença. */
   protected readonly diff = computed(() =>
     this.showDiff() ? lineDiff(this.remote(), this.mine()) : null,
   );

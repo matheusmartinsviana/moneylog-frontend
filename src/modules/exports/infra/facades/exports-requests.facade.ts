@@ -20,11 +20,6 @@ import { safeFilenameFromContentDisposition } from '~/util/api/content-dispositi
 import { ProblemError } from '~/util/api/problem';
 import { API_MOCKS } from '~/util/api-mocks';
 
-/**
- * Facade de requisições de exportação (FE 05): o único lugar com HTTP do módulo. O arquivo vem como `Blob`
- * por uma requisição com `Authorization` (o interceptor), **nunca** por um link com token na URL; o nome
- * sugerido vem do `Content-Disposition` (com um nome padrão se o header não vier ou não for legível).
- */
 @Injectable({ providedIn: 'root' })
 export class ExportsRequestsFacade extends ExportsGateway {
   private readonly http = inject(HttpClient);

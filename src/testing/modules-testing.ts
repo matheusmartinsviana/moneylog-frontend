@@ -18,10 +18,6 @@ import { provideReports } from '~/modules/reports/infra/reports.providers.dev';
 import { provideSearch } from '~/modules/search/infra/search.providers';
 import { provideTransactions } from '~/modules/transactions/infra/transactions.providers';
 
-/**
- * A mesma ligação do bootstrap (porta → infra) para os módulos de negócio, para testar o app
- * montado de ponta a ponta em modo mock (quem chama fornece `HttpClient` e `API_MOCKS = true`).
- */
 export function provideBusinessModules(): Provider[] {
   return [
     ...provideAccounts(),

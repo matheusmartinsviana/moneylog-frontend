@@ -26,17 +26,12 @@
   margin-bottom: var(--space-5);
 }
 
-/* Título do dia: legenda discreta alinhada ao texto das linhas, como nas listas agrupadas do iOS. */
 .day__title {
   padding-inline: var(--space-4);
   color: var(--color-text-muted);
   font-weight: var(--weight-semibold);
 }
 
-/*
- * Lista agrupada (iOS): um bloco arredondado por dia, sem caixa por linha. As divisórias são linhas finas que
- * começam no texto (depois do ícone), pintadas no fundo de cada item a partir do segundo.
- */
 .list {
   --inset: calc(var(--space-4) + 2.5rem + var(--space-3));
   display: grid;
@@ -93,7 +88,6 @@
   gap: var(--space-2);
 }
 
-/* Lembretes: o início do texto é o da própria linha (sem ícone). */
 .list:has(> .reminder) {
   --inset: var(--space-4);
 }
@@ -102,7 +96,6 @@
   padding-top: var(--space-3);
 }
 
-/* Resumo do dia: cartão de tinta suave (acento) no topo da lista. */
 .daily {
   margin-bottom: var(--space-4);
   padding: var(--space-3) var(--space-4);
@@ -112,7 +105,6 @@
   font-size: var(--text-sm);
 }
 
-/* Esqueleto do carregamento: mesmo bloco agrupado e a mesma linha (ícone + três linhas de texto + ação). */
 .sk-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

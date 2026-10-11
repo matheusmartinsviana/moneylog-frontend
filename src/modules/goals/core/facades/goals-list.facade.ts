@@ -26,11 +26,6 @@ export type GoalsListState =
 
 const LOADING: GoalsListState = { status: 'loading' };
 
-/**
- * Facade da lista de metas: pede ao backend as metas de um status (a ordem é a dele: prioridade, prazo e
- * nome) e pagina até o fim. `current`, `progress`, `remaining` e `monthlyNeeded` chegam calculados; nada é
- * somado aqui. Pedir outro status cancela a requisição anterior (`switchMap`). Escopo de componente.
- */
 @Injectable()
 export class GoalsListFacade {
   private readonly gateway = inject(GoalsGateway);
@@ -59,11 +54,9 @@ export class GoalsListFacade {
             map((data): GoalsListState =>
               data.length === 0 ? { status: 'empty' } : { status: 'ready', data },
             ),
-            // Recarga silenciosa: não passa por `loading` (a tela e a folha continuam montadas).
             startWith(...(silent ? [] : [LOADING])),
             catchError((error: unknown) => {
               const before = this.current();
-              // Recarga silenciosa que falha: o último `ready` continua valendo (M5 da Etapa 4).
               if (silent && before.status === 'ready') return of(before);
               return of<GoalsListState>({ status: 'error', problem: problemOf(error) });
             }),
@@ -74,20 +67,14 @@ export class GoalsListFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  /** Carrega (ou recarrega, no "tentar de novo") as metas de um status; sem status, todas. */
   load(status?: GoalStatus, featured?: boolean): void {
     this.loads.next({ status, featured, silent: false });
   }
 
-  /**
-   * Recarrega sem trocar `ready` por `loading` e sem trocar `ready` por erro se a rede falhar: quem já tem
-   * dados (o Início com a folha de reserva aberta) não perde a tela. Sem dados anteriores, comporta-se como `load`.
-   */
   reload(status?: GoalStatus, featured?: boolean): void {
     this.loads.next({ status, featured, silent: this.current().status === 'ready' });
   }
 
-  /** Todas as metas do status, paginando até o fim (como S-91). */
   loadAll(status?: GoalStatus, featured?: boolean): Observable<readonly Goal[]> {
     const page = (n: number) =>
       this.gateway.list({

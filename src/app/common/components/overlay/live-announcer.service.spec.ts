@@ -6,7 +6,6 @@ import { lockModal } from '~/app/common/components/overlay/modal-lock';
 const region = () => document.querySelector<HTMLElement>('[data-cy="live-announcer"]');
 
 describe('LiveAnnouncer', () => {
-  // Outro spec do mesmo worker pode ter deixado uma região no body: começa sempre limpo.
   beforeEach(() => document.body.replaceChildren());
 
   afterEach(() => {

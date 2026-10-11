@@ -8,7 +8,6 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { problemMessage } from '~/app/common/i18n/problem-message';
 import { AiSettingsFacade } from '~/modules/ai/core/facades/ai-settings.facade';
 
-/** Preferência da mensagem diária com IA (desligada por padrão). Cada mudança é salva e o estado vem da resposta. */
 @Component({
   selector: 'app-ai-settings-card',
   imports: [ReactiveFormsModule, SwitchComponent, ErrorStateComponent],
@@ -52,7 +51,6 @@ export class AiSettingsCardComponent implements OnInit {
       else this.daily.enable({ emitEvent: false });
     });
     effect(() => {
-      // Falhou ao salvar: o interruptor volta ao que o backend tem.
       const settings = this.facade.settings();
       if (this.facade.problem() !== null && settings !== null)
         this.daily.setValue(settings.dailyMessageEnabled, { emitEvent: false });

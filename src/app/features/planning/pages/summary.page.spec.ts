@@ -119,7 +119,6 @@ describe('SummaryPage', () => {
 
   it('Dado a comparação com setembro, então diz subiu e caiu em palavras, com valor e percentual do backend', async () => {
     await setup();
-    // A comparação mora em "Mais" (recolhido por padrão).
     await userEvent.click(screen.getByTestId('summary-more-toggle'));
 
     expect(

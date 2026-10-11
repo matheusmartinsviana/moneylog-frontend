@@ -1,25 +1,18 @@
 import { demoId } from '~/demo/demo-world';
 
-/**
- * Fotos do modo demonstração: **imagens sintéticas geradas por código** (SVG com degradê e texto). Nenhum
- * arquivo binário é versionado e nenhuma foto real entra no demo. Só existe no build `demo`.
- */
 export const DEMO_PHOTO_WIDTH = 640;
 export const DEMO_PHOTO_HEIGHT = 360;
 
-/** Pares de cores do degradê (nomes CSS; um par por foto, em rodízio). */
 const PALETTES: readonly (readonly [string, string])[] = [
   ['slateblue', 'lavender'],
   ['teal', 'paleturquoise'],
   ['peru', 'bisque'],
 ];
 
-/** `goalId` termina em 12 dígitos; o id da foto é derivado dele, estável entre leituras. */
 export function demoPhotoId(goalId: string, index: number): string {
   return demoId('photo', Number(goalId.slice(-12)) * 10 + index + 1);
 }
 
-/** Bytes (SVG) da foto sintética: o mesmo desenho nas duas variantes, só muda a escala. */
 export function demoPhotoBlob(photoId: string, name: string): Blob {
   const index = Number(photoId.slice(-1)) - 1;
   const [from, to] = PALETTES[Math.max(index, 0) % PALETTES.length]!;

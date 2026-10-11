@@ -49,13 +49,6 @@ const FLAGS: readonly ImportLineFlag[] = [
   'POSSIBLE_TRANSFER',
 ];
 
-/**
- * Revisão de um lote (smart): linhas com data, descrição, valor, categoria sugerida (com confiança em texto),
- * método, situação e marcas; aceitar, rejeitar, forçar, decidir transferência/parcela; "aceitar todas as sem
- * decisão" (em lote); aplicar (com resumo e confirmação) e desfazer (com motivo). Os contadores, o resumo e o
- * que falta decidir vêm do backend; depois de cada ação a tela usa a resposta ou relê o lote. "Aplicar" fica
- * bloqueado, com a explicação, enquanto houver linha pedindo decisão.
- */
 @Component({
   selector: 'app-import-review-page',
   imports: [
@@ -80,7 +73,6 @@ export class ImportReviewPage {
   protected readonly t = inject(I18nService).t;
   protected readonly review = inject(ImportReviewFacade);
 
-  /** `:id` da rota. */
   readonly id = input.required<string>();
 
   protected readonly statusControl = new FormControl<string | null>(null);
@@ -120,7 +112,6 @@ export class ImportReviewPage {
     return state.status === 'error' ? state.problem : null;
   });
   protected readonly notFound = computed(() => this.loadProblem()?.status === 404);
-  /** Mensagem genérica; as falhas com ações próprias (perna da transferência, aplicar) têm banner à parte. */
   protected readonly actionError = computed(() => {
     const problem = this.review.problem();
     if (!problem || this.legConflictLine() || this.review.applyFailure()) return null;
@@ -236,7 +227,6 @@ export class ImportReviewPage {
           this.expense.set(expense);
           this.income.set(income);
         },
-        // Sem categorias o nome some, mas a revisão segue (a falha aparece ao decidir).
         error: () => undefined,
       });
     this.statusControl.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => this.applyFilter());
@@ -250,7 +240,6 @@ export class ImportReviewPage {
     });
   }
 
-  /** Aceita com a categoria já definida ou sugerida; sem categoria, abre a folha. */
   protected accept(line: ImportLine): void {
     const categoryId = line.categoryId ?? line.suggestion?.categoryId ?? null;
     if (categoryId === null) {

@@ -8,11 +8,6 @@ import type { GoalReservation } from '~/modules/goals/core/types/goal';
 import { formatIsoDate } from '~/util/date';
 import { isNegative, withoutSign } from '~/util/money';
 
-/**
- * Uma reserva (ou liberação) da meta (presentational): conta, data, nota e o valor que o backend devolveu.
- * A liberação vem negativa; a tela diz "Liberação" em **texto** e mostra o valor sem o sinal (o sentido já
- * está no rótulo), sem nenhuma conta.
- */
 @Component({
   selector: 'li[app-reservation-row]',
   imports: [MoneyComponent],

@@ -45,7 +45,6 @@ const ITEMS = {
   settings: { key: 'settings', path: '/settings', icon: 'settings', activeOptions: PREFIX },
 } as const satisfies Record<NavKey, NavItem>;
 
-/** Barra inferior do mobile (arquitetura §5.3): Início · Movimentações · + · Metas · Mais. */
 export const BOTTOM_NAV_ITEMS: readonly NavItem[] = [
   ITEMS.home,
   ITEMS.transactions,
@@ -61,12 +60,6 @@ export interface NavGroup {
   readonly items: readonly NavItem[];
 }
 
-/**
- * Sidebar em grupos (DS 02): OVERVIEW, WORKSPACE e SYSTEM. Nenhuma tela some: Cartões e Metas ficam em
- * OVERVIEW, Notas e Pessoas em WORKSPACE (`/debts` segue alcançada por `/people`), Importar extrato e
- * Configurações em SYSTEM. O rótulo "Planejamento" é mantido (decisão do dono). `budgets` (T208) é a página "em breve" do
- * orçamento; `vault`, `ai` e `mcp` (fatia F) são páginas honestas (nada finge funcionar).
- */
 export const SIDEBAR_GROUPS: readonly NavGroup[] = [
   {
     key: 'overview',
@@ -87,15 +80,12 @@ export const SIDEBAR_GROUPS: readonly NavGroup[] = [
   { key: 'system', items: [ITEMS.import, ITEMS.notifications, ITEMS.settings] },
 ];
 
-/** Lista plana da sidebar, na ordem dos grupos. */
 export const SIDEBAR_ITEMS: readonly NavItem[] = SIDEBAR_GROUPS.flatMap((group) => group.items);
 
-/** Seções que não cabem na barra inferior e ficam em /more no mobile. */
 export const MORE_ITEMS: readonly NavItem[] = SIDEBAR_ITEMS.filter(
   (item) => !BOTTOM_NAV_ITEMS.some((bottom) => bottom.key === item.key),
 );
 
-/** `/more` sob os mesmos três títulos de grupo (grupos que ficariam vazios não aparecem). */
 export const MORE_GROUPS: readonly NavGroup[] = SIDEBAR_GROUPS.map((group) => ({
   key: group.key,
   items: group.items.filter((item) => MORE_ITEMS.includes(item)),
@@ -103,11 +93,6 @@ export const MORE_GROUPS: readonly NavGroup[] = SIDEBAR_GROUPS.map((group) => ({
 
 export const QUICK_ADD_ITEM: NavItem = ITEMS.quickAdd;
 
-/**
- * Trilho da sidebar (DS 03), sempre recolhido: só o essencial cabe sem rolagem em notebook. O resto das seções
- * abre num popover ("Mais", `SIDEBAR_POPOVER_ITEMS`); no celular a mesma lista está em `/more`. Configurações e
- * Sair ficam fixos no rodapé do trilho.
- */
 export const SIDEBAR_MAIN_ITEMS: readonly NavItem[] = [
   ITEMS.home,
   ITEMS.transactions,
@@ -121,12 +106,10 @@ export const SIDEBAR_MAIN_ITEMS: readonly NavItem[] = [
 export const SIDEBAR_MORE_ITEM: NavItem = ITEMS.more;
 export const SIDEBAR_SETTINGS_ITEM: NavItem = ITEMS.settings;
 
-/** Atalhos secundários do popover "Mais": tudo que não está no trilho nem é Configurações (rodapé). */
 export const SIDEBAR_POPOVER_ITEMS: readonly NavItem[] = SIDEBAR_ITEMS.filter(
   (item) => !SIDEBAR_MAIN_ITEMS.includes(item) && item.key !== SIDEBAR_SETTINGS_ITEM.key,
 );
 
-/** A rota `url` (sem query nem fragmento) pertence ao item? Início só na raiz; os demais, pela seção. */
 export function isNavActive(item: NavItem, url: string): boolean {
   const path = url.split(/[?#]/)[0] ?? '';
   if (item.path === '/') return path === '/';
