@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-const contract = resolve(root, '..', 'contracts', 'openapi.yaml');
+const contract = resolve(root, 'contracts', 'openapi.yaml');
 const committed = join(root, 'src', 'util', 'api', 'schema.gen.ts');
 const dir = mkdtempSync(join(tmpdir(), 'moneylog-api-'));
 const fresh = join(dir, 'schema.gen.ts');

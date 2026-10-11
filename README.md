@@ -9,7 +9,7 @@ Angular 22 (standalone, zoneless, OnPush) + `@angular/pwa`. Node 24 (`.nvmrc`), 
 | `npm run start:mock`            | ambiente **mock** (`environment.mock.ts`): sem backend, sem chamada a `/v1`, sessão falsa        |
 | `npm run build`                 | build de produção, API real (gera `ngsw-worker.js` e `manifest.webmanifest`)                     |
 | `npm run build:production-mock` | build de produção com o ambiente mock (só para o projeto Playwright `prod`)                      |
-| `npm run api:types`             | gera `src/util/api/schema.gen.ts` a partir de `../contracts/openapi.yaml` (`openapi-typescript`) |
+| `npm run api:types`             | gera `src/util/api/schema.gen.ts` a partir de `contracts/openapi.yaml` (`openapi-typescript`) |
 | `npm run api:check`             | falha se `schema.gen.ts` está desatualizado em relação ao contrato                               |
 | `npm test`                      | Vitest + Angular Testing Library, com cobertura e `coverageThreshold`                            |
 | `npm run e2e`                   | Playwright: projetos `mock` e `prod` (sem backend)                                               |
@@ -22,7 +22,7 @@ Angular 22 (standalone, zoneless, OnPush) + `@angular/pwa`. Node 24 (`.nvmrc`), 
 
 ## Contrato e ambientes
 
-- **Contrato primeiro (S-66):** `../contracts/openapi.yaml` é a fonte da verdade. Mudou o contrato:
+- **Contrato primeiro (S-66):** `contracts/openapi.yaml` é a fonte da verdade. Mudou o contrato:
   `npm run api:types` e versione o `schema.gen.ts`. Só `src/modules/*/infra` importa esse arquivo
   (`lint:deps`, regra `schema-only-from-infra`); o resto do app usa os tipos do `core`.
 - **Mock só por build (S-67):** `src/app/config/environment.ts` tem `apiMocks: false` (API real).
@@ -65,3 +65,11 @@ Hooks (Husky, instalados pelo `prepare` na raiz do repositório): `commit-msg` r
 (Conventional Commits) e `pre-commit` roda o lint-staged + `lint:deps` quando o commit toca `frontend/`.
 
 Estrutura e regras de cada camada: veja os README em `src/app`, `src/modules`, `src/util`, `src/styles` e `src/assets`.
+
+## Repositórios
+Este repositório (`moneylog-frontend`) faz parte do projeto **moneylog**, que tem um repositório principal com
+`backend/` e `frontend/` como submódulos (docs, infra e scripts de deploy ficam lá). O contrato OpenAPI é do
+backend: `contracts/openapi.yaml` aqui é uma cópia. Atualize com `npm run contract:sync && npm run api:types`
+(a fonte é `../backend/contracts/openapi.yaml` ou `MONEYLOG_CONTRACT_SRC`); `npm run contract:check` confere.
+
+Commits: Conventional Commits (commitlint) e **sem `Co-Authored-By`** nem linha de atribuição.

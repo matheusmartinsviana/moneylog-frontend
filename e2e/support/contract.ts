@@ -21,7 +21,7 @@ interface Operation {
   responses: Record<string, unknown>;
 }
 
-const CONTRACT = resolve(__dirname, '..', '..', '..', 'contracts', 'openapi.yaml');
+const CONTRACT = resolve(__dirname, '..', '..', 'contracts', 'openapi.yaml');
 const METHODS = ['get', 'post', 'put', 'delete', 'patch'];
 
 const spec = parse(readFileSync(CONTRACT, 'utf8')) as OpenApi;
