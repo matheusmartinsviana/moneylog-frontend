@@ -411,6 +411,22 @@ html[data-glass] .glass-lens {
   cursor: not-allowed;
 }
 
+.input:-webkit-autofill,
+.input:-webkit-autofill:hover,
+.input:-webkit-autofill:focus,
+.input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
+  box-shadow: 0 0 0 100rem var(--color-surface-inset) inset;
+  transition: background-color 600000s 0s;
+}
+
+.input:-webkit-autofill:focus-visible {
+  box-shadow:
+    0 0 0 100rem var(--color-surface-inset) inset,
+    var(--focus-ring);
+}
+
 /*
  * Ledger: lista de valores no estilo planilha (DS 00 §5): rótulo à esquerda, valor tabular à
  * direita, divisores sutis e linha de total. Uso: <dl class="ledger"><div class="ledger__row">…
