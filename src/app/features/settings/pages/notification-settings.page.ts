@@ -15,6 +15,7 @@ import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { SelectComponent } from '~/app/common/components/forms/select/select.component';
 import { SwitchComponent } from '~/app/common/components/forms/switch/switch.component';
 import { TextFieldComponent } from '~/app/common/components/forms/text-field/text-field.component';
+import { TimePickerComponent } from '~/app/common/components/forms/time-picker/time-picker.component';
 import { PageLayoutComponent } from '~/app/common/components/page-layout/page-layout.component';
 import { SectionContainerComponent } from '~/app/common/components/section-container/section-container.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
@@ -42,6 +43,7 @@ const FREQUENCIES: readonly SummaryFrequency[] = ['DAILY', 'ONLY_DUE', 'OFF'];
     SelectComponent,
     SwitchComponent,
     TextFieldComponent,
+    TimePickerComponent,
   ],
   providers: [NotificationSettingsFacade, PushFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,

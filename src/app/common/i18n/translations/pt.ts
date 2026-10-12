@@ -591,6 +591,14 @@ export const pt: AppI18n = {
       warning: 'Atenção',
       risk: 'Risco',
     },
+    time: {
+      placeholder: '--:--',
+      open: 'Abrir seletor de horário',
+      choose: 'Escolher horário',
+      hour: 'Hora',
+      minute: 'Minuto',
+      done: 'Pronto',
+    },
     date: {
       placeholder: 'dd/mm/aaaa',
       formatHint: 'Use o formato {format}.',
@@ -3243,7 +3251,6 @@ export const pt: AppI18n = {
         title: 'Título',
         date: 'Data',
         time: 'Hora (opcional)',
-        timeHint: 'No formato 08:30.',
         note: 'Nota (opcional)',
         save: 'Salvar lembrete',
         cancel: 'Cancelar',
@@ -3257,7 +3264,6 @@ export const pt: AppI18n = {
       dailyTitle: 'Resumo do dia',
       dailyEnabled: 'Receber o resumo do dia',
       dailyTime: 'Horário do resumo',
-      timeHint: 'No formato 08:00.',
       frequency: 'Frequência',
       frequencies: {
         DAILY: 'Todos os dias',

@@ -590,6 +590,14 @@ export const es: AppI18n = {
       warning: 'Atención',
       risk: 'Riesgo',
     },
+    time: {
+      placeholder: '--:--',
+      open: 'Abrir selector de hora',
+      choose: 'Elegir hora',
+      hour: 'Hora',
+      minute: 'Minuto',
+      done: 'Listo',
+    },
     date: {
       placeholder: 'dd/mm/aaaa',
       formatHint: 'Usa el formato {format}.',
@@ -3254,7 +3262,6 @@ export const es: AppI18n = {
         title: 'Título',
         date: 'Fecha',
         time: 'Hora (opcional)',
-        timeHint: 'Como 08:30.',
         note: 'Nota (opcional)',
         save: 'Guardar recordatorio',
         cancel: 'Cancelar',
@@ -3268,7 +3275,6 @@ export const es: AppI18n = {
       dailyTitle: 'Resumen del día',
       dailyEnabled: 'Recibir el resumen del día',
       dailyTime: 'Hora del resumen',
-      timeHint: 'Como 08:00.',
       frequency: 'Frecuencia',
       frequencies: {
         DAILY: 'Todos los días',

@@ -32,7 +32,9 @@ describe('NotificationSettingsPage (T136)', () => {
     gateway.settingsValue = someSettings({ displayName: 'Ana', kinds: { INVOICE_DUE: false } });
     await setup(gateway);
 
-    expect(screen.getByTestId('settings-daily-time')).toHaveValue('08:00');
+    expect(screen.getByTestId('settings-daily-time')).toHaveTextContent('08:00');
+    expect(screen.getByTestId('settings-quiet-from')).toHaveTextContent('22:00');
+    expect(screen.getByTestId('settings-quiet-to')).toHaveTextContent('07:00');
     expect(screen.getByTestId('settings-display-name')).toHaveValue('Ana');
     expect(screen.getByTestId('settings-kind-INVOICE_DUE')).toHaveAttribute(
       'aria-checked',
@@ -59,15 +61,21 @@ describe('NotificationSettingsPage (T136)', () => {
     expect(screen.getByTestId('notification-settings-saved')).toBeInTheDocument();
   });
 
-  it('Dado horário inválido, então não salva', async () => {
+  it('Dado que escolho os horários no seletor, então o salvar envia o resumo e a janela de silêncio escolhidos', async () => {
     const gateway = new NotificationsGatewayStub();
     const { fixture } = await setup(gateway);
-    const time = screen.getByTestId('settings-daily-time');
-    await userEvent.clear(time);
-    await userEvent.type(time, '99:99');
+
+    await userEvent.click(screen.getByTestId('settings-daily-time'));
+    await userEvent.click(screen.getByTestId('settings-daily-time-hour-09'));
+    await userEvent.click(screen.getByTestId('settings-daily-time-minute-30'));
+    await userEvent.click(screen.getByTestId('settings-quiet-from'));
+    await userEvent.click(screen.getByTestId('settings-quiet-from-hour-23'));
+    await userEvent.click(screen.getByTestId('settings-quiet-from-minute-15'));
     await userEvent.click(screen.getByTestId('notification-settings-save'));
     await fixture.whenStable();
-    expect(gateway.savedSettings).toEqual([]);
+
+    expect(gateway.savedSettings[0]?.dailySummary.time).toBe('09:30');
+    expect(gateway.savedSettings[0]?.quietHours).toEqual({ from: '23:15', to: '07:00' });
   });
 
   it('Dado 409 (VERSION_CONFLICT), então avisa e recarrega a versão atual', async () => {

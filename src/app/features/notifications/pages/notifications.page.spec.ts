@@ -157,6 +157,23 @@ describe('NotificationsPage (T135)', () => {
     ]);
   });
 
+  it('Dado "Novo lembrete" com a hora escolhida no seletor, então o backend recebe o horário', async () => {
+    const gateway = new NotificationsGatewayStub();
+    const { fixture } = await setup(gateway);
+
+    await userEvent.click(screen.getByTestId('reminder-add'));
+    const form = screen.getByTestId('reminder-form-form');
+    await userEvent.type(within(form).getByTestId('reminder-title'), 'Ligar para o banco');
+    await userEvent.type(within(form).getByTestId('reminder-date'), '15102026');
+    await userEvent.click(within(form).getByTestId('reminder-time'));
+    await userEvent.click(screen.getByTestId('reminder-time-hour-08'));
+    await userEvent.click(screen.getByTestId('reminder-time-minute-30'));
+    await userEvent.click(screen.getByTestId('reminder-save'));
+    await fixture.whenStable();
+
+    expect(gateway.createdReminders[0]?.remindAt).toBe('08:30');
+  });
+
   it('Dado a página com uma notificação, então o axe não aponta violações', async () => {
     const gateway = new NotificationsGatewayStub();
     gateway.notifications = [aNotification()];

@@ -82,6 +82,7 @@ export const ICONS = {
     'M8 3v4',
     'M16 3v4',
   ],
+  time: [circle(12, 12, 8.5), 'M12 7.5V12l3 2'],
   search: [circle(11, 11, 6.5), 'M16 16l4.5 4.5'],
   folder: [
     'M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2.5h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z',

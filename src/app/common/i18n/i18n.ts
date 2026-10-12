@@ -523,6 +523,14 @@ export abstract class AppI18n {
       readonly warning: string;
       readonly risk: string;
     };
+    readonly time: {
+      readonly placeholder: string;
+      readonly open: string;
+      readonly choose: string;
+      readonly hour: string;
+      readonly minute: string;
+      readonly done: string;
+    };
     readonly date: {
       readonly placeholder: string;
       readonly formatHint: string;
@@ -2658,7 +2666,6 @@ export abstract class AppI18n {
         readonly title: string;
         readonly date: string;
         readonly time: string;
-        readonly timeHint: string;
         readonly note: string;
         readonly save: string;
         readonly cancel: string;
@@ -2672,7 +2679,6 @@ export abstract class AppI18n {
       readonly dailyTitle: string;
       readonly dailyEnabled: string;
       readonly dailyTime: string;
-      readonly timeHint: string;
       readonly frequency: string;
       readonly frequencies: Readonly<Record<'DAILY' | 'ONLY_DUE' | 'OFF', string>>;
       readonly kindsTitle: string;

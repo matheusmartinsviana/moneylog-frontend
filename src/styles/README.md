@@ -97,8 +97,7 @@ Regras globais (corrigidas por causa comum, não tela por tela):
   de prender o conteúdo numa janela de ~130 px; pop-ups usam a rolagem do painel (sem `max-height` fixo na lista).
 - **Altura baixa em retrato (<= 740 px).** A saudação do cabeçalho e a frase do gráfico saem; o gráfico do Início tem
   `min-height: 8,5rem` e, se ainda faltar altura (<= 375x667), o painel do Início rola por dentro até ele (a página não).
-- **Campos.** Busca usa `type="search"` + `enterkeyhint="search"` (sem o "x" nativo); horário usa `mask="time"` (só dígitos,
-  o `:` entra sozinho) e **não** `inputmode="numeric"` (que esconde o `:` no iOS).
+- **Campos.** Busca usa `type="search"` + `enterkeyhint="search"` (sem o "x" nativo); horário usa `app-time-picker` (seletor próprio de hora e minuto, sem digitar).
 
 ## Contraste (WCAG AA)
 

@@ -6,8 +6,6 @@ import { FieldErrorComponent } from '~/app/common/components/forms/field-error/f
 
 export type TextFieldType = 'text' | 'email' | 'password' | 'search';
 
-export type TextFieldMask = 'time';
-
 @Component({
   selector: 'app-text-field',
   imports: [FieldErrorComponent],
@@ -124,7 +122,6 @@ export class TextFieldComponent extends FieldControl<string | null> {
   readonly autocomplete = input<string>();
   readonly maxlength = input<number>();
   readonly inputmode = input<string>();
-  readonly mask = input<TextFieldMask>();
   readonly enterkeyhint = input<string>();
   readonly role = input<string>();
   readonly ariaControls = input<string>();
@@ -148,13 +145,7 @@ export class TextFieldComponent extends FieldControl<string | null> {
   }
 
   protected onInput(event: Event): void {
-    const field = event.target as HTMLInputElement;
-    let value = field.value;
-    if (this.mask() === 'time') {
-      const digits = value.replace(/\D/g, '').slice(0, 4);
-      value = digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
-      field.value = value;
-    }
+    const value = (event.target as HTMLInputElement).value;
     this.value.set(value);
     this.onChange(value);
   }
