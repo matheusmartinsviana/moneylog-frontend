@@ -12,11 +12,10 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { DatePickerComponent } from '~/app/common/components/forms/date-picker/date-picker.component';
 import { TextAreaComponent } from '~/app/common/components/forms/text-area/text-area.component';
 import { TextFieldComponent } from '~/app/common/components/forms/text-field/text-field.component';
+import { TimePickerComponent } from '~/app/common/components/forms/time-picker/time-picker.component';
 import { SheetComponent } from '~/app/common/components/sheet/sheet.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import type { Reminder, ReminderInput } from '~/modules/notifications/core/types/notification';
-
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 @Component({
   selector: 'app-reminder-form',
@@ -24,6 +23,7 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
     ReactiveFormsModule,
     SheetComponent,
     TextFieldComponent,
+    TimePickerComponent,
     DatePickerComponent,
     TextAreaComponent,
   ],
@@ -51,14 +51,11 @@ const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
           fieldId="reminder-date"
           [label]="t().notifications.reminders.form.date"
         />
-        <app-text-field
+        <app-time-picker
           formControlName="remindAt"
           fieldId="reminder-time"
           [label]="t().notifications.reminders.form.time"
-          [hint]="t().notifications.reminders.form.timeHint"
           [mandatory]="false"
-          inputmode="numeric"
-          [maxlength]="5"
         />
         <app-text-area
           formControlName="note"
@@ -111,7 +108,7 @@ export class ReminderFormComponent {
       validators: [Validators.required, Validators.maxLength(120)],
     }),
     remindOn: new FormControl<string | null>(null, [Validators.required]),
-    remindAt: new FormControl('', { nonNullable: true, validators: [Validators.pattern(TIME)] }),
+    remindAt: new FormControl<string | null>(null),
     note: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(500)] }),
   });
 
@@ -123,7 +120,7 @@ export class ReminderFormComponent {
         this.form.reset({
           title: current?.title ?? '',
           remindOn: current?.remindOn ?? null,
-          remindAt: current?.remindAt ?? '',
+          remindAt: current?.remindAt ?? null,
           note: current?.note ?? '',
         });
       });
@@ -137,7 +134,7 @@ export class ReminderFormComponent {
     this.saved.emit({
       title: value.title,
       remindOn: value.remindOn ?? '',
-      remindAt: value.remindAt === '' ? null : value.remindAt,
+      remindAt: value.remindAt,
       note: value.note === '' ? null : value.note,
       link: this.reminder()?.link ?? null,
     });

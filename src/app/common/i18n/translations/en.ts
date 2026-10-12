@@ -585,6 +585,14 @@ export const en: AppI18n = {
       warning: 'Warning',
       risk: 'Risk',
     },
+    time: {
+      placeholder: '--:--',
+      open: 'Open time picker',
+      choose: 'Choose time',
+      hour: 'Hour',
+      minute: 'Minute',
+      done: 'Done',
+    },
     date: {
       placeholder: 'mm/dd/yyyy',
       formatHint: 'Use the format {format}.',
@@ -3233,7 +3241,6 @@ export const en: AppI18n = {
         title: 'Title',
         date: 'Date',
         time: 'Time (optional)',
-        timeHint: 'Like 08:30.',
         note: 'Note (optional)',
         save: 'Save reminder',
         cancel: 'Cancel',
@@ -3247,7 +3254,6 @@ export const en: AppI18n = {
       dailyTitle: 'Daily summary',
       dailyEnabled: 'Receive the daily summary',
       dailyTime: 'Summary time',
-      timeHint: 'Like 08:00.',
       frequency: 'Frequency',
       frequencies: {
         DAILY: 'Every day',

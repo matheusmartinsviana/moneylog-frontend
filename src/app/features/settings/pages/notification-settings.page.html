@@ -34,14 +34,10 @@
               fieldId="settings-daily-enabled"
               [label]="t().notifications.settings.dailyEnabled"
             />
-            <app-text-field
+            <app-time-picker
               formControlName="dailyTime"
               fieldId="settings-daily-time"
               [label]="t().notifications.settings.dailyTime"
-              [hint]="t().notifications.settings.timeHint"
-              mask="time"
-              autocomplete="off"
-              [maxlength]="5"
             />
             <app-select
               formControlName="frequency"
@@ -66,23 +62,15 @@
 
         <app-section-container [heading]="t().notifications.settings.quietTitle">
           <div class="grid grid--two">
-            <app-text-field
+            <app-time-picker
               formControlName="quietFrom"
               fieldId="settings-quiet-from"
               [label]="t().notifications.settings.quietFrom"
-              [hint]="t().notifications.settings.timeHint"
-              mask="time"
-              autocomplete="off"
-              [maxlength]="5"
             />
-            <app-text-field
+            <app-time-picker
               formControlName="quietTo"
               fieldId="settings-quiet-to"
               [label]="t().notifications.settings.quietTo"
-              [hint]="t().notifications.settings.timeHint"
-              mask="time"
-              autocomplete="off"
-              [maxlength]="5"
             />
           </div>
         </app-section-container>
