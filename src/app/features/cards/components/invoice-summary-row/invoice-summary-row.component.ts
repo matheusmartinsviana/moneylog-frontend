@@ -27,16 +27,12 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
       </a>
       <app-invoice-status [status]="i.status" />
     </div>
+    <span class="row__amount" [attr.data-cy]="'invoice-outstanding-' + i.id">
+      <app-money [value]="i.outstanding" />
+    </span>
     <p class="row__dates" [attr.data-cy]="'invoice-dates-' + i.id">
-      <span>{{ period() }}</span>
       <span>{{ closing() }}</span>
       <span>{{ due() }}</span>
-    </p>
-    <p class="row__outstanding">
-      <span class="row__label">{{ t().cards.detail.invoiceRow.outstanding }}</span>
-      <span class="row__amount" [attr.data-cy]="'invoice-outstanding-' + i.id">
-        <app-money [value]="i.outstanding" />
-      </span>
     </p>
     @if (i.hasLateEntries) {
       <p class="row__late" [attr.data-cy]="'invoice-late-' + i.id">
@@ -49,12 +45,32 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
     :host(.row) {
       position: relative;
       display: grid;
-      gap: var(--space-2);
-      padding: var(--space-4);
-      border: var(--border-width) solid var(--color-border);
-      border-radius: var(--radius-card);
-      background-color: var(--color-surface);
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'main amount'
+        'dates dates'
+        'late late';
+      gap: var(--space-1) var(--space-3);
+      align-items: center;
+      padding: var(--space-4) var(--space-5);
+      border-bottom: var(--border-width) solid var(--color-border);
       list-style: none;
+    }
+
+    :host(.row:last-child) {
+      border-bottom: 0;
+    }
+
+    .row__main {
+      grid-area: main;
+    }
+
+    .row__dates {
+      grid-area: dates;
+    }
+
+    .row__late {
+      grid-area: late;
     }
 
     .row__main {
@@ -78,20 +94,12 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
       font-size: var(--text-sm);
     }
 
-    .row__outstanding {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: var(--space-3);
-    }
-
-    .row__label {
-      color: var(--color-text-muted);
-      font-size: var(--text-sm);
-    }
-
     .row__amount {
-      font-weight: var(--weight-semibold);
+      grid-area: amount;
+      font-size: var(--text-lg);
+      font-weight: var(--weight-medium);
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
     }
 
     .row__late {
@@ -115,12 +123,6 @@ export class InvoiceSummaryRowComponent {
   protected readonly openLabel = computed(() =>
     interpolate(this.t().cards.detail.invoiceRow.open, {
       month: formatCompetenceShort(this.invoice().referenceMonth, this.locale()),
-    }),
-  );
-  protected readonly period = computed(() =>
-    interpolate(this.t().cards.detail.invoiceRow.period, {
-      from: formatIsoDate(this.invoice().periodStart, this.locale()),
-      to: formatIsoDate(this.invoice().closingDate, this.locale()),
     }),
   );
   protected readonly closing = computed(() =>

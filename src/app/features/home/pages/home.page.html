@@ -1,4 +1,4 @@
-<app-page-layout [fit]="fit()" [heading]="t().nav.home" [description]="asOf()">
+<app-page-layout class="home-layout" [fit]="false" [heading]="t().nav.home" [description]="asOf()">
   <div pageActions class="actions">
     @if (dashboard.data()?.summary?.isProjection) {
       <span class="tag" data-cy="home-projection">{{ t().home.projection }}</span>
@@ -63,33 +63,41 @@
             </p>
           }
 
-          <app-kpi-cards
-            class="home__kpis"
-            part="compact"
-            [summary]="data.summary"
-            [monthly]="monthly.data()"
-            [monthlyStatus]="monthlyStatus()"
-            (retry)="monthly.load(data.summary.month.competence)"
-          />
+          <div class="home__grid">
+            <app-glass-panel class="home__wallet" variant="wallet" [strong]="true">
+              <app-wallet-header
+                [embedded]="true"
+                [showAction]="false"
+                [available]="data.summary.balances.available"
+                [displayName]="displayName()"
+                [photoUrl]="photoUrl()"
+              />
+              <app-quick-actions class="home__quick" />
+            </app-glass-panel>
 
-          <app-spending-overview
-            class="home__chart"
-            [state]="overview.state()"
-            [period]="overview.period()"
-            (periodChange)="changePeriod($event)"
-            (retry)="overview.retry()"
-          />
-
-          <div class="home__side">
-            <app-upcoming-brief class="home__upcoming" [upcoming]="data.upcoming" />
-            <app-debt-summary-card class="home__debts" />
+            <app-analytics-panel
+              class="home__analytics"
+              [summary]="monthly.state()"
+              (retry)="monthly.load(data.summary.month.competence)"
+            />
+            <div class="home__box home__upcoming">
+              <app-upcoming-brief [upcoming]="data.upcoming" />
+            </div>
+            <app-chart-panel
+              class="home__chart"
+              [state]="overview.state()"
+              [period]="overview.period()"
+              [periods]="chartPeriods"
+              (periodChange)="changePeriod($event)"
+              (retry)="overview.retry()"
+            />
+            <app-glass-panel class="home__recent-panel" variant="card" [flat]="true">
+              <div class="home__recent">
+                <app-recent-activity [state]="activity.state()" (retry)="activity.retry()" />
+              </div>
+            </app-glass-panel>
+            <app-pomodoro-card class="home__pomodoro" [displayName]="displayName()" />
           </div>
-          <app-featured-goal
-            class="home__goal"
-            [goals]="goals.data() ?? []"
-            [status]="goalsStatus()"
-            (retry)="goals.reload('ACTIVE', true)"
-          />
         </div>
       }
     }

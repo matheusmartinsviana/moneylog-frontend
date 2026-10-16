@@ -37,6 +37,7 @@ import { DebtDetailFacade } from '~/modules/debts/core/facades/debt-detail.facad
 import { TransactionDetailFacade } from '~/modules/transactions/core/facades/transaction-detail.facade';
 import { formatIsoDate } from '~/util/date';
 import { isOpenStatus } from '~/util/debt';
+import { formatBps } from '~/util/ratio';
 
 type Dialog = 'forgive' | 'void' | null;
 
@@ -96,6 +97,19 @@ export class DebtPage {
       debt.description ??
       (debt.direction === 'RECEIVABLE' ? copy.defaultTitleReceivable : copy.defaultTitlePayable)
     );
+  });
+  protected readonly kindLabel = computed(() => {
+    const kind = this.debt()?.kind;
+    return kind === 'CARD_CASH_OUT' || kind === 'PAYROLL' ? this.t().cardCashOut.kind[kind] : null;
+  });
+  protected readonly rate = computed(() => {
+    const debt = this.debt();
+    if (!debt || debt.kind === 'PERSONAL') return null;
+    const locale = HTML_LANG[this.i18n.language()];
+    return {
+      monthly: debt.effectiveRate ? formatBps(debt.effectiveRate.monthlyBps, locale) : null,
+      annual: debt.effectiveRate ? formatBps(debt.effectiveRate.annualBps, locale) : null,
+    };
   });
   protected readonly settleLabel = computed(() =>
     this.debt()?.direction === 'RECEIVABLE'

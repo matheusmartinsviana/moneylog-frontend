@@ -63,6 +63,9 @@ export class AccountsPage {
   protected readonly filter = computed<AccountStatus>(() =>
     this.status() === 'ARCHIVED' ? 'ARCHIVED' : 'ACTIVE',
   );
+  protected readonly hasBlocked = computed(
+    () => this.filter() === 'ACTIVE' && (this.accounts.data()?.some((a) => !a.archivable) ?? false),
+  );
   protected readonly pendingArchive = signal<Account | null>(null);
   protected readonly busy = signal(false);
   protected readonly reservationsBlocked = signal(false);

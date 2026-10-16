@@ -8,6 +8,8 @@ export const NOTIFICATIONS_ENDPOINTS = {
   reminderDone: (id: string) => `/v1/reminders/${encodeURIComponent(id)}/done`,
   reminderSnooze: (id: string) => `/v1/reminders/${encodeURIComponent(id)}/snooze`,
   settings: '/v1/settings/notifications',
+  profilePhoto: '/v1/profile/photo',
+  profilePhotoContent: '/v1/profile/photo/content',
   pushConfig: '/v1/push/config',
   pushSubscriptions: '/v1/push/subscriptions',
   pushSubscription: (id: string) => `/v1/push/subscriptions/${encodeURIComponent(id)}`,

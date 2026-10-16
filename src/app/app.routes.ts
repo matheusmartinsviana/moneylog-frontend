@@ -33,6 +33,14 @@ export const routes: Routes = [
       { path: 'cards', loadChildren: () => import('~/app/features/cards/cards.routes') },
       { path: 'accounts', loadChildren: () => import('~/app/features/accounts/accounts.routes') },
       { path: 'planning', loadChildren: () => import('~/app/features/planning/planning.routes') },
+      {
+        path: 'statement',
+        loadChildren: () => import('~/app/features/statement/statement.routes'),
+      },
+      {
+        path: 'simulator',
+        loadChildren: () => import('~/app/features/simulator/simulator.routes'),
+      },
       { path: 'people', loadChildren: () => import('~/app/features/people/people.routes') },
       { path: 'debts', loadChildren: () => import('~/app/features/debts/debts.routes') },
       { path: 'notes', loadChildren: () => import('~/app/features/notes/notes.routes') },

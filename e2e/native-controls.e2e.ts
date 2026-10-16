@@ -13,7 +13,7 @@ async function installDetector(page: Page): Promise<void> {
   await page.addInitScript(() => {
     const found: string[] = [];
     const BANNED_TAGS = ['select', 'datalist', 'details', 'summary', 'dialog', 'progress', 'meter'];
-    const ALLOWED_TYPES = ['text', 'email', 'password'];
+    const ALLOWED_TYPES = ['text', 'email', 'password', 'search'];
     const BANNED_ATTRS = [
       'popover',
       'popovertarget',

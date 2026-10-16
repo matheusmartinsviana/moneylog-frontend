@@ -88,6 +88,50 @@ describe('TransactionsPage', () => {
     expect(text(screen.getByTestId('totals-summary-net'))).toBe('R$ 887,89');
   });
 
+  it('Dado a visão Por competência, então pede Minha parte e mostra o seletor com a dica correspondente', async () => {
+    const { gateway } = await setup(new TransactionsGatewayStub(), '/transactions?view=entries');
+
+    expect(gateway.entryCalls[0]?.filters.amounts).toBe('MINE');
+    expect(screen.getByTestId('view-hint')).toHaveTextContent(pt.view.hint.MINE);
+  });
+
+  it('Dado a visão Registros, então o seletor Minha parte / Bruto não aparece', async () => {
+    await setup();
+
+    expect(screen.queryByTestId('view-toggle-block')).not.toBeInTheDocument();
+  });
+
+  it('Dado ?amounts=GROSS na URL, então a lista por competência é pedida como Bruto e o seletor reflete isso', async () => {
+    const { gateway } = await setup(
+      new TransactionsGatewayStub(),
+      '/transactions?view=entries&amounts=GROSS',
+    );
+
+    expect(gateway.entryCalls.at(-1)?.filters.amounts).toBe('GROSS');
+    expect(screen.getByTestId('view-hint')).toHaveTextContent(pt.view.hint.GROSS);
+  });
+
+  it('Dado ?amounts inválido na URL, então cai em Minha parte', async () => {
+    const { gateway } = await setup(
+      new TransactionsGatewayStub(),
+      '/transactions?view=entries&amounts=lixo',
+    );
+
+    expect(gateway.entryCalls.at(-1)?.filters.amounts).toBe('MINE');
+  });
+
+  it('Dado escolher Bruto, então recarrega a lista como Bruto e a URL guarda a escolha para o F5', async () => {
+    const { gateway, router } = await setup(
+      new TransactionsGatewayStub(),
+      '/transactions?view=entries',
+    );
+
+    await userEvent.click(screen.getByRole('radio', { name: pt.view.GROSS }));
+
+    await vi.waitFor(() => expect(gateway.entryCalls.at(-1)?.filters.amounts).toBe('GROSS'));
+    expect(router.url).toContain('amounts=GROSS');
+  });
+
   it('Dado o valor de uma despesa, então vai à direita, tabular e com o sinal da direção', async () => {
     await setup();
 
@@ -174,6 +218,7 @@ describe('TransactionsPage', () => {
     await setup(gateway, '/transactions?from=2026-09-01&to=2026-09-30');
     const calls = gateway.listCalls.length;
 
+    await userEvent.click(screen.getByTestId('filters-toggle'));
     await userEvent.type(screen.getByTestId('filter-from'), '{Backspace}');
 
     expect(gateway.listCalls).toHaveLength(calls);
@@ -182,6 +227,7 @@ describe('TransactionsPage', () => {
   it('Dado a mudança de um filtro, então a URL é atualizada e a lista recarrega', async () => {
     const { gateway, router } = await setup();
 
+    await userEvent.click(screen.getByTestId('filters-toggle'));
     await userEvent.click(screen.getByTestId('filter-method'));
     await userEvent.click(screen.getByTestId('filter-method-option-DEBIT'));
 
@@ -195,6 +241,7 @@ describe('TransactionsPage', () => {
       '/transactions?method=PIX&type=EXPENSE',
     );
 
+    await userEvent.click(screen.getByTestId('filters-toggle'));
     await userEvent.click(screen.getByTestId('filters-clear'));
 
     expect(gateway.listCalls.at(-1)!.filters).toMatchObject({

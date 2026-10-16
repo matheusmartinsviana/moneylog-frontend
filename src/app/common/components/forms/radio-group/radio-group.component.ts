@@ -185,9 +185,9 @@ export type RadioLayout = 'vertical' | 'horizontal' | 'cards';
 
     .radios--cards .radio {
       padding: var(--space-3) var(--space-4);
-      border: var(--border-width) solid var(--color-control-border);
-      border-radius: var(--radius-card);
-      background-color: var(--color-surface);
+      border: var(--border-width) solid var(--field-border);
+      border-radius: var(--field-radius);
+      background-color: var(--field-bg);
     }
 
     .radios--cards .radio.is-checked {

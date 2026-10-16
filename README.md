@@ -11,14 +11,15 @@ Angular 22 (standalone, zoneless, OnPush) + `@angular/pwa`. Node 24 (`.nvmrc`), 
 | `npm run build:production-mock` | build de produção com o ambiente mock (só para o projeto Playwright `prod`)                     |
 | `npm run api:types`             | gera `src/util/api/schema.gen.ts` a partir de `contracts/openapi.yaml` (`openapi-typescript`)   |
 | `npm run api:check`             | falha se `schema.gen.ts` está desatualizado em relação ao contrato                              |
-| `npm test`                      | Vitest + Angular Testing Library, com cobertura e `coverageThreshold`                           |
+| `npm test`                      | Vitest + Angular Testing Library, sem cobertura (rápido, uso local)                             |
+| `npm run test:ci`               | o mesmo com cobertura e `coverageThreshold` (usado no CI)                                       |
 | `npm run e2e`                   | Playwright: projetos `mock` e `prod` (sem backend)                                              |
 | `npm run e2e:integration`       | Playwright `integration`: Postgres + backend reais (veja "E2E com backend real")                |
 | `npm run lint`                  | ESLint + regras visuais (`scripts/check-styles.mjs`) + contraste (`scripts/check-contrast.mjs`) |
 | `npm run lint:deps`             | fronteiras de camada e ciclos (`.dependency-cruiser.cjs`)                                       |
 | `npm run typecheck`             | `ngc` (templates estritos) + `tsc` dos testes                                                   |
 | `npm run format`                | Prettier                                                                                        |
-| `npm run icons`                 | gera os PNGs do PWA a partir dos SVGs em `src/assets/icons`                                     |
+| `npm run icons`                 | gera favicon, PWA, apple-touch e logo da UI a partir de `brand/logo-source.png`                 |
 
 ## Contrato e ambientes
 

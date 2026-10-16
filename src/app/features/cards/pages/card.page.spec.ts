@@ -143,13 +143,12 @@ describe('CardPage', () => {
     expect(screen.getByTestId('card-header')).not.toHaveTextContent('R$ 5,00');
   });
 
-  it('Dado a lista de faturas, então cada linha mostra referência, período, fechamento, vencimento, situação em texto e outstanding', async () => {
+  it('Dado a lista de faturas, então cada linha mostra referência, fechamento, vencimento, situação em texto e outstanding', async () => {
     await setup();
 
     const row = screen.getByTestId('invoice-row-inv-nov');
     expect(row).toHaveTextContent('Fatura de nov/2026');
     const dates = screen.getByTestId('invoice-dates-inv-nov');
-    expect(dates).toHaveTextContent('Período: 25 de set. a 25 de out.');
     expect(dates).toHaveTextContent('Fecha em 25 de out.');
     expect(dates).toHaveTextContent('Vence em 5 de nov.');
     expect(within(row).getByTestId('invoice-status')).toHaveTextContent('Fechada');

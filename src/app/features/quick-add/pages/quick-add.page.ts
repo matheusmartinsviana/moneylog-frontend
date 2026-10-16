@@ -175,6 +175,7 @@ export class QuickAddPage {
   protected readonly people = signal<readonly PersonRef[]>([]);
   protected readonly receivables = signal<readonly ReceivableOption[]>([]);
   private readonly peopleLoad = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  protected readonly peopleStatus = this.peopleLoad.asReadonly();
   private readonly receivablesLoad = signal<'idle' | 'loading' | 'ready' | 'error'>('idle');
   private receivablesSub: Subscription | null = null;
   protected readonly peopleProblem = signal<Problem | null>(null);
@@ -243,7 +244,7 @@ export class QuickAddPage {
             label: copy.action,
             available: true,
             primary: true,
-            link: noCard ? '/cards/new' : '/accounts/new',
+            link: this.asModal ? undefined : noCard ? '/cards/new' : '/accounts/new',
           },
         ]
       : [];
@@ -477,6 +478,11 @@ export class QuickAddPage {
         },
         error: (error: unknown) => this.load.set({ status: 'error', problem: problemOf(error) }),
       });
+  }
+
+  protected onEmptyAction(id: string): void {
+    const target = id === 'add-card' ? ['cards', 'new'] : ['accounts', 'new'];
+    void this.router.navigate([{ outlets: { primary: target, modal: null } }]);
   }
 
   protected close(): void {

@@ -1,12 +1,12 @@
 <main id="main-content" class="login" tabindex="-1" data-cy="login-page">
   @if (checking()) {
-    <section class="login__card surface" aria-busy="true" data-cy="login-checking">
+    <section class="login__card glass glass--strong" aria-busy="true" data-cy="login-checking">
       <p class="login__brand">{{ t().shell.brand }}</p>
       <p class="login__description" role="status">{{ t().auth.login.checking }}</p>
     </section>
   } @else if (setupMode()) {
     <form
-      class="login__card surface"
+      class="login__card glass glass--strong"
       [formGroup]="setupForm"
       (ngSubmit)="onSetupSubmit()"
       novalidate
@@ -14,16 +14,9 @@
     >
       <header class="login__header">
         <img
-          class="login__logo login__logo--on-light"
-          src="assets/brand/logo-on-light.png"
-          alt=""
-          width="48"
-          height="48"
-          decoding="async"
-        />
-        <img
-          class="login__logo login__logo--on-dark"
-          src="assets/brand/logo-on-dark.png"
+          class="login__logo"
+          src="assets/brand/logo-mark-128.webp"
+          srcset="assets/brand/logo-mark-128.webp 1x, assets/brand/logo-mark-256.webp 2x"
           alt=""
           width="48"
           height="48"
@@ -105,19 +98,17 @@
       </button>
     </form>
   } @else {
-    <form class="login__card surface" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+    <form
+      class="login__card glass glass--strong"
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      novalidate
+    >
       <header class="login__header">
         <img
-          class="login__logo login__logo--on-light"
-          src="assets/brand/logo-on-light.png"
-          alt=""
-          width="48"
-          height="48"
-          decoding="async"
-        />
-        <img
-          class="login__logo login__logo--on-dark"
-          src="assets/brand/logo-on-dark.png"
+          class="login__logo"
+          src="assets/brand/logo-mark-128.webp"
+          srcset="assets/brand/logo-mark-128.webp 1x, assets/brand/logo-mark-256.webp 2x"
           alt=""
           width="48"
           height="48"

@@ -33,6 +33,7 @@ export function toMonthlySummary(response: MonthlySummaryResponse): MonthlySumma
   const largestCategory = response.largestCategory;
   const largestExpense = response.largestExpense;
   return {
+    view: response.view,
     competence: response.competence,
     partial: response.partial,
     isProjection: response.isProjection,

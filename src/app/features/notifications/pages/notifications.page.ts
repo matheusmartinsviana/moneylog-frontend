@@ -29,16 +29,17 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { problemMessage } from '~/app/common/i18n/problem-message';
 import { NotificationRowComponent } from '~/app/features/notifications/components/notification-row.component';
 import { ReminderFormComponent } from '~/app/features/notifications/components/reminder-form.component';
-import { dailyText } from '~/app/features/notifications/notification-text';
+import { dailyText, kindLabel } from '~/app/features/notifications/notification-text';
 import { DailyMessageFacade } from '~/modules/notifications/core/facades/daily-message.facade';
 import { NotificationsCenterFacade } from '~/modules/notifications/core/facades/notifications-center.facade';
 import { RemindersFacade } from '~/modules/notifications/core/facades/reminders.facade';
 import { UnreadCountFacade } from '~/modules/notifications/core/facades/unread-count.facade';
-import type {
-  AppNotification,
-  NotificationKind,
-  Reminder,
-  ReminderInput,
+import {
+  ALERT_KINDS,
+  type AppNotification,
+  type NotificationKind,
+  type Reminder,
+  type ReminderInput,
 } from '~/modules/notifications/core/types/notification';
 import { formatIsoDate } from '~/util/date';
 
@@ -52,6 +53,7 @@ const KINDS: readonly NotificationKind[] = [
   'REMINDER',
   'GOAL_DEADLINE',
   'GROUPED',
+  ...ALERT_KINDS,
 ];
 
 interface DayGroup {
@@ -106,7 +108,7 @@ export class NotificationsPage implements OnInit {
     { value: 'UNREAD', label: this.t().notifications.center.unread },
   ]);
   protected readonly kindOptions = computed<readonly ChoiceOption[]>(() =>
-    KINDS.map((kind) => ({ value: kind, label: this.t().notifications.kinds[kind] })),
+    KINDS.map((kind) => ({ value: kind, label: kindLabel(this.t().notifications, kind) })),
   );
 
   protected readonly groups = computed<readonly DayGroup[]>(() => {

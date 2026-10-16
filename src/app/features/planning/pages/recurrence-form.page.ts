@@ -9,9 +9,10 @@ import {
   signal,
   untracked,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { map, Observable, startWith, tap } from 'rxjs';
 
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
@@ -36,10 +37,22 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { problemMessage } from '~/app/common/i18n/problem-message';
 import { EntityChanges } from '~/app/common/services/entity-changes';
 import { ToastService } from '~/app/common/services/toast.service';
+import {
+  type PeopleStatus,
+  SplitFieldComponent,
+} from '~/app/features/quick-add/components/split-field/split-field.component';
+import {
+  draftOf,
+  newSplitGroup,
+  patchSplit,
+  startSplit,
+  stopSplit,
+} from '~/app/features/quick-add/components/split-field/split-form';
 import { FormOptions, loadFormOptions } from '~/app/features/quick-add/form-options';
 import { AccountsListFacade } from '~/modules/accounts/core/facades/accounts-list.facade';
 import { CardsListFacade } from '~/modules/cards/core/facades/cards-list.facade';
 import { CategoriesFacade } from '~/modules/categories/core/facades/categories.facade';
+import { PeopleListFacade } from '~/modules/people/core/facades/people-list.facade';
 import { RecurrenceFormFacade } from '~/modules/recurrences/core/facades/recurrence-form.facade';
 import {
   FREQUENCIES,
@@ -54,6 +67,8 @@ import {
 } from '~/modules/recurrences/core/types/recurrence';
 import { Problem, problemOf } from '~/util/api/problem';
 import { todayIso } from '~/util/date';
+import type { PersonRef } from '~/util/debt';
+import { draftFromLines, toSplitInput } from '~/util/split';
 
 type EndMode = 'none' | 'date' | 'max';
 
@@ -96,8 +111,9 @@ const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
     DatePickerComponent,
     NumberStepperComponent,
     SegmentedControlComponent,
+    SplitFieldComponent,
   ],
-  providers: [RecurrenceFormFacade, AccountsListFacade, CardsListFacade],
+  providers: [RecurrenceFormFacade, AccountsListFacade, CardsListFacade, PeopleListFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './recurrence-form.page.html',
   styleUrl: './recurrence-form.page.css',
@@ -124,6 +140,7 @@ export class RecurrenceFormPage {
   private readonly accountsFacade = inject(AccountsListFacade);
   private readonly cardsFacade = inject(CardsListFacade);
   private readonly categoriesFacade = inject(CategoriesFacade);
+  private readonly peopleFacade = inject(PeopleListFacade);
   protected readonly t = inject(I18nService).t;
   protected readonly facade = inject(RecurrenceFormFacade);
   protected readonly currency = RECURRENCE_CURRENCY;
@@ -152,6 +169,8 @@ export class RecurrenceFormPage {
     endDate: new FormControl<string | null>(null),
     maxOccurrences: new FormControl<number | null>(null),
     nextMonthIncome: new FormControl(false, { nonNullable: true }),
+    splitOn: new FormControl(false, { nonNullable: true }),
+    split: newSplitGroup(),
   });
 
   protected readonly dirty = dirtySignal(this.form);
@@ -163,6 +182,18 @@ export class RecurrenceFormPage {
   protected readonly hasAccount = computed(() => this.accountValue() !== null);
   protected readonly isIncome = computed(() => this.typeValue() === 'INCOME');
   protected readonly isCard = computed(() => this.typeValue() === 'CARD_PURCHASE');
+  private readonly splitOnValue = valueSignal(this.form.controls.splitOn);
+  protected readonly splitting = computed(() => this.isCard() && this.splitOnValue());
+  private readonly splitInvalid = toSignal(
+    this.form.controls.split.statusChanges.pipe(
+      map(() => this.form.controls.split.invalid),
+      startWith(this.form.controls.split.invalid),
+    ),
+    { requireSync: true },
+  );
+  protected readonly splitBlocked = computed(() => this.splitting() && this.splitInvalid());
+  protected readonly people = signal<readonly PersonRef[]>([]);
+  protected readonly peopleStatus = signal<PeopleStatus>('idle');
   protected readonly isCustom = computed(() => this.frequencyValue() === 'CUSTOM');
   protected readonly endMode = computed<EndMode>(() => {
     const mode = this.endModeValue();
@@ -269,6 +300,8 @@ export class RecurrenceFormPage {
         toggle(c.type, !editing);
         toggle(c.frequency, !editing);
         toggle(c.startDate, !editing);
+        if (!card && c.splitOn.value) c.splitOn.setValue(false);
+        toggle(c.splitOn, card);
       });
     });
     effect(() => {
@@ -302,10 +335,20 @@ export class RecurrenceFormPage {
           maxOccurrences: recurrence.maxOccurrences,
           nextMonthIncome: recurrence.incomeCompetenceOffsetMonths === 1,
         });
+        this.restoreSplit(recurrence.splitMode, recurrence.shares);
       });
     });
 
     this.loadOptions();
+
+    this.form.controls.splitOn.valueChanges.pipe(takeUntilDestroyed()).subscribe((on) => {
+      if (on) {
+        this.ensurePeople();
+        startSplit(this.form.controls.split);
+      } else {
+        stopSplit(this.form.controls.split);
+      }
+    });
 
     effect(() => {
       const problem = this.facade.problem();
@@ -322,6 +365,45 @@ export class RecurrenceFormPage {
       this.changes.notify('recurrences');
       void this.router.navigate(this.backUrl());
     });
+  }
+
+  private restoreSplit(
+    mode: Parameters<typeof draftFromLines>[0] | null,
+    shares: Parameters<typeof draftFromLines>[1],
+  ): void {
+    if (mode === null || shares.length === 0) return;
+    this.ensurePeople();
+    this.form.controls.splitOn.setValue(true);
+    patchSplit(this.form.controls.split, draftFromLines(mode, shares));
+  }
+
+  protected readonly createPerson = (name: string): Observable<PersonRef> =>
+    this.peopleFacade
+      .create({ name, notes: null })
+      .pipe(
+        tap((person) =>
+          this.people.update((list) => [...list, { id: person.id, name: person.name }]),
+        ),
+      );
+
+  protected ensurePeople(): void {
+    const status = this.peopleStatus();
+    if (status === 'idle' || status === 'error') this.loadPeople();
+  }
+
+  protected loadPeople(): void {
+    if (this.peopleStatus() === 'loading') return;
+    this.peopleStatus.set('loading');
+    this.peopleFacade
+      .loadAll('ACTIVE')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (people) => {
+          this.people.set(people.map((person) => ({ id: person.id, name: person.name })));
+          this.peopleStatus.set('ready');
+        },
+        error: () => this.peopleStatus.set('error'),
+      });
   }
 
   private backUrl(): string[] {
@@ -353,6 +435,7 @@ export class RecurrenceFormPage {
             card || value.accountId === null ? null : (value.method as RecurrenceMethod | null),
           cardId: card ? value.cardId : null,
           endDate: value.endDate,
+          ...(card ? { split: this.splitInput() } : {}),
           ...(recurrence.type === 'INCOME'
             ? { incomeCompetenceOffsetMonths: value.nextMonthIncome ? (1 as const) : (0 as const) }
             : {}),
@@ -379,8 +462,13 @@ export class RecurrenceFormPage {
       ...(value.type === 'INCOME' && value.nextMonthIncome
         ? { incomeCompetenceOffsetMonths: 1 as const }
         : {}),
+      ...(card && this.splitting() ? { split: this.splitInput() } : {}),
     };
     this.facade.save({ kind: 'create', input });
+  }
+
+  private splitInput() {
+    return this.splitting() ? toSplitInput(draftOf(this.form.controls.split)) : null;
   }
 
   protected reloadLatest(): void {

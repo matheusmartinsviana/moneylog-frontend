@@ -23,6 +23,7 @@
 
 .total__label {
   display: block;
+  letter-spacing: 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   font-weight: var(--weight-regular);
@@ -31,8 +32,14 @@
 .total__value,
 .fixed__value {
   margin: 0;
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fixed__value {
+  font-size: var(--text-xl);
 }
 
 .total__none {
@@ -66,7 +73,8 @@
 .mini dd,
 .fact dd {
   margin: 0;
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
 }
 
 .actions {
@@ -160,13 +168,12 @@
 .plan {
   display: grid;
   gap: var(--space-1);
-  padding-inline-start: var(--space-3);
-  border-inline-start: 2px solid var(--color-border);
 }
 
 @media (width >= 768px) {
   .top {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: start;
   }
 }
 

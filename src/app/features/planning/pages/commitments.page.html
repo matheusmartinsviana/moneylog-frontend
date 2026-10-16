@@ -10,10 +10,7 @@
 
   <app-planning-nav current="commitments" />
 
-  <header class="intro">
-    <h2 class="intro__title">{{ t().commitments.title }}</h2>
-    <p class="note" data-cy="commitments-description">{{ t().commitments.description }}</p>
-  </header>
+  <p class="caption" data-cy="commitments-description">{{ t().commitments.description }}</p>
 
   @switch (commitments.state().status) {
     @case ('loading') {

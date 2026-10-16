@@ -1,0 +1,76 @@
+@let copy = t().thirdParties.installments;
+<ul class="installments" data-cy="tp-installments">
+  @for (installment of installments(); track installment.installmentId) {
+    <li class="installment" [attr.data-cy]="'tp-installment-' + installment.installmentId">
+      <div class="installment__head">
+        <span class="installment__part">{{ part(installment) }}</span>
+        <span class="installment__amount"><app-money [value]="installment.pending" /></span>
+      </div>
+      <p class="installment__expected">
+        <span [attr.data-cy]="'tp-installment-expected-' + installment.installmentId">{{
+          expectedAt(installment)
+        }}</span>
+        @if (canEdit(installment) && editingId() !== installment.installmentId) {
+          <button
+            type="button"
+            class="installment__link"
+            [attr.data-cy]="'tp-installment-change-' + installment.installmentId"
+            [attr.aria-label]="changeLabel(installment)"
+            [disabled]="facade.savingInstallmentId() !== null"
+            (click)="startEdit(installment)"
+          >
+            {{ copy.change }}
+          </button>
+          @if (installment.overridden) {
+            <button
+              type="button"
+              class="installment__link"
+              [attr.data-cy]="'tp-installment-reset-' + installment.installmentId"
+              [disabled]="facade.savingInstallmentId() !== null"
+              (click)="reset(installment)"
+            >
+              {{ copy.reset }}
+            </button>
+          }
+        }
+      </p>
+      @if (editingId() === installment.installmentId) {
+        <div class="installment__edit">
+          <app-month-picker
+            [formControl]="picker"
+            [fieldId]="'tp-installment-month-' + installment.installmentId"
+            [label]="copy.monthLabel"
+            [min]="minMonth"
+            [max]="maxMonth"
+          />
+          <div class="installment__actions">
+            <button
+              type="button"
+              class="button"
+              [attr.data-cy]="'tp-installment-cancel-' + installment.installmentId"
+              [disabled]="facade.savingInstallmentId() !== null"
+              (click)="cancelEdit()"
+            >
+              {{ copy.cancel }}
+            </button>
+            <button
+              type="button"
+              class="button button--primary"
+              [attr.data-cy]="'tp-installment-save-' + installment.installmentId"
+              [disabled]="facade.savingInstallmentId() !== null"
+              [attr.aria-busy]="facade.savingInstallmentId() === installment.installmentId"
+              (click)="saveEdit(installment)"
+            >
+              {{
+                facade.savingInstallmentId() === installment.installmentId ? copy.saving : copy.save
+              }}
+            </button>
+          </div>
+        </div>
+      }
+    </li>
+  }
+</ul>
+@if (errorText(); as message) {
+  <p class="error" role="alert" data-cy="tp-installment-error">{{ message }}</p>
+}

@@ -4,8 +4,11 @@ import { Observable, of } from 'rxjs';
 import { CommitmentsGateway } from '~/modules/commitments/core/interfaces/commitments.gateway';
 import type {
   Commitment,
+  CommitmentClausesInput,
+  CommitmentCsvFile,
   CommitmentInput,
   CommitmentProgressInput,
+  CommitmentSharesInput,
 } from '~/modules/commitments/core/types/commitment';
 import { brl } from '~/testing/accounts-testing';
 import type { Slice } from '~/util/api/slice';
@@ -93,6 +96,12 @@ export class CommitmentsGatewayStub extends CommitmentsGateway {
   pay$: Observable<Commitment> | null = null;
   progress$: Observable<Commitment> | null = null;
   create$: Observable<Commitment> | null = null;
+  shares$: Observable<Commitment> | null = null;
+  clauses$: Observable<Commitment> | null = null;
+  csv$: Observable<CommitmentCsvFile> | null = null;
+  readonly shareUpdates: { id: string; position: number; input: CommitmentSharesInput }[] = [];
+  readonly clauseUpdates: { id: string; input: CommitmentClausesInput }[] = [];
+  readonly csvRequests: { id: string; language: string }[] = [];
   readonly pays: { id: string; position: number; paidOn: string; version: number }[] = [];
   readonly progresses: { id: string; input: CommitmentProgressInput }[] = [];
   readonly creates: { input: CommitmentInput; key: string }[] = [];
@@ -118,6 +127,27 @@ export class CommitmentsGatewayStub extends CommitmentsGateway {
   updateProgress(id: string, input: CommitmentProgressInput): Observable<Commitment> {
     this.progresses.push({ id, input });
     return this.progress$ ?? of(aLoan({ installmentsPaid: input.installmentsPaid }));
+  }
+
+  updateShares(id: string, position: number, input: CommitmentSharesInput): Observable<Commitment> {
+    this.shareUpdates.push({ id, position, input });
+    return this.shares$ ?? of(aProject({ id, version: input.version + 1 }));
+  }
+
+  updateClauses(id: string, input: CommitmentClausesInput): Observable<Commitment> {
+    this.clauseUpdates.push({ id, input });
+    return this.clauses$ ?? of(aProject({ id, version: input.version + 1 }));
+  }
+
+  byPersonCsv(id: string, language: string): Observable<CommitmentCsvFile> {
+    this.csvRequests.push({ id, language });
+    return (
+      this.csv$ ??
+      of({
+        blob: new Blob(['a;b'], { type: 'text/csv' }),
+        filename: 'moneylog-imovel-por-pessoa.csv',
+      })
+    );
   }
 }
 

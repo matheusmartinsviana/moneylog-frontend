@@ -85,9 +85,10 @@ import type { Toast, ToastAction } from '~/app/common/services/toast.service';
     .toast__dismiss {
       display: grid;
       place-items: center;
-      width: 2rem;
-      height: 2rem;
+      width: var(--touch-min);
+      height: var(--touch-min);
       flex: none;
+      margin: calc((2rem - var(--touch-min)) / 2);
       border: 0;
       border-radius: var(--radius-control);
       background: none;

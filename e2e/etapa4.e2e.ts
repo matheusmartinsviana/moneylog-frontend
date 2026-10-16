@@ -36,12 +36,14 @@ test.describe('/people sem pessoas', () => {
     await expect(page.locator('[data-cy="people-empty-archived"]')).toBeVisible();
   });
 
-  test('a busca por nome é um campo próprio (sem input type=search)', async ({ page }) => {
+  test('a busca por nome é o campo próprio, sem a aparência nativa de busca', async ({ page }) => {
     await page.goto('/people');
     await waitForApp(page);
 
-    await page.locator('[data-cy="people-search"]').fill('joão');
-    await expect(page.locator('input[type="search"]')).toHaveCount(0);
+    const field = page.locator('[data-cy="people-search"]');
+    await field.fill('joão');
+    await expect(field).toHaveClass(/input/);
+    expect(await field.evaluate((el) => getComputedStyle(el).appearance)).toBe('none');
   });
 });
 
@@ -84,18 +86,16 @@ test.describe('/debts/:id', () => {
 });
 
 test.describe('/quick-add: pessoas e dívidas', () => {
-  test('o grupo "Pessoas e dívidas" tem emprestar, receber e nova dívida', async ({ page }) => {
+  test('o seletor de modo agrupa "Pessoas e dívidas" com emprestar, receber e nova dívida', async ({
+    page,
+  }) => {
     await seedPreferences(page, { language: 'pt' });
     await page.goto('/quick-add?mode=debt');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="quick-add-people"]')).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
-
-    for (const mode of ['received', 'debt']) {
-      await expect(page.locator(`[data-cy="quick-add-people-mode-${mode}"]`)).toBeVisible();
+    await page.locator('[data-cy="quick-add-mode"]').click();
+    for (const mode of ['loan', 'received', 'debt']) {
+      await expect(page.locator(`[data-cy="quick-add-mode-option-${mode}"]`)).toBeVisible();
     }
   });
 
@@ -105,7 +105,9 @@ test.describe('/quick-add: pessoas e dívidas', () => {
     await page.goto('/quick-add?mode=loan');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="empty-state-action-add-account"]')).toBeVisible();
+    await expect(
+      page.getByRole('dialog').locator('[data-cy="empty-state-action-add-account"]'),
+    ).toBeVisible();
   });
 
   test('"Nova dívida" não precisa de conta, explica que não mexe no saldo e mostra a categoria só em "Eu devo"', async ({
@@ -179,7 +181,9 @@ test.describe('/planning/recurrences/new', () => {
     await page.goto('/planning/recurrences/new');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="empty-state-action-add-account"]')).toBeVisible();
+    await expect(
+      page.getByRole('dialog').locator('[data-cy="empty-state-action-add-account"]'),
+    ).toBeVisible();
   });
 });
 

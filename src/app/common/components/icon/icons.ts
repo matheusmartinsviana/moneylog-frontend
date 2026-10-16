@@ -73,6 +73,7 @@ export const ICONS = {
   chevronDown: ['M6 9.5 12 15.5l6-6'],
   filter: ['M4 6h16', 'M7 12h10', 'M10 18h4'],
   close: ['M6.5 6.5l11 11', 'M17.5 6.5l-11 11'],
+  expand: ['M4 9V4h5', 'M20 9V4h-5', 'M4 15v5h5', 'M20 15v5h-5'],
   chevronLeft: ['M14.5 6 8.5 12l6 6'],
   chevronUp: ['M6 14.5 12 8.5l6 6'],
   check: ['M5.5 12.5l4.5 4.5 8.5-9.5'],
@@ -114,6 +115,23 @@ export const ICONS = {
   pause: ['M8.5 5.5v13', 'M15.5 5.5v13'],
   play: ['M8 5.5v13l10.5-6.5Z'],
   sparkle: ['M12 3.5l1.9 5.6 5.6 1.9-5.6 1.9L12 18.5l-1.9-5.6-5.6-1.9 5.6-1.9Z'],
+  arrowUp: ['M12 19V5', 'M6.5 10.5 12 5l5.5 5.5'],
+  arrowDown: ['M12 5v14', 'M6.5 13.5 12 19l5.5-5.5'],
+  arrowOut: ['M7 17 17 7', 'M9 7h8v8'],
+  arrowIn: ['M17 7 7 17', 'M15 17H7V9'],
+  arrowReturn: ['M9.5 6.5 4.5 11.5l5 5', 'M4.5 11.5H15a4.5 4.5 0 0 1 0 9h-3'],
+  arrowsOpposite: ['M4 8h15', 'M15.5 4.5 19 8l-3.5 3.5', 'M20 16H5', 'M8.5 12.5 5 16l3.5 3.5'],
+  chart: ['M4 17l5-5 4 4 7-8', 'M15 8h5v5'],
+  person: [circle(12, 8.5, 3.5), 'M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6'],
+  adjust: ['M12 4v8', 'M8 8h8', 'M8 17h8'],
+  generic: [circle(12, 12, 8.5), 'M8.5 12h7'],
+  eye: ['M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z', circle(12, 12, 3)],
+  eyeOff: [
+    'M4 4l16 16',
+    'M10 5.7a8.5 8.5 0 0 1 2-.2c6 0 9.5 6.5 9.5 6.5a16 16 0 0 1-3 3.8',
+    'M6.4 7.6A16 16 0 0 0 2.5 12s3.5 6.5 9.5 6.5a8.5 8.5 0 0 0 3.2-.6',
+    'M9.9 9.9a3 3 0 0 0 4.2 4.2',
+  ],
 } as const satisfies Record<string, readonly string[]>;
 
 export type IconName = keyof typeof ICONS;

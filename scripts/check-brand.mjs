@@ -14,6 +14,8 @@ if (!brand) {
 }
 
 const html = readFileSync(join(src, 'index.html'), 'utf8');
+if (!existsSync(join(src, 'assets/icons/favicon.ico')))
+  problems.push('src/assets/icons/favicon.ico não existe (rode npm run icons)');
 for (const needle of [
   `<title>${brand}</title>`,
   `<meta name="application-name" content="${brand}" />`,
@@ -63,12 +65,24 @@ for (const file of [
   'src/app/features/login/pages/login.page.html',
 ]) {
   const text = readFileSync(join(root, file), 'utf8');
-  for (const logo of ['logo-on-light', 'logo-on-dark'])
-    if (!text.includes(`assets/brand/${logo}.png`))
-      problems.push(`${file}: falta o logo (assets/brand/${logo}.png)`);
+  for (const logo of ['logo-mark-128'])
+    if (!text.includes(`assets/brand/${logo}.webp`))
+      problems.push(`${file}: falta o logo (assets/brand/${logo}.webp)`);
 }
+for (const file of [
+  'brand/logo-source.png',
+  'src/assets/brand/logo-mark-64.webp',
+  'src/assets/brand/logo-mark-128.webp',
+  'src/assets/brand/logo-mark-256.webp',
+])
+  if (!existsSync(join(root, file))) problems.push(`${file} não existe (rode npm run icons)`);
+for (const old of ['logo-on-light', 'logo-on-dark'])
+  if (existsSync(join(src, 'assets/brand', `${old}.png`)))
+    problems.push(`src/assets/brand/${old}.png é a marca antiga e deve ser removido`);
 for (const icon of [
+  'icon-16',
   'icon-32',
+  'icon-48',
   'icon-192',
   'icon-512',
   'icon-maskable-192',

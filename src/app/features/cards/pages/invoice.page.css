@@ -12,7 +12,7 @@
 .section {
   display: grid;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-5);
 }
 
 .section__title {
@@ -38,4 +38,11 @@
   display: grid;
   justify-items: start;
   gap: var(--space-2);
+}
+
+@media (width >= 64rem) {
+  .sticky {
+    position: sticky;
+    top: calc(var(--page-header-height) + var(--space-3));
+  }
 }

@@ -1,6 +1,7 @@
 import { Observable } from 'rxjs';
 
 import type {
+  CardCashOutInput,
   Debt,
   DebtDirection,
   DebtInput,
@@ -22,6 +23,7 @@ export abstract class DebtsGateway {
   abstract list(query: DebtsQuery): Observable<Slice<Debt>>;
   abstract get(id: string): Observable<Debt>;
   abstract create(input: DebtInput, idempotencyKey: string): Observable<Debt>;
+  abstract createCardCashOut(input: CardCashOutInput, idempotencyKey: string): Observable<Debt>;
   abstract update(id: string, input: DebtUpdate): Observable<Debt>;
   abstract cancel(id: string, reason: string): Observable<Debt>;
   abstract void(id: string, reason: string): Observable<Debt>;

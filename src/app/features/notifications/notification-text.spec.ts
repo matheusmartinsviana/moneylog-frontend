@@ -26,6 +26,14 @@ describe('notificationText (chave de i18n + params, S-34)', () => {
     );
   });
 
+  it('Dado valores ocultos, então o montante some do texto e a data continua', () => {
+    const text = notificationText(invoice, pt.notifications, 'pt-BR', true);
+
+    expect(text.body).not.toMatch(/1\.423/);
+    expect(text.body).toContain('R$ •••••');
+    expect(text.body).toContain('Cartão Roxo');
+  });
+
   it('Dado uma chave desconhecida, então mostra o texto neutro (nunca a chave crua)', () => {
     const text = notificationText(
       { titleKey: 'notification.algo.novo', params: {} },
@@ -116,8 +124,121 @@ describe('notificationLink', () => {
     ['GOAL', '/goals/abc'],
     ['RECURRENCE', '/planning'],
     ['REMINDER', '/notifications'],
+    ['INVOICE', '/cards/invoices/abc'],
     ['USER', '/'],
   ] as const)('Dado a referência %s, então leva a %s', (type, path) => {
     expect(notificationLink({ ref: { type, id: 'abc' } })).toBe(path);
+  });
+});
+
+describe('notificationText, alertas de 2.32.0', () => {
+  it('Dado o custo de dinheiro no cartão, então mostra a taxa em porcentagem e a parcela', () => {
+    const text = notificationText(
+      {
+        titleKey: 'notification.cardCashOut.cost',
+        params: { monthlyRateBps: '199', installmentAmount: '350.00', installments: '6' },
+      },
+      pt.notifications,
+      'pt-BR',
+    );
+
+    expect(text.title).toBe('Dinheiro no cartão tem custo');
+    expect(text.body).toContain('1,99');
+    expect(text.body).toMatch(/R\$\s?350,00/);
+    expect(text.body).toContain('6 parcelas');
+  });
+
+  it('Dado o mês negativo, então formata a competência e o valor com a moeda do dado', () => {
+    const text = notificationText(
+      {
+        titleKey: 'notification.month.negative',
+        params: { competence: '2026-11', surplus: '-120.50' },
+      },
+      pt.notifications,
+      'pt-BR',
+    );
+
+    expect(text.body).toContain('novembro');
+    expect(text.body).toMatch(/R\$\s?120,50/);
+  });
+
+  it('Dado a assinatura sem uso, então sai nos três idiomas', () => {
+    const notification = {
+      titleKey: 'notification.subscription.unused',
+      params: { name: 'Streaming', days: '75' },
+    };
+
+    expect(notificationText(notification, pt.notifications, 'pt-BR').body).toContain('75 dias');
+    expect(notificationText(notification, en.notifications, 'en').body).toContain('75 days');
+    expect(notificationText(notification, es.notifications, 'es').body).toContain('75 días');
+  });
+
+  it('Dado parâmetro que falta, então cai no texto neutro e nunca mostra chaves soltas', () => {
+    const text = notificationText(
+      { titleKey: 'notification.thirdParty.overdue', params: {} },
+      pt.notifications,
+      'pt-BR',
+    );
+
+    expect(text).toEqual(pt.notifications.unknownMessage);
+  });
+
+  it('Dado alerta de assinatura, então o link vai para as assinaturas', () => {
+    expect(
+      notificationLink({ kind: 'SUBSCRIPTION_UNUSED', ref: { type: 'RECURRENCE', id: 'r-1' } }),
+    ).toBe('/planning/subscriptions');
+  });
+
+  it('Dado alerta ligado a uma movimentação ou compromisso, então o link abre o registro', () => {
+    expect(notificationLink({ ref: { type: 'TRANSACTION', id: 't-1' } })).toBe('/transactions/t-1');
+    expect(notificationLink({ ref: { type: 'COMMITMENT', id: 'c-1' } })).toBe(
+      '/planning/commitments/c-1',
+    );
+  });
+});
+
+describe('notificationText, os dez alertas novos com os parâmetros reais do backend', () => {
+  const cases = [
+    [
+      'notification.invoice.autodebitOff',
+      { cardName: 'Cartão A', dueDate: '2026-11-05', amount: '1283.00' },
+    ],
+    ['notification.month.negative', { competence: '2026-11', surplus: '-80.00' }],
+    ['notification.debt.beforeFinancing', { amount: '3000.00', installments: '12' }],
+    [
+      'notification.cardCashOut.cost',
+      { monthlyRateBps: '199', installmentAmount: '350.00', installments: '6' },
+    ],
+    ['notification.subscription.overlap', { group: 'video' }],
+    ['notification.subscription.unused', { name: 'Streaming', days: '75' }],
+    ['notification.subscription.weekly', { name: 'Streaming' }],
+    ['notification.thirdParty.overdue', { personName: 'Ana', amount: '120.00' }],
+    ['notification.balance.belowRealEstate', { balance: '500.00', due: '2000.00' }],
+    [
+      'notification.document.divergence',
+      { label: 'Fatura Roxo', informed: '1283.00', documented: '1271.00', difference: '12.00' },
+    ],
+  ] as const;
+
+  it.each(cases)(
+    'Dado %s, então os três idiomas montam título e corpo sem placeholder',
+    (key, params) => {
+      for (const [copy, locale] of [
+        [pt.notifications, 'pt-BR'],
+        [en.notifications, 'en'],
+        [es.notifications, 'es'],
+      ] as const) {
+        const text = notificationText({ titleKey: key, params }, copy, locale);
+
+        expect(text).not.toEqual(copy.unknownMessage);
+        expect(`${text.title} ${text.body}`).not.toMatch(/\{\w+\}/);
+      }
+    },
+  );
+
+  it.each(cases)('Dado %s e valores ocultos, então nenhum montante aparece', (key, params) => {
+    const text = notificationText({ titleKey: key, params }, pt.notifications, 'pt-BR', true);
+
+    expect(`${text.title} ${text.body}`).not.toMatch(/R\$\s?[\d-]/);
   });
 });

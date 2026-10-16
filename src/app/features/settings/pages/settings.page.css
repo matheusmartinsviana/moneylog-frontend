@@ -1,18 +1,43 @@
-.settings {
-  display: grid;
-  gap: var(--section-gap);
-  min-width: 0;
-}
-
 .preferences {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
 }
 
 .links {
+  display: grid;
+  overflow: hidden;
+}
+
+.links__row {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 3.25rem;
+  padding: 0 var(--space-5);
+  border-bottom: var(--border-width) solid var(--home-divider);
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.links__row:last-child {
+  border-bottom: 0;
+}
+
+.links__row app-icon {
+  color: var(--color-text-muted);
+}
+
+@media (hover: hover) {
+  .links__row:hover {
+    background-color: var(--color-hover-soft);
+  }
+}
+
+.links__row:focus-visible {
+  outline: none;
+  box-shadow: inset var(--focus-ring);
 }
 
 .settings__more-body {
@@ -21,18 +46,8 @@
   padding-top: var(--space-3);
 }
 
-@media (width >= 768px) {
-  .settings {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
-    align-items: start;
-  }
-
+@media (width >= 64rem) {
   .preferences {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .links,
-  .settings__more {
-    grid-column: 1 / -1;
   }
 }

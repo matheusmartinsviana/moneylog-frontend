@@ -9,6 +9,7 @@ const zero = (): MoneyResponse => ({ amount: '0.00', currency: 'BRL' });
 const AS_OF = '2026-10-10';
 
 export const EMPTY_DASHBOARD_SUMMARY: DashboardSummaryResponse = {
+  view: 'MINE',
   asOf: AS_OF,
   isProjection: false,
   hasAccounts: false,

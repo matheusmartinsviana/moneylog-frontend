@@ -1,9 +1,16 @@
 :host {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
-  container-type: inline-size;
+  border-radius: var(--radius-window);
+  isolation: isolate;
+}
+
+.home-layout {
+  position: relative;
+  z-index: 1;
 }
 
 .actions {
@@ -33,113 +40,119 @@
 
 .skeleton__block--hero {
   height: 13rem;
-  border-radius: var(--radius-panel);
+  border-radius: var(--radius-wallet);
 }
 
 .home {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto auto auto minmax(8.5rem, 1fr);
-  grid-template-areas:
-    'kpis'
-    'side'
-    'goal'
-    'chart';
-  gap: var(--space-2);
-  height: 100%;
-  min-height: 0;
-  min-width: 0;
-  overflow-y: auto;
-}
-
-.home > * {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   min-width: 0;
 }
 
-.home__banner {
-  grid-column: 1 / -1;
+.home__col {
+  display: contents;
 }
 
-.home__kpis {
-  grid-area: kpis;
+.home__wallet,
+.home__analytics,
+.home__upcoming,
+.home__chart,
+.home__pomodoro,
+.home__recent-panel {
+  min-width: 0;
 }
 
-.home__chart {
-  grid-area: chart;
-  min-height: 8.5rem;
+.home__box {
+  container-type: inline-size;
 }
 
-.home__goal {
-  grid-area: goal;
+.home__quick {
+  padding: 0 var(--space-6) var(--space-6);
 }
 
-.home__side {
+.home__recent {
+  padding: var(--space-5);
+}
+
+.home__grid {
   display: grid;
-  grid-area: side;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-2);
+  gap: var(--space-5);
+  min-width: 0;
 }
 
-@container (width >= 54rem) {
-  .home {
-    grid-template-columns: minmax(0, 1fr) minmax(17rem, 22rem);
-    grid-template-rows: auto minmax(8.5rem, 1fr) auto;
+.home__grid > * {
+  animation: home-rise var(--duration-base) var(--ease-standard) both;
+}
+
+@media (width >= 64rem) {
+  .home__grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
     grid-template-areas:
-      'kpis kpis'
-      'chart goal'
-      'side goal';
-    gap: var(--space-3);
+      'wallet wallet wallet wallet wallet wallet wallet analytics analytics analytics analytics analytics'
+      'wallet wallet wallet wallet wallet wallet wallet upcoming upcoming upcoming upcoming upcoming'
+      'chart chart chart chart chart chart chart chart chart chart chart chart'
+      'recent recent recent recent recent recent recent pomodoro pomodoro pomodoro pomodoro pomodoro';
+    gap: var(--space-5) var(--space-6);
+    align-items: stretch;
   }
 
-  .home__side {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-height: 0;
-  }
-}
-
-@container (width >= 76rem) {
-  .home {
-    grid-template-columns: minmax(0, 1fr) clamp(24rem, 28%, 34rem);
-    grid-template-rows: auto minmax(0, 1fr) auto;
-    grid-template-areas:
-      'kpis kpis'
-      'chart goal'
-      'chart side';
+  .home__wallet {
+    grid-area: wallet;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
-  .home__side {
-    grid-template-columns: minmax(0, 1fr);
+  .home__analytics {
+    grid-area: analytics;
   }
-}
 
-@media (orientation: landscape) and (max-height: 500px) {
-  .home {
-    grid-template-rows: none;
-    height: auto;
-    overflow-y: visible;
+  .home__upcoming {
+    grid-area: upcoming;
   }
 
   .home__chart {
-    min-height: 12rem;
+    grid-area: chart;
+    margin-block: var(--space-4);
+  }
+
+  .home__recent-panel {
+    grid-area: recent;
+  }
+
+  .home__pomodoro {
+    grid-area: pomodoro;
+    align-self: start;
+  }
+
+  .home__recent {
+    padding: var(--space-6);
   }
 }
 
-@media (width < 48rem) and (max-height: 700px) {
-  .home,
-  .home__side {
-    gap: var(--space-1);
+@media (width < 48rem) {
+  .home__recent {
+    padding: var(--space-4);
+  }
+
+  .actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
   }
 }
 
-@media (width <= 40rem) {
-  .home {
-    grid-template-rows: none;
-    height: auto;
-    overflow-y: visible;
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
+}
 
-  .home__chart {
-    min-height: 0;
+@media (prefers-reduced-motion: reduce) {
+  .home__grid > * {
+    animation: none;
   }
 }

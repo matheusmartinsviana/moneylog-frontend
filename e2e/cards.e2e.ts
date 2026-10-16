@@ -87,11 +87,12 @@ test.describe('Crédito', () => {
     await page.goto('/quick-add?mode=credit');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="empty-state-title"]')).toHaveText(
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.locator('[data-cy="empty-state-title"]')).toHaveText(
       'Cadastre um cartão para registrar.',
     );
-    await page.locator('[data-cy="empty-state-action-add-card"]').click();
-    await expect(page).toHaveURL(/\/cards\/new$/);
+    await dialog.locator('[data-cy="empty-state-action-add-card"]').click();
+    await expect(page).toHaveURL(/\/cards\/new/);
   });
 
   test('a rota de um cartão inexistente mostra "não encontrado" com voltar; a fatura também', async ({

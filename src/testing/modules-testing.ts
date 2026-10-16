@@ -11,6 +11,7 @@ import { provideImports } from '~/modules/imports/infra/imports.providers';
 import { provideMonthlySummary } from '~/modules/monthly-summary/infra/monthly-summary.providers';
 import { provideNotes } from '~/modules/notes/infra/notes.providers';
 import { provideNotifications } from '~/modules/notifications/infra/notifications.providers';
+import { provideOwnerStatement } from '~/modules/owner-statement/infra/owner-statement.providers';
 import { providePeople } from '~/modules/people/infra/people.providers';
 import { provideProjections } from '~/modules/projections/infra/projections.providers';
 import { provideRecurrences } from '~/modules/recurrences/infra/recurrences.providers';
@@ -30,6 +31,7 @@ export function provideBusinessModules(): Provider[] {
     ...provideRecurrences(),
     ...provideGoals(),
     ...provideMonthlySummary(),
+    ...provideOwnerStatement(),
     ...provideProjections(),
     ...provideExports(),
     ...provideImports(),

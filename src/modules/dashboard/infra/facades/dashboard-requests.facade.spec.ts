@@ -39,6 +39,7 @@ function summaryResponse(): DashboardSummaryResponse {
   let n = 0;
   const m = (): MoneyResponse => ({ amount: `${++n}.00`, currency: 'BRL' });
   return {
+    view: 'MINE',
     asOf: '2026-10-10',
     isProjection: true,
     hasAccounts: true,
@@ -98,8 +99,12 @@ describe('DashboardRequestsFacade', () => {
       const summary = await firstValueFrom(gateway.getSummary());
       const upcoming = await firstValueFrom(gateway.getUpcoming());
 
-      expect(summary).toEqual({
+      const emptyWithoutView: Partial<typeof EMPTY_DASHBOARD_SUMMARY> = {
         ...EMPTY_DASHBOARD_SUMMARY,
+      };
+      delete emptyWithoutView.view;
+      expect(summary).toEqual({
+        ...emptyWithoutView,
         balances: { ...EMPTY_DASHBOARD_SUMMARY.balances, inAccountsChange: null },
       });
       expect(summary.balances.available).toEqual({ amount: '0.00', currency: 'BRL' });
@@ -133,8 +138,10 @@ describe('DashboardRequestsFacade', () => {
       expect(req.request.method).toBe('GET');
       req.flush(response);
 
+      const withoutView: Partial<typeof response> = { ...response };
+      delete withoutView.view;
       expect(await result).toEqual({
-        ...response,
+        ...withoutView,
         balances: { ...response.balances, inAccountsChange: null },
       });
     });

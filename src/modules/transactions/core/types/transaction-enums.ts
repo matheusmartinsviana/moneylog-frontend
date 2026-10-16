@@ -23,6 +23,9 @@ export const ACCOUNT_TRANSACTION_TYPES = [
 ] as const satisfies readonly TransactionType[];
 export type AccountTransactionType = (typeof ACCOUNT_TRANSACTION_TYPES)[number];
 
+export const TRANSACTION_NATURES = ['FIXED', 'VARIABLE'] as const;
+export type TransactionNature = (typeof TRANSACTION_NATURES)[number];
+
 export const PAYMENT_METHODS = ['CASH', 'DEBIT', 'PIX', 'TRANSFER', 'BOLETO', 'OTHER'] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 

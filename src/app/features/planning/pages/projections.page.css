@@ -19,12 +19,33 @@
 }
 
 .start {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-2) var(--space-4);
-  font-weight: var(--weight-semibold);
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.focus {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.chart-toggle {
+  display: none;
+  min-height: var(--touch-min);
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+@media (width <= 640px) {
+  .chart-toggle {
+    display: inline-flex;
+  }
+
+  .chart.is-collapsed {
+    display: none;
+  }
 }
 
 .start__label {

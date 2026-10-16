@@ -6,6 +6,7 @@ import { ReportsGateway } from '~/modules/reports/core/interfaces/reports.gatewa
 import type { SpendingByCategory } from '~/modules/reports/core/types/reports';
 import { LEDGER_GATE } from '~/util/api/ledger-gate';
 import { Problem, problemOf } from '~/util/api/problem';
+import { DEFAULT_VIEW, type ViewMode } from '~/util/view-mode';
 
 export type CategorySpendingState =
   | { readonly status: 'loading' }
@@ -20,9 +21,9 @@ export const CATEGORY_LIMIT = 5;
 export class CategorySpendingFacade {
   private readonly gateway = inject(ReportsGateway);
   private readonly gate = inject(LEDGER_GATE, { optional: true });
-  private readonly loads = new Subject<string>();
+  private readonly loads = new Subject<{ month: string; view: ViewMode }>();
   private readonly current = signal<CategorySpendingState>({ status: 'loading' });
-  private month: string | null = null;
+  private last: { month: string; view: ViewMode } | null = null;
 
   readonly state = this.current.asReadonly();
   readonly data = computed(() => {
@@ -37,8 +38,8 @@ export class CategorySpendingFacade {
   constructor() {
     this.loads
       .pipe(
-        switchMap((month) => {
-          const source = this.gateway.spendingByCategory(month, CATEGORY_LIMIT);
+        switchMap(({ month, view }) => {
+          const source = this.gateway.spendingByCategory(month, CATEGORY_LIMIT, view);
           return (this.gate ? this.gate.run(source, PRIORITY) : source).pipe(
             map((data): CategorySpendingState =>
               data.items.length === 0 && data.other === null
@@ -56,12 +57,12 @@ export class CategorySpendingFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  load(month: string): void {
-    this.month = month;
-    this.loads.next(month);
+  load(month: string, view: ViewMode = DEFAULT_VIEW): void {
+    this.last = { month, view };
+    this.loads.next(this.last);
   }
 
   retry(): void {
-    if (this.month !== null) this.loads.next(this.month);
+    if (this.last !== null) this.loads.next(this.last);
   }
 }

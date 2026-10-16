@@ -73,6 +73,7 @@ export class CommitmentPage {
 
   protected readonly commitment = this.facade.commitment;
   protected readonly paying = signal<CommitmentItem | null>(null);
+  protected readonly showAllSchedule = signal(false);
   private readonly locale = computed(() => HTML_LANG[this.i18n.language()]);
 
   protected readonly payForm = new FormGroup({
@@ -85,6 +86,12 @@ export class CommitmentPage {
     nextDueDate: new FormControl<string | null>(null),
     notes: new FormControl('', { nonNullable: true }),
   });
+
+  protected visibleSchedule(items: readonly CommitmentItem[]): readonly CommitmentItem[] {
+    if (this.showAllSchedule() || items.length <= 8) return items;
+    const pending = items.filter((item) => !item.paid).slice(0, 6);
+    return pending.length > 0 ? pending : items.slice(-3);
+  }
 
   protected readonly notFoundActions = computed<readonly EmptyStateAction[]>(() => [
     {

@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { NEVER, Observable } from 'rxjs';
 
 import { pt } from '~/app/common/i18n/translations/pt';
+import { ValuesVisibilityService } from '~/app/common/services/values-visibility.service';
 import { NotificationsPopoverComponent } from '~/app/features/notifications/components/notifications-popover.component';
 import type {
   NotificationsQuery,
@@ -74,6 +76,21 @@ describe('NotificationsPopoverComponent (sino do cabeçalho)', () => {
       'href',
       '/notifications',
     );
+  });
+
+  it('Dado valores ocultos, quando o pop-up abre, então os montantes citados vêm mascarados', async () => {
+    localStorage.clear();
+    const gateway = new NotificationsGatewayStub();
+    gateway.notifications = [aNotification({ id: 'n-1' })];
+    const { bell } = await setup(gateway);
+    TestBed.inject(ValuesVisibilityService).set(true);
+
+    await userEvent.click(bell);
+
+    const item = await screen.findByTestId('notifications-popover-item');
+    expect(item).toHaveTextContent('R$ •••••');
+    expect(item).not.toHaveTextContent('1.423');
+    TestBed.inject(ValuesVisibilityService).set(false);
   });
 
   it('Dado o pop-up aberto, quando aperta Esc, então fecha e o foco volta ao botão do sino', async () => {

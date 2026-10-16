@@ -33,6 +33,8 @@ import type { Category } from '~/modules/categories/core/types/category';
 import {
   PAYMENT_METHODS,
   PaymentMethod,
+  TRANSACTION_NATURES,
+  TransactionNature,
 } from '~/modules/transactions/core/types/transaction-enums';
 import type {
   ExpenseInput,
@@ -90,6 +92,7 @@ export class CashEntryFormComponent extends TransactionFormBase {
     date: new FormControl<string | null>(todayIso()),
     incomeCompetence: new FormControl<string | null>(null),
     method: new FormControl<string | null>(null),
+    nature: new FormControl<string | null>(null),
     shares: new FormArray<ShareGroup>([]),
   });
   private readonly formValue = toSignal(this.form.valueChanges.pipe(startWith(null)), {
@@ -123,6 +126,13 @@ export class CashEntryFormComponent extends TransactionFormBase {
     PAYMENT_METHODS.map((method) => ({
       value: method,
       label: this.t().transactions.methods[method],
+    })),
+  );
+
+  protected readonly natureOptions = computed<readonly ChoiceOption[]>(() =>
+    TRANSACTION_NATURES.map((nature) => ({
+      value: nature,
+      label: this.t().entryForm.nature.options[nature],
     })),
   );
 
@@ -181,6 +191,7 @@ export class CashEntryFormComponent extends TransactionFormBase {
           accountId: initial.accountId,
           date: initial.date,
           method: initial.method,
+          nature: 'nature' in initial ? (initial.nature ?? null) : null,
           incomeCompetence:
             'incomeCompetence' in initial ? (initial.incomeCompetence ?? null) : null,
         }),
@@ -221,6 +232,9 @@ export class CashEntryFormComponent extends TransactionFormBase {
       ...((this.fixedMethod() ?? value.method)
         ? { method: (this.fixedMethod() ?? value.method) as PaymentMethod }
         : {}),
+      ...(this.type() === 'EXPENSE' && value.nature
+        ? { nature: value.nature as TransactionNature }
+        : {}),
       ...(shares.length > 0 && this.type() === 'EXPENSE' ? { shares } : {}),
       ...(this.type() === 'INCOME' &&
       value.incomeCompetence &&
@@ -239,6 +253,7 @@ export class CashEntryFormComponent extends TransactionFormBase {
   protected clearAfterSave(): void {
     this.form.controls.amount.reset(null);
     this.form.controls.description.reset('');
+    this.form.controls.nature.reset(null);
     this.form.controls.incomeCompetence.reset(null);
     this.split.setValue(false);
     this.loan.setValue(false);

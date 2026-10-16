@@ -21,7 +21,11 @@ const NEXT_7_DAYS: readonly UpcomingBucket[] = ['OVERDUE', 'TODAY', 'TOMORROW', 
   imports: [RouterLink, MoneyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <section class="ub glass" aria-labelledby="home-upcoming-title" data-cy="home-upcoming-brief">
+    <section
+      class="ub glass-panel glass-panel--card glass-panel--flat"
+      aria-labelledby="home-upcoming-title"
+      data-cy="home-upcoming-brief"
+    >
       <header class="ub__head">
         <h2 class="ub__title" id="home-upcoming-title">{{ t().brief.upcoming.title }}</h2>
         <a class="ub__link hit" routerLink="/planning/overview" data-cy="home-upcoming-all">

@@ -1,10 +1,12 @@
-<header class="wh" [class.wh--home]="onHome()" data-cy="workspace-header">
-  @if (onHome()) {
-    <div class="wh__greeting">
-      <p class="wh__hello" data-cy="workspace-greeting">{{ greeting() }}</p>
-      <p class="wh__subtitle" data-cy="workspace-subtitle">{{ t().header.subtitle }}</p>
-    </div>
-  }
+<header class="wh" data-cy="workspace-header">
+  <a
+    class="icon-button wh__menu"
+    routerLink="/more"
+    data-cy="header-menu"
+    [attr.aria-label]="t().nav.more"
+  >
+    <app-icon name="more" [size]="20" />
+  </a>
 
   @defer (on immediate) {
     <app-global-search class="wh__search" />
@@ -13,6 +15,12 @@
   }
 
   <div class="wh__status">
+    <app-values-toggle />
+    @defer (on immediate) {
+      <app-notifications-popover />
+    } @placeholder {
+      <span class="wh__avatar-placeholder" aria-hidden="true"></span>
+    }
     <button
       type="button"
       class="icon-button wh__bell"
@@ -24,7 +32,6 @@
     >
       <app-icon [name]="themeIcon()" [size]="20" />
     </button>
-    <app-notifications-popover />
     @defer (on immediate) {
       <app-profile-menu class="wh__profile" cy="header-profile" />
     } @placeholder {

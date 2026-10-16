@@ -1,9 +1,9 @@
-<app-page-layout fit [heading]="t().nav.accounts">
+<app-page-layout [heading]="t().nav.accounts">
   <a pageActions class="button button--primary" routerLink="/accounts/new" data-cy="accounts-add">
     {{ t().accounts.add }}
   </a>
 
-  <div class="fit-stack">
+  <div class="stack">
     <nav
       class="tabs"
       appSlideIndicator
@@ -29,7 +29,7 @@
       </a>
     </nav>
 
-    <div class="fit-scroll">
+    <div class="stack">
       @if (reservationsBlocked()) {
         <p class="banner" role="alert" data-cy="accounts-reservations-blocked">
           {{ t().errors.codes['ACCOUNT_HAS_RESERVATIONS'] }}
@@ -59,7 +59,7 @@
               illustration="grid"
             />
           } @else {
-            <p class="empty-note" data-cy="accounts-empty-archived">
+            <p class="state-note" data-cy="accounts-empty-archived">
               {{ t().accounts.emptyArchived }}
             </p>
           }
@@ -69,16 +69,21 @@
         }
         @case ('ready') {
           @if (accounts.data(); as data) {
-            <ul class="list" data-cy="accounts-list">
-              @for (account of data; track account.id) {
-                <li
-                  app-account-row
-                  [account]="account"
-                  (archive)="askArchive($event)"
-                  (unarchive)="unarchive($event)"
-                ></li>
-              }
-            </ul>
+            <div class="card-flat list-wrap">
+              <ul class="list" data-cy="accounts-list">
+                @for (account of data; track account.id) {
+                  <li
+                    app-account-row
+                    [account]="account"
+                    (archive)="askArchive($event)"
+                    (unarchive)="unarchive($event)"
+                  ></li>
+                }
+              </ul>
+            </div>
+            @if (hasBlocked()) {
+              <p class="caption" data-cy="accounts-archive-hint">{{ t().accounts.archiveHint }}</p>
+            }
           }
         }
       }

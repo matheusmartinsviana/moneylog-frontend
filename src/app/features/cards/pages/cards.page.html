@@ -52,7 +52,7 @@
           illustration="grid"
         />
       } @else {
-        <p class="empty-note" data-cy="cards-empty-archived">{{ t().cards.emptyArchived }}</p>
+        <p class="state-note" data-cy="cards-empty-archived">{{ t().cards.emptyArchived }}</p>
       }
     }
     @case ('error') {
@@ -60,22 +60,27 @@
     }
     @case ('ready') {
       @if (cards.data(); as data) {
-        <div class="table-head" aria-hidden="true">
-          <span>{{ t().cards.columns.name }}</span>
-          <span>{{ t().cards.columns.limit }}</span>
-          <span>{{ t().cards.columns.invoice }}</span>
-          <span class="table-head__actions">{{ t().cards.columns.actions }}</span>
+        <div class="card-flat list-wrap">
+          <div class="table-head" aria-hidden="true">
+            <span>{{ t().cards.columns.name }}</span>
+            <span>{{ t().cards.columns.limit }}</span>
+            <span>{{ t().cards.columns.invoice }}</span>
+            <span class="table-head__actions">{{ t().cards.columns.actions }}</span>
+          </div>
+          <ul class="list" data-cy="cards-list">
+            @for (card of data; track card.id) {
+              <li
+                app-card-row
+                [card]="card"
+                (archive)="askArchive($event)"
+                (unarchive)="unarchive($event)"
+              ></li>
+            }
+          </ul>
         </div>
-        <ul class="list" data-cy="cards-list">
-          @for (card of data; track card.id) {
-            <li
-              app-card-row
-              [card]="card"
-              (archive)="askArchive($event)"
-              (unarchive)="unarchive($event)"
-            ></li>
-          }
-        </ul>
+        @if (hasBlocked()) {
+          <p class="caption" data-cy="cards-archive-hint">{{ t().cards.archiveHint }}</p>
+        }
       }
     }
   }

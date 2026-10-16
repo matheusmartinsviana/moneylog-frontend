@@ -58,187 +58,243 @@
           <p class="banner" role="alert" data-cy="debt-action-error">{{ message }}</p>
         }
 
-        <section class="summary surface" data-cy="debt-summary">
-          <p class="summary__status" data-cy="debt-status" [attr.data-status]="d.status">
-            {{ t().debts.status[d.status] }}
-            @if (d.overdue) {
-              <span class="summary__overdue" data-cy="debt-overdue">
-                {{ t().debts.detail.overdue }}
-              </span>
-            }
-          </p>
-          <dl class="figures">
-            <div>
-              <dt>{{ t().debts.detail.principal }}</dt>
-              <dd data-cy="debt-principal"><app-money [value]="d.principal" /></dd>
-            </div>
-            <div>
-              <dt>{{ t().debts.detail.settled }}</dt>
-              <dd data-cy="debt-settled"><app-money [value]="d.settled" /></dd>
-            </div>
-            <div>
-              <dt>{{ t().debts.detail.outstanding }}</dt>
-              <dd class="figures__outstanding" data-cy="debt-outstanding">
-                <app-money [value]="d.outstanding" />
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <dl class="fields">
-          <div class="fields__row" data-cy="debt-field-person">
-            <dt>{{ d.person ? t().debts.detail.person : t().debts.detail.creditor }}</dt>
-            <dd>
-              @if (d.person; as person) {
-                <a [routerLink]="['/people', person.id]" data-cy="debt-person-link">{{
-                  person.name
-                }}</a>
-              } @else {
-                <span data-cy="debt-creditor-name">{{ d.creditorName }}</span>
-              }
-            </dd>
-          </div>
-          <div class="fields__row" data-cy="debt-field-direction">
-            <dt>{{ t().debts.detail.directionLabel }}</dt>
-            <dd>{{ t().debts.direction[d.direction] }}</dd>
-          </div>
-          <div class="fields__row" data-cy="debt-field-date">
-            <dt>{{ t().debts.detail.date }}</dt>
-            <dd>{{ dates().date }}</dd>
-          </div>
-          <div class="fields__row" data-cy="debt-field-expected">
-            <dt>{{ t().debts.detail.expectedDate }}</dt>
-            <dd>{{ dates().expected ?? t().debts.detail.noExpectedDate }}</dd>
-          </div>
-          @if (d.category) {
-            <div class="fields__row" data-cy="debt-field-category">
-              <dt>{{ t().debts.detail.category }}</dt>
-              <dd>{{ d.category.name }}</dd>
-            </div>
-          }
-          <div class="fields__row" data-cy="debt-field-origin">
-            <dt>{{ t().debts.detail.origin }}</dt>
-            <dd>
-              {{ t().debts.detail.originValues[d.origin] }}
-              @if (d.originTransactionId; as originId) {
-                <a [routerLink]="['/transactions', originId]" data-cy="debt-origin-link">{{
-                  t().debts.detail.viewOrigin
-                }}</a>
-              }
-            </dd>
-          </div>
-          @if (closed()) {
-            <div class="fields__row" data-cy="debt-field-closure">
-              <dt>{{ t().debts.detail.closure }}</dt>
-              <dd>
-                <span data-cy="debt-closed-on">{{ dates().closure }}</span>
-                @if (d.closureReason) {
-                  <span data-cy="debt-closure-reason">
-                    {{ t().debts.detail.closureReason }}: {{ d.closureReason }}
+        <div class="page-grid">
+          <div class="stack span-7">
+            <section
+              class="summary glass-panel glass-panel--strong glass-panel--card"
+              data-cy="debt-summary"
+            >
+              <p class="summary__status" data-cy="debt-status" [attr.data-status]="d.status">
+                {{ t().debts.status[d.status] }}
+                @if (d.overdue) {
+                  <span class="summary__overdue" data-cy="debt-overdue">
+                    {{ t().debts.detail.overdue }}
                   </span>
                 }
-              </dd>
-            </div>
-          }
-        </dl>
-
-        <section class="settlements" aria-labelledby="debt-settlements-title">
-          <h2 id="debt-settlements-title" class="section-title">
-            {{ t().debts.detail.settlements.title }}
-          </h2>
-          @if (reverseError(); as message) {
-            <p class="banner" role="alert" data-cy="debt-reverse-error">{{ message }}</p>
-          }
-          @if (d.settlements.length === 0) {
-            <p class="empty" data-cy="debt-settlements-empty">
-              {{ t().debts.detail.settlements.empty }}
-            </p>
-          } @else {
-            <ul class="list" data-cy="debt-settlements">
-              @for (settlement of d.settlements; track settlement.transactionId) {
-                <li
-                  class="settlement"
-                  [attr.data-cy]="'debt-settlement-' + settlement.transactionId"
-                >
-                  <span class="settlement__amount">
-                    <app-money [value]="settlement.amount" />
-                  </span>
-                  <span class="settlement__date num">{{ formatDate(settlement.date) }}</span>
-                  @if (!settlement.active) {
-                    <span class="settlement__tag">{{ t().debts.detail.settlements.reversed }}</span>
-                  }
-                  <a
-                    class="settlement__link"
-                    [routerLink]="['/transactions', settlement.transactionId]"
-                    [attr.data-cy]="'debt-settlement-view-' + settlement.transactionId"
-                  >
-                    {{ t().debts.detail.settlements.view }}
-                  </a>
-                  @if (settlement.active) {
-                    <button
-                      type="button"
-                      class="button"
-                      [attr.data-cy]="'debt-settlement-reverse-' + settlement.transactionId"
-                      (click)="askReverse(settlement.transactionId)"
-                    >
-                      {{ t().debts.detail.settlements.reverse }}
-                    </button>
-                  }
-                </li>
+              </p>
+              @if (kindLabel(); as label) {
+                <p class="summary__kind" data-cy="debt-kind">{{ label }}</p>
               }
-            </ul>
-          }
-        </section>
+              <dl class="figures">
+                <div class="figures__focus">
+                  <dt>{{ t().debts.detail.outstanding }}</dt>
+                  <dd class="figure" data-cy="debt-outstanding">
+                    <app-money [value]="d.outstanding" />
+                  </dd>
+                </div>
+                <div>
+                  <dt>{{ t().debts.detail.principal }}</dt>
+                  <dd data-cy="debt-principal"><app-money [value]="d.principal" /></dd>
+                </div>
+                <div>
+                  <dt>{{ t().debts.detail.settled }}</dt>
+                  <dd data-cy="debt-settled"><app-money [value]="d.settled" /></dd>
+                </div>
+              </dl>
+            </section>
 
-        <div class="actions actions--secondary" data-cy="debt-secondary-actions">
-          @if (isOpen()) {
-            <button type="button" class="button" data-cy="debt-edit" (click)="openEdit()">
-              {{ t().debts.detail.actions.edit }}
-            </button>
-          }
-          @if (d.cancelable) {
-            <button
-              type="button"
-              class="button"
-              data-cy="debt-forgive"
-              (click)="openDialog('forgive')"
-            >
-              {{ t().debts.detail.actions.forgive }}
-            </button>
-          }
-          @if (d.voidable) {
-            <button type="button" class="button" data-cy="debt-void" (click)="openDialog('void')">
-              {{ t().debts.detail.actions.void }}
-            </button>
-          } @else if (voidBlocked(); as hint) {
-            <button
-              type="button"
-              class="button"
-              data-cy="debt-void"
-              aria-disabled="true"
-              aria-describedby="debt-void-hint"
-              (click)="$event.preventDefault()"
-            >
-              {{ t().debts.detail.actions.void }}
-            </button>
-            <p
-              class="hint"
-              id="debt-void-hint"
-              data-cy="debt-void-blocked"
-              [attr.data-reason]="d.voidBlockedBy"
-            >
-              {{ hint }}
-            </p>
-          }
+            <dl class="fields">
+              @if (d.channel) {
+                <div class="fields__row" data-cy="debt-field-channel">
+                  <dt>{{ t().cardCashOut.channelLabel }}</dt>
+                  <dd>{{ d.channel }}</dd>
+                </div>
+              }
+              <div class="fields__row" data-cy="debt-field-person">
+                <dt>{{ d.person ? t().debts.detail.person : t().debts.detail.creditor }}</dt>
+                <dd>
+                  @if (d.person; as person) {
+                    <a [routerLink]="['/people', person.id]" data-cy="debt-person-link">{{
+                      person.name
+                    }}</a>
+                  } @else {
+                    <span data-cy="debt-creditor-name">{{ d.creditorName }}</span>
+                  }
+                </dd>
+              </div>
+              <div class="fields__row" data-cy="debt-field-direction">
+                <dt>{{ t().debts.detail.directionLabel }}</dt>
+                <dd>{{ t().debts.direction[d.direction] }}</dd>
+              </div>
+              <div class="fields__row" data-cy="debt-field-date">
+                <dt>{{ t().debts.detail.date }}</dt>
+                <dd>{{ dates().date }}</dd>
+              </div>
+              <div class="fields__row" data-cy="debt-field-expected">
+                <dt>{{ t().debts.detail.expectedDate }}</dt>
+                <dd>{{ dates().expected ?? t().debts.detail.noExpectedDate }}</dd>
+              </div>
+              @if (d.category) {
+                <div class="fields__row" data-cy="debt-field-category">
+                  <dt>{{ t().debts.detail.category }}</dt>
+                  <dd>{{ d.category.name }}</dd>
+                </div>
+              }
+              <div class="fields__row" data-cy="debt-field-origin">
+                <dt>{{ t().debts.detail.origin }}</dt>
+                <dd>
+                  {{ t().debts.detail.originValues[d.origin] }}
+                  @if (d.originTransactionId; as originId) {
+                    <a [routerLink]="['/transactions', originId]" data-cy="debt-origin-link">{{
+                      t().debts.detail.viewOrigin
+                    }}</a>
+                  }
+                </dd>
+              </div>
+              @if (closed()) {
+                <div class="fields__row" data-cy="debt-field-closure">
+                  <dt>{{ t().debts.detail.closure }}</dt>
+                  <dd>
+                    <span data-cy="debt-closed-on">{{ dates().closure }}</span>
+                    @if (d.closureReason) {
+                      <span data-cy="debt-closure-reason">
+                        {{ t().debts.detail.closureReason }}: {{ d.closureReason }}
+                      </span>
+                    }
+                  </dd>
+                </div>
+              }
+            </dl>
+
+            <div class="actions actions--secondary quiet-actions" data-cy="debt-secondary-actions">
+              @if (isOpen()) {
+                <button type="button" class="button" data-cy="debt-edit" (click)="openEdit()">
+                  {{ t().debts.detail.actions.edit }}
+                </button>
+              }
+              @if (d.cancelable) {
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="debt-forgive"
+                  (click)="openDialog('forgive')"
+                >
+                  {{ t().debts.detail.actions.forgive }}
+                </button>
+              }
+              @if (d.voidable) {
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="debt-void"
+                  (click)="openDialog('void')"
+                >
+                  {{ t().debts.detail.actions.void }}
+                </button>
+              } @else if (voidBlocked(); as hint) {
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="debt-void"
+                  aria-disabled="true"
+                  aria-describedby="debt-void-hint"
+                  (click)="$event.preventDefault()"
+                >
+                  {{ t().debts.detail.actions.void }}
+                </button>
+                <p
+                  class="hint"
+                  id="debt-void-hint"
+                  data-cy="debt-void-blocked"
+                  [attr.data-reason]="d.voidBlockedBy"
+                >
+                  {{ hint }}
+                </p>
+              }
+            </div>
+          </div>
+          <div class="stack span-5">
+            @if (rate(); as r) {
+              <section
+                class="rate card-flat"
+                aria-labelledby="debt-rate-title"
+                data-cy="debt-effective-rate"
+              >
+                <h2 id="debt-rate-title" class="section-title">
+                  {{ t().cardCashOut.effectiveRate.title }}
+                </h2>
+                @if (r.monthly !== null && r.annual !== null) {
+                  <dl class="figures">
+                    <div>
+                      <dt>{{ t().cardCashOut.effectiveRate.monthly }}</dt>
+                      <dd data-cy="debt-rate-monthly">{{ r.monthly }}</dd>
+                    </div>
+                    <div>
+                      <dt>{{ t().cardCashOut.effectiveRate.annual }}</dt>
+                      <dd data-cy="debt-rate-annual">{{ r.annual }}</dd>
+                    </div>
+                  </dl>
+                  <p class="hint">{{ t().cardCashOut.effectiveRate.note }}</p>
+                } @else {
+                  <p class="hint" data-cy="debt-rate-none">
+                    {{ t().cardCashOut.effectiveRate.none }}
+                  </p>
+                }
+              </section>
+            }
+
+            <section class="settlements" aria-labelledby="debt-settlements-title">
+              <h2 id="debt-settlements-title" class="section-title">
+                {{ t().debts.detail.settlements.title }}
+              </h2>
+              @if (reverseError(); as message) {
+                <p class="banner" role="alert" data-cy="debt-reverse-error">{{ message }}</p>
+              }
+              @if (d.settlements.length === 0) {
+                <p class="state-note" data-cy="debt-settlements-empty">
+                  {{ t().debts.detail.settlements.empty }}
+                </p>
+              } @else {
+                <ul class="list" data-cy="debt-settlements">
+                  @for (settlement of d.settlements; track settlement.transactionId) {
+                    <li
+                      class="settlement"
+                      [attr.data-cy]="'debt-settlement-' + settlement.transactionId"
+                    >
+                      <span class="settlement__amount">
+                        <app-money [value]="settlement.amount" />
+                      </span>
+                      <span class="settlement__date num">{{ formatDate(settlement.date) }}</span>
+                      @if (!settlement.active) {
+                        <span class="settlement__tag">{{
+                          t().debts.detail.settlements.reversed
+                        }}</span>
+                      }
+                      <a
+                        class="settlement__link"
+                        [routerLink]="['/transactions', settlement.transactionId]"
+                        [attr.data-cy]="'debt-settlement-view-' + settlement.transactionId"
+                      >
+                        {{ t().debts.detail.settlements.view }}
+                      </a>
+                      @if (settlement.active) {
+                        <button
+                          type="button"
+                          class="button"
+                          [attr.data-cy]="'debt-settlement-reverse-' + settlement.transactionId"
+                          (click)="askReverse(settlement.transactionId)"
+                        >
+                          {{ t().debts.detail.settlements.reverse }}
+                        </button>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          </div>
+          <div class="span-12">
+            <app-linked-notes
+              type="DEBT"
+              cy="debt-notes"
+              [entityId]="d.id"
+              [label]="d.description ?? d.person?.name ?? d.creditorName ?? ''"
+              [status]="
+                d.status === 'CANCELED' ? 'CANCELED' : d.status === 'VOIDED' ? 'VOIDED' : null
+              "
+            />
+          </div>
         </div>
-
-        <app-linked-notes
-          type="DEBT"
-          cy="debt-notes"
-          [entityId]="d.id"
-          [label]="d.description ?? d.person?.name ?? d.creditorName ?? ''"
-          [status]="d.status === 'CANCELED' ? 'CANCELED' : d.status === 'VOIDED' ? 'VOIDED' : null"
-        />
 
         <app-settle-sheet
           [open]="settling()"

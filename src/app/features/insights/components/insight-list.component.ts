@@ -15,7 +15,9 @@ import type { InsightsState } from '~/modules/ai/core/facades/insights.facade';
   template: `
     @switch (state().status) {
       @case ('loading') {
-        <p role="status" data-cy="insights-loading">{{ t().ai.insights.loading }}</p>
+        <p class="state-note" role="status" data-cy="insights-loading">
+          {{ t().ai.insights.loading }}
+        </p>
       }
       @case ('error') {
         <app-error-state [problem]="problem()" (retry)="retry.emit()" />
@@ -26,24 +28,22 @@ import type { InsightsState } from '~/modules/ai/core/facades/insights.facade';
             @for (line of lines(); track line.id) {
               <li class="il__item">
                 <p>{{ line.text }}</p>
-                <p class="il__muted">
-                  {{ t().ai.insights.source }}
-                  @if (line.categoryId) {
-                    ·
+                @if (line.categoryId) {
+                  <p class="il__muted">
                     <a
-                      class="il__link"
+                      class="il__link hit"
                       routerLink="/transactions"
                       [queryParams]="{ categoryId: line.categoryId }"
                       data-cy="insight-spending-link"
                       >{{ t().ai.insights.viewSpending }}</a
                     >
-                  }
-                </p>
+                  </p>
+                }
               </li>
             }
           </ul>
         } @else {
-          <p data-cy="insights-empty">{{ t().ai.insights.empty }}</p>
+          <p class="state-note" data-cy="insights-empty">{{ t().ai.insights.empty }}</p>
         }
       }
       @default {
@@ -58,7 +58,8 @@ import type { InsightsState } from '~/modules/ai/core/facades/insights.facade';
   styles: `
     .il {
       display: grid;
-      gap: var(--space-3);
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+      gap: var(--space-5) var(--space-8);
       margin: 0;
       padding: 0;
       list-style: none;
@@ -66,10 +67,11 @@ import type { InsightsState } from '~/modules/ai/core/facades/insights.facade';
 
     .il__item {
       display: grid;
-      gap: var(--space-1);
-      padding: var(--space-3) var(--space-4);
-      border: 1px solid var(--color-border);
-      border-radius: var(--radius-control);
+      align-content: start;
+      gap: var(--space-2);
+      padding-top: var(--space-4);
+      border-top: var(--border-width) solid var(--home-divider);
+      text-wrap: pretty;
     }
 
     .il__muted {
@@ -78,7 +80,12 @@ import type { InsightsState } from '~/modules/ai/core/facades/insights.facade';
     }
 
     .il__link {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--touch-min);
       color: var(--color-accent);
+      font-weight: var(--weight-medium);
     }
   `,
 })

@@ -49,7 +49,7 @@
               <div class="item__actions">
                 <button
                   type="button"
-                  class="button"
+                  class="button button--soft"
                   data-cy="home-upcoming-realize"
                   [attr.aria-label]="view.realizeLabel"
                   (click)="realize.emit(view.item)"
@@ -105,9 +105,9 @@
     </div>
   </dl>
   <p class="note" data-cy="home-upcoming-in-note">{{ t().home.upcoming.totalInNote }}</p>
-  @if (hasRecurrence()) {
+  @if (hasRecurrence() || hiddenCount() > 0) {
     <a class="link hit" routerLink="/planning/occurrences" data-cy="home-upcoming-pending">
-      {{ t().home.upcoming.openPending }}
+      {{ hiddenCount() > 0 ? t().brief.showAll : t().home.upcoming.openPending }}
     </a>
   }
 } @else {

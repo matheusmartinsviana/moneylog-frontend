@@ -57,6 +57,12 @@ export abstract class CardsGateway {
 
   abstract getInvoice(id: string): Observable<Invoice>;
 
+  abstract changeDocumentAmount(
+    invoiceId: string,
+    documentAmount: string | null,
+    version: number | null,
+  ): Observable<Invoice>;
+
   abstract previewPayment(invoiceId: string, amount: string): Observable<PaymentPreview>;
 
   abstract payInvoice(

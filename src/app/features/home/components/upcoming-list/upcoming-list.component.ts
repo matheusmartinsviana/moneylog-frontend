@@ -43,6 +43,7 @@ export class UpcomingListComponent {
 
   readonly upcoming = input.required<Upcoming>();
   readonly realize = output<UpcomingItem>();
+  readonly limit = input<number | null>(null);
 
   protected readonly hasItems = computed(
     () => this.upcoming().items.length > 0 || this.upcoming().undated.length > 0,
@@ -53,6 +54,13 @@ export class UpcomingListComponent {
       (item) => item.refType === 'RECURRENCE',
     ),
   );
+
+  protected readonly hiddenCount = computed(() => {
+    const limit = this.limit();
+    if (limit === null) return 0;
+    const total = this.upcoming().items.length + this.upcoming().undated.length;
+    return Math.max(total - limit, 0);
+  });
 
   protected readonly groups = computed<readonly GroupView[]>(() => {
     const copy = this.t().home.upcoming;
@@ -85,6 +93,16 @@ export class UpcomingListComponent {
       label: copy.undated,
       items: [...orphans, ...undated].map(view),
     };
-    return [...dated, withoutDate].filter((group) => group.items.length > 0);
+    const all = [...dated, withoutDate].filter((group) => group.items.length > 0);
+    const limit = this.limit();
+    if (limit === null) return all;
+    let left = limit;
+    return all
+      .map((group) => {
+        const items = group.items.slice(0, Math.max(left, 0));
+        left -= items.length;
+        return { ...group, items };
+      })
+      .filter((group) => group.items.length > 0);
   });
 }

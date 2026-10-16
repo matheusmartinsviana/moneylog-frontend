@@ -11,6 +11,7 @@ import type { ListFilters } from '~/modules/transactions/core/types/list-filters
 import type { Transaction, TransactionTotals } from '~/modules/transactions/core/types/transaction';
 import type { TransactionInput } from '~/modules/transactions/core/types/transaction-input';
 import { brl } from '~/testing/accounts-testing';
+import type { SplitInput } from '~/util/split';
 
 export function aTransaction(overrides: Partial<Transaction> = {}): Transaction {
   return {
@@ -34,6 +35,10 @@ export function aTransaction(overrides: Partial<Transaction> = {}): Transaction 
     invoice: null,
     debt: null,
     shares: [],
+    splitMode: null,
+    personShares: [],
+    myAmount: null,
+    thirdPartyAmount: null,
     recurrenceId: null,
     occurrenceDate: null,
     incomeCompetence: null,
@@ -98,6 +103,8 @@ export class TransactionsGatewayStub extends TransactionsGateway {
   update$: Observable<Transaction> = of(aTransaction());
   void$: Observable<Transaction> = of(aTransaction({ status: 'VOIDED' }));
   cancel$: Observable<Transaction> = of(aTransaction());
+  shares$: Observable<Transaction> = of(aTransaction());
+  shareUpdates: { id: string; split: SplitInput; version: number }[] = [];
 
   list(filters: ListFilters, page: number, pageSize: number): Observable<TransactionSlice> {
     this.listCalls.push({ filters, page, pageSize });
@@ -126,6 +133,11 @@ export class TransactionsGatewayStub extends TransactionsGateway {
   void(id: string, reason: string): Observable<Transaction> {
     this.voids.push({ id, reason });
     return this.void$;
+  }
+
+  updateShares(id: string, split: SplitInput, version: number): Observable<Transaction> {
+    this.shareUpdates.push({ id, split, version });
+    return this.shares$;
   }
 
   cancelInstallments(id: string, reason: string): Observable<Transaction> {

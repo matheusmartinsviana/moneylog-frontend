@@ -12,6 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 
+import { AvatarComponent } from '~/app/common/components/avatar/avatar.component';
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 import type { IconName } from '~/app/common/components/icon/icons';
 import { OverlayPanelComponent } from '~/app/common/components/overlay/overlay-panel.component';
@@ -36,7 +37,7 @@ const normalize = (text: string): string =>
 
 @Component({
   selector: 'app-menu',
-  imports: [IconComponent, OverlayPanelComponent, TooltipDirective],
+  imports: [AvatarComponent, IconComponent, OverlayPanelComponent, TooltipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="menu" #wrapper>
@@ -65,6 +66,8 @@ const normalize = (text: string): string =>
         @if (showLabel()) {
           <span>{{ label() }}</span>
           <app-icon class="menu__chevron" name="chevronDown" [size]="16" />
+        } @else if (avatar() && (avatarName() || avatarSrc())) {
+          <app-avatar size="sm" [name]="avatarName()" [src]="avatarSrc()" />
         } @else {
           <app-icon [name]="icon()" [size]="20" />
         }
@@ -151,15 +154,21 @@ const normalize = (text: string): string =>
       min-height: 2.75rem;
       height: 2.75rem;
       padding: 0;
-      border-color: var(--color-border);
-      border-radius: var(--radius-icon);
-      background-color: var(--color-accent-soft);
+      border-color: var(--btn-glass-border);
+      border-radius: 50%;
+      background-color: var(--btn-glass-solid);
+      background-image: var(--btn-soft-bg);
+      box-shadow: var(--btn-glass-shadow);
       color: var(--color-accent);
+      transition:
+        background-image var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-base) var(--ease-standard);
     }
 
     .menu__trigger--avatar:hover:not(:disabled),
     .menu__trigger--avatar.is-open {
-      background-color: var(--color-hover-soft);
+      background-image: var(--btn-glass-bg-hover);
+      box-shadow: var(--btn-glass-shadow-hover);
       color: var(--color-text);
     }
 
@@ -169,9 +178,9 @@ const normalize = (text: string): string =>
       height: 2.5rem;
       min-height: 2.5rem;
       padding: 0;
-      border-color: var(--color-border);
-      border-radius: var(--radius-icon);
-      background-color: var(--color-surface-inset);
+      border-color: var(--rail-pill-border);
+      border-radius: var(--radius-rail-pill);
+      background-color: var(--rail-pill-bg);
       color: var(--color-text);
     }
 
@@ -187,7 +196,7 @@ const normalize = (text: string): string =>
     .menu__trigger--rail.is-active {
       border-color: transparent;
       background-color: transparent;
-      color: var(--color-on-accent);
+      color: var(--color-text);
     }
 
     .menu__trigger--rail.is-active:hover:not(:disabled),
@@ -195,7 +204,7 @@ const normalize = (text: string): string =>
       border-color: transparent;
       background-color: transparent;
       background-image: none;
-      color: var(--color-on-accent);
+      color: var(--color-text);
     }
 
     .menu__trigger--rail:focus-visible {
@@ -222,9 +231,9 @@ const normalize = (text: string): string =>
 
     .menu__trigger--rail:hover:not(:disabled),
     .menu__trigger--rail.is-open {
-      border-color: var(--color-hover-border);
-      background-color: var(--color-surface-inset);
-      background-image: var(--gradient-hover);
+      border-color: var(--rail-pill-border);
+      background-color: var(--rail-pill-hover);
+      background-image: none;
     }
 
     .menu__trigger:disabled {
@@ -329,6 +338,8 @@ export class MenuComponent {
   readonly items = input.required<readonly MenuItem[]>();
   readonly icon = input<IconName>('more');
   readonly avatar = input(false);
+  readonly avatarName = input<string | null>(null);
+  readonly avatarSrc = input<string | null>(null);
   readonly showLabel = input(false);
   readonly variant = input<'default' | 'rail'>('default');
   readonly active = input(false);

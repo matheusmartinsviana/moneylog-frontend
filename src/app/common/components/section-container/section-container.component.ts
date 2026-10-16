@@ -8,10 +8,11 @@ let nextId = 0;
   host: { '[class.fill]': 'fill()' },
   template: `
     <section
-      class="section"
+      class="section glass-panel"
       [class.lift]="interactive()"
       [class.section--glow]="glow()"
       [class.glass]="glow()"
+      [class.glass-panel--flat]="!glow()"
       [class.glass--strong]="glow()"
       [class.section--fill]="fill()"
       [class.section--dense]="dense()"
@@ -44,13 +45,7 @@ let nextId = 0;
       display: grid;
       gap: var(--space-4);
       padding: var(--space-5);
-      border-radius: var(--radius-panel);
-    }
-
-    .section:not(.glass) {
-      border: var(--border-width) solid var(--color-border);
-      background-color: var(--color-surface);
-      box-shadow: var(--shadow-1);
+      border-radius: var(--radius-rail);
     }
 
     .section--glow {
@@ -105,7 +100,7 @@ let nextId = 0;
 
     @media (hover: hover) {
       .section.lift:hover {
-        box-shadow: var(--shadow-2);
+        box-shadow: var(--glass-panel-shadow-strong);
       }
     }
 

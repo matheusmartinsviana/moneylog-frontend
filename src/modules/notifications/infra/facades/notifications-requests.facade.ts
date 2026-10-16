@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap, throwError } from 'rxjs';
 
 import { NotificationsGateway } from '~/modules/notifications/core/interfaces/notifications.gateway';
 import type {
@@ -8,6 +8,7 @@ import type {
   DailyMessage,
   NotificationSettings,
   NotificationsQuery,
+  ProfilePhoto,
   PushConfig,
   PushSubscriptionInput,
   Reminder,
@@ -27,6 +28,7 @@ import type {
   DailyMessageResponse,
   NotificationSettingsResponse,
   NotificationSliceResponse,
+  ProfilePhotoResponse,
   PushConfigResponse,
   PushSubscriptionRequest,
   PushSubscriptionResponse,
@@ -39,6 +41,7 @@ import {
   DEFAULT_SETTINGS,
   EMPTY_PAGE,
 } from '~/modules/notifications/mock-data/empty-notifications';
+import { problemFromBlobError } from '~/util/api/blob-problem';
 import { Problem, ProblemError, toProblem } from '~/util/api/problem';
 import type { Slice } from '~/util/api/slice';
 import { API_MOCKS } from '~/util/api-mocks';
@@ -147,6 +150,40 @@ export class NotificationsRequestsFacade extends NotificationsGateway {
     return this.http
       .put<NotificationSettingsResponse>(E.settings, toSettingsRequest(settings))
       .pipe(map(toSettings), catchError(fail));
+  }
+
+  uploadProfilePhoto(file: Blob, fileName: string): Observable<ProfilePhoto> {
+    if (this.useMocks) return notFound();
+    const body = new FormData();
+    body.append('file', file, fileName);
+    return this.http.put<ProfilePhotoResponse>(E.profilePhoto, body).pipe(
+      map((r): ProfilePhoto => ({ hasPhoto: r.hasPhoto, photoVersion: r.photoVersion })),
+      catchError(fail),
+    );
+  }
+
+  profilePhotoContent(): Observable<Blob> {
+    if (this.useMocks) return notFound();
+    return this.http
+      .get(E.profilePhotoContent, {
+        params: new HttpParams().set('variant', 'thumb'),
+        responseType: 'blob',
+      })
+      .pipe(
+        catchError((error: unknown) =>
+          from(problemFromBlobError(error)).pipe(
+            switchMap((problem) => throwError(() => new ProblemError(problem))),
+          ),
+        ),
+      );
+  }
+
+  removeProfilePhoto(): Observable<void> {
+    if (this.useMocks) return notFound();
+    return this.http.delete<void>(E.profilePhoto).pipe(
+      map(() => undefined),
+      catchError(fail),
+    );
   }
 
   pushConfig(): Observable<PushConfig> {

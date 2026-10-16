@@ -80,6 +80,19 @@ describe('CardFormPage', () => {
       expect(screen.queryByTestId('billing-change')).not.toBeInTheDocument();
     });
 
+    it('Dado os atalhos de instituição, quando escolho um, então preenche o campo sem obrigar e deixa editar', async () => {
+      await setup();
+
+      expect(input('card-institution').value).toBe('');
+      for (const [index, name] of ['Itaú', 'Nubank', 'Banco do Brasil', 'Mercado Pago'].entries()) {
+        expect(screen.getByTestId(`card-form-institution-${index}`)).toHaveTextContent(name);
+      }
+      await userEvent.click(screen.getByTestId('card-form-institution-3'));
+      expect(input('card-institution').value).toBe('Mercado Pago');
+      await type('card-institution', 'Outro banco');
+      expect(input('card-institution').value).toBe('Outro banco');
+    });
+
     it('Dado os dados, quando salvo, então cria com os valores, mostra o toast e volta para a lista', async () => {
       const { gateway, toast, router, fixture } = await setup();
 
@@ -93,6 +106,101 @@ describe('CardFormPage', () => {
       expect(gateway.calls).toEqual(['create:Roxinho']);
       expect(toast.toasts()[0]?.message).toBe('Cartão Roxinho adicionado.');
       expect(router.url).toBe('/cards');
+    });
+
+    it('Dado o formulário novo, então o débito automático vem como "Não informado" e o corpo leva null', async () => {
+      const { gateway, fixture } = await setup();
+
+      expect(screen.getByTestId('card-auto-debit-unknown')).toBeChecked();
+      await type('card-name', 'Roxinho');
+      await type('card-closing-day', '25');
+      await type('card-due-day', '5');
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates[0]).toMatchObject({
+        autoDebit: null,
+        brand: null,
+        bestPurchaseDay: null,
+        lastDigits: [],
+      });
+    });
+
+    it('Dado débito automático ligado, bandeira, melhor dia e finais, então o corpo leva os quatro campos', async () => {
+      const { gateway, fixture } = await setup();
+
+      await type('card-name', 'Roxinho');
+      await type('card-closing-day', '25');
+      await type('card-due-day', '5');
+      await userEvent.click(screen.getByTestId('card-auto-debit-on'));
+      await type('card-brand', '  Visa ');
+      await type('card-best-purchase-day', '26');
+      await type('card-last-digits', '1234, 5678');
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates[0]).toMatchObject({
+        autoDebit: true,
+        brand: 'Visa',
+        bestPurchaseDay: 26,
+        lastDigits: ['1234', '5678'],
+      });
+    });
+
+    it('Dado débito automático desligado, então o corpo leva false e não null', async () => {
+      const { gateway, fixture } = await setup();
+
+      await type('card-name', 'Roxinho');
+      await type('card-closing-day', '25');
+      await type('card-due-day', '5');
+      await userEvent.click(screen.getByTestId('card-auto-debit-off'));
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates[0]).toMatchObject({ autoDebit: false });
+    });
+
+    it.each(['12', '12345', '12ab', '1234 99'])(
+      'Dado o final "%s" que não tem 4 dígitos, então mostra o erro e não chama a API',
+      async (digits) => {
+        const { gateway, fixture } = await setup();
+
+        await type('card-name', 'Roxinho');
+        await type('card-closing-day', '25');
+        await type('card-due-day', '5');
+        await type('card-last-digits', digits);
+        await userEvent.click(screen.getByTestId('card-form-save'));
+        await fixture.whenStable();
+
+        expect(gateway.creates).toEqual([]);
+        expect(screen.getByTestId('card-form')).toBeInTheDocument();
+      },
+    );
+
+    it('Dado finais repetidos, então o formulário avisa antes de enviar (o servidor recusa com CARD_LAST_DIGITS_INVALID)', async () => {
+      const { gateway, fixture } = await setup();
+
+      await type('card-name', 'Roxinho');
+      await type('card-closing-day', '25');
+      await type('card-due-day', '5');
+      await type('card-last-digits', '1234, 1234');
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates).toEqual([]);
+    });
+
+    it('Dado mais de cinco finais, então o formulário avisa antes de enviar', async () => {
+      const { gateway, fixture } = await setup();
+
+      await type('card-name', 'Roxinho');
+      await type('card-closing-day', '25');
+      await type('card-due-day', '5');
+      await type('card-last-digits', '1111, 2222, 3333, 4444, 5555, 6666');
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates).toEqual([]);
     });
 
     it('Dado campos vazios, quando salvo, então mostra os erros de UX e não chama a API', async () => {
@@ -134,6 +242,23 @@ describe('CardFormPage', () => {
 
       expect(input('card-name').value).toBe('Roxinho');
       expect(screen.getByText(pt.errors.codes['CARD_INVALID_LIMIT']!)).toBeInTheDocument();
+      expect(screen.queryByTestId('card-form-error')).not.toBeInTheDocument();
+    });
+
+    it('Dado 422 CARD_LAST_DIGITS_INVALID do backend, então o erro vai ao campo dos finais e o digitado fica', async () => {
+      const gateway = new CardsGatewayStub();
+      gateway.next = failWith(422, 'CARD_LAST_DIGITS_INVALID');
+      const { fixture } = await setup(gateway);
+      await type('card-name', 'Roxinho');
+      await type('card-closing-day', '25');
+      await type('card-due-day', '5');
+      await type('card-last-digits', '1234, 5678');
+
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      fixture.detectChanges();
+
+      expect(input('card-last-digits').value).toBe('1234, 5678');
+      expect(screen.getByText(pt.errors.codes['CARD_LAST_DIGITS_INVALID']!)).toBeInTheDocument();
       expect(screen.queryByTestId('card-form-error')).not.toBeInTheDocument();
     });
 
@@ -220,6 +345,47 @@ describe('CardFormPage', () => {
       expect(input('card-due-day').value).toBe('5');
       expect(gateway.billingPreviewCalls).toEqual([]);
       expect(screen.queryByTestId('billing-change')).not.toBeInTheDocument();
+    });
+
+    it('Dado o cartão com débito automático desligado e finais, então o formulário os mostra e o PUT os reenvia', async () => {
+      const gateway = new CardsGatewayStub();
+      gateway.cards = [
+        aCard({
+          id: 'card-1',
+          autoDebit: false,
+          brand: 'Visa',
+          bestPurchaseDay: 26,
+          lastDigits: ['1234', '5678'],
+          version: 3,
+        }),
+      ];
+      const { fixture } = await setup(gateway, 'card-1');
+
+      expect(screen.getByTestId('card-auto-debit-off')).toBeChecked();
+      expect(input('card-brand').value).toBe('Visa');
+      expect(input('card-last-digits').value).toBe('1234, 5678');
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.updates[0]).toMatchObject({
+        autoDebit: false,
+        brand: 'Visa',
+        bestPurchaseDay: 26,
+        lastDigits: ['1234', '5678'],
+        version: 3,
+      });
+    });
+
+    it('Dado o cartão com débito automático desconhecido, então o formulário mostra "Não informado" e o PUT mantém null', async () => {
+      const gateway = new CardsGatewayStub();
+      gateway.cards = [aCard({ id: 'card-1', autoDebit: null })];
+      const { fixture } = await setup(gateway, 'card-1');
+
+      expect(screen.getByTestId('card-auto-debit-unknown')).toBeChecked();
+      await userEvent.click(screen.getByTestId('card-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.updates[0]).toMatchObject({ autoDebit: null });
     });
 
     it('Dado mudar só o nome, então salva com a version e sem confirmedEffectiveFrom', async () => {

@@ -9,6 +9,7 @@ import type {
   TransactionType,
 } from '~/modules/transactions/core/types/transaction-enums';
 import { cleanSearchTerm } from '~/util/search-term';
+import { DEFAULT_VIEW, VIEW_MODES, type ViewMode } from '~/util/view-mode';
 
 export type ListView = 'records' | 'entries';
 
@@ -20,6 +21,7 @@ export interface ListFilters {
   readonly to: string | null;
   readonly competence: string;
   readonly lens: EntryLens;
+  readonly amounts: ViewMode;
   readonly type: TransactionType | null;
   readonly accountId: string | null;
   readonly categoryId: string | null;
@@ -54,6 +56,7 @@ export function defaultFilters(today: string): ListFilters {
     to,
     competence: today.slice(0, 7),
     lens: 'CONSUMPTION',
+    amounts: DEFAULT_VIEW,
     type: null,
     accountId: null,
     categoryId: null,
@@ -71,6 +74,7 @@ export function filtersToQuery(filters: ListFilters, today: string): Record<stri
   if (filters.to !== base.to) query['to'] = filters.to ?? '';
   if (filters.competence !== base.competence) query['competence'] = filters.competence;
   if (filters.lens !== base.lens) query['lens'] = filters.lens;
+  if (filters.amounts !== base.amounts) query['amounts'] = filters.amounts;
   if (filters.type) query['type'] = filters.type;
   if (filters.accountId) query['accountId'] = filters.accountId;
   if (filters.categoryId) query['categoryId'] = filters.categoryId;
@@ -102,6 +106,7 @@ export function filtersFromQuery(read: (key: string) => string | null, today: st
     to: date('to', base.to),
     competence: competence !== null && ISO_MONTH.test(competence) ? competence : base.competence,
     lens: oneOf('lens', ['CONSUMPTION', 'INCOME'] as const) ?? base.lens,
+    amounts: oneOf('amounts', VIEW_MODES) ?? base.amounts,
     type: oneOf('type', TRANSACTION_TYPES),
     accountId: uuid('accountId'),
     categoryId: uuid('categoryId'),

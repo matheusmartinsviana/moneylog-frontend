@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  DestroyRef,
   effect,
   ElementRef,
   inject,
@@ -15,6 +16,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Observable, tap } from 'rxjs';
 
 import {
   EmptyStateAction,
@@ -30,26 +32,39 @@ import { ToastService } from '~/app/common/services/toast.service';
 import { LinkedNotesComponent } from '~/app/features/notes/components/linked-notes/linked-notes.component';
 import {
   ReceiptPersonOption,
+  receiptMessage,
   ThirdPartyReceiptModalComponent,
 } from '~/app/features/planning/components/third-party-receipt-modal/third-party-receipt-modal.component';
+import type { PeopleStatus } from '~/app/features/quick-add/components/split-field/split-field.component';
 import { CancelInstallmentsActionComponent } from '~/app/features/transactions/components/cancel-installments-action/cancel-installments-action.component';
 import { ImpactPanelComponent } from '~/app/features/transactions/components/impact-panel/impact-panel.component';
 import { InstallmentsListComponent } from '~/app/features/transactions/components/installments-list/installments-list.component';
+import { SplitEditModalComponent } from '~/app/features/transactions/components/split-edit-modal/split-edit-modal.component';
 import { ThirdPartyBadgeComponent } from '~/app/features/transactions/components/third-party-badge/third-party-badge.component';
 import { ThirdPartyMarkModalComponent } from '~/app/features/transactions/components/third-party-mark-modal/third-party-mark-modal.component';
 import { VoidActionComponent } from '~/app/features/transactions/components/void-action/void-action.component';
 import { incomeMonthNote } from '~/app/features/transactions/transaction-competence';
 import { flowOf, flowSign } from '~/app/features/transactions/transaction-flow';
 import { transactionLabel } from '~/app/features/transactions/transaction-label';
+import { PeopleListFacade } from '~/modules/people/core/facades/people-list.facade';
 import {
   ThirdPartyExpenseFacade,
   ThirdPartyLink,
 } from '~/modules/third-parties/core/facades/third-party-expense.facade';
+import type { ThirdPartyReceipt } from '~/modules/third-parties/core/types/third-party';
 import { TransactionDetailFacade } from '~/modules/transactions/core/facades/transaction-detail.facade';
 import type { Transaction } from '~/modules/transactions/core/types/transaction';
 import { formatCompetenceShort, formatInstant, formatIsoDate } from '~/util/date';
+import type { PersonRef } from '~/util/debt';
 import { counterpartyName } from '~/util/debt-name';
 import { formatMoney } from '~/util/money';
+import { bpsToPercent, type SplitInput } from '~/util/split';
+
+interface SplitLine {
+  readonly key: string;
+  readonly name: string;
+  readonly detail: string;
+}
 
 interface Field {
   readonly key: string;
@@ -75,9 +90,10 @@ interface Field {
     ThirdPartyBadgeComponent,
     ThirdPartyMarkModalComponent,
     ThirdPartyReceiptModalComponent,
+    SplitEditModalComponent,
     MoneyComponent,
   ],
-  providers: [TransactionDetailFacade, ThirdPartyExpenseFacade],
+  providers: [TransactionDetailFacade, ThirdPartyExpenseFacade, PeopleListFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { '(document:keydown.escape)': 'onEscape($event)' },
   templateUrl: './transaction-detail.page.html',
@@ -85,6 +101,7 @@ interface Field {
 })
 export class TransactionDetailPage {
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
   private readonly toast = inject(ToastService);
@@ -95,6 +112,13 @@ export class TransactionDetailPage {
 
   readonly id = input.required<string>();
 
+  private get peopleFacade(): PeopleListFacade {
+    return this.injector.get(PeopleListFacade);
+  }
+  protected readonly people = signal<readonly PersonRef[]>([]);
+  protected readonly peopleStatus = signal<PeopleStatus>('idle');
+  protected readonly splitEditOpen = signal(false);
+  protected readonly splitReceiptOpen = signal(false);
   protected readonly cancelDone = signal(0);
   protected readonly markOpen = signal(false);
   private readonly heading = viewChild<ElementRef<HTMLElement>>('heading');
@@ -144,6 +168,47 @@ export class TransactionDetailPage {
       (tx.type === 'EXPENSE' || tx.type === 'CARD_PURCHASE')
     );
   });
+  protected readonly showSplit = computed(() => {
+    const tx = this.transaction();
+    return tx !== null && tx.type === 'CARD_PURCHASE' && tx.status === 'ACTIVE';
+  });
+  protected readonly hasSplit = computed(() => (this.transaction()?.personShares.length ?? 0) > 0);
+  protected readonly splitLines = computed<readonly SplitLine[]>(() => {
+    const tx = this.transaction();
+    if (!tx) return [];
+    const copy = this.t().split.detail;
+    return tx.personShares.map((line, index) => ({
+      key: `${line.personId ?? 'owner'}-${index}`,
+      name:
+        line.personId === null
+          ? copy.owner
+          : (this.people().find((person) => person.id === line.personId)?.name ??
+            this.t().split.summary.otherPerson),
+      detail:
+        line.bps !== null
+          ? interpolate(copy.bps, { percent: bpsToPercent(line.bps) })
+          : line.amount !== null
+            ? formatMoney(line.amount)
+            : copy.equal,
+    }));
+  });
+  protected readonly splitReceiptPeople = computed<readonly ReceiptPersonOption[]>(() => {
+    const tx = this.transaction();
+    if (!tx) return [];
+    return tx.personShares.flatMap((line) =>
+      line.personId === null
+        ? []
+        : [
+            {
+              id: line.personId,
+              name:
+                this.people().find((person) => person.id === line.personId)?.name ??
+                this.t().split.summary.otherPerson,
+              expenses: [{ id: tx.id, label: tx.description }],
+            },
+          ],
+    );
+  });
   protected readonly fields = computed<readonly Field[]>(() => {
     const tx = this.transaction();
     return tx ? this.fieldsOf(tx) : [];
@@ -170,6 +235,16 @@ export class TransactionDetailPage {
         if (tx !== null && eligible) this.thirdParty.find(tx.id);
       });
     });
+    effect(() => {
+      const needed = this.hasSplit() || this.splitEditOpen();
+      untracked(() => {
+        if (needed && this.peopleStatus() === 'idle') this.loadPeople();
+      });
+    });
+    this.facade.sharesUpdated$.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.splitEditOpen.set(false);
+      this.toast.show(this.t().split.edit.toast);
+    });
     this.facade.voided$.pipe(takeUntilDestroyed()).subscribe(() => {
       this.toast.show(this.t().transactions.detail.void.toast);
     });
@@ -191,11 +266,49 @@ export class TransactionDetailPage {
     ];
   }
 
-  protected afterReceipt(): void {
+  protected afterReceipt(receipt: ThirdPartyReceipt): void {
     this.receiptOpen.set(false);
-    this.toast.show(this.t().thirdParties.receipts.toast.recorded);
+    this.toast.show(receiptMessage(receipt, this.t().thirdParties.receipts.toast));
     this.thirdParty.find(this.id());
   }
+
+  protected afterSplitReceipt(receipt: ThirdPartyReceipt): void {
+    this.splitReceiptOpen.set(false);
+    this.toast.show(receiptMessage(receipt, this.t().thirdParties.receipts.toast));
+  }
+
+  protected openSplitEdit(): void {
+    this.facade.clearSharesProblem();
+    this.splitEditOpen.set(true);
+  }
+
+  protected saveSplit(split: SplitInput): void {
+    const tx = this.transaction();
+    if (tx) this.facade.updateShares(tx.id, split, tx.version);
+  }
+
+  protected loadPeople(): void {
+    this.peopleStatus.set('loading');
+    this.peopleFacade
+      .loadAll('ACTIVE')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (list) => {
+          this.people.set(list.map(({ id, name }) => ({ id, name })));
+          this.peopleStatus.set('ready');
+        },
+        error: () => this.peopleStatus.set('error'),
+      });
+  }
+
+  protected readonly createPerson = (name: string): Observable<PersonRef> =>
+    this.peopleFacade
+      .create({ name, notes: null })
+      .pipe(
+        tap((person) =>
+          this.people.update((list) => [...list, { id: person.id, name: person.name }]),
+        ),
+      );
 
   protected afterMarked(): void {
     this.markOpen.set(false);

@@ -23,6 +23,10 @@ export interface Card {
   readonly committedFuture: Money;
   readonly closingConfirmed: boolean;
   readonly archivable: boolean;
+  readonly autoDebit: boolean | null;
+  readonly brand: string | null;
+  readonly bestPurchaseDay: number | null;
+  readonly lastDigits: readonly string[];
   readonly version: number;
 }
 
@@ -33,6 +37,10 @@ export interface CardInput {
   readonly closingDay: number;
   readonly dueDay: number;
   readonly defaultPaymentAccountId: string | null;
+  readonly autoDebit?: boolean | null;
+  readonly brand?: string | null;
+  readonly bestPurchaseDay?: number | null;
+  readonly lastDigits?: readonly string[];
 }
 
 export interface CardUpdate extends CardInput {

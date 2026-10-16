@@ -23,6 +23,12 @@ export function nextMonthOf(value: string): string {
     : `${String(year).padStart(4, '0')}-${String(month + 1).padStart(2, '0')}`;
 }
 
+export function shiftCompetence(value: string, months: number): string {
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7)) - 1 + months;
+  return new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 7);
+}
+
 export function formatCompetence(value: string, locale: string): string {
   const match = ISO_MONTH.exec(value);
   if (!match) return value;

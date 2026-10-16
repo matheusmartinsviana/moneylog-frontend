@@ -15,6 +15,7 @@ export const INVOICES_ENDPOINTS = {
   item: (id: string) => `/v1/invoices/${encodeURIComponent(id)}`,
   paymentPreview: (id: string) => `/v1/invoices/${encodeURIComponent(id)}/payment-preview`,
   payments: (id: string) => `/v1/invoices/${encodeURIComponent(id)}/payments`,
+  documentAmount: (id: string) => `/v1/invoices/${encodeURIComponent(id)}/document-amount`,
 } as const;
 
 export const IDEMPOTENCY_HEADER = 'Idempotency-Key';

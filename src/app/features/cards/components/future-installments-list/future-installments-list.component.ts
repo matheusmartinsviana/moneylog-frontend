@@ -64,7 +64,7 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
       padding: var(--space-4);
       border: var(--border-width) solid var(--color-border);
       border-radius: var(--radius-card);
-      background-color: var(--color-surface);
+      background-color: var(--card-flat-bg);
     }
 
     .group__title {

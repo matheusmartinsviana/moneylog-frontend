@@ -1,14 +1,18 @@
 import type {
+  ThirdPartyExpectedMonth,
   ThirdPartyExpense,
   ThirdPartyExpenseInput,
+  ThirdPartyInstallment,
   ThirdPartyItem,
   ThirdPartyReceipt,
   ThirdPartyReceiptInput,
   ThirdPartyReceivables,
 } from '~/modules/third-parties/core/types/third-party';
 import type {
+  ThirdPartyExpectedMonthResponse,
   ThirdPartyExpenseRequest,
   ThirdPartyExpenseResponse,
+  ThirdPartyInstallmentResponse,
   ThirdPartyReceiptRequest,
   ThirdPartyReceiptResponse,
   ThirdPartyReceivablesResponse,
@@ -19,6 +23,32 @@ const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
   currency: value.currency,
 });
+
+export function toInstallment(installment: ThirdPartyInstallmentResponse): ThirdPartyInstallment {
+  return {
+    installmentId: installment.installmentId,
+    number: installment.number,
+    total: installment.total,
+    consumptionMonth: installment.consumptionMonth,
+    dueMonth: installment.dueMonth,
+    expectedMonth: installment.expectedMonth,
+    overridden: installment.overridden,
+    owed: money(installment.owed),
+    received: money(installment.received),
+    pending: money(installment.pending),
+  };
+}
+
+export function toExpectedMonth(
+  response: ThirdPartyExpectedMonthResponse,
+): ThirdPartyExpectedMonth {
+  return {
+    transactionId: response.transactionId,
+    personId: response.personId,
+    version: response.version,
+    installment: toInstallment(response.installment),
+  };
+}
 
 function toItem(
   item: ThirdPartyReceivablesResponse['people'][number]['items'][number],
@@ -33,6 +63,7 @@ function toItem(
     received: money(item.received),
     pending: money(item.pending),
     status: item.status,
+    installments: item.installments.map(toInstallment),
   };
 }
 
@@ -48,6 +79,12 @@ export function toReceivables(response: ThirdPartyReceivablesResponse): ThirdPar
       owed: money(person.owed),
       received: money(person.received),
       pending: money(person.pending),
+      months: person.months.map((month) => ({
+        competence: month.competence,
+        owed: money(month.owed),
+        received: money(month.received),
+        pending: money(month.pending),
+      })),
       items: person.items.map(toItem),
     })),
     month: {
@@ -88,6 +125,8 @@ export function toReceipt(response: ThirdPartyReceiptResponse): ThirdPartyReceip
     amount: money(response.amount),
     receivedOn: response.receivedOn,
     note: response.note,
+    settlement: response.settlement,
+    ledgerEffect: response.ledgerEffect ?? null,
   };
 }
 
@@ -97,6 +136,7 @@ export function toReceiptRequest(input: ThirdPartyReceiptInput): ThirdPartyRecei
     personId: input.personId,
     amount: input.amount,
     ...(input.transactionId === null ? {} : { transactionId: input.transactionId }),
+    ...(input.accountId ? { accountId: input.accountId } : {}),
     ...(input.receivedOn === null ? {} : { receivedOn: input.receivedOn }),
     ...(note === '' ? {} : { note }),
   };

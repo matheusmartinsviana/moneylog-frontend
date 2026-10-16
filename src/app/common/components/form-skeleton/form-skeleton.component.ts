@@ -204,7 +204,7 @@ export type FormSkeletonPiece =
       margin-inline: calc(var(--space-5) * -1);
       padding: var(--space-3) var(--space-5);
       border-top: var(--border-width) solid var(--color-border);
-      background-color: var(--color-surface);
+      background-color: var(--card-flat-bg);
     }
 
     .skeleton-form__cancel {

@@ -10,6 +10,7 @@ const brl = (amount: string) => ({ amount, currency: 'BRL' });
 
 function series(granularity: ReportGranularity, points: [string, string][]): IncomeExpenseSeries {
   return {
+    view: 'MINE',
     period: 'D7',
     from: points[0]![0],
     to: points.at(-1)![1],

@@ -1,86 +1,291 @@
 [data-theme-scope='light'],
 :root {
-  --color-canvas: #f6f5fb;
-  --color-surface: #ffffff;
-  --color-surface-muted: #f1effa;
-  --color-surface-inset: #f8f7fd;
-  --color-border: #ebe8f6;
-  --color-control-border: #8a86a5;
-  --color-text: #1a1830;
-  --color-text-muted: #5a5775;
-  --color-accent: #094360;
-  --color-on-accent: #ffffff;
+  --brand-forest: #0a251e;
+  --color-canvas: #f1f2ea;
+  --color-surface: #fcfcf8;
+  --color-surface-muted: #eceee3;
+  --color-surface-inset: #f6f7f0;
+  --color-border: #dde1d3;
+  --color-control-border: #6f7a68;
+  --field-bg: color-mix(in srgb, var(--color-surface-inset) 78%, transparent);
+  --field-border: color-mix(in srgb, var(--color-control-border) 85%, transparent);
+  --field-border-hover: var(--color-control-border);
+  --field-radius: 14px;
+  --field-shadow: inset 0 1px 2px rgb(0 0 0 / 6%);
+  --scrollbar-thumb: rgb(31 77 58 / 38%);
+  --scrollbar-thumb-hover: rgb(31 77 58 / 58%);
+  --color-text: #14231c;
+  --color-text-muted: #4b5b51;
+  --color-accent: #1f4d3a;
+  --color-on-accent: #f6f7f0;
   --color-positive: #137a38;
   --color-warning: #a85108;
   --color-risk: #be123c;
-  --color-accent-soft: #e6ecef;
-  --color-accent-soft-hover: #d8e1e6;
+  --color-accent-soft: #e1eae2;
+  --color-accent-soft-hover: #d1dfd3;
   --color-positive-soft: #e9f6ee;
   --color-warning-soft: #fbefdb;
   --color-risk-soft: #fce8ed;
-  --color-chart-1: #094360;
-  --color-chart-2: #7c7897;
-  --color-focus: #094360;
-  --color-hover: #2563eb;
-  --color-hover-soft: rgb(37 99 235 / 8%);
-  --color-hover-border: rgb(37 99 235 / 30%);
+  --color-chart-1: #1f4d3a;
+  --color-chart-2: #7b806c;
+  --color-focus: #1f4d3a;
+  --btn-radius: var(--radius-pill);
+  --btn-blur: 10px;
+  --btn-glass-bg: linear-gradient(180deg, rgb(255 255 255 / 78%) 0%, rgb(226 235 222 / 62%) 100%);
+  --btn-glass-bg-hover: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 94%) 0%,
+    rgb(236 243 232 / 82%) 100%
+  );
+  --btn-glass-solid: #f4f7ef;
+  --btn-glass-border: rgb(31 77 58 / 16%);
+  --btn-glass-border-hover: rgb(31 77 58 / 30%);
+  --btn-glass-shadow:
+    0 6px 16px -8px rgb(20 40 30 / 24%), 0 1px 2px rgb(20 40 30 / 6%),
+    inset 0 1px 0 rgb(255 255 255 / 95%), inset 0 0 0 1px rgb(255 255 255 / 40%);
+  --btn-glass-shadow-hover:
+    0 12px 26px -10px rgb(20 40 30 / 30%), 0 2px 4px rgb(20 40 30 / 6%),
+    inset 0 1px 0 rgb(255 255 255 / 100%), inset 0 0 0 1px rgb(255 255 255 / 55%);
+  --btn-glass-shadow-active:
+    0 2px 6px -3px rgb(20 40 30 / 24%), inset 0 1px 2px rgb(20 40 30 / 10%);
+  --btn-primary-bg: linear-gradient(180deg, #34745a 0%, #1f4d3a 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, #3d8064 0%, #265a44 100%);
+  --btn-primary-border: rgb(255 255 255 / 22%);
+  --btn-primary-shadow:
+    0 10px 22px -10px rgb(31 77 58 / 55%), 0 2px 4px rgb(31 77 58 / 14%),
+    inset 0 1px 0 rgb(255 255 255 / 32%), inset 0 -1px 0 rgb(0 0 0 / 12%);
+  --btn-primary-shadow-hover:
+    0 14px 28px -10px rgb(31 77 58 / 60%), 0 2px 6px rgb(31 77 58 / 16%),
+    inset 0 1px 0 rgb(255 255 255 / 40%), inset 0 -1px 0 rgb(0 0 0 / 12%);
+  --btn-soft-bg: linear-gradient(180deg, rgb(225 234 226 / 85%) 0%, rgb(209 223 211 / 70%) 100%);
+  --btn-pressed-bg: linear-gradient(180deg, #2a6048 0%, #1f4d3a 100%);
+  --color-hover: #2f6b4f;
+  --color-hover-soft: rgb(31 77 58 / 8%);
+  --color-hover-border: rgb(31 77 58 / 30%);
   --gradient-hover: linear-gradient(var(--color-hover-soft), var(--color-hover-soft));
   --gradient-hairline: linear-gradient(var(--color-border), var(--color-border));
-  --color-shadow: rgb(60 40 120 / 6%);
-  --color-shadow-strong: rgb(60 40 120 / 14%);
-  --color-scrim: rgb(246 245 251 / 88%);
+  --color-shadow: rgb(20 40 30 / 6%);
+  --color-shadow-strong: rgb(20 40 30 / 14%);
+  --color-scrim: rgb(244 245 238 / 88%);
   --gradient-glow-top: radial-gradient(
     ellipse 70% 100% at 50% 0%,
-    rgb(25 127 179 / 16%) 0%,
-    rgb(25 127 179 / 5%) 45%,
+    rgb(47 107 79 / 16%) 0%,
+    rgb(47 107 79 / 5%) 45%,
     transparent 75%
   );
   --gradient-panel-glow: radial-gradient(
     ellipse 80% 70% at 50% 115%,
-    rgb(25 127 179 / 16%) 0%,
+    rgb(47 107 79 / 16%) 0%,
     transparent 70%
   );
   --gradient-panel-glow-soft: radial-gradient(
     ellipse 70% 90% at 12% 0%,
-    rgb(25 127 179 / 12%),
+    rgb(47 107 79 / 12%),
     transparent 70%
   );
   --gradient-gauge: radial-gradient(
     ellipse 70% 90% at 50% 100%,
-    rgb(25 127 179 / 40%) 0%,
-    rgb(25 127 179 / 10%) 55%,
+    rgb(47 107 79 / 40%) 0%,
+    rgb(47 107 79 / 10%) 55%,
     transparent 75%
   );
   --gradient-stripes: repeating-linear-gradient(
     90deg,
-    rgb(25 127 179 / 9%) 0 1px,
+    rgb(47 107 79 / 9%) 0 1px,
     transparent 1px 7px
   );
 
   --glass-solid: var(--color-surface);
   --glass-bg: color-mix(in oklab, var(--color-surface) 66%, transparent);
   --glass-bg-strong: color-mix(in oklab, var(--color-surface) 86%, transparent);
-  --glass-border: var(--color-border);
-  --glass-shadow: 0 12px 36px -14px rgb(60 40 120 / 22%), inset 0 1px 0 0 rgb(255 255 255 / 50%);
-  --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 45%) 0%, rgb(255 255 255 / 0%) 42%);
+  --glass-border: var(--glass-panel-border);
+  --glass-shadow: var(--glass-panel-shadow-strong);
+  --glass-sheen: var(--glass-panel-sheen);
   --glass-edge-top: var(--glass-border);
-  --logo-on-light-display: block;
-  --logo-on-dark-display: none;
   --skeleton-bg: color-mix(in oklab, var(--color-surface-muted) 55%, var(--color-surface));
   --gradient-shimmer: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(25 127 179 / 7%) 50%,
+    rgb(47 107 79 / 7%) 50%,
     transparent 100%
   );
   --glass-lens-bg: rgb(255 255 255 / 45%);
   --glass-lens-glow: inset 0 1px 0 0 rgb(255 255 255 / 50%);
 
+  --color-ink: #14231c;
+  --color-emerald: #8fbf9f;
+  --color-cyan: #a9c9b4;
+  --color-cyan-soft: #cfe3d6;
+  --color-success: #21885e;
+  --color-danger: #d85b68;
+  --color-home-bg: #f1f2ea;
+  --color-home-bg-lift: #f8f8f2;
+  --color-home-bg-deep: #e3e7da;
+  --color-home-veil: #ffffff;
+  --color-home-glass-tint: #ffffff;
+  --color-home-rays: #7fb596;
+  --aurora-forest: rgb(31 77 58 / 16%);
+  --aurora-sage: rgb(127 170 140 / 22%);
+  --aurora-ivory: rgb(244 238 214 / 55%);
+  --aurora-olive: rgb(122 140 84 / 18%);
+  --gradient-aurora-forest: radial-gradient(closest-side, var(--aurora-forest), transparent);
+  --gradient-aurora-sage: radial-gradient(closest-side, var(--aurora-sage), transparent);
+  --gradient-aurora-ivory: radial-gradient(closest-side, var(--aurora-ivory), transparent);
+  --gradient-aurora-olive: radial-gradient(closest-side, var(--aurora-olive), transparent);
+  --gradient-focus-full: radial-gradient(
+    120% 80% at 50% 0%,
+    color-mix(in srgb, var(--color-home-action) 22%, transparent),
+    transparent 70%
+  );
+  --color-home-text: #14231c;
+  --color-home-text-muted: #45554b;
+  --color-home-action: #1f4d3a;
+  --color-home-on-action: #f6f7f0;
+  --color-income-text: #17694a;
+  --color-income-mark: #17694a;
+  --color-expense-text: #a8323a;
+  --color-expense-mark: #b4424a;
+  --color-neutral-text: #3a4a44;
+  --color-neutral-mark: #4f6159;
+  --home-glass-alpha: 62%;
+  --home-glass-alpha-strong: 82%;
+  --home-veil-alpha: 30%;
+  --rays-opacity-max: 0%;
+  --home-wash-forest: rgb(31 77 58 / 14%);
+  --home-wash-sage: rgb(127 170 140 / 26%);
+  --home-wash-ivory: rgb(250 246 228 / 70%);
+  --grain-opacity: 0.055;
+  --grain-blend: multiply;
+  --grain-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.6 -0.3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --gradient-home-bg:
+    radial-gradient(ellipse 80% 55% at 50% -5%, var(--color-home-bg-lift) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 0% 100%, var(--home-wash-sage) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 100% 0%, var(--home-wash-ivory) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 100% 85%, var(--home-wash-forest) 0%, transparent 70%),
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 60%, var(--home-vignette) 100%),
+    linear-gradient(180deg, var(--color-home-bg) 0%, var(--color-home-bg-deep) 100%);
+  --gradient-home-veil: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-home-veil) var(--home-veil-alpha), transparent) 0%,
+    transparent 100%
+  );
+  --gradient-rays-static: none;
+  --glass-panel-solid: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha),
+    var(--color-home-bg)
+  );
+  --glass-panel-solid-strong: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha-strong),
+    var(--color-home-bg)
+  );
+  --glass-panel-bg: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha),
+    transparent
+  );
+  --glass-panel-bg-strong: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha-strong),
+    transparent
+  );
+  --glass-panel-border: rgb(255 255 255 / 62%);
+  --glass-panel-shadow:
+    0 0 0 1px rgb(31 55 40 / 5%), 0 22px 50px -26px rgb(31 55 40 / 24%),
+    0 8px 22px -14px rgb(31 55 40 / 12%), inset 0 1px 0 0 rgb(255 255 255 / 85%),
+    inset 0 -1px 0 0 rgb(255 255 255 / 26%);
+  --glass-panel-shadow-strong:
+    0 0 0 1px rgb(31 55 40 / 6%), 0 30px 64px -28px rgb(31 55 40 / 30%),
+    0 10px 26px -14px rgb(31 55 40 / 16%), inset 0 1px 0 0 rgb(255 255 255 / 95%),
+    inset 0 -1px 0 0 rgb(255 255 255 / 32%);
+  --home-vignette: rgb(14 28 20 / 8%);
+  --glass-panel-sheen:
+    radial-gradient(90% 46% at 0% 0%, rgb(255 255 255 / 42%), transparent 64%),
+    linear-gradient(
+      165deg,
+      rgb(226 237 222 / 34%) 0%,
+      rgb(210 224 204 / 16%) 58%,
+      rgb(236 228 204 / 22%) 100%
+    );
+  --glass-panel-blur: 18px;
+  --glass-panel-blur-mobile: 14px;
+  --glass-panel-saturate: 150%;
+  --home-surface-elevated: rgb(255 255 255 / 70%);
+  --home-surface-hover: rgb(14 28 20 / 5%);
+  --home-surface-pressed: rgb(14 28 20 / 9%);
+  --home-divider: rgb(14 28 20 / 8%);
+  --color-home-focus: #1f4d3a;
+  --home-focus-ring: 0 0 0 2px var(--color-home-bg), 0 0 0 4px var(--color-home-focus);
+  --card-issuer-fg: #f2f7f5;
+  --card-brand-red: #eb001b;
+  --card-brand-orange: #f79e1b;
+  --card-brand-overlap: #ff5f00;
+  --card-visa-ink: #1a1f71;
+  --card-chip-a: #f4f5f8;
+  --card-chip-b: #9ba1ac;
+  --card-chip-line: rgb(58 64 76 / 0.55);
+  --card-edge: rgb(255 255 255 / 0.28);
+  --gradient-card-sheen: linear-gradient(
+    115deg,
+    rgb(255 255 255 / 0.22) 0%,
+    rgb(255 255 255 / 0.05) 34%,
+    transparent 52%,
+    rgb(255 255 255 / 0.07) 100%
+  );
+  --gradient-card-texture: repeating-linear-gradient(
+    115deg,
+    rgb(255 255 255 / 0.12) 0 1px,
+    transparent 1px 10px
+  );
+  --card-surface-neutral: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card-issuer-neutral-bg) 90%, white) 0%,
+    var(--card-issuer-neutral-bg) 48%,
+    color-mix(in srgb, var(--card-issuer-neutral-bg) 78%, black) 100%
+  );
+  --card-surface-itau: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card-issuer-itau-bg) 97%, white) 0%,
+    var(--card-issuer-itau-bg) 48%,
+    color-mix(in srgb, var(--card-issuer-itau-bg) 95%, black) 100%
+  );
+  --card-surface-nubank: linear-gradient(
+    155deg,
+    color-mix(in srgb, var(--card-issuer-nubank-bg) 86%, white) 0%,
+    var(--card-issuer-nubank-bg) 48%,
+    color-mix(in srgb, var(--card-issuer-nubank-bg) 74%, black) 100%
+  );
+  --card-surface-bb: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card-issuer-bb-bg) 94%, white) 0%,
+    var(--card-issuer-bb-bg) 48%,
+    color-mix(in srgb, var(--card-issuer-bb-bg) 93%, black) 100%
+  );
+  --card-surface-mercadopago: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--card-issuer-mercadopago-bg) 90%, white) 0%,
+    var(--card-issuer-mercadopago-bg) 48%,
+    color-mix(in srgb, var(--card-issuer-mercadopago-bg) 78%, black) 100%
+  );
+  --card-issuer-neutral-bg: #1b2a27;
+  --card-issuer-neutral-mark: #8fbf9f;
+  --card-issuer-itau-bg: #ff5a00;
+  --card-issuer-itau-mark: #0b2a6b;
+  --card-issuer-nubank-bg: #820ad1;
+  --card-issuer-nubank-mark: #e3cdfa;
+  --card-issuer-bb-bg: #fce000;
+  --card-issuer-bb-mark: #0b3b9e;
+  --card-issuer-mercadopago-bg: #0f2a3f;
+  --card-issuer-mercadopago-mark: #52b2f0;
+  --card-issuer-itau-fg: #0b1f4a;
+  --card-issuer-bb-fg: #0a1f5c;
+
   color-scheme: light;
 
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Geist Variable', 'Geist',
-    'Inter', system-ui, sans-serif;
+    'Geist Variable', 'Geist', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
   --font-mono: 'Geist Mono Variable', 'Geist Mono', 'SF Mono', ui-monospace, monospace;
   --text-tab: 0.6875rem;
   --text-xs: 0.75rem;
@@ -98,6 +303,7 @@
   --weight-medium: 500;
   --weight-semibold: 600;
 
+  --radius-wallet: 36px;
   --radius-window: 28px;
   --radius-card: 20px;
   --radius-panel: 24px;
@@ -131,6 +337,9 @@
   --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in: cubic-bezier(0.4, 0, 1, 1);
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-panel-enter: 520ms;
+  --enter-distance: 6px;
   --ease-spring: cubic-bezier(0.34, 1.35, 0.64, 1);
 
   --bottom-nav-height: 4rem;
@@ -142,11 +351,17 @@
   --page-pad-top: var(--space-3);
   --page-pad-bottom: var(--space-6);
   --page-gap: var(--space-4);
+  --card-flat-bg: var(--glass-panel-solid);
+  --page-header-height: 3.5rem;
+  --page-header-veil: color-mix(in srgb, var(--color-canvas) 55%, transparent);
+  --page-header-line: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --page-header-shadow: 0 10px 18px -16px var(--color-shadow-strong);
   --section-gap: var(--space-4);
   --card-padding: var(--space-5);
   --window-max-width: 160rem;
   --z-content: 1;
   --z-raised: 2;
+  --z-sticky: 5;
   --z-chrome: 10;
   --z-side-panel: 20;
   --z-dialog: 50;
@@ -155,6 +370,25 @@
   --z-toast: 80;
   --z-skip: 100;
   --shadow-popover: 0 8px 28px var(--color-shadow-strong);
+  --gradient-header-veil: linear-gradient(to bottom, var(--page-header-veil), transparent);
+  --mask-header-fade:
+    linear-gradient(to bottom, #000 40%, rgb(0 0 0 / 40%) 70%, transparent),
+    linear-gradient(
+      to right,
+      transparent,
+      #000 var(--space-8),
+      #000 calc(100% - var(--space-8)),
+      transparent
+    );
+  --mask-shell-fade:
+    linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 35%) var(--space-4), #000 var(--space-8)),
+    linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--space-4),
+      #000 calc(100% - var(--space-4)),
+      transparent 100%
+    );
   --mask-scroll-fade: linear-gradient(
     to bottom,
     transparent 0,
@@ -170,6 +404,29 @@
   --mask-fade-down: linear-gradient(to bottom, #000 0%, transparent 100%);
   --focus-ring-keyboard: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-focus);
   --focus-ring: var(--focus-ring-keyboard);
+  --rail-bg: linear-gradient(
+    165deg,
+    rgb(222 234 218 / 64%) 0%,
+    rgb(206 221 200 / 50%) 58%,
+    rgb(232 224 200 / 44%) 100%
+  );
+  --rail-specular: radial-gradient(120% 55% at 0% 0%, rgb(255 255 255 / 48%), transparent 62%);
+  --rail-border: rgb(255 255 255 / 58%);
+  --rail-shadow:
+    0 28px 64px -26px rgb(31 55 40 / 26%), 0 8px 24px -14px rgb(31 55 40 / 14%),
+    inset 0 1px 0 0 rgb(255 255 255 / 85%), inset 0 -1px 0 0 rgb(255 255 255 / 28%);
+  --rail-pill-bg: rgb(255 255 255 / 32%);
+  --rail-pill-border: rgb(255 255 255 / 52%);
+  --rail-pill-hover: rgb(255 255 255 / 58%);
+  --rail-drop-bg: linear-gradient(160deg, rgb(255 255 255 / 86%) 0%, rgb(213 231 214 / 72%) 100%);
+  --rail-drop-border: rgb(255 255 255 / 80%);
+  --rail-drop-shadow:
+    0 8px 20px -8px rgb(95 140 108 / 55%), 0 0 0 3px rgb(127 170 140 / 14%),
+    inset 0 1px 0 0 rgb(255 255 255 / 95%);
+  --rail-sand: rgb(168 150 108 / 55%);
+  --radius-rail: 24px;
+  --radius-rail-bar: 22px;
+  --radius-rail-pill: 16px;
 }
 
 @media (width >= 768px) {
@@ -189,10 +446,10 @@
 @media (width <= 640px) {
   :root {
     --text-tab: 0.6875rem;
-    --text-xs: 0.71875rem;
-    --text-sm: clamp(0.75rem, 0.7rem + 0.2vw, 0.8125rem);
-    --text-md: clamp(0.8125rem, 0.77rem + 0.2vw, 0.875rem);
-    --text-lg: clamp(0.9375rem, 0.88rem + 0.25vw, 1rem);
+    --text-xs: 0.875rem;
+    --text-sm: 0.9375rem;
+    --text-md: 1rem;
+    --text-lg: 1.0625rem;
     --text-xl: clamp(1.0625rem, 0.95rem + 0.5vw, 1.1875rem);
     --text-2xl: clamp(1.125rem, 1rem + 0.5vw, 1.25rem);
     --text-3xl: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);
@@ -222,157 +479,504 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --color-canvas: #0b0b12;
-    --color-surface: #14141e;
-    --color-surface-muted: #1c1c2a;
-    --color-surface-inset: #0f0f18;
+    --color-canvas: #0b1d15;
+    --color-surface: #111b15;
+    --color-surface-muted: #18251d;
+    --color-surface-inset: #0c1510;
     --color-border: rgb(255 255 255 / 8%);
-    --color-control-border: #68667f;
-    --color-text: #f2f1fb;
-    --color-text-muted: #a5a3c0;
-    --color-accent: #7bc5ea;
-    --color-on-accent: #04202e;
+    --color-control-border: #7b8b80;
+    --scrollbar-thumb: rgb(169 205 181 / 30%);
+    --scrollbar-thumb-hover: rgb(169 205 181 / 50%);
+    --color-text: #f2f3ea;
+    --color-text-muted: #a9b6ac;
+    --color-accent: #a9cdb5;
+    --color-on-accent: #0a1a12;
     --color-positive: #4ade80;
     --color-warning: #fbbf24;
     --color-risk: #fb7185;
-    --color-accent-soft: #222d3b;
-    --color-accent-soft-hover: #293747;
+    --color-accent-soft: #1f2e25;
+    --color-accent-soft-hover: #283a2f;
     --color-positive-soft: #14281f;
     --color-warning-soft: #2e2412;
     --color-risk-soft: #331a26;
-    --color-chart-1: #7bc5ea;
-    --color-chart-2: #d8d3ee;
-    --color-focus: #a1daf7;
-    --color-hover: #7cb7ff;
-    --color-hover-soft: rgb(124 183 255 / 10%);
-    --color-hover-border: rgb(124 183 255 / 32%);
+    --color-chart-1: #a9cdb5;
+    --color-chart-2: #d9d5bf;
+    --color-focus: #cfe5d6;
+    --btn-radius: var(--radius-pill);
+    --btn-blur: 10px;
+    --btn-glass-bg: linear-gradient(180deg, rgb(255 255 255 / 11%) 0%, rgb(120 180 145 / 8%) 100%);
+    --btn-glass-bg-hover: linear-gradient(
+      180deg,
+      rgb(255 255 255 / 17%) 0%,
+      rgb(120 180 145 / 13%) 100%
+    );
+    --btn-glass-solid: #1c2a22;
+    --btn-glass-border: rgb(255 255 255 / 13%);
+    --btn-glass-border-hover: rgb(169 205 181 / 38%);
+    --btn-glass-shadow:
+      0 8px 18px -10px rgb(0 0 0 / 55%), inset 0 1px 0 rgb(255 255 255 / 16%),
+      inset 0 0 0 1px rgb(255 255 255 / 4%);
+    --btn-glass-shadow-hover:
+      0 14px 28px -12px rgb(0 0 0 / 60%), inset 0 1px 0 rgb(255 255 255 / 22%),
+      inset 0 0 0 1px rgb(255 255 255 / 7%);
+    --btn-glass-shadow-active: 0 2px 6px -3px rgb(0 0 0 / 50%), inset 0 1px 2px rgb(0 0 0 / 30%);
+    --btn-primary-bg: linear-gradient(180deg, #bcd9c6 0%, #93bba1 100%);
+    --btn-primary-bg-hover: linear-gradient(180deg, #c8e2d1 0%, #a2c8b0 100%);
+    --btn-primary-border: rgb(255 255 255 / 30%);
+    --btn-primary-shadow:
+      0 10px 22px -10px rgb(120 180 145 / 45%), 0 2px 4px rgb(0 0 0 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 45%), inset 0 -1px 0 rgb(0 0 0 / 14%);
+    --btn-primary-shadow-hover:
+      0 14px 28px -10px rgb(120 180 145 / 55%), 0 2px 6px rgb(0 0 0 / 30%),
+      inset 0 1px 0 rgb(255 255 255 / 55%), inset 0 -1px 0 rgb(0 0 0 / 14%);
+    --btn-soft-bg: linear-gradient(180deg, rgb(169 205 181 / 20%) 0%, rgb(169 205 181 / 12%) 100%);
+    --btn-pressed-bg: linear-gradient(180deg, #bcd9c6 0%, #93bba1 100%);
+    --color-hover: #a9cdb5;
+    --color-hover-soft: rgb(169 205 181 / 10%);
+    --color-hover-border: rgb(169 205 181 / 32%);
     --color-shadow: rgb(0 0 0 / 30%);
     --color-shadow-strong: rgb(0 0 0 / 46%);
-    --color-scrim: rgb(11 11 18 / 88%);
+    --color-scrim: rgb(9 20 14 / 88%);
     --gradient-glow-top: radial-gradient(
       ellipse 70% 100% at 50% 0%,
-      rgb(81 184 236 / 26%) 0%,
-      rgb(81 184 236 / 8%) 45%,
+      rgb(120 180 145 / 26%) 0%,
+      rgb(120 180 145 / 8%) 45%,
       transparent 75%
     );
     --gradient-panel-glow: radial-gradient(
       ellipse 80% 70% at 50% 115%,
-      rgb(81 184 236 / 28%) 0%,
+      rgb(120 180 145 / 28%) 0%,
       transparent 70%
     );
     --gradient-panel-glow-soft: radial-gradient(
       ellipse 70% 90% at 12% 0%,
-      rgb(81 184 236 / 20%),
+      rgb(120 180 145 / 20%),
       transparent 70%
     );
     --gradient-gauge: radial-gradient(
       ellipse 70% 90% at 50% 100%,
-      rgb(81 184 236 / 55%) 0%,
-      rgb(81 184 236 / 12%) 55%,
+      rgb(120 180 145 / 55%) 0%,
+      rgb(120 180 145 / 12%) 55%,
       transparent 75%
     );
     --gradient-stripes: repeating-linear-gradient(
       90deg,
-      rgb(161 218 247 / 9%) 0 1px,
+      rgb(190 220 200 / 9%) 0 1px,
       transparent 1px 7px
     );
     --glass-solid: var(--color-surface);
     --glass-bg: color-mix(in oklab, var(--color-surface) 58%, transparent);
     --glass-bg-strong: color-mix(in oklab, var(--color-surface) 84%, transparent);
-    --glass-border: var(--color-border);
-    --glass-shadow: 0 12px 38px -12px rgb(0 0 0 / 60%), inset 0 1px 0 0 rgb(255 255 255 / 4%);
-    --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 4%) 0%, rgb(255 255 255 / 0%) 42%);
+    --glass-border: var(--glass-panel-border);
+    --glass-shadow: var(--glass-panel-shadow-strong);
+    --glass-sheen: var(--glass-panel-sheen);
     --glass-edge-top: var(--glass-border);
-    --logo-on-light-display: none;
-    --logo-on-dark-display: block;
     --skeleton-bg: color-mix(in oklab, var(--color-surface-muted) 45%, var(--color-surface));
     --gradient-shimmer: linear-gradient(
       90deg,
       transparent 0%,
-      rgb(161 218 247 / 6%) 50%,
+      rgb(190 220 200 / 6%) 50%,
       transparent 100%
     );
     --glass-lens-bg: rgb(255 255 255 / 5%);
     --glass-lens-glow: inset 0 1px 0 0 rgb(255 255 255 / 5%);
+    --color-ink: #14231c;
+    --color-emerald: #8fbf9f;
+    --color-cyan: #a9c9b4;
+    --color-cyan-soft: #cfe3d6;
+    --color-success: #21885e;
+    --color-danger: #d85b68;
+    --color-home-bg: #0b1d15;
+    --color-home-bg-lift: #143325;
+    --color-home-bg-deep: #06110b;
+    --color-home-veil: #010b08;
+    --color-home-glass-tint: #ffffff;
+    --color-home-rays: #a9cdb5;
+    --aurora-forest: rgb(63 130 96 / 30%);
+    --aurora-sage: rgb(139 176 150 / 18%);
+    --aurora-ivory: rgb(226 216 178 / 9%);
+    --aurora-olive: rgb(120 140 84 / 16%);
+    --gradient-aurora-forest: radial-gradient(closest-side, var(--aurora-forest), transparent);
+    --gradient-aurora-sage: radial-gradient(closest-side, var(--aurora-sage), transparent);
+    --gradient-aurora-ivory: radial-gradient(closest-side, var(--aurora-ivory), transparent);
+    --gradient-aurora-olive: radial-gradient(closest-side, var(--aurora-olive), transparent);
+    --color-home-text: #f3f5ee;
+    --color-home-text-muted: #bccdc2;
+    --color-home-action: #cfe5d6;
+    --color-home-on-action: #0a1a12;
+    --color-income-text: #86e0b4;
+    --color-income-mark: #6fd6a4;
+    --color-expense-text: #f6b8b3;
+    --color-expense-mark: #ee8c88;
+    --color-neutral-text: #c5d8d2;
+    --color-neutral-mark: #8fb0a6;
+    --home-glass-alpha: 7%;
+    --home-glass-alpha-strong: 12%;
+    --home-veil-alpha: 35%;
+    --rays-opacity-max: 8%;
+    --home-wash-forest: rgb(40 110 80 / 30%);
+    --home-wash-sage: rgb(120 160 135 / 14%);
+    --home-wash-ivory: rgb(226 216 178 / 7%);
+    --grain-opacity: 0.14;
+    --grain-blend: soft-light;
+    --gradient-home-bg:
+      radial-gradient(ellipse 80% 55% at 50% -5%, var(--color-home-bg-lift) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 0% 100%, var(--home-wash-forest) 0%, transparent 70%),
+      radial-gradient(ellipse 55% 45% at 100% 100%, rgb(20 120 90 / 14%) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 40% at 100% 5%, var(--home-wash-sage) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 30% at 20% 30%, var(--home-wash-ivory) 0%, transparent 70%),
+      radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, var(--home-vignette) 100%),
+      linear-gradient(180deg, var(--color-home-bg) 0%, var(--color-home-bg-deep) 100%);
+    --gradient-home-veil: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-home-veil) var(--home-veil-alpha), transparent) 0%,
+      transparent 100%
+    );
+    --gradient-rays-static:
+      radial-gradient(
+        ellipse 40% 70% at 0% 40%,
+        color-mix(in srgb, var(--color-home-rays) var(--rays-opacity-max), transparent) 0%,
+        transparent 100%
+      ),
+      radial-gradient(
+        ellipse 40% 70% at 100% 40%,
+        color-mix(in srgb, var(--color-home-rays) var(--rays-opacity-max), transparent) 0%,
+        transparent 100%
+      );
+    --glass-panel-solid: color-mix(
+      in srgb,
+      var(--color-home-glass-tint) var(--home-glass-alpha),
+      var(--color-home-bg)
+    );
+    --glass-panel-solid-strong: color-mix(
+      in srgb,
+      var(--color-home-glass-tint) var(--home-glass-alpha-strong),
+      var(--color-home-bg)
+    );
+    --glass-panel-bg: color-mix(
+      in srgb,
+      var(--color-home-glass-tint) var(--home-glass-alpha),
+      transparent
+    );
+    --glass-panel-bg-strong: color-mix(
+      in srgb,
+      var(--color-home-glass-tint) var(--home-glass-alpha-strong),
+      transparent
+    );
+    --glass-panel-border: rgb(255 255 255 / 13%);
+    --glass-panel-shadow:
+      0 0 0 1px rgb(0 0 0 / 22%), 0 26px 60px -28px rgb(0 0 0 / 58%),
+      0 8px 24px -14px rgb(0 0 0 / 40%), inset 0 1px 0 0 rgb(255 255 255 / 18%),
+      inset 0 -1px 0 0 rgb(255 255 255 / 5%);
+    --glass-panel-shadow-strong:
+      0 0 0 1px rgb(0 0 0 / 26%), 0 34px 72px -30px rgb(0 0 0 / 64%),
+      0 10px 28px -14px rgb(0 0 0 / 46%), inset 0 1px 0 0 rgb(255 255 255 / 24%),
+      inset 0 -1px 0 0 rgb(255 255 255 / 7%);
+    --home-vignette: rgb(0 0 0 / 38%);
+    --glass-panel-sheen:
+      radial-gradient(90% 46% at 0% 0%, rgb(255 255 255 / 9%), transparent 64%),
+      linear-gradient(
+        165deg,
+        rgb(70 104 84 / 16%) 0%,
+        rgb(30 48 38 / 6%) 58%,
+        rgb(90 80 56 / 10%) 100%
+      );
+    --glass-panel-blur: 18px;
+    --glass-panel-blur-mobile: 14px;
+    --glass-panel-saturate: 150%;
+    --home-surface-elevated: rgb(255 255 255 / 10%);
+    --home-surface-hover: rgb(255 255 255 / 8%);
+    --home-surface-pressed: rgb(255 255 255 / 5%);
+    --home-divider: rgb(255 255 255 / 7%);
+    --color-home-focus: #d7eadd;
+    --home-focus-ring: 0 0 0 2px var(--color-home-bg), 0 0 0 4px var(--color-home-focus);
+    --card-issuer-fg: #f2f7f5;
+    --card-issuer-neutral-bg: #1b2a27;
+    --card-issuer-neutral-mark: #8fbf9f;
+    --card-issuer-itau-bg: #ff5a00;
+    --card-issuer-itau-mark: #0b2a6b;
+    --card-issuer-nubank-bg: #820ad1;
+    --card-issuer-nubank-mark: #e3cdfa;
+    --card-issuer-bb-bg: #fce000;
+    --card-issuer-bb-mark: #0b3b9e;
+    --card-issuer-mercadopago-bg: #0f2a3f;
+    --card-issuer-mercadopago-mark: #52b2f0;
+    --card-issuer-itau-fg: #0b1f4a;
+    --card-issuer-bb-fg: #0a1f5c;
     color-scheme: dark;
+    --rail-bg: linear-gradient(
+      165deg,
+      rgb(30 52 40 / 58%) 0%,
+      rgb(20 36 28 / 50%) 58%,
+      rgb(46 42 30 / 38%) 100%
+    );
+    --rail-specular: radial-gradient(120% 55% at 0% 0%, rgb(255 255 255 / 11%), transparent 62%);
+    --rail-border: rgb(255 255 255 / 14%);
+    --rail-shadow:
+      0 30px 70px -28px rgb(0 0 0 / 60%), 0 8px 26px -14px rgb(0 0 0 / 42%),
+      inset 0 1px 0 0 rgb(255 255 255 / 20%), inset 0 -1px 0 0 rgb(255 255 255 / 6%);
+    --rail-pill-bg: rgb(255 255 255 / 6%);
+    --rail-pill-border: rgb(255 255 255 / 11%);
+    --rail-pill-hover: rgb(255 255 255 / 12%);
+    --rail-drop-bg: linear-gradient(160deg, rgb(169 205 181 / 30%) 0%, rgb(169 205 181 / 14%) 100%);
+    --rail-drop-border: rgb(255 255 255 / 22%);
+    --rail-drop-shadow:
+      0 8px 22px -8px rgb(169 205 181 / 38%), 0 0 0 3px rgb(169 205 181 / 10%),
+      inset 0 1px 0 0 rgb(255 255 255 / 28%);
+    --rail-sand: rgb(214 196 150 / 60%);
   }
 }
 
 [data-theme-scope='dark'],
 :root[data-theme='dark'] {
-  --color-canvas: #0b0b12;
-  --color-surface: #14141e;
-  --color-surface-muted: #1c1c2a;
-  --color-surface-inset: #0f0f18;
+  --field-bg: color-mix(in srgb, var(--color-surface-inset) 78%, transparent);
+  --field-border: color-mix(in srgb, var(--color-control-border) 85%, transparent);
+  --field-border-hover: var(--color-control-border);
+  --color-canvas: #0b1d15;
+  --color-surface: #111b15;
+  --color-surface-muted: #18251d;
+  --color-surface-inset: #0c1510;
   --color-border: rgb(255 255 255 / 8%);
-  --color-control-border: #68667f;
-  --color-text: #f2f1fb;
-  --color-text-muted: #a5a3c0;
-  --color-accent: #7bc5ea;
-  --color-on-accent: #04202e;
+  --color-control-border: #7b8b80;
+  --scrollbar-thumb: rgb(169 205 181 / 30%);
+  --scrollbar-thumb-hover: rgb(169 205 181 / 50%);
+  --color-text: #f2f3ea;
+  --color-text-muted: #a9b6ac;
+  --color-accent: #a9cdb5;
+  --color-on-accent: #0a1a12;
   --color-positive: #4ade80;
   --color-warning: #fbbf24;
   --color-risk: #fb7185;
-  --color-accent-soft: #222d3b;
-  --color-accent-soft-hover: #293747;
+  --color-accent-soft: #1f2e25;
+  --color-accent-soft-hover: #283a2f;
   --color-positive-soft: #14281f;
   --color-warning-soft: #2e2412;
   --color-risk-soft: #331a26;
-  --color-chart-1: #7bc5ea;
-  --color-chart-2: #d8d3ee;
-  --color-focus: #a1daf7;
-  --color-hover: #7cb7ff;
-  --color-hover-soft: rgb(124 183 255 / 10%);
-  --color-hover-border: rgb(124 183 255 / 32%);
+  --color-chart-1: #a9cdb5;
+  --color-chart-2: #d9d5bf;
+  --color-focus: #cfe5d6;
+  --btn-radius: var(--radius-pill);
+  --btn-blur: 10px;
+  --btn-glass-bg: linear-gradient(180deg, rgb(255 255 255 / 11%) 0%, rgb(120 180 145 / 8%) 100%);
+  --btn-glass-bg-hover: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 17%) 0%,
+    rgb(120 180 145 / 13%) 100%
+  );
+  --btn-glass-solid: #1c2a22;
+  --btn-glass-border: rgb(255 255 255 / 13%);
+  --btn-glass-border-hover: rgb(169 205 181 / 38%);
+  --btn-glass-shadow:
+    0 8px 18px -10px rgb(0 0 0 / 55%), inset 0 1px 0 rgb(255 255 255 / 16%),
+    inset 0 0 0 1px rgb(255 255 255 / 4%);
+  --btn-glass-shadow-hover:
+    0 14px 28px -12px rgb(0 0 0 / 60%), inset 0 1px 0 rgb(255 255 255 / 22%),
+    inset 0 0 0 1px rgb(255 255 255 / 7%);
+  --btn-glass-shadow-active: 0 2px 6px -3px rgb(0 0 0 / 50%), inset 0 1px 2px rgb(0 0 0 / 30%);
+  --btn-primary-bg: linear-gradient(180deg, #bcd9c6 0%, #93bba1 100%);
+  --btn-primary-bg-hover: linear-gradient(180deg, #c8e2d1 0%, #a2c8b0 100%);
+  --btn-primary-border: rgb(255 255 255 / 30%);
+  --btn-primary-shadow:
+    0 10px 22px -10px rgb(120 180 145 / 45%), 0 2px 4px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 45%), inset 0 -1px 0 rgb(0 0 0 / 14%);
+  --btn-primary-shadow-hover:
+    0 14px 28px -10px rgb(120 180 145 / 55%), 0 2px 6px rgb(0 0 0 / 30%),
+    inset 0 1px 0 rgb(255 255 255 / 55%), inset 0 -1px 0 rgb(0 0 0 / 14%);
+  --btn-soft-bg: linear-gradient(180deg, rgb(169 205 181 / 20%) 0%, rgb(169 205 181 / 12%) 100%);
+  --btn-pressed-bg: linear-gradient(180deg, #bcd9c6 0%, #93bba1 100%);
+  --color-hover: #a9cdb5;
+  --color-hover-soft: rgb(169 205 181 / 10%);
+  --color-hover-border: rgb(169 205 181 / 32%);
   --color-shadow: rgb(0 0 0 / 30%);
   --color-shadow-strong: rgb(0 0 0 / 46%);
-  --color-scrim: rgb(11 11 18 / 88%);
+  --color-scrim: rgb(9 20 14 / 88%);
   --gradient-glow-top: radial-gradient(
     ellipse 70% 100% at 50% 0%,
-    rgb(81 184 236 / 26%) 0%,
-    rgb(81 184 236 / 8%) 45%,
+    rgb(120 180 145 / 26%) 0%,
+    rgb(120 180 145 / 8%) 45%,
     transparent 75%
   );
   --gradient-panel-glow: radial-gradient(
     ellipse 80% 70% at 50% 115%,
-    rgb(81 184 236 / 28%) 0%,
+    rgb(120 180 145 / 28%) 0%,
     transparent 70%
   );
   --gradient-panel-glow-soft: radial-gradient(
     ellipse 70% 90% at 12% 0%,
-    rgb(81 184 236 / 20%),
+    rgb(120 180 145 / 20%),
     transparent 70%
   );
   --gradient-gauge: radial-gradient(
     ellipse 70% 90% at 50% 100%,
-    rgb(81 184 236 / 55%) 0%,
-    rgb(81 184 236 / 12%) 55%,
+    rgb(120 180 145 / 55%) 0%,
+    rgb(120 180 145 / 12%) 55%,
     transparent 75%
   );
   --gradient-stripes: repeating-linear-gradient(
     90deg,
-    rgb(161 218 247 / 9%) 0 1px,
+    rgb(190 220 200 / 9%) 0 1px,
     transparent 1px 7px
   );
   --glass-solid: var(--color-surface);
   --glass-bg: color-mix(in oklab, var(--color-surface) 58%, transparent);
   --glass-bg-strong: color-mix(in oklab, var(--color-surface) 84%, transparent);
-  --glass-border: var(--color-border);
-  --glass-shadow: 0 12px 38px -12px rgb(0 0 0 / 60%), inset 0 1px 0 0 rgb(255 255 255 / 4%);
-  --glass-sheen: linear-gradient(180deg, rgb(255 255 255 / 4%) 0%, rgb(255 255 255 / 0%) 42%);
+  --glass-border: var(--glass-panel-border);
+  --glass-shadow: var(--glass-panel-shadow-strong);
+  --glass-sheen: var(--glass-panel-sheen);
   --glass-edge-top: var(--glass-border);
-  --logo-on-light-display: none;
-  --logo-on-dark-display: block;
   --skeleton-bg: color-mix(in oklab, var(--color-surface-muted) 45%, var(--color-surface));
   --gradient-shimmer: linear-gradient(
     90deg,
     transparent 0%,
-    rgb(161 218 247 / 6%) 50%,
+    rgb(190 220 200 / 6%) 50%,
     transparent 100%
   );
   --glass-lens-bg: rgb(255 255 255 / 5%);
   --glass-lens-glow: inset 0 1px 0 0 rgb(255 255 255 / 5%);
+  --color-ink: #14231c;
+  --color-emerald: #8fbf9f;
+  --color-cyan: #a9c9b4;
+  --color-cyan-soft: #cfe3d6;
+  --color-success: #21885e;
+  --color-danger: #d85b68;
+  --color-home-bg: #0b1d15;
+  --color-home-bg-lift: #143325;
+  --color-home-bg-deep: #06110b;
+  --color-home-veil: #010b08;
+  --color-home-glass-tint: #ffffff;
+  --color-home-rays: #a9cdb5;
+  --aurora-forest: rgb(63 130 96 / 30%);
+  --aurora-sage: rgb(139 176 150 / 18%);
+  --aurora-ivory: rgb(226 216 178 / 9%);
+  --aurora-olive: rgb(120 140 84 / 16%);
+  --gradient-aurora-forest: radial-gradient(closest-side, var(--aurora-forest), transparent);
+  --gradient-aurora-sage: radial-gradient(closest-side, var(--aurora-sage), transparent);
+  --gradient-aurora-ivory: radial-gradient(closest-side, var(--aurora-ivory), transparent);
+  --gradient-aurora-olive: radial-gradient(closest-side, var(--aurora-olive), transparent);
+  --color-home-text: #f3f5ee;
+  --color-home-text-muted: #bccdc2;
+  --color-home-action: #cfe5d6;
+  --color-home-on-action: #0a1a12;
+  --color-income-text: #86e0b4;
+  --color-income-mark: #6fd6a4;
+  --color-expense-text: #f6b8b3;
+  --color-expense-mark: #ee8c88;
+  --color-neutral-text: #c5d8d2;
+  --color-neutral-mark: #8fb0a6;
+  --home-glass-alpha: 7%;
+  --home-glass-alpha-strong: 12%;
+  --home-veil-alpha: 35%;
+  --rays-opacity-max: 8%;
+  --home-wash-forest: rgb(40 110 80 / 30%);
+  --home-wash-sage: rgb(120 160 135 / 14%);
+  --home-wash-ivory: rgb(226 216 178 / 7%);
+  --grain-opacity: 0.14;
+  --grain-blend: soft-light;
+  --gradient-home-bg:
+    radial-gradient(ellipse 80% 55% at 50% -5%, var(--color-home-bg-lift) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 0% 100%, var(--home-wash-forest) 0%, transparent 70%),
+    radial-gradient(ellipse 55% 45% at 100% 100%, rgb(20 120 90 / 14%) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 100% 5%, var(--home-wash-sage) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 20% 30%, var(--home-wash-ivory) 0%, transparent 70%),
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 55%, var(--home-vignette) 100%),
+    linear-gradient(180deg, var(--color-home-bg) 0%, var(--color-home-bg-deep) 100%);
+  --gradient-home-veil: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-home-veil) var(--home-veil-alpha), transparent) 0%,
+    transparent 100%
+  );
+  --gradient-rays-static:
+    radial-gradient(
+      ellipse 40% 70% at 0% 40%,
+      color-mix(in srgb, var(--color-home-rays) var(--rays-opacity-max), transparent) 0%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 40% 70% at 100% 40%,
+      color-mix(in srgb, var(--color-home-rays) var(--rays-opacity-max), transparent) 0%,
+      transparent 100%
+    );
+  --glass-panel-solid: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha),
+    var(--color-home-bg)
+  );
+  --glass-panel-solid-strong: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha-strong),
+    var(--color-home-bg)
+  );
+  --glass-panel-bg: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha),
+    transparent
+  );
+  --glass-panel-bg-strong: color-mix(
+    in srgb,
+    var(--color-home-glass-tint) var(--home-glass-alpha-strong),
+    transparent
+  );
+  --glass-panel-border: rgb(255 255 255 / 13%);
+  --glass-panel-shadow:
+    0 0 0 1px rgb(0 0 0 / 22%), 0 26px 60px -28px rgb(0 0 0 / 58%),
+    0 8px 24px -14px rgb(0 0 0 / 40%), inset 0 1px 0 0 rgb(255 255 255 / 18%),
+    inset 0 -1px 0 0 rgb(255 255 255 / 5%);
+  --glass-panel-shadow-strong:
+    0 0 0 1px rgb(0 0 0 / 26%), 0 34px 72px -30px rgb(0 0 0 / 64%),
+    0 10px 28px -14px rgb(0 0 0 / 46%), inset 0 1px 0 0 rgb(255 255 255 / 24%),
+    inset 0 -1px 0 0 rgb(255 255 255 / 7%);
+  --home-vignette: rgb(0 0 0 / 38%);
+  --glass-panel-sheen:
+    radial-gradient(90% 46% at 0% 0%, rgb(255 255 255 / 9%), transparent 64%),
+    linear-gradient(
+      165deg,
+      rgb(70 104 84 / 16%) 0%,
+      rgb(30 48 38 / 6%) 58%,
+      rgb(90 80 56 / 10%) 100%
+    );
+  --glass-panel-blur: 18px;
+  --glass-panel-blur-mobile: 14px;
+  --glass-panel-saturate: 150%;
+  --home-surface-elevated: rgb(255 255 255 / 10%);
+  --home-surface-hover: rgb(255 255 255 / 8%);
+  --home-surface-pressed: rgb(255 255 255 / 5%);
+  --home-divider: rgb(255 255 255 / 7%);
+  --color-home-focus: #d7eadd;
+  --home-focus-ring: 0 0 0 2px var(--color-home-bg), 0 0 0 4px var(--color-home-focus);
+  --card-issuer-fg: #f2f7f5;
+  --card-issuer-neutral-bg: #1b2a27;
+  --card-issuer-neutral-mark: #8fbf9f;
+  --card-issuer-itau-bg: #ff5a00;
+  --card-issuer-itau-mark: #0b2a6b;
+  --card-issuer-nubank-bg: #820ad1;
+  --card-issuer-nubank-mark: #e3cdfa;
+  --card-issuer-bb-bg: #fce000;
+  --card-issuer-bb-mark: #0b3b9e;
+  --card-issuer-mercadopago-bg: #0f2a3f;
+  --card-issuer-mercadopago-mark: #52b2f0;
+  --card-issuer-itau-fg: #0b1f4a;
+  --card-issuer-bb-fg: #0a1f5c;
   color-scheme: dark;
+  --rail-bg: linear-gradient(
+    165deg,
+    rgb(30 52 40 / 58%) 0%,
+    rgb(20 36 28 / 50%) 58%,
+    rgb(46 42 30 / 38%) 100%
+  );
+  --rail-specular: radial-gradient(120% 55% at 0% 0%, rgb(255 255 255 / 11%), transparent 62%);
+  --rail-border: rgb(255 255 255 / 14%);
+  --rail-shadow:
+    0 30px 70px -28px rgb(0 0 0 / 60%), 0 8px 26px -14px rgb(0 0 0 / 42%),
+    inset 0 1px 0 0 rgb(255 255 255 / 20%), inset 0 -1px 0 0 rgb(255 255 255 / 6%);
+  --rail-pill-bg: rgb(255 255 255 / 6%);
+  --rail-pill-border: rgb(255 255 255 / 11%);
+  --rail-pill-hover: rgb(255 255 255 / 12%);
+  --rail-drop-bg: linear-gradient(160deg, rgb(169 205 181 / 30%) 0%, rgb(169 205 181 / 14%) 100%);
+  --rail-drop-border: rgb(255 255 255 / 22%);
+  --rail-drop-shadow:
+    0 8px 22px -8px rgb(169 205 181 / 38%), 0 0 0 3px rgb(169 205 181 / 10%),
+    inset 0 1px 0 0 rgb(255 255 255 / 28%);
+  --rail-sand: rgb(214 196 150 / 60%);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -383,5 +987,7 @@
     --duration-slow: 0ms;
     --duration-enter: 0ms;
     --duration-hero: 0ms;
+    --duration-panel-enter: 0ms;
+    --enter-distance: 0px;
   }
 }

@@ -2,12 +2,19 @@
   class="totals"
   [class.totals--summary]="variant() === 'summary'"
   [class.glass]="variant() === 'summary'"
+  [class.glass--strong]="variant() === 'summary'"
   role="group"
   [attr.aria-label]="t().transactions.totals.label"
   [attr.data-cy]="cy()"
 >
   @if (recordTotals(); as totals) {
     <dl class="totals__list">
+      <div class="totals__item totals__item--net">
+        <dt>{{ netLabel() }}</dt>
+        <dd [class.is-negative]="negative(totals.cashFlow.net)" [attr.data-cy]="cy() + '-net'">
+          <app-money [value]="totals.cashFlow.net" />
+        </dd>
+      </div>
       <div class="totals__item">
         <dt>{{ t().transactions.totals.count }}</dt>
         <dd class="num" [attr.data-cy]="cy() + '-count'">{{ totals.count }}</dd>
@@ -19,12 +26,6 @@
       <div class="totals__item">
         <dt>{{ t().transactions.totals.out }}</dt>
         <dd [attr.data-cy]="cy() + '-out'"><app-money [value]="totals.cashFlow.out" /></dd>
-      </div>
-      <div class="totals__item totals__item--net">
-        <dt>{{ netLabel() }}</dt>
-        <dd [class.is-negative]="negative(totals.cashFlow.net)" [attr.data-cy]="cy() + '-net'">
-          <app-money [value]="totals.cashFlow.net" />
-        </dd>
       </div>
     </dl>
     @if (voidedOnly()) {

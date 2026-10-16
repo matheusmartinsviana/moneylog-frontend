@@ -29,6 +29,7 @@ import type {
   PurchasePreviewResponse,
 } from '~/modules/cards/infra/responses/card.response';
 import type { Money } from '~/util/money';
+import type { PersonAmount, PersonShareLine, ShareInput } from '~/util/split';
 
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
@@ -66,9 +67,29 @@ export function toInvoiceItem(response: InvoiceItemResponse): InvoiceItem {
   };
 }
 
+const toPersonAmount = (value: { personId: string | null; amount: Money }): PersonAmount => ({
+  personId: value.personId,
+  amount: money(value.amount),
+});
+
+export function toShareLine(line: {
+  personId: string | null;
+  bps: number | null;
+  amount: { amount: string; currency: string } | null;
+}): PersonShareLine {
+  return {
+    personId: line.personId,
+    bps: line.bps,
+    amount: line.amount ? money(line.amount) : null,
+  };
+}
+
 export function toInvoice(response: InvoiceResponse): Invoice {
   return {
     ...toInvoiceSummary(response),
+    myShare: money(response.myShare),
+    thirdPartyShare: money(response.thirdPartyShare),
+    shareByPerson: response.shareByPerson.map(toPersonAmount),
     items: response.items.map(toInvoiceItem),
     payments: response.payments.map((payment) => ({
       transactionId: payment.transactionId,
@@ -76,6 +97,9 @@ export function toInvoice(response: InvoiceResponse): Invoice {
       amount: money(payment.amount),
       date: payment.date,
     })),
+    documentAmount: response.documentAmount ? money(response.documentAmount) : null,
+    documentDivergence: response.documentDivergence ? money(response.documentDivergence) : null,
+    documentVersion: response.documentVersion ?? null,
   };
 }
 
@@ -108,6 +132,10 @@ export function toCard(response: CardResponse): Card {
     committedFuture: money(response.committedFuture),
     closingConfirmed: response.closingConfirmed,
     archivable: response.archivable,
+    autoDebit: response.autoDebit ?? null,
+    brand: response.brand ?? null,
+    bestPurchaseDay: response.bestPurchaseDay ?? null,
+    lastDigits: [...(response.lastDigits ?? [])],
     version: response.version,
   };
 }
@@ -134,10 +162,15 @@ export function toPurchasePreview(response: PurchasePreviewResponse): PurchasePr
       competence: installment.competence,
       invoice: toInvoiceRef(installment.invoice),
       lateEntry: installment.lateEntry,
+      myAmount: money(installment.myAmount),
+      thirdPartyAmount: money(installment.thirdPartyAmount),
+      byPerson: installment.byPerson.map(toPersonAmount),
     })),
     total: money(response.total),
     availableLimitAfter: response.availableLimitAfter ? money(response.availableLimitAfter) : null,
     overLimit: response.overLimit,
+    splitMode: response.splitMode ?? null,
+    shares: (response.shares ?? []).map(toShareLine),
     warnings: [...response.warnings],
   };
 }
@@ -179,6 +212,12 @@ export function toCreateRequest(input: CardInput): CardCreateRequest {
     closingDay: input.closingDay,
     dueDay: input.dueDay,
     defaultPaymentAccountId: input.defaultPaymentAccountId,
+    ...(input.autoDebit === undefined ? {} : { autoDebit: input.autoDebit }),
+    ...(input.brand === undefined
+      ? {}
+      : { brand: input.brand?.trim() ? input.brand.trim() : null }),
+    ...(input.bestPurchaseDay === undefined ? {} : { bestPurchaseDay: input.bestPurchaseDay }),
+    ...(input.lastDigits === undefined ? {} : { lastDigits: [...input.lastDigits] }),
   };
 }
 
@@ -190,8 +229,23 @@ export function toUpdateRequest(input: CardUpdate): CardUpdateRequest {
   };
 }
 
+export function toShareBody(shares: readonly ShareInput[]): readonly ShareInput[] {
+  return shares.map((share) => ({
+    personId: share.personId,
+    ...(share.bps === undefined ? {} : { bps: share.bps }),
+    ...(share.amount === undefined ? {} : { amount: share.amount }),
+  }));
+}
+
 export function toPurchasePreviewBody(request: PurchasePreviewRequest): PurchasePreviewRequestBody {
-  return { amount: request.amount, installments: request.installments, date: request.date };
+  return {
+    amount: request.amount,
+    installments: request.installments,
+    date: request.date,
+    ...(request.split
+      ? { splitMode: request.split.mode, shares: [...toShareBody(request.split.shares)] }
+      : {}),
+  };
 }
 
 export function toPaymentBody(input: InvoicePaymentInput): InvoicePaymentRequest {

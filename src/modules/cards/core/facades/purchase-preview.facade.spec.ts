@@ -25,7 +25,9 @@ describe('PurchasePreviewFacade', () => {
     expect(gateway.purchaseRequests).toHaveLength(0);
     vi.advanceTimersByTime(1);
 
-    expect(gateway.purchaseRequests).toEqual([{ cardId: 'card-1', request: REQUEST }]);
+    expect(gateway.purchaseRequests).toEqual([
+      { cardId: 'card-1', request: { ...REQUEST, split: null } },
+    ]);
     expect(facade.loading()).toBe(false);
   });
 

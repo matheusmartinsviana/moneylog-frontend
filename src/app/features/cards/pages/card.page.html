@@ -1,5 +1,4 @@
 <app-page-layout
-  fit
   [heading]="card()?.name ?? t().nav.cards"
   [description]="card()?.institution ?? undefined"
 >
@@ -31,12 +30,6 @@
         >
           {{ t().cards.detail.newPurchase }}
         </a>
-        <button type="button" class="button" data-cy="card-ongoing" (click)="ongoingOpen.set(true)">
-          {{ t().debtOverview.actions.addOngoing }}
-        </button>
-        <a class="button" [routerLink]="['/cards', c.id, 'edit']" data-cy="card-edit">
-          {{ t().cards.detail.edit }}
-        </a>
       }
     </div>
   }
@@ -65,35 +58,64 @@
     }
     @case ('ready') {
       @if (card(); as c) {
-        <div class="fit-stack">
-          <app-card-header [card]="c" (confirmClosing)="closingOpen.set(true)" />
-          @if (payHint(); as hint) {
+        <div class="page-grid">
+          <div class="stack span-5">
+            <app-card-header [card]="c" (confirmClosing)="closingOpen.set(true)" />
             @if (!compact()) {
-              <p class="hint" id="card-pay-hint" data-cy="card-pay-hint" [attr.data-reason]="hint">
-                @switch (hint) {
-                  @case ('loading') {
-                    {{ t().cards.detail.payInvoicesLoading }}
-                  }
-                  @case ('error') {
-                    {{ t().cards.detail.payInvoicesError }}
-                    <button
-                      type="button"
-                      class="button"
-                      data-cy="card-pay-hint-retry"
-                      (click)="retryInvoices()"
-                    >
-                      {{ t().cards.pay.retry }}
-                    </button>
-                  }
-                  @default {
-                    {{ t().cards.detail.nothingToPay }}
-                  }
-                }
-              </p>
+              <div class="quiet-actions" data-cy="card-quiet-actions">
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="card-ongoing"
+                  (click)="ongoingOpen.set(true)"
+                >
+                  {{ t().debtOverview.actions.addOngoing }}
+                </button>
+                <a
+                  class="button"
+                  [routerLink]="['/cards', c.id, 'cash-out']"
+                  data-cy="card-cash-out"
+                >
+                  {{ t().cards.detail.cashOut }}
+                </a>
+                <a class="button" [routerLink]="['/cards', c.id, 'edit']" data-cy="card-edit">
+                  {{ t().cards.detail.edit }}
+                </a>
+              </div>
             }
-          }
+            @if (payHint(); as hint) {
+              @if (!compact()) {
+                <p
+                  class="caption"
+                  id="card-pay-hint"
+                  data-cy="card-pay-hint"
+                  [attr.data-reason]="hint"
+                >
+                  @switch (hint) {
+                    @case ('loading') {
+                      {{ t().cards.detail.payInvoicesLoading }}
+                    }
+                    @case ('error') {
+                      {{ t().cards.detail.payInvoicesError }}
+                      <button
+                        type="button"
+                        class="button"
+                        data-cy="card-pay-hint-retry"
+                        (click)="retryInvoices()"
+                      >
+                        {{ t().cards.pay.retry }}
+                      </button>
+                    }
+                    @default {
+                      {{ t().cards.detail.nothingToPay }}
+                    }
+                  }
+                </p>
+              }
+            }
+          </div>
 
-          <div class="fit-scroll">
+          <div class="stack span-7">
             <app-tabs
               fieldId="card-tabs"
               [label]="t().cards.detail.tabs.label"
@@ -109,15 +131,33 @@
                   }
                   @case ('ready') {
                     @if (list.data.length === 0) {
-                      <p class="empty" data-cy="invoices-empty">
+                      <p class="state-note" data-cy="invoices-empty">
                         {{ t().cards.detail.invoicesEmpty }}
                       </p>
                     } @else {
-                      <ul class="list" data-cy="invoices-list">
-                        @for (invoice of list.data; track invoice.id) {
-                          <li app-invoice-summary-row [invoice]="invoice"></li>
-                        }
-                      </ul>
+                      <div class="card-flat list-wrap">
+                        <ul class="list" data-cy="invoices-list">
+                          @for (invoice of visibleInvoices(list.data); track invoice.id) {
+                            <li app-invoice-summary-row [invoice]="invoice"></li>
+                          }
+                        </ul>
+                      </div>
+                      @if (
+                        list.data.length > visibleInvoices(list.data).length || showAllInvoices()
+                      ) {
+                        <button
+                          type="button"
+                          class="link-more hit-area invoices-more"
+                          data-cy="invoices-show-all"
+                          (click)="showAllInvoices.set(!showAllInvoices())"
+                        >
+                          {{
+                            showAllInvoices()
+                              ? t().cards.detail.invoicesFewer
+                              : t().cards.detail.invoicesAll
+                          }}
+                        </button>
+                      }
                     }
                   }
                   @default {
@@ -141,7 +181,9 @@
                   }
                   @case ('ready') {
                     @if (installments.data.byInvoice.length === 0) {
-                      <p class="empty" data-cy="future-empty">{{ t().cards.detail.futureEmpty }}</p>
+                      <p class="state-note" data-cy="future-empty">
+                        {{ t().cards.detail.futureEmpty }}
+                      </p>
                     } @else {
                       <app-future-installments-list [future]="installments.data" />
                     }

@@ -54,6 +54,10 @@ export class OccurrencesPage implements OnInit {
   protected readonly overdue = computed(
     () => this.occurrences.data()?.filter((occurrence) => occurrence.overdue) ?? [],
   );
+  protected readonly showAllUpcoming = signal(false);
+  protected readonly visibleUpcoming = computed(() =>
+    this.showAllUpcoming() ? this.upcoming() : this.upcoming().slice(0, 8),
+  );
   protected readonly upcoming = computed(
     () => this.occurrences.data()?.filter((occurrence) => !occurrence.overdue) ?? [],
   );

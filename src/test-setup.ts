@@ -5,8 +5,10 @@ import { afterEach } from 'vitest';
 
 document.documentElement.setAttribute('data-motion', 'off');
 
-configure({ dom: { testIdAttribute: 'data-cy' } });
-configureDom({ testIdAttribute: 'data-cy' });
+const ASYNC_UTIL_TIMEOUT_MS = 8_000;
+
+configure({ dom: { testIdAttribute: 'data-cy', asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS } });
+configureDom({ testIdAttribute: 'data-cy', asyncUtilTimeout: ASYNC_UTIL_TIMEOUT_MS });
 
 afterEach(() => {
   try {

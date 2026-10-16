@@ -2,13 +2,9 @@
 
 Arquivos estáticos servidos em `/assets` (os README são ignorados no build).
 
-- `brand/logo-on-light.png` (recibo escuro) e `brand/logo-on-dark.png` (recibo branco): o logo da interface, um por tema
-  (sidebar e login; o CSS escolhe pelos tokens `--logo-on-*-display`).
-- `icons/*.png`: **gerados** por `npm run icons` a partir da arte do dono em `brand/` (mestres `logo-any`, `logo-maskable`,
-  `logo-apple` e `logo-badge`; as artes originais estão em `brand/recibo-escuro.png` e `brand/recibo-branco.png` e
-  `brand/make-masters.mjs` mostra como os mestres saíram delas). Versionados: `icon-32`, `icon-192`, `icon-512`, `icon-maskable-192`, `icon-maskable-512`,
-  `apple-touch-icon` (180×180) e `badge-96` (silhueta branca da barra de status do Android nas notificações push).
+- `brand/logo-mark-64|128|256.webp`: só o glifo "$" (fita verde-pálida e sálvia) com fundo transparente. A sidebar e o login o colocam sobre um slot verde-floresta (`--brand-forest`) em qualquer tema.
+- `icons/*`: **gerados** por `npm run icons` a partir da arte do dono em `brand/logo-source.png`: `favicon.ico`, `icon-16/32/48` (zoom no glifo, cantos arredondados transparentes), `icon-192`, `icon-512` (cantos arredondados), `icon-maskable-192/512` e `apple-touch-icon` (180, opaco; full-bleed com o glifo na safe zone) e `badge-96` (silhueta branca do glifo, barra de status do Android nas notificações push).
 
 As imagens ficam em cache `lazy` no service worker; o app shell, o CSS, o JS e as fontes latinas em `prefetch`.
 
-Os ícones são referenciados com `?v=N` (index.html, manifest, sw-push.js). Ao trocar a arte, aumente o N: o Safari e a Cloudflare guardam o ícone por horas e só buscam de novo com uma URL nova.
+Os ícones são referenciados com `?v=N` (index.html, manifest, sw-push.js). Ao trocar a arte, aumente o N (hoje 5): o Safari e a Cloudflare guardam o ícone por horas e só buscam de novo com uma URL nova.

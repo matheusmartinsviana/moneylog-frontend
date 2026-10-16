@@ -1,4 +1,5 @@
 import type { Money } from '~/util/money';
+import type { PersonAmount } from '~/util/split';
 
 export const INVOICE_STATUSES = ['FUTURE', 'OPEN', 'CLOSED', 'OVERDUE', 'PAID'] as const;
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
@@ -40,8 +41,14 @@ export interface InvoicePayment {
 }
 
 export interface Invoice extends InvoiceSummary {
+  readonly myShare: Money;
+  readonly thirdPartyShare: Money;
+  readonly shareByPerson: readonly PersonAmount[];
   readonly items: readonly InvoiceItem[];
   readonly payments: readonly InvoicePayment[];
+  readonly documentAmount: Money | null;
+  readonly documentDivergence: Money | null;
+  readonly documentVersion: number | null;
 }
 
 export interface InvoiceRef {

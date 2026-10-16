@@ -5,6 +5,7 @@ const noDelta = { amount: zero, percent: null };
 
 export function emptySummary(month: string): MonthlySummaryResponse {
   return {
+    view: 'MINE',
     competence: month,
     partial: false,
     isProjection: false,

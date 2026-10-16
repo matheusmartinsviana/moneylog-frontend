@@ -12,6 +12,7 @@ import type {
 import type { TransactionInput } from '~/modules/transactions/core/types/transaction-input';
 import type { DebtSummary } from '~/util/debt';
 import type { Money } from '~/util/money';
+import type { PersonShareLine, SplitMode } from '~/util/split';
 
 export interface Ref {
   readonly id: string;
@@ -71,6 +72,10 @@ export interface Transaction {
   readonly invoice: TransactionInvoiceRef | null;
   readonly debt: DebtSummary | null;
   readonly shares: readonly DebtSummary[];
+  readonly splitMode: SplitMode | null;
+  readonly personShares: readonly PersonShareLine[];
+  readonly myAmount: Money | null;
+  readonly thirdPartyAmount: Money | null;
   readonly incomeCompetence: string | null;
   readonly recurrenceId: string | null;
   readonly occurrenceDate: string | null;

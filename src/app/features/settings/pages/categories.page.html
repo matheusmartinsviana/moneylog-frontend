@@ -3,9 +3,18 @@
   [heading]="t().categories.title"
   [description]="t().categories.description"
 >
-  <a pageActions class="button" routerLink="/settings" data-cy="categories-back">
+  <a pageActions class="link-more hit-area" routerLink="/settings" data-cy="categories-back">
     {{ t().categories.backToSettings }}
   </a>
+  <button
+    pageActions
+    type="button"
+    class="button button--primary"
+    data-cy="categories-add"
+    (click)="startCreate()"
+  >
+    {{ t().categories.add }}
+  </button>
 
   <nav
     class="tabs"
@@ -32,16 +41,6 @@
     </a>
   </nav>
 
-  <div>
-    <button
-      type="button"
-      class="button button--primary"
-      data-cy="categories-add"
-      (click)="startCreate()"
-    >
-      {{ t().categories.add }}
-    </button>
-  </div>
   @if (creating()) {
     <app-form-modal
       #modal
@@ -109,7 +108,7 @@
       <app-error-state [problem]="categories.error()" (retry)="retry()" />
     }
     @case ('ready') {
-      <ul class="list surface" data-cy="categories-list">
+      <ul class="list card-flat" data-cy="categories-list">
         @for (category of categories.active(); track category.id) {
           <li
             app-category-row
@@ -132,7 +131,7 @@
           [heading]="archivedLabel()"
           [(open)]="archivedOpen"
         >
-          <ul class="list surface archived__list">
+          <ul class="list card-flat archived__list">
             @for (category of categories.archived(); track category.id) {
               <li
                 app-category-row

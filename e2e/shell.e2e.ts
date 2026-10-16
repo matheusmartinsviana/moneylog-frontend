@@ -1,5 +1,7 @@
 import {
+  BOTTOM_NAV_LABELS,
   BOTTOM_NAV_ORDER,
+  BOTTOM_NAV_SHORT_LABELS,
   expect,
   expectNoHorizontalScroll,
   expectNoRawKeys,
@@ -9,8 +11,8 @@ import {
   NAV_LABELS,
   NOT_FOUND_TITLE,
   ROUTES,
+  RAIL_ORDER,
   seedPreferences,
-  SIDEBAR_ORDER,
   test,
   VIEWPORTS,
   ViewportName,
@@ -20,7 +22,7 @@ import {
 test.describe('shell em 375 × 812 (mobile)', () => {
   test.use({ viewport: VIEWPORTS.mobile });
 
-  test('barra inferior fixa com Início · Movimentações · + · Metas · Mais e sem sidebar', async ({
+  test('barra inferior fixa com Visão geral · Transações · Orçamentos · Metas · Configurações e sem sidebar', async ({
     page,
   }) => {
     await page.goto('/');
@@ -39,28 +41,27 @@ test.describe('shell em 375 × 812 (mobile)', () => {
 
     for (const key of BOTTOM_NAV_ORDER) {
       await expect(page.locator(`[data-cy="bottom-nav-${key}"]`)).toHaveAccessibleName(
-        NAV_LABELS.pt[key]!,
+        BOTTOM_NAV_SHORT_LABELS.pt[key] ?? BOTTOM_NAV_LABELS.pt[key]!,
       );
     }
 
     const box = await bottomNav.boundingBox();
     expect(box).not.toBeNull();
-    expect(Math.round(box!.y + box!.height)).toBe(VIEWPORTS.mobile.height);
-    const position = await bottomNav.evaluate((el) => getComputedStyle(el).position);
+    const gap = VIEWPORTS.mobile.height - Math.round(box!.y + box!.height);
+    expect(gap, 'a barra flutua a poucos pixels da borda inferior').toBeGreaterThanOrEqual(0);
+    expect(gap).toBeLessThanOrEqual(16);
+    const position = await bottomNav.evaluate(
+      (el) => getComputedStyle(el.closest('app-bottom-nav') ?? el).position,
+    );
     expect(position).toBe('fixed');
 
-    const add = page.locator('[data-cy="bottom-nav-quickAdd"]');
-    const addBg = await add
-      .locator('.bottom-nav__add-circle')
-      .evaluate((el) => getComputedStyle(el).backgroundColor);
-    const homeBg = await page
-      .locator('[data-cy="bottom-nav-home"]')
-      .evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(addBg).not.toBe(homeBg);
-
-    await add.click();
-    await expect(page).toHaveURL(/\(modal:quick-add\)$/);
-    await expect(page.getByRole('dialog')).toBeVisible();
+    const style = await bottomNav.evaluate((el) => {
+      const computed = getComputedStyle(el);
+      return { filter: computed.backdropFilter };
+    });
+    expect(style.filter === 'none' || style.filter === '').toBe(true);
+    await expect(page.locator('[data-cy="bottom-nav-quickAdd"]')).toHaveCount(0);
+    await expect(page.locator('[data-cy="bottom-nav-more"]')).toHaveCount(0);
     await expectNoHorizontalScroll(page);
   });
 
@@ -74,12 +75,6 @@ test.describe('shell em 375 × 812 (mobile)', () => {
     for (const key of BOTTOM_NAV_ORDER) {
       const link = page.locator(`[data-cy="bottom-nav-${key}"]`);
       await link.click();
-      if (key === 'quickAdd') {
-        await expect(page.getByRole('dialog')).toBeVisible();
-        await page.keyboard.press('Escape');
-        await expect(page.getByRole('dialog')).toBeHidden();
-        continue;
-      }
       await expect(link).toHaveAttribute('aria-current', 'page');
       await expect(
         page.locator('[data-cy="bottom-nav"] [aria-current="page"]:visible'),
@@ -88,6 +83,16 @@ test.describe('shell em 375 × 812 (mobile)', () => {
       await expectNoHorizontalScroll(page);
     }
     expect(await page.evaluate(() => (window as unknown as { __spa?: number }).__spa)).toBe(1);
+  });
+
+  test('/more continua acessível pelo botão de menu do cabeçalho a partir do Início em 375 px', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await waitForApp(page);
+    await page.locator('[data-cy="header-menu"]').click();
+    await expect(page).toHaveURL(/\/more$/);
+    await expect(page.locator('[data-cy="more-list"]')).toBeVisible();
   });
 
   test('/more lista as seções que não estão na barra inferior e cada uma abre', async ({
@@ -162,7 +167,7 @@ test.describe('shell em 375 × 812 (mobile)', () => {
 test.describe('shell em 768 × 1024 (tablet)', () => {
   test.use({ viewport: VIEWPORTS.tablet });
 
-  test('sidebar recolhida com rótulo acessível e sem barra inferior', async ({ page }) => {
+  test('trilho recolhido com rótulo acessível e sem barra inferior', async ({ page }) => {
     await page.goto('/');
     await waitForApp(page);
     await expect(page.locator('[data-cy="bottom-nav"]')).toBeHidden();
@@ -172,15 +177,13 @@ test.describe('shell em 768 × 1024 (tablet)', () => {
     const width = (await sidebar.boundingBox())!.width;
     expect(width, 'sidebar recolhida (só ícones)').toBeLessThan(100);
 
-    for (const key of SIDEBAR_ORDER) {
+    for (const key of RAIL_ORDER) {
       const link = page.locator(`[data-cy="sidebar-${key}"]`);
       await expect(link).toBeVisible();
       await expect(link).toHaveAccessibleName(NAV_LABELS.pt[key]!);
     }
-    const labelWidth = await page
-      .locator('[data-cy="sidebar-cards"] .sidebar__label')
-      .evaluate((el) => el.getBoundingClientRect().width);
-    expect(labelWidth).toBeLessThanOrEqual(1);
+    await expect(page.locator('[data-cy="sidebar-more"]')).toBeVisible();
+    await expect(page.locator('[data-cy="sidebar-signOut"]')).toBeVisible();
     await expectNoHorizontalScroll(page);
   });
 
@@ -190,49 +193,49 @@ test.describe('shell em 768 × 1024 (tablet)', () => {
     await page.goto('/more');
     await waitForApp(page);
     const reached: string[] = [];
-    for (let i = 0; i < 40 && reached.length < SIDEBAR_ORDER.length; i++) {
+    for (let i = 0; i < 40 && reached.length < RAIL_ORDER.length; i++) {
       await page.keyboard.press('Tab');
       const info = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
-        return { cy: el.getAttribute('data-cy'), ring: getComputedStyle(el).boxShadow };
+        const square = el.querySelector('.sidebar__sq');
+        return {
+          cy: el.getAttribute('data-cy'),
+          ring: square ? getComputedStyle(square).boxShadow : 'none',
+        };
       });
-      if (info.cy && SIDEBAR_ORDER.includes(info.cy.replace('sidebar-', ''))) {
-        reached.push(info.cy.replace('sidebar-', ''));
+      const key = info.cy?.replace('sidebar-', '') ?? '';
+      if (RAIL_ORDER.includes(key)) {
+        reached.push(key);
         expect(info.ring, `${info.cy} com anel de foco`).toMatch(/0px 0px 0px 4px/);
-        await expect
-          .poll(
-            () =>
-              page.evaluate(() => {
-                const label = document.activeElement?.querySelector('.sidebar__label');
-                return label ? getComputedStyle(label).opacity : null;
-              }),
-            { message: `${info.cy} mostra o rótulo no foco` },
-          )
-          .toBe('1');
+        await expect(
+          page.locator('body > .tooltip[role="tooltip"]'),
+          `${info.cy} mostra o rótulo no foco`,
+        ).toHaveText(NAV_LABELS.pt[key]!);
       }
     }
-    expect(reached).toEqual(SIDEBAR_ORDER);
+    expect(reached).toEqual(RAIL_ORDER);
   });
 });
 
 test.describe('shell em 1280 × 800 (desktop)', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
-  test('sidebar expandida com as 16 seções na ordem, sem Dream Board', async ({ page }) => {
+  test('trilho de 64 px com os 9 itens essenciais na ordem, Mais e Configurações, sem Dream Board', async ({
+    page,
+  }) => {
     await page.goto('/');
     await waitForApp(page);
     await expect(page.locator('[data-cy="bottom-nav"]')).toBeHidden();
     const sidebar = page.locator('[data-cy="sidebar"]');
     await expect(sidebar).toBeVisible();
-    expect((await sidebar.boundingBox())!.width, 'sidebar expandida').toBeGreaterThan(180);
+    expect((await sidebar.boundingBox())!.width, 'trilho recolhido').toBeLessThan(100);
 
-    const nav = sidebar.locator('nav');
-    const keys = await nav
-      .locator('li a[data-cy^="sidebar-"]')
+    const keys = await sidebar
+      .locator('li a[data-cy^="sidebar-"], a[data-cy="sidebar-settings"]')
       .evaluateAll((links) => links.map((a) => a.getAttribute('data-cy')!.replace('sidebar-', '')));
-    expect(keys).toEqual(SIDEBAR_ORDER);
-    for (const key of SIDEBAR_ORDER) {
-      await expect(page.locator(`[data-cy="sidebar-${key}"] .sidebar__label`)).toHaveText(
+    expect(keys).toEqual(RAIL_ORDER);
+    for (const key of RAIL_ORDER) {
+      await expect(page.locator(`[data-cy="sidebar-${key}"]`)).toHaveAccessibleName(
         NAV_LABELS.pt[key]!,
       );
     }
@@ -240,7 +243,7 @@ test.describe('shell em 1280 × 800 (desktop)', () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test('o item ativo da sidebar continua com foco visível', async ({ page }) => {
+  test('o item ativo do trilho continua com foco visível', async ({ page }) => {
     await page.goto('/transactions');
     await waitForApp(page);
     const active = page.locator('[data-cy="sidebar-transactions"]');
@@ -250,27 +253,27 @@ test.describe('shell em 1280 × 800 (desktop)', () => {
     await expect(active).toBeFocused();
     const ring = await active.evaluate((el) => ({
       focusVisible: el.matches(':focus-visible'),
-      boxShadow: getComputedStyle(el).boxShadow,
-      outline: getComputedStyle(el).outlineStyle,
+      boxShadow: getComputedStyle(el.querySelector('.sidebar__sq')!).boxShadow,
     }));
     expect(ring.focusVisible).toBe(true);
     expect(ring.boxShadow, 'anel de foco no item ativo').toMatch(/0px 0px 0px 4px/);
   });
 
-  test('o "Novo registro" ativo continua com foco visível', async ({ page }) => {
-    await page.goto('/quick-add');
+  test('o "Novo registro" recebe foco visível pelo teclado', async ({ page }) => {
+    await page.goto('/');
     await waitForApp(page);
     const quickAdd = page.locator('[data-cy="sidebar-quickAdd"]');
-    await expect(quickAdd).toHaveAttribute('aria-current', 'page');
     await page.locator('[data-cy="sidebar-brand"]').focus();
     await page.keyboard.press('Tab');
     await expect(quickAdd).toBeFocused();
-    const boxShadow = await quickAdd.evaluate((el) => getComputedStyle(el).boxShadow);
-    expect(boxShadow, 'anel de foco no "Novo registro" ativo').toMatch(/0px 0px 0px 4px/);
+    const boxShadow = await quickAdd.evaluate(
+      (el) => getComputedStyle(el.querySelector('.sidebar__sq')!).boxShadow,
+    );
+    expect(boxShadow, 'anel de foco no "Novo registro"').toMatch(/0px 0px 0px 4px/);
   });
 });
 
-const NO_EMPTY_STATE = new Set(['more', 'import', 'vault', 'mcp']);
+const NO_EMPTY_STATE = new Set(['more', 'import', 'vault', 'mcp', 'statement', 'settings', 'ai']);
 
 for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {
   test.describe(`todas as rotas em ${viewport}`, () => {

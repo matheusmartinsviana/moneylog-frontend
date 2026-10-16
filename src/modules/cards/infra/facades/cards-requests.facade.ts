@@ -114,6 +114,10 @@ export class CardsRequestsFacade extends CardsGateway {
           committedFuture: { amount: '0.00', currency: 'BRL' },
           closingConfirmed: true,
           archivable: true,
+          autoDebit: body.autoDebit ?? null,
+          brand: body.brand ?? null,
+          bestPurchaseDay: body.bestPurchaseDay ?? null,
+          lastDigits: body.lastDigits ?? [],
           version: 0,
           createdAt: '2026-01-01T00:00:00Z',
           updatedAt: '2026-01-01T00:00:00Z',
@@ -191,6 +195,18 @@ export class CardsRequestsFacade extends CardsGateway {
     if (this.useMocks) return notFound('INVOICE_NOT_FOUND');
     return this.http
       .get<InvoiceResponse>(INVOICES_ENDPOINTS.item(id))
+      .pipe(map(toInvoice), catchError(fail));
+  }
+
+  changeDocumentAmount(
+    invoiceId: string,
+    documentAmount: string | null,
+    version: number | null,
+  ): Observable<Invoice> {
+    if (this.useMocks) return notFound('INVOICE_NOT_FOUND');
+    const body = version === null ? { documentAmount } : { documentAmount, version };
+    return this.http
+      .put<InvoiceResponse>(INVOICES_ENDPOINTS.documentAmount(invoiceId), body)
       .pipe(map(toInvoice), catchError(fail));
   }
 

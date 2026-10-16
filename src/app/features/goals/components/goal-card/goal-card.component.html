@@ -18,7 +18,6 @@
         t().goals.metric[g.metric]
       }}</span>
     }
-    <span class="tag" [attr.data-cy]="'goal-priority-' + g.id">{{ priority() }}</span>
     @if (g.status !== 'ACTIVE') {
       <span
         class="tag"
@@ -97,6 +96,6 @@
   </p>
 }
 
-<div class="card__actions">
+<div class="card__actions quiet-actions">
   <ng-content />
 </div>

@@ -7,6 +7,7 @@ import type {
   RealizedTransaction,
   RealizePayment,
 } from '~/modules/recurrences/core/types/recurrence';
+import type { RealizeForeign } from '~/modules/recurrences/core/types/subscription';
 import { newIdempotencyKey } from '~/util/api/idempotency-key';
 import { Problem, problemOf } from '~/util/api/problem';
 
@@ -15,6 +16,7 @@ interface Attempt {
   readonly date: string;
   readonly amount: string | null;
   readonly payment: RealizePayment | null;
+  readonly foreign: RealizeForeign | null;
   readonly key: string;
 }
 
@@ -52,6 +54,7 @@ export class OccurrenceRealizeFacade {
               attempt.amount,
               attempt.key,
               attempt.payment,
+              attempt.foreign,
             )
             .pipe(
               tap((transaction) => {
@@ -76,6 +79,7 @@ export class OccurrenceRealizeFacade {
     date: string,
     amount: string | null,
     payment: RealizePayment | null = null,
+    foreign: RealizeForeign | null = null,
   ): void {
     const pending = this.last;
     const same =
@@ -84,12 +88,17 @@ export class OccurrenceRealizeFacade {
       pending.date === date &&
       pending.amount === amount &&
       pending.payment?.accountId === payment?.accountId &&
-      pending.payment?.method === payment?.method;
+      pending.payment?.method === payment?.method &&
+      pending.foreign?.originalAmount === foreign?.originalAmount &&
+      pending.foreign?.currency === foreign?.currency &&
+      pending.foreign?.fxRate === foreign?.fxRate &&
+      pending.foreign?.iofBps === foreign?.iofBps;
     const attempt: Attempt = {
       recurrenceId,
       date,
       amount,
       payment,
+      foreign,
       key: same ? pending.key : newIdempotencyKey(),
     };
     this.last = attempt;

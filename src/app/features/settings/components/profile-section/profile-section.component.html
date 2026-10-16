@@ -1,0 +1,75 @@
+<app-section-container
+  [heading]="t().settings.profile.title"
+  [description]="t().settings.profile.description"
+>
+  @if (ready()) {
+    <div class="profile" data-cy="profile-section">
+      <div class="profile__photo">
+        <app-avatar
+          size="lg"
+          [name]="profile.displayName()"
+          [src]="profile.photoUrl()"
+          [label]="t().settings.profile.photoLabel"
+        />
+        <div class="profile__photo-actions">
+          <app-files-button
+            cy="profile-photo-change"
+            [label]="
+              profile.hasPhoto() ? t().settings.profile.changePhoto : t().settings.profile.addPhoto
+            "
+            [accept]="accept"
+            [disabled]="profile.busy()"
+            (picked)="pick($event)"
+          />
+          @if (profile.hasPhoto()) {
+            <button
+              type="button"
+              class="button"
+              data-cy="profile-photo-remove"
+              [disabled]="profile.busy()"
+              (click)="remove()"
+            >
+              {{ t().settings.profile.removePhoto }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <form class="profile__name" (submit)="save($event)" novalidate>
+        <app-text-field
+          [formControl]="nickname"
+          fieldId="profile-nickname"
+          [label]="t().settings.profile.nickname"
+          [hint]="t().settings.profile.nicknameHint"
+          [mandatory]="false"
+          [maxlength]="nameMax"
+          autocomplete="nickname"
+        />
+        <button
+          type="submit"
+          class="button button--primary profile__save"
+          data-cy="profile-nickname-save"
+          [disabled]="profile.busy() || unchanged()"
+        >
+          {{ profile.busy() ? t().settings.profile.saving : t().settings.profile.save }}
+        </button>
+      </form>
+
+      @if (actionError(); as message) {
+        <p class="banner" role="alert" data-cy="profile-error">{{ message }}</p>
+      }
+      @if (noticeText(); as message) {
+        <p class="banner" role="status" data-cy="profile-notice">{{ message }}</p>
+      }
+    </div>
+  } @else if (loadProblem()) {
+    <app-error-state [problem]="loadProblem()" (retry)="profile.load()" />
+  } @else {
+    <div data-cy="profile-loading">
+      <p class="visually-hidden" role="status">{{ t().settings.profile.loading }}</p>
+      <div class="list-skeleton" aria-hidden="true">
+        <div class="list-skeleton__row"></div>
+      </div>
+    </div>
+  }
+</app-section-container>

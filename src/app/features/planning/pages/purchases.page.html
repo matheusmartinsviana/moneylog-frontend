@@ -1,0 +1,155 @@
+<app-page-layout [heading]="t().nav.planning">
+  <div class="stack">
+    <app-planning-nav current="purchases" />
+
+    <div class="stack">
+      <div class="page-grid">
+        <app-section-container
+          class="span-5"
+          [heading]="t().purchaseGroups.commitment.title"
+          [glow]="true"
+        >
+          <div class="horizon">
+            <app-segmented-toggle
+              cy="purchases-horizon"
+              [label]="t().purchaseGroups.commitment.horizonLabel"
+              [options]="horizonOptions()"
+              [value]="'' + commitments.horizon()"
+              (valueChange)="setHorizon($event)"
+            />
+          </div>
+          @switch (commitments.state().status) {
+            @case ('loading') {
+              <p class="note" role="status" data-cy="purchases-commitments-loading">
+                {{ t().purchaseGroups.commitment.loading }}
+              </p>
+            }
+            @case ('error') {
+              <div class="inline-error" role="alert" data-cy="purchases-commitments-error">
+                <p class="note">{{ t().purchaseGroups.commitment.error }}</p>
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="purchases-commitments-retry"
+                  (click)="commitments.load()"
+                >
+                  {{ t().purchaseGroups.commitment.retry }}
+                </button>
+              </div>
+            }
+            @case ('ready') {
+              @if (commitments.data(); as data) {
+                <p class="until" data-cy="purchases-until">{{ untilText() }}</p>
+                <dl class="facts" data-cy="purchases-commitments">
+                  <div class="fact">
+                    <dt>{{ t().purchaseGroups.commitment.committed }}</dt>
+                    <dd class="figure" data-cy="purchases-committed">
+                      <app-money [value]="data.committed" />
+                    </dd>
+                  </div>
+                  <div class="fact">
+                    <dt>{{ t().purchaseGroups.commitment.mine }}</dt>
+                    <dd data-cy="purchases-committed-mine">
+                      <app-money [value]="data.committedMine" />
+                    </dd>
+                  </div>
+                </dl>
+                @if (monthRows().length > 0) {
+                  <h3 class="months__title">{{ t().purchaseGroups.commitment.byMonth }}</h3>
+                  <ul class="months" data-cy="purchases-by-month">
+                    @for (row of monthRows(); track row.competence) {
+                      <li class="month" [attr.data-cy]="'purchases-month-' + row.competence">
+                        <span class="month__label">{{ row.label }}</span>
+                        <span class="month__amount"><app-money [value]="row.amount" /></span>
+                        <span class="month__mine"><app-money [value]="row.mine" /></span>
+                      </li>
+                    }
+                  </ul>
+                }
+                <p class="note">{{ t().purchaseGroups.commitment.note }}</p>
+              }
+            }
+          }
+        </app-section-container>
+
+        <div class="stack span-7">
+          <div class="toolbar">
+            <app-segmented-toggle
+              cy="purchases-status"
+              [label]="t().purchaseGroups.filterLabel"
+              [options]="statusOptions()"
+              [value]="groups.filter()"
+              (valueChange)="setStatus($event)"
+            />
+            <button
+              type="button"
+              class="button button--primary"
+              data-cy="purchases-add"
+              (click)="openCreate()"
+            >
+              {{ t().purchaseGroups.add }}
+            </button>
+          </div>
+
+          @if (actionError(); as message) {
+            <p class="banner" role="alert" data-cy="purchases-action-error">{{ message }}</p>
+          }
+
+          @switch (groups.state().status) {
+            @case ('loading') {
+              <div data-cy="purchases-loading">
+                <p class="visually-hidden" role="status">{{ t().purchaseGroups.loading }}</p>
+                <div class="list-skeleton" aria-hidden="true">
+                  <div class="list-skeleton__row"></div>
+                  <div class="list-skeleton__row"></div>
+                  <div class="list-skeleton__row"></div>
+                </div>
+              </div>
+            }
+            @case ('error') {
+              <app-error-state [problem]="groups.error()" (retry)="retry()" />
+            }
+            @case ('empty') {
+              <app-empty-state
+                [heading]="t().purchaseGroups.empty.title"
+                [description]="
+                  groups.filter() === 'ACTIVE'
+                    ? t().purchaseGroups.empty.description
+                    : t().purchaseGroups.emptyDone
+                "
+                [actions]="emptyActions()"
+                illustration="timeline"
+                (action)="openCreate()"
+              />
+            }
+            @case ('ready') {
+              <ul class="list" data-cy="purchases-list">
+                @for (group of groups.data(); track group.id) {
+                  <li
+                    app-purchase-group-card
+                    [group]="group"
+                    [busy]="manage.busy()"
+                    (editRequested)="openEdit($event)"
+                    (linkRequested)="openLink($event)"
+                    (unlinkRequested)="unlink($event)"
+                  ></li>
+                }
+              </ul>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  @if (formOpen()) {
+    <app-purchase-group-form-modal
+      [group]="editing()"
+      (closed)="closeModals()"
+      (saved)="afterCreated()"
+    />
+  }
+  @if (linking(); as group) {
+    <app-purchase-link-modal [group]="group" (closed)="closeModals()" />
+  }
+</app-page-layout>

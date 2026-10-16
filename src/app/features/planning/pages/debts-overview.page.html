@@ -27,7 +27,11 @@
     @case ('ready') {
       @if (overview.data(); as data) {
         <div class="top">
-          <section class="total surface" aria-labelledby="debts-total-title" data-cy="debts-total">
+          <section
+            class="total glass-panel glass-panel--strong glass-panel--card"
+            aria-labelledby="debts-total-title"
+            data-cy="debts-total"
+          >
             <h2 class="total__title" id="debts-total-title">{{ t().debtOverview.title }}</h2>
             @if (!hasDebt(data)) {
               <p class="total__none" data-cy="debts-none">
@@ -65,7 +69,7 @@
                 {{ t().debtOverview.actions.addOngoing }}
               </button>
               <a
-                class="button"
+                class="button button--soft"
                 routerLink="/quick-add"
                 [queryParams]="{ mode: 'debt' }"
                 data-cy="debts-add-debt"
@@ -76,7 +80,7 @@
           </section>
 
           <section
-            class="fixed surface"
+            class="fixed card-flat"
             aria-labelledby="debts-fixed-title"
             data-cy="debts-fixed-costs"
           >

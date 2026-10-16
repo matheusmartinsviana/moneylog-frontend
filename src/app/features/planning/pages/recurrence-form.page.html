@@ -110,6 +110,25 @@
           [label]="t().recurrences.form.card"
           [hint]="t().recurrences.form.cardNote"
         />
+        <app-switch
+          formControlName="splitOn"
+          fieldId="recurrence-split"
+          [label]="t().split.toggle"
+        />
+        @if (splitting()) {
+          <app-split-field
+            [group]="form.controls.split"
+            [people]="people()"
+            [peopleStatus]="peopleStatus()"
+            [createPerson]="createPerson"
+            [currency]="currency"
+            idPrefix="recurrence-split"
+            (peopleRetry)="loadPeople()"
+          />
+          <p class="form__hint" data-cy="recurrence-split-future">
+            {{ t().recurrences.form.splitFutureOnly }}
+          </p>
+        }
       } @else {
         <app-select
           formControlName="accountId"
@@ -215,7 +234,7 @@
           type="submit"
           class="button button--primary"
           data-cy="recurrence-form-save"
-          [disabled]="facade.saving()"
+          [disabled]="facade.saving() || splitBlocked()"
           [attr.aria-busy]="facade.saving()"
         >
           {{ facade.saving() ? t().recurrences.form.saving : t().recurrences.form.save }}

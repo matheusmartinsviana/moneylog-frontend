@@ -6,6 +6,7 @@ import { TransactionsEvents } from '~/modules/transactions/core/facades/transact
 import { TransactionsGateway } from '~/modules/transactions/core/interfaces/transactions.gateway';
 import type { Transaction } from '~/modules/transactions/core/types/transaction';
 import { Problem, problemOf } from '~/util/api/problem';
+import type { SplitInput } from '~/util/split';
 
 export type DetailState =
   | { readonly status: 'idle' }
@@ -28,6 +29,14 @@ export class TransactionDetailFacade {
   private readonly canceledEvents = new Subject<Transaction>();
   private readonly cancelingState = signal(false);
   private readonly cancelProblemState = signal<Problem | null>(null);
+  private readonly shareUpdates = new Subject<{
+    id: string;
+    split: SplitInput;
+    version: number;
+  }>();
+  private readonly sharesUpdatedEvents = new Subject<Transaction>();
+  private readonly sharesSavingState = signal(false);
+  private readonly sharesProblemState = signal<Problem | null>(null);
 
   readonly state = this.current.asReadonly();
   readonly transaction = computed(() => {
@@ -40,6 +49,10 @@ export class TransactionDetailFacade {
   readonly canceled$ = this.canceledEvents.asObservable();
   readonly canceling = this.cancelingState.asReadonly();
   readonly cancelProblem = this.cancelProblemState.asReadonly();
+
+  readonly sharesUpdated$ = this.sharesUpdatedEvents.asObservable();
+  readonly sharesSaving = this.sharesSavingState.asReadonly();
+  readonly sharesProblem = this.sharesProblemState.asReadonly();
 
   readonly voidBlockedBy = computed(() => this.transaction()?.voidBlockedBy ?? null);
   readonly canCancelInstallments = computed(() => {
@@ -114,6 +127,28 @@ export class TransactionDetailFacade {
         this.cancelingState.set(false);
         this.cancelProblemState.set(problem);
       });
+
+    this.shareUpdates
+      .pipe(
+        exhaustMap(({ id, split, version }) => {
+          this.sharesSavingState.set(true);
+          this.sharesProblemState.set(null);
+          return this.gateway.updateShares(id, split, version).pipe(
+            tap((transaction) => {
+              this.current.set({ status: 'ready', transaction });
+              this.sharesUpdatedEvents.next(transaction);
+              this.events.notifyChanged();
+            }),
+            map(() => null),
+            catchError((error: unknown) => of(problemOf(error))),
+          );
+        }),
+        takeUntilDestroyed(),
+      )
+      .subscribe((problem) => {
+        this.sharesSavingState.set(false);
+        this.sharesProblemState.set(problem);
+      });
   }
 
   load(id: string): void {
@@ -126,5 +161,13 @@ export class TransactionDetailFacade {
 
   cancelInstallments(id: string, reason: string): void {
     this.cancels.next({ id, reason });
+  }
+
+  updateShares(id: string, split: SplitInput, version: number): void {
+    this.shareUpdates.next({ id, split, version });
+  }
+
+  clearSharesProblem(): void {
+    this.sharesProblemState.set(null);
   }
 }

@@ -98,10 +98,10 @@ export interface BarListOther {
       text-decoration: none;
     }
 
-    @media (pointer: coarse) {
+    @media (pointer: coarse), (width <= 640px) {
       .bl__link {
-        padding-block: var(--space-3);
-        margin-block: calc(var(--space-3) * -1);
+        padding-block: var(--space-4);
+        margin-block: calc(var(--space-4) * -1);
       }
     }
 

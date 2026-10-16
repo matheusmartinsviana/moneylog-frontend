@@ -1,6 +1,6 @@
 import { DeferBlockBehavior, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { render, screen, waitFor } from '@testing-library/angular';
+import { render, screen, waitFor, within } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { defer, delay, NEVER, Observable, of, Subject, tap, throwError } from 'rxjs';
 
@@ -21,19 +21,26 @@ import {
   provideDashboardMock,
   provideDashboardStub,
 } from '~/testing/dashboard-testing';
-import { provideDebtOverviewStub } from '~/testing/debt-overview-testing';
 import {
   aSummary,
   MonthlySummaryGatewayStub,
   provideMonthlySummaryStub,
 } from '~/testing/etapa5-testing';
-import { aDreamGoal, aGoal, GoalsGatewayStub, provideGoalsStub } from '~/testing/goals-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
+import {
+  NotificationsGatewayStub,
+  provideNotificationsStub,
+} from '~/testing/notifications-testing';
 import {
   anIncomeExpenseSeries,
   provideReportsStub,
   ReportsGatewayStub,
 } from '~/testing/reports-testing';
+import {
+  aTransaction,
+  provideTransactionsStub,
+  TransactionsGatewayStub,
+} from '~/testing/transactions-testing';
 import { LedgerGate } from '~/util/api/ledger-gate';
 import { formatMoney, type Money } from '~/util/money';
 
@@ -66,7 +73,8 @@ interface Stubs {
   dashboard: DashboardGatewayStub;
   monthly: MonthlySummaryGatewayStub;
   reports: ReportsGatewayStub;
-  goals: GoalsGatewayStub;
+  transactions: TransactionsGatewayStub;
+  notifications: NotificationsGatewayStub;
 }
 
 function stubs(): Stubs {
@@ -74,7 +82,8 @@ function stubs(): Stubs {
     dashboard: new DashboardGatewayStub(),
     monthly: new MonthlySummaryGatewayStub(),
     reports: new ReportsGatewayStub(),
-    goals: new GoalsGatewayStub(),
+    transactions: new TransactionsGatewayStub(),
+    notifications: new NotificationsGatewayStub(),
   };
 }
 
@@ -87,8 +96,8 @@ async function setup(s: Stubs = stubs(), language: 'pt' | 'en' = 'pt') {
       provideDashboardStub(s.dashboard),
       provideMonthlySummaryStub(s.monthly),
       provideReportsStub(s.reports),
-      provideGoalsStub(s.goals),
-      ...provideDebtOverviewStub(),
+      provideTransactionsStub(s.transactions),
+      provideNotificationsStub(s.notifications),
     ],
   });
   await result.fixture.whenStable();
@@ -131,8 +140,8 @@ describe('HomePage (Início sucinto)', () => {
         provideDashboardMock(),
         provideMonthlySummaryStub(),
         provideReportsStub(),
-        provideGoalsStub(),
-        ...provideDebtOverviewStub(),
+        provideTransactionsStub(),
+        provideNotificationsStub(),
       ],
     });
 
@@ -200,27 +209,94 @@ describe('HomePage (Início sucinto)', () => {
   });
 
   describe('com dados', () => {
-    it('Dado o resumo, então saldo, gasto, receita e resultado do mês são os que o servidor devolveu (sem conta no front)', async () => {
+    it('Dado o resumo, então o saldo disponível é o que o servidor devolveu (sem conta no front)', async () => {
       const summary = aDashboardSummary();
       await setup();
 
-      expect(text(screen.getByTestId('kpi-in-accounts-value'))).toBe(
-        shown(summary.balances.inAccounts),
+      expect(text(screen.getByTestId('home-wallet-available'))).toContain(
+        shown(summary.balances.available),
       );
-      expect(text(screen.getByTestId('kpi-in-accounts-change'))).toBe('+8% vs fim do mês passado');
-      expect(text(screen.getByTestId('kpi-spending-value'))).toBe(shown(summary.month.consumption));
-      expect(text(screen.getByTestId('kpi-income-value'))).toBe(shown(summary.month.income));
-      expect(text(screen.getByTestId('kpi-result-value'))).toBe(shown(summary.month.net));
-      expect(text(screen.getByTestId('kpi-savings-value'))).toBe('91,7%');
+      expect(text(screen.getByTestId('home-wallet-label'))).toBe(pt.home.wallet.available);
+      expect(screen.getByTestId('home-quick-transfer').getAttribute('href')).toMatch(
+        /^\/quick-add/,
+      );
     });
 
-    it('Dado resultado negativo do servidor, então mostra o menos tipográfico', async () => {
+    it('Dado saldo disponível negativo do servidor, então mostra o menos tipográfico e o aviso', async () => {
       const s = stubs();
       const base = aDashboardSummary();
-      s.dashboard.summary$ = of({ ...base, month: { ...base.month, net: brl('-120.00') } });
+      s.dashboard.summary$ = of({
+        ...base,
+        balances: { ...base.balances, available: brl('-120.00') },
+      });
       await setup(s);
 
-      expect(text(screen.getByTestId('kpi-result-value'))).toBe('−R$ 120,00');
+      expect(text(screen.getByTestId('home-wallet-available'))).toContain('−R$ 120,00');
+      expect(screen.getByTestId('home-wallet-negative')).toBeInTheDocument();
+    });
+
+    it('Dado o resumo do mês, então o painel analítico mostra receita, despesa e resultado do servidor', async () => {
+      const s = stubs();
+      s.monthly.result = () => of(aSummary({ partial: false }));
+      await setup(s);
+
+      const panel = await screen.findByTestId('home-analytics-income');
+      expect(text(panel)).toContain(shown(aSummary().income));
+      expect(text(screen.getByTestId('home-analytics-expenses'))).toContain(
+        shown(aSummary().expenses),
+      );
+      expect(text(screen.getByTestId('home-analytics-net'))).toContain(shown(aSummary().net));
+    });
+
+    it('Dado falha só no resumo do mês, então só o painel analítico mostra erro e o resto segue', async () => {
+      const s = stubs();
+      s.monthly.result = () => throwError(() => new Error('rede'));
+      await setup(s);
+
+      const analytics = await screen.findByTestId('home-analytics');
+      expect(within(analytics).getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByTestId('home-wallet-available')).toBeInTheDocument();
+      expect(screen.getByTestId('home-chart-panel')).toBeInTheDocument();
+    });
+
+    it('Dado movimentações, então a atividade recente mostra as da API na ordem e abre o detalhe', async () => {
+      const s = stubs();
+      s.transactions.list$ = () =>
+        of({
+          items: [
+            aTransaction({ id: 'tx-1', description: 'Mercado' }),
+            aTransaction({ id: 'tx-2', description: 'Padaria' }),
+          ],
+          hasNext: false,
+          totals: {} as never,
+        });
+      await setup(s);
+
+      const rows = await screen.findAllByTestId('home-recent-item');
+      expect(rows).toHaveLength(2);
+      expect(screen.getAllByTestId('home-recent-link')[0]).toHaveAttribute(
+        'href',
+        '/transactions/tx-1',
+      );
+      expect(s.transactions.listCalls[0]?.pageSize).toBe(5);
+    });
+
+    it('Dado nenhuma movimentação, então a atividade recente oferece registrar a primeira', async () => {
+      const s = stubs();
+      s.transactions.list$ = () => of({ items: [], hasNext: false, totals: {} as never });
+      await setup(s);
+
+      expect(await screen.findByTestId('home-recent-empty')).toBeInTheDocument();
+    });
+
+    it('Dado falha só nas movimentações, então só a atividade recente mostra erro com tentar de novo', async () => {
+      const s = stubs();
+      s.transactions.list$ = () => throwError(() => new Error('rede'));
+      await setup(s);
+
+      const recent = await screen.findByTestId('home-recent');
+      expect(within(recent).getByRole('alert')).toBeInTheDocument();
+      expect(screen.getByTestId('home-wallet-available')).toBeInTheDocument();
     });
 
     it('Dado mais de 3 compromissos, então mostra só 3 dos próximos 7 dias, na ordem do servidor, e leva ao Panorama', async () => {
@@ -255,52 +331,15 @@ describe('HomePage (Início sucinto)', () => {
       expect(screen.queryByTestId('home-upcoming-item')).not.toBeInTheDocument();
     });
 
-    it('Dado as dívidas, então "Você deve" mostra o total do servidor com link para as dívidas totais', async () => {
-      await setup();
-
-      expect(await screen.findByTestId('home-debts-total')).toHaveTextContent('R$ 6.500,00');
-      expect(screen.getByTestId('home-debts-open')).toHaveAttribute('href', '/planning/debts');
-    });
-
-    it('Dado uma meta marcada como destaque, então mostra só ela, com o preço e o progresso do servidor', async () => {
-      const s = stubs();
-      s.goals.goals = [
-        aGoal({
-          id: 'g-1',
-          name: 'Reserva',
-          stage: 'STRATEGY',
-          progress: '0.4250',
-          featured: true,
-        }),
-        aGoal({ id: 'g-2', name: 'Viagem' }),
-      ];
-      await setup(s);
-
-      expect(await screen.findByTestId('home-featured-goal-open')).toHaveTextContent('Reserva');
-      expect(screen.getByTestId('home-featured-goal-open')).toHaveAttribute('href', '/goals/g-1');
-      expect(screen.queryByTestId('home-featured-goal-stage')).not.toBeInTheDocument();
-      expect(screen.getByTestId('home-featured-goal-percent')).toHaveTextContent('42,5%');
-      expect(screen.getByTestId('home-featured-goal-price')).toHaveTextContent('20.000,00');
-      expect(s.goals.queries[0]).toMatchObject({ status: 'ACTIVE', featured: true });
-      expect(screen.queryByText('Viagem')).not.toBeInTheDocument();
-    });
-
-    it('Dado nenhuma meta em destaque, então convida a marcar uma', async () => {
-      await setup();
-
-      expect(await screen.findByTestId('home-featured-goal-empty')).toHaveTextContent(
-        pt.brief.featuredGoal.empty,
-      );
-      expect(screen.getByTestId('home-featured-goal-choose')).toHaveAttribute('href', '/goals');
-    });
-
-    it('Dado o Início, então os blocos que saíram (contas, categorias, recentes, insights, legado, captura) não estão aqui', async () => {
+    it('Dado o Início, então os blocos que saíram (contas, categorias, legado, captura) não estão aqui', async () => {
       await setup();
 
       for (const id of [
+        'home-carousel',
+        'home-goal-card',
+        'home-debts-total',
         'home-accounts-section',
         'home-categories-total',
-        'home-recent',
         'home-insight',
         'home-legacy',
         'home-quick-capture',
@@ -320,35 +359,38 @@ describe('HomePage (Início sucinto)', () => {
     });
   });
 
-  describe('gráfico compacto', () => {
-    it('Dado o gráfico, então só oferece 7 dias, 30 dias e 12 meses e usa os valores do backend', async () => {
-      const s = stubs();
-      await setup(s);
+  describe('composição', () => {
+    it('Dado o Início, então há uma h1 e cada seção tem a sua h2', async () => {
+      await setup();
+      await screen.findByTestId('home-wallet-available');
 
-      expect(await screen.findByTestId('home-overview-chart')).toBeInTheDocument();
-      expect(screen.getByTestId('home-overview-period-D7')).toBeInTheDocument();
-      expect(screen.getByTestId('home-overview-period-D30')).toBeInTheDocument();
-      expect(screen.getByTestId('home-overview-period-M12')).toBeInTheDocument();
-      expect(screen.queryByTestId('home-overview-period-M3')).not.toBeInTheDocument();
-      expect(screen.getByTestId('home-overview-transactions')).toHaveAttribute(
-        'href',
-        '/transactions',
+      expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+      const h2 = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent?.trim());
+      expect(h2).toEqual(
+        expect.arrayContaining([
+          pt.home.wallet.region,
+          pt.home.analytics.title,
+          pt.home.chart.title,
+        ]),
       );
     });
 
-    it('Dado a troca de período, então pede o relatório do período escolhido', async () => {
+    it('Dado o Início, então a carteira vem primeiro no DOM', async () => {
+      await setup();
+
+      const grid = screen.getByTestId('home-dashboard').querySelector('.home__grid');
+      expect(grid?.firstElementChild).toBe(
+        screen.getByTestId('home-wallet-header').closest('.home__wallet'),
+      );
+    });
+
+    it('Dado o saldo pronto e o resumo do mês ainda carregando, então a carteira já aparece', async () => {
       const s = stubs();
-      const { fixture } = await setup(s);
-      const periods: string[] = [];
-      s.reports.incomeExpensesResult = (period) => {
-        periods.push(period);
-        return of(anIncomeExpenseSeries({ period }));
-      };
+      s.monthly.result = () => NEVER;
+      await setup(s);
 
-      await userEvent.click(screen.getByTestId('home-overview-period-M12'));
-      await fixture.whenStable();
-
-      expect(periods).toEqual(['M12']);
+      expect(screen.getByTestId('home-wallet-available')).toBeInTheDocument();
+      expect(screen.getByTestId('home-analytics-loading')).toBeInTheDocument();
     });
   });
 
@@ -371,15 +413,15 @@ describe('HomePage (Início sucinto)', () => {
 
     expect(screen.getByText(en.brief.upcoming.title)).toBeInTheDocument();
     expect(screen.getByText(en.brief.register)).toBeInTheDocument();
-    expect(screen.getByText(en.brief.result)).toBeInTheDocument();
+    expect(screen.getByTestId('home-wallet-label')).toHaveTextContent(en.home.wallet.available);
+    expect(screen.getByTestId('home-analytics')).toHaveTextContent(en.home.analytics.title);
   });
 
   it('Dado o Início completo, então não há violações de acessibilidade', async () => {
     const s = stubs();
-    s.goals.goals = [aDreamGoal(3)];
     s.monthly.result = () => of(aSummary({ partial: false }));
     const { container } = await setup(s);
-    await screen.findByTestId('home-featured-goal-open');
+    await screen.findByTestId('home-analytics-summary');
 
     const violations = await axeViolations(container);
     expect(violations, describeViolations(violations)).toEqual([]);
@@ -421,12 +463,12 @@ describe('HomePage: fila das leituras do razão (R13)', () => {
       meter.track<IncomeExpenseSeries>('overview', anIncomeExpenseSeries());
     await setup(s);
 
-    await waitFor(() => expect(screen.getByTestId('home-overview-chart')).toBeInTheDocument(), {
+    await waitFor(() => expect(screen.getByTestId('home-chart-totals')).toBeInTheDocument(), {
       timeout: 3000,
     });
 
     expect(meter.max).toBeLessThanOrEqual(2);
-    expect(meter.started).toEqual(['dashboard', 'upcoming', 'monthly', 'overview']);
+    expect(meter.started).toEqual(['dashboard', 'upcoming', 'overview', 'monthly']);
     expect(meter.inFlight).toBe(0);
     expect(new LedgerGate().maxInFlight).toBe(2);
   });

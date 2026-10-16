@@ -62,3 +62,28 @@ export function formatPoints(
     .join('')
     .trim();
 }
+
+const BPS_TEXT = /^\d{1,3}(?:[.,]\d{1,2})?$/;
+
+export function formatBps(bps: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'percent',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(bps / 10000);
+}
+
+export function bpsToPercentText(bps: number): string {
+  const whole = Math.trunc(bps / 100);
+  const fraction = bps % 100;
+  if (fraction === 0) return String(whole);
+  return `${whole}.${String(fraction).padStart(2, '0').replace(/0$/, '')}`;
+}
+
+export function percentTextToBps(text: string): number | null {
+  const value = text.trim();
+  if (!BPS_TEXT.test(value)) return null;
+  const [whole = '0', fraction = ''] = value.replace(',', '.').split('.');
+  const bps = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+  return bps <= 10000 ? bps : null;
+}

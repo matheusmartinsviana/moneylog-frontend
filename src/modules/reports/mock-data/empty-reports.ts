@@ -13,6 +13,7 @@ export function emptyIncomeExpenseSeries(
   const monthly = period === 'M12';
   const weekly = period === 'M3';
   return {
+    view: 'MINE',
     period,
     from: AS_OF,
     to: AS_OF,
@@ -25,6 +26,7 @@ export function emptyIncomeExpenseSeries(
 
 export function emptySpendingByCategory(month: string): SpendingByCategoryResponse {
   return {
+    view: 'MINE',
     basis: 'COMPETENCE',
     from: `${month}-01`,
     to: `${month}-01`,

@@ -12,7 +12,7 @@
 
 .totals:not(.glass) {
   border: var(--border-width) solid var(--color-border);
-  background-color: var(--color-surface);
+  background-color: var(--card-flat-bg);
   box-shadow: var(--shadow-1);
 }
 
@@ -66,21 +66,36 @@
 
 .totals--summary {
   gap: var(--space-1);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-4);
 }
 
 .totals--summary .totals__list {
-  gap: var(--space-1) var(--space-4);
+  align-items: baseline;
+  gap: var(--space-1) var(--space-5);
 }
 
 .totals--summary .totals__item {
   font-size: var(--text-sm);
 }
 
+.totals--summary .totals__item--net {
+  flex: 1 1 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.totals--summary .totals__item--net dd {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
 @media (width >= 768px) {
   .totals--summary {
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-5);
+    padding: var(--space-5) var(--space-6);
   }
 
   .totals--summary .totals__list {
@@ -93,10 +108,18 @@
     gap: var(--space-1);
   }
 
+  .totals--summary .totals__item--net {
+    flex: 0 0 auto;
+  }
+
   .totals--summary .totals__item dd {
     font-size: var(--text-xl);
     font-weight: var(--weight-medium);
     font-variant-numeric: tabular-nums;
     text-align: left;
+  }
+
+  .totals--summary .totals__item--net dd {
+    font-size: var(--text-3xl);
   }
 }

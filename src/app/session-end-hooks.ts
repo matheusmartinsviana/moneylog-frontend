@@ -6,6 +6,7 @@ import {
   type SessionEndHook,
 } from '~/modules/auth/core/interfaces/session-end-hook';
 import { GoalPhotoCache } from '~/modules/goals/core/facades/goal-photo-cache';
+import { ProfileFacade } from '~/modules/notifications/core/facades/profile.facade';
 import { PUSH_SUBSCRIPTION_KEY } from '~/modules/notifications/core/facades/push.facade';
 import { NotificationsGateway } from '~/modules/notifications/core/interfaces/notifications.gateway';
 import { readStorage, removeStorage } from '~/util/safe-storage';
@@ -45,6 +46,13 @@ export function revokeGoalPhotosHook(cache: GoalPhotoCache): SessionEndHook {
   };
 }
 
+export function clearProfileHook(profile: ProfileFacade): SessionEndHook {
+  return (): Observable<unknown> => {
+    profile.clear();
+    return of(undefined);
+  };
+}
+
 export function provideSessionEndHooks(): Provider[] {
   return [
     {
@@ -52,6 +60,7 @@ export function provideSessionEndHooks(): Provider[] {
       useFactory: () => [
         cancelPushHook(inject(NotificationsGateway)),
         revokeGoalPhotosHook(inject(GoalPhotoCache)),
+        clearProfileHook(inject(ProfileFacade)),
         clearPrivateCachesHook(typeof caches === 'undefined' ? undefined : caches),
       ],
     },

@@ -60,6 +60,7 @@ function build(
   const income = buckets.reduce((sum, b) => sum + b.cents.income, 0);
   const expenses = buckets.reduce((sum, b) => sum + b.cents.expenses, 0);
   return {
+    view: 'MINE',
     period,
     from,
     to,

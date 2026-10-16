@@ -541,6 +541,51 @@ export function buildWorld(today: string): World {
     installments: 12,
   });
 
+  add({
+    type: 'CARD_PURCHASE',
+    cents: 73_310,
+    date: dateIn(addMonthsKey(month, -5), 10),
+    description: 'Utensílios para a casa',
+    categoryId: cat(CAT.shopping),
+    cardId: card.id,
+  });
+  add({
+    type: 'CARD_PURCHASE',
+    cents: 120_000,
+    date: addDays(today, -3),
+    description: 'Geladeira',
+    categoryId: cat(CAT.shopping),
+    cardId: card.id,
+    installments: 6,
+  });
+  add({
+    type: 'TRANSFER',
+    cents: 100_000,
+    date: addDays(today, -1),
+    description: 'Reforço da reserva',
+    accountId: checking,
+    counterId: savings,
+  });
+  add({
+    type: 'REFUND',
+    cents: 5_000,
+    date: addDays(today, -2),
+    description: 'Reembolso da loja',
+    categoryId: cat(CAT.shopping),
+    accountId: checking,
+    method: 'PIX',
+  });
+  const scheduled = add({
+    type: 'EXPENSE',
+    cents: 9_000,
+    date: addDays(today, 4),
+    description: 'Seguro do celular',
+    categoryId: cat(CAT.subscriptions),
+    accountId: checking,
+    method: 'DEBIT',
+  });
+  recs.push(scheduled);
+
   const installments: InstallmentDef[] = [];
   for (const rec of recs.filter((r) => r.type === 'CARD_PURCHASE')) {
     const base = Math.floor(rec.cents / rec.installments);
@@ -837,6 +882,18 @@ export function buildWorld(today: string): World {
       categoryId: rec.categoryId!,
       installment: inst.total > 1 ? { number: inst.number, total: inst.total } : null,
       via: 'CARD',
+    });
+  }
+
+  for (const rec of recs.filter((r) => r.type === 'REFUND' && r.categoryId)) {
+    consumption.push({
+      rec,
+      date: rec.date,
+      competence: rec.date.slice(0, 7),
+      cents: -rec.cents,
+      categoryId: rec.categoryId!,
+      installment: null,
+      via: 'ACCOUNT',
     });
   }
 

@@ -1,13 +1,13 @@
 <!-- eslint-disable @angular-eslint/template/no-inline-styles -->
 <figure class="lc" [attr.data-cy]="cy()">
   @if (empty()) {
-    <p class="lc__empty" [attr.data-cy]="cy() + '-empty'">{{ t().charts.empty }}</p>
+    <p class="lc__empty" [attr.data-cy]="cy() + '-empty'">{{ emptyText() ?? t().charts.empty }}</p>
   } @else {
     <div
       class="lc__plot"
       [class.lc__plot--single]="count() === 1"
       [class.lc__plot--dense]="count() > 20"
-      [class.lc__plot--hero]="hero()"
+      [class.lc__plot--area]="variant() === 'area'"
       role="group"
       tabindex="0"
       [attr.aria-label]="label()"
@@ -80,6 +80,30 @@
       <span class="lc__y lc__y--zero" [style.top.%]="zeroTopPct()" [attr.data-cy]="cy() + '-y-zero'"
         >0</span
       >
+
+      @for (group of marked(); track group.id) {
+        @for (dot of group.dots; track $index) {
+          <span
+            class="lc__dot lc__dot--mark"
+            [class.lc__dot--secondary]="group.secondary"
+            [style.left.%]="dot.leftPct"
+            [style.top.%]="dot.topPct"
+            [attr.data-cy]="cy() + '-mark-' + group.id"
+          ></span>
+        }
+      }
+      @for (label of directLabels(); track label.id) {
+        <span
+          class="lc__direct"
+          [class.lc__direct--secondary]="label.secondary"
+          [class.lc__direct--above]="label.above"
+          [style.left.%]="label.leftPct"
+          [style.top.%]="label.topPct"
+          aria-hidden="true"
+          [attr.data-cy]="cy() + '-direct-' + label.id"
+          >{{ label.text }}</span
+        >
+      }
 
       @if (count() === 1) {
         @for (item of drawn(); track item.series.id) {

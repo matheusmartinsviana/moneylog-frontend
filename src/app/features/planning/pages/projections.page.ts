@@ -1,7 +1,9 @@
+import { NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  signal,
   effect,
   inject,
   input,
@@ -42,6 +44,7 @@ import { formatCompetence, formatIsoDate } from '~/util/date';
 @Component({
   selector: 'app-projections-page',
   imports: [
+    NgTemplateOutlet,
     DisclosureComponent,
     ReactiveFormsModule,
     PageLayoutComponent,
@@ -64,6 +67,8 @@ export class ProjectionsPage {
   private readonly router = inject(Router);
   protected readonly t = this.i18n.t;
   protected readonly projection = inject(ProjectionsFacade);
+
+  protected readonly chartOpen = signal(true);
 
   readonly horizon = input<string>();
   readonly trend = input<string>();

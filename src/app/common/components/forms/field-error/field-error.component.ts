@@ -40,6 +40,8 @@ export function errorMessage(
       return interpolate(messages.monthMax, { month: formatCompetence(param('max'), locale) });
     case 'server':
       return serverCodes[String(detail)] ?? messages.invalid;
+    case 'message':
+      return typeof detail === 'string' ? detail : messages.invalid;
     case 'maxlength':
       return interpolate(messages.maxlength, { max: param('requiredLength') });
     default:

@@ -50,7 +50,7 @@ for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {
         await seedMockResponses(page, homeResponses());
         await page.goto('/');
         await waitForApp(page);
-        await page.locator('[data-cy="home-overview-chart"]').waitFor();
+        await page.locator('[data-cy="home-chart-totals"]').waitFor();
         await page.evaluate(() => document.fonts.ready);
         await page.waitForTimeout(450);
         await expectNoHorizontalScroll(page);
@@ -64,7 +64,7 @@ for (const viewport of Object.keys(VIEWPORTS) as ViewportName[]) {
         await seedMockResponses(page, homeResponses());
         await page.goto('/');
         await waitForApp(page);
-        await page.locator('[data-cy="home-overview-chart"]').waitFor();
+        await page.locator('[data-cy="home-chart-totals"]').waitFor();
         if (viewport === 'mobile') await page.locator('[data-cy="global-search-open"]').click();
         else await page.locator('[data-cy="global-search-input"]').click();
         await page.locator('[data-cy="global-search-input"]').fill('mercado');

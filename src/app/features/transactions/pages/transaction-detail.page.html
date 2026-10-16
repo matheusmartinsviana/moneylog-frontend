@@ -34,7 +34,7 @@
       @if (transaction(); as tx) {
         <div class="detail__body">
           <p
-            class="detail__amount"
+            class="detail__amount figure"
             [class.is-voided]="tx.status === 'VOIDED'"
             data-cy="detail-amount"
           >
@@ -93,6 +93,62 @@
 
           @if (tx.status === 'ACTIVE') {
             <app-impact-panel [impact]="tx.impact" />
+          }
+
+          @if (showSplit()) {
+            <section
+              class="third row-card"
+              aria-labelledby="detail-split-title"
+              data-cy="detail-split"
+            >
+              <h2 class="third__title" id="detail-split-title">{{ t().split.detail.title }}</h2>
+              @if (hasSplit()) {
+                <dl class="third__facts">
+                  @if (tx.myAmount; as mine) {
+                    <div>
+                      <dt>{{ t().split.detail.mine }}</dt>
+                      <dd data-cy="detail-split-mine"><app-money [value]="mine" /></dd>
+                    </div>
+                  }
+                  @if (tx.thirdPartyAmount; as other) {
+                    <div>
+                      <dt>{{ t().split.detail.thirdParty }}</dt>
+                      <dd data-cy="detail-split-third"><app-money [value]="other" /></dd>
+                    </div>
+                  }
+                </dl>
+                <ul class="split-lines" data-cy="detail-split-lines">
+                  @for (line of splitLines(); track line.key) {
+                    <li class="split-lines__row">
+                      <span>{{ line.name }}</span>
+                      <span>{{ line.detail }}</span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="third__note" data-cy="detail-split-none">{{ t().split.detail.none }}</p>
+              }
+              <div class="third__actions">
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="detail-split-edit"
+                  (click)="openSplitEdit()"
+                >
+                  {{ t().split.detail.edit }}
+                </button>
+                @if (hasSplit()) {
+                  <button
+                    type="button"
+                    class="button"
+                    data-cy="detail-split-receive"
+                    (click)="splitReceiptOpen.set(true)"
+                  >
+                    {{ t().split.detail.receive }}
+                  </button>
+                }
+              </div>
+            </section>
           }
 
           @if (canMarkThirdParty()) {
@@ -166,7 +222,7 @@
             [status]="tx.status === 'VOIDED' ? 'VOIDED' : null"
           />
 
-          <div class="actions">
+          <div class="actions quiet-actions">
             @if (canEdit()) {
               <a
                 class="button"
@@ -228,13 +284,34 @@
     (marked)="afterMarked()"
   />
 }
+@if (splitEditOpen() && transaction(); as current) {
+  <app-split-edit-modal
+    [transaction]="current"
+    [people]="people()"
+    [peopleStatus]="peopleStatus()"
+    [createPerson]="createPerson"
+    [saving]="facade.sharesSaving()"
+    [problem]="facade.sharesProblem()"
+    (closed)="splitEditOpen.set(false)"
+    (saved)="saveSplit($event)"
+    (peopleRetry)="loadPeople()"
+  />
+}
+@if (splitReceiptOpen()) {
+  <app-third-party-receipt-modal
+    [people]="splitReceiptPeople()"
+    [presetTransactionId]="id()"
+    (closed)="splitReceiptOpen.set(false)"
+    (recorded)="afterSplitReceipt($event)"
+  />
+}
 @if (receiptOpen() && thirdParty.link(); as link) {
   <app-third-party-receipt-modal
     [people]="receiptPeople(link)"
     [presetPersonId]="link.person.id"
     [presetTransactionId]="id()"
     (closed)="receiptOpen.set(false)"
-    (recorded)="afterReceipt()"
+    (recorded)="afterReceipt($event)"
   />
 }
 <router-outlet (deactivate)="reloadAfterEdit()" />

@@ -1,5 +1,7 @@
 import {
+  BOTTOM_NAV_LABELS,
   BOTTOM_NAV_ORDER,
+  BOTTOM_NAV_SHORT_LABELS,
   expect,
   expectNoHorizontalScroll,
   Lang,
@@ -13,13 +15,11 @@ import {
 
 const LANGS: Lang[] = ['pt', 'en', 'es'];
 
-const LABELED_KEYS = BOTTOM_NAV_ORDER.filter((key) => key !== 'quickAdd');
-
 test.describe('barra inferior em 375 × 812 (S-56)', () => {
   test.use({ viewport: VIEWPORTS.mobile });
 
   for (const lang of LANGS) {
-    test(`idioma ${lang}: os 4 rótulos aparecem inteiros, com ≥ 10 px e sem reticências`, async ({
+    test(`idioma ${lang}: os 5 rótulos aparecem inteiros, com ≥ 10 px e sem reticências`, async ({
       page,
     }) => {
       await seedPreferences(page, { language: lang });
@@ -33,7 +33,7 @@ test.describe('barra inferior em 375 × 812 (S-56)', () => {
             nodes.map((node) => {
               const style = getComputedStyle(node);
               return {
-                text: node.textContent?.trim() ?? '',
+                text: (node as HTMLElement).innerText.trim(),
                 scrollWidth: node.scrollWidth,
                 clientWidth: node.clientWidth,
                 fontSize: Number.parseFloat(style.fontSize),
@@ -45,7 +45,11 @@ test.describe('barra inferior em 375 × 812 (S-56)', () => {
         expect(
           labels.map((label) => label.text),
           route.path,
-        ).toEqual(LABELED_KEYS.map((key) => NAV_LABELS[lang][key]));
+        ).toEqual(
+          BOTTOM_NAV_ORDER.map(
+            (key) => BOTTOM_NAV_SHORT_LABELS[lang][key] ?? BOTTOM_NAV_LABELS[lang][key],
+          ),
+        );
         for (const label of labels) {
           expect(label.scrollWidth, `"${label.text}" cabe em ${route.path}`).toBeLessThanOrEqual(
             label.clientWidth,
@@ -58,15 +62,14 @@ test.describe('barra inferior em 375 × 812 (S-56)', () => {
     });
   }
 
-  test('o nome acessível de Movimentações contém o texto visível (WCAG 2.5.3)', async ({
-    page,
-  }) => {
+  test('o nome acessível de cada item contém o texto visível (WCAG 2.5.3)', async ({ page }) => {
     await page.goto('/');
     await waitForApp(page);
-    const link = page.locator('[data-cy="bottom-nav-transactions"]');
-    const visible = (await link.locator('.bottom-nav__label').innerText()).trim();
-    expect(visible).toBe(NAV_LABELS.pt['transactions']);
-    await expect(link).toHaveAccessibleName(new RegExp(visible));
+    for (const key of BOTTOM_NAV_ORDER) {
+      const link = page.locator(`[data-cy="bottom-nav-${key}"]`);
+      const visible = (await link.locator('.bottom-nav__label').innerText()).trim();
+      await expect(link).toHaveAccessibleName(new RegExp(visible));
+    }
   });
 });
 
@@ -90,16 +93,14 @@ test.describe('"Novo registro" é o nome único de /quick-add (S-57)', () => {
       await expect(page.getByRole('dialog')).toBeVisible();
     });
 
-    test(`idioma ${lang} em 375: o "+" e o título da página são "${name}"`, async ({ page }) => {
+    test(`idioma ${lang} em 375: a barra não tem o "+" e /quick-add abre "${name}"`, async ({
+      page,
+    }) => {
       await page.setViewportSize(VIEWPORTS.mobile);
       await seedPreferences(page, { language: lang });
-      await page.goto('/');
+      await page.goto('/quick-add');
       await waitForApp(page);
-
-      const plus = page.locator('[data-cy="bottom-nav-quickAdd"]');
-      await expect(plus).toHaveAccessibleName(name);
-      await plus.click();
-      await expect(page).toHaveURL(/\(modal:quick-add\)$/);
+      await expect(page.locator('[data-cy="bottom-nav-quickAdd"]')).toHaveCount(0);
       await expect(page.getByRole('dialog')).toBeVisible();
       await expect(page.locator('body')).not.toContainText(/captura rápida|quick capture/i);
     });

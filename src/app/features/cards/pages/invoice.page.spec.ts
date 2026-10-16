@@ -25,6 +25,7 @@ import {
 } from '~/testing/cards-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
 import { provideNotesStub } from '~/testing/notes-testing';
+import { aPerson, PeopleGatewayStub, providePeopleStub } from '~/testing/people-testing';
 
 vi.setConfig({ testTimeout: 20_000 });
 
@@ -68,6 +69,8 @@ async function setup(invoice = closedInvoice(), url = '/cards/card-1/invoices/in
 }
 
 async function run(gateway: CardsGatewayStub, url = '/cards/card-1/invoices/inv-nov') {
+  const people = new PeopleGatewayStub();
+  people.people = [aPerson({ id: 'person-1', name: 'Ana' })];
   const accounts = new AccountsGatewayStub();
   accounts.accounts = [anAccount({ id: 'acc-1', name: 'Nubank' })];
   const result = await render(App, {
@@ -85,6 +88,7 @@ async function run(gateway: CardsGatewayStub, url = '/cards/card-1/invoices/inv-
       provideNotesStub(),
       provideCardsStub(gateway),
       provideAccountsStub(accounts),
+      providePeopleStub(people),
     ],
   });
   await result.fixture.whenStable();
@@ -310,6 +314,65 @@ describe('InvoicePage', () => {
     await run(gateway);
 
     expect(screen.getByTestId('invoice-loading')).toHaveTextContent(pt.cards.invoice.loading);
+  });
+
+  it('Dado a fatura rateada, então mostra a cheia, a minha parte e quanto cada pessoa deve, como a API devolveu', async () => {
+    await setup(
+      closedInvoice({
+        myShare: brl('800.00'),
+        thirdPartyShare: brl('483.00'),
+        shareByPerson: [
+          { personId: null, amount: brl('800.00') },
+          { personId: 'person-1', amount: brl('483.00') },
+        ],
+      }),
+    );
+
+    expect(text(screen.getByTestId('invoice-total'))).toBe('R$ 1.283,00');
+    expect(text(screen.getByTestId('invoice-my-share'))).toBe('R$ 800,00');
+    expect(text(screen.getByTestId('invoice-third-party-share'))).toBe('R$ 483,00');
+    expect(await screen.findByText('Ana')).toBeInTheDocument();
+    expect(screen.getByTestId('invoice-share-note')).toHaveTextContent(pt.cards.invoice.share.note);
+  });
+
+  it('Dado uma pessoa do rateio que não está entre as ativas, então a linha diz "Cota de outra pessoa" em vez do nome', async () => {
+    await setup(
+      closedInvoice({
+        myShare: brl('800.00'),
+        thirdPartyShare: brl('483.00'),
+        shareByPerson: [
+          { personId: null, amount: brl('800.00') },
+          { personId: 'person-arquivada', amount: brl('483.00') },
+        ],
+      }),
+    );
+
+    const rows = await screen.findAllByTestId('invoice-share-person');
+    expect(rows).toHaveLength(1);
+    expect(text(rows[0]!)).toContain(pt.cards.invoice.share.otherPerson);
+    expect(text(rows[0]!)).toContain('R$ 483,00');
+  });
+
+  it('Dado a fatura rateada, então o valor a pagar continua sendo o da fatura cheia', async () => {
+    await setup(
+      closedInvoice({
+        myShare: brl('800.00'),
+        thirdPartyShare: brl('483.00'),
+        shareByPerson: [
+          { personId: null, amount: brl('800.00') },
+          { personId: 'person-1', amount: brl('483.00') },
+        ],
+      }),
+    );
+
+    expect(text(screen.getByTestId('invoice-outstanding'))).toBe('R$ 1.283,00');
+  });
+
+  it('Dado a fatura sem rateio, então a minha parte é a cheia e não há linha de terceiros', async () => {
+    await setup();
+
+    expect(text(screen.getByTestId('invoice-my-share'))).toBe('R$ 1.283,00');
+    expect(screen.queryByTestId('invoice-third-party-share')).not.toBeInTheDocument();
   });
 
   it('Dado a tela, então o axe não aponta violações', async () => {

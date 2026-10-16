@@ -65,16 +65,14 @@ test.describe('tema claro e escuro', () => {
     expect(duration.split(',').every((d) => parseFloat(d) <= 0.01)).toBe(true);
   });
 
-  test('a pilha de fontes começa na do sistema e o Geist é o fallback empacotado', async ({
-    page,
-  }) => {
+  test('a pilha de fontes começa no Geist empacotado e cai na do sistema', async ({ page }) => {
     await page.goto('/');
     await waitForApp(page);
     const stack = await page.evaluate(() => getComputedStyle(document.documentElement).fontFamily);
     const families = stack.split(',').map((f) => f.trim().replace(/^["']|["']$/g, ''));
-    expect(families[0]).toBe('-apple-system');
-    expect(families.indexOf('SF Pro Text')).toBeGreaterThan(0);
-    expect(families.indexOf('Geist Variable')).toBeGreaterThan(families.indexOf('SF Pro Text'));
+    expect(families[0]).toBe('Geist Variable');
+    expect(families.indexOf('system-ui')).toBeGreaterThan(0);
+    expect(families.indexOf('-apple-system')).toBeGreaterThan(families.indexOf('Geist Variable'));
   });
 
   test('sem a SF na pilha, o Geist empacotado é quem renderiza o texto', async ({ page }) => {

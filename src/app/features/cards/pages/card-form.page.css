@@ -24,3 +24,17 @@
   justify-content: flex-end;
   gap: var(--space-2);
 }
+
+.form__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.form__suggestion {
+  min-block-size: 44px;
+}
+
+.form--nested {
+  padding-top: var(--space-3);
+}

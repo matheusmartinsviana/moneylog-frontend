@@ -1,10 +1,11 @@
-import type {
-  AppNotification,
-  DailyMessage,
-  NotificationSettings,
-  PushConfig,
-  Reminder,
-  ReminderInput,
+import {
+  type AppNotification,
+  DEFAULT_ALERT_SETTINGS,
+  type DailyMessage,
+  type NotificationSettings,
+  type PushConfig,
+  type Reminder,
+  type ReminderInput,
 } from '~/modules/notifications/core/types/notification';
 import type {
   DailyMessageResponse,
@@ -61,7 +62,16 @@ export function toSettings(r: NotificationSettingsResponse): NotificationSetting
     quietHours: { ...r.quietHours },
     push: { enabled: r.push.enabled },
     displayName: r.displayName ?? null,
+    alerts: {
+      subscriptionUnusedDays: r.alerts?.subscriptionUnusedDays ?? null,
+      invoiceDueLeadDays: r.alerts?.invoiceDueLeadDays ?? DEFAULT_ALERT_SETTINGS.invoiceDueLeadDays,
+      documentDivergenceTolerance:
+        r.alerts?.documentDivergenceTolerance?.amount ??
+        DEFAULT_ALERT_SETTINGS.documentDivergenceTolerance,
+    },
     version: r.version,
+    hasPhoto: r.hasPhoto ?? false,
+    photoVersion: r.photoVersion ?? 0,
   };
 }
 
@@ -72,6 +82,14 @@ export function toSettingsRequest(s: NotificationSettings): NotificationSettings
     quietHours: { ...s.quietHours },
     push: { enabled: s.push.enabled },
     displayName: s.displayName?.trim() ? s.displayName.trim() : null,
+    alerts: {
+      subscriptionUnusedDays: s.alerts.subscriptionUnusedDays,
+      invoiceDueLeadDays: s.alerts.invoiceDueLeadDays,
+      documentDivergenceTolerance: {
+        amount: s.alerts.documentDivergenceTolerance,
+        currency: 'BRL',
+      },
+    },
     version: s.version,
   };
 }

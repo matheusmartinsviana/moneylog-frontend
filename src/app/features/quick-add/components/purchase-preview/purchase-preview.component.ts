@@ -8,6 +8,8 @@ import { problemMessage } from '~/app/common/i18n/problem-message';
 import type { PurchasePreview } from '~/modules/cards/core/types/purchase-preview';
 import type { Problem } from '~/util/api/problem';
 import { formatCompetenceShort, formatIsoDate } from '~/util/date';
+import type { PersonRef } from '~/util/debt';
+import { isPositive } from '~/util/money';
 
 @Component({
   selector: 'app-purchase-preview',
@@ -29,6 +31,20 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
               <span class="num">{{ row.label }}</span>
               <span class="installment__invoice">{{ row.invoice }}</span>
               <span class="installment__amount"><app-money [value]="row.amount" /></span>
+              @if (row.split) {
+                <span class="installment__split" data-cy="purchase-preview-split">
+                  <span class="installment__part">
+                    {{ t().cards.purchase.preview.mine }}
+                    <app-money [value]="row.split.mine" />
+                  </span>
+                  @for (part of row.split.people; track $index) {
+                    <span class="installment__part">
+                      {{ part.name }}
+                      <app-money [value]="part.amount" />
+                    </span>
+                  }
+                </span>
+              }
             </li>
           }
         </ul>
@@ -57,14 +73,16 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
         </dl>
 
         @for (warning of data.warnings; track warning) {
-          <p class="warning" role="status" [attr.data-cy]="'purchase-warning-' + warning">
-            {{ t().cards.purchase.preview.warnings[warning] }}
-            @if (warning === 'LATE_ENTRY') {
-              <span class="warning__hint">{{
-                t().cards.purchase.preview.warnings.LATE_ENTRY_HINT
-              }}</span>
-            }
-          </p>
+          @if (warningText(warning); as text) {
+            <p class="warning" role="status" [attr.data-cy]="'purchase-warning-' + warning">
+              {{ text }}
+              @if (warning === 'LATE_ENTRY') {
+                <span class="warning__hint">{{
+                  t().cards.purchase.preview.warnings.LATE_ENTRY_HINT
+                }}</span>
+              }
+            </p>
+          }
         }
       }
     </section>
@@ -115,6 +133,20 @@ import { formatCompetenceShort, formatIsoDate } from '~/util/date';
       border-bottom: 0;
     }
 
+    .installment__split {
+      display: flex;
+      flex-wrap: wrap;
+      grid-column: 1 / -1;
+      gap: var(--space-1) var(--space-3);
+      color: var(--color-text-muted);
+      font-size: var(--text-xs);
+    }
+
+    .installment__part {
+      display: inline-flex;
+      gap: var(--space-1);
+    }
+
     .installment__invoice {
       color: var(--color-text-muted);
       font-size: var(--text-xs);
@@ -144,6 +176,7 @@ export class PurchasePreviewComponent {
   readonly preview = input<PurchasePreview | null>(null);
   readonly loading = input(false);
   readonly problem = input<Problem | null>(null);
+  readonly people = input<readonly PersonRef[]>([]);
 
   private readonly locale = computed(() => HTML_LANG[this.i18n.language()]);
 
@@ -154,11 +187,29 @@ export class PurchasePreviewComponent {
       : this.t().cards.purchase.preview.unavailable;
   });
 
+  protected warningText(warning: string): string | null {
+    const warnings: Readonly<Record<string, string>> = this.t().cards.purchase.preview.warnings;
+    return Object.hasOwn(warnings, warning) ? (warnings[warning] ?? null) : null;
+  }
+
   protected readonly rows = computed(() => {
     const copy = this.t().cards.purchase.preview;
+    const people = this.people();
     return (this.preview()?.installments ?? []).map((installment) => ({
       number: installment.number,
       amount: installment.amount,
+      split: isPositive(installment.thirdPartyAmount)
+        ? {
+            mine: installment.myAmount,
+            people: installment.byPerson
+              .filter((part) => part.personId !== null)
+              .map((part) => ({
+                name:
+                  people.find((person) => person.id === part.personId)?.name ?? copy.otherPerson,
+                amount: part.amount,
+              })),
+          }
+        : null,
       label: interpolate(copy.installment, {
         number: String(installment.number),
         total: String(installment.total),

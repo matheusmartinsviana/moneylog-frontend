@@ -18,3 +18,8 @@
 .empty-note {
   color: var(--color-text-muted);
 }
+
+.list .button {
+  min-height: var(--touch-min);
+  padding-inline: 0;
+}

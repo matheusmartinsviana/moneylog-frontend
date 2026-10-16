@@ -7,3 +7,5 @@ export type CommitmentSliceResponse = Schemas['CommitmentSlice'];
 export type CommitmentRequest = Schemas['CommitmentInput'];
 export type CommitmentPayRequest = Schemas['CommitmentPayInput'];
 export type CommitmentProgressRequest = Schemas['CommitmentProgressInput'];
+export type CommitmentSharesRequest = Schemas['CommitmentSharesUpdate'];
+export type CommitmentClausesRequest = Schemas['CommitmentClausesUpdate'];

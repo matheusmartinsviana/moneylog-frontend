@@ -15,20 +15,24 @@ manual; `[data-theme="light|dark"]` (gravado pelo `ThemeService`) vale contra o 
 
 ## Redesign "workspace" (DS 02, ADR-011)
 
-- **Paleta (escala Tailwind zinc/teal/green/amber/rose):** claro com `canvas` off-white neutro (`#f4f4f2`) e cartões
-  `surface` brancos (`#ffffff`); escuro com `canvas` `#0b0b0d` e `surface` `#161618` (cinzas neutros, sem preto puro, mais
-  clara que o canvas). Acento teal (`#0f766e` claro / `#2dd4bf` escuro); positivo verde (`#15803d` / `#4ade80`), alerta âmbar
-  (`#a85108` / `#fbbf24`), risco rose (`#be123c` / `#fb7185`). Tema escolhido no alternador do cabeçalho (Sistema, Claro, Escuro).
+- **Paleta "old money" (verde-floresta e marfim):** claro com `canvas` marfim esverdeado (`#f1f2ea`) e cartões `surface`
+  `#fcfcf8`; escuro com `canvas` verde-floresta quase preto (`#0b1d15`) e `surface` `#111b15`. Acento verde-floresta
+  (`#1f4d3a` claro / `#a9cdb5` sálvia escuro), foco e hover na mesma família; nenhum azul, índigo ou lavanda decorativo.
+  Positivo verde (`#137a38` / `#4ade80`), alerta âmbar (`#a85108` / `#fbbf24`), risco rose (`#be123c` / `#fb7185`) seguem
+  como semântica financeira. Tema escolhido no alternador do cabeçalho (Sistema, Claro, Escuro).
+- **Vidro na casca:** a sidebar/trilho (também recolhido) usa `.glass-panel` (translúcido com blur, borda, brilho e sombra
+  do Dashboard Glass); a barra inferior mobile é uma barra flutuante `.glass-panel--flat` (sem blur porque é `fixed`,
+  regra do `check-styles`). Exceção intencional de cor: marcas dos emissores de cartão (`--card-issuer-*`).
 - **Tintas `*-soft`** (`accent`, `positive`, `warning`, `risk`): **hex sólido** (10% do tom sobre `surface` no claro, 14% no
   escuro) porque `check-contrast` só lê `#rrggbb` e uma tinta translúcida mudaria de contraste conforme o fundo. Dois pares
   que a revisão apontou como falha (`accent` sobre `accent-soft` em `surface-muted`, 4,40:1; `accent` a 18% no escuro,
   4,35:1) deixam de existir por esse desenho.
-- **Gráficos:** `--color-chart-1` (acento) e `--color-chart-2` (neutro quente), conferidos a ≥ 3:1 (WCAG 1.4.11) sobre
+- **Gráficos:** `--color-chart-1` (acento verde) e `--color-chart-2` (pedra quente), conferidos a ≥ 3:1 (WCAG 1.4.11) sobre
   `surface` e `surface-muted`. Série 2 sempre tracejada: a diferença nunca é só de cor.
 - **Bordas:** `--color-border` é decorativa (cartões, divisores). Campos e controles interativos usam `--color-control-border` (>= 3:1, WCAG 1.4.11; FE-S-236). `--color-accent-soft-hover` é o hover sólido do `.button--soft`.
 - **Raios:** `--radius-window` 28px, `--radius-card` 20px, `--radius-panel` 24px, `--radius-control` 12px. **Sombras:**
   `--shadow-1`, `--shadow-2`, `--shadow-window` (todas por `--color-shadow*`, opacidade ≤ 12% no claro).
-- **Tipografia:** `--font-sans` começa em `-apple-system`/SF e mantém o Geist como fallback; `--text-kpi` 28px e
+- **Tipografia:** `--font-sans` começa no Geist (auto-hospedado, igual em todos os SO, sem depender de SF Pro; DS 00 §4 permite Geist Sans na web); títulos 600 com tracking negativo (h1 -0.025em, h2 -0.018em, h3 -0.012em, KPI -0.03em); `--text-kpi` 28px e
   `--text-display` 32px; `.num` e `.num-kpi` são tabulares.
 - **Movimento:** `--duration-fast` 180ms, `--duration-base` 240ms, `--duration-slow` 300ms, `--ease-emphasized`.
   `prefers-reduced-motion` zera as três durações e os efeitos de `transform` (hover do `.lift`, pressão do `.button`) só
@@ -193,6 +197,21 @@ Gerado por `npm run contrast`.
   CSS; em celular/toque 12 px) ou ausente = sólido (Safari/WebKit, sem `backdrop-filter`, `prefers-reduced-transparency`).
   Uso: sidebar em trilho, painéis de overlay (modal, sheet, menu), tooltip do gráfico, painel do gráfico (`glow`) e resumo de
   Movimentações; nunca em listas. Utilitários novos: `.icon-button`, `.pill`, `.status`, `.glyph`, `.row-card`, `.search`.
+- **Vidro do Início (`.glass-panel`, ADR-020).** Tokens `--color-home-*`, `--glass-panel-*`, `--gradient-home-*`,
+  `--gradient-rays-static`, `--color-{income,expense,neutral}-{text,mark}` e `--card-issuer-*`, nos dois temas, todos no
+  `check-contrast`. `<html data-glass-panel="blur">` (`detectPanelGlassMode`) liga o desfoque também no Safari e no celular;
+  ausente = sólido (sem suporte, Save-Data, `prefers-reduced-transparency`). No máximo 3 painéis com blur por vez no mobile;
+  lista rolável e elemento fixo usam `.glass-panel--flat` (sem blur). Raios: `--radius-wallet` (36) só no painel central.
+  Se a medição em iPhone falhar (Q-25), `PANEL_BLUR_ON_SAFARI = false` devolve o Safari ao sólido.
+- **Orçamento de bundle (DG-01, 2026-10-13).** `ng build` do inicial, medido em cópia limpa: `HEAD` = 485,81 kB raw / 129,61 kB
+  gzip; `HEAD` + só `tokens.css`, `utilities.css` e `glass-support.ts` da DG-01 = 495,18 kB raw / 130,53 kB gzip. Custo da DG-01:
+  +9,37 kB raw / **+0,92 kB gzip** (limite do ADR-020: +1 kB gzip, folga de 0,08 kB). As próximas tasks do vidro não herdam
+  folga: cada uma mede e registra o próprio custo, ou a base sobe de forma explícita no ADR-020.
+- **Guardas (`npm run lint`).** `check-styles.mjs` falha para `backdrop-filter` em elemento `position: fixed|sticky` na mesma
+  regra, em regras separadas que compartilham classe e em classe de vidro aplicada a elemento fixo. Exceção temporária e
+  rastreável (`TEMPORARY_EXCEPTIONS`): `bottom-nav.component.css`, que ainda usa blur; sai na **DG-11**. Testes de falha em
+  `check-styles.test.mjs` e `check-contrast.test.mjs` (`node --test`), incluindo o CSS do sólido sem suporte e de
+  `prefers-reduced-transparency`. `data-glass-panel` é definido uma vez no boot e não reage a mudança de `saveData`.
 - **Barras de rolagem:** finas e discretas (`scrollbar-width: thin`, cor por token); a sidebar rola por dentro sem barra visível.
 
 ## Movimento (`motion.css`)

@@ -5,6 +5,7 @@ import {
   DestroyRef,
   effect,
   inject,
+  Injector,
   input,
   signal,
   untracked,
@@ -25,6 +26,7 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { ToastService } from '~/app/common/services/toast.service';
 import { ClosingBadgeComponent } from '~/app/features/cards/components/closing-badge/closing-badge.component';
 import { ClosingConfirmModalComponent } from '~/app/features/cards/components/closing-confirm-modal/closing-confirm-modal.component';
+import { InvoiceDocumentComponent } from '~/app/features/cards/components/invoice-document/invoice-document.component';
 import { InvoiceItemsTableComponent } from '~/app/features/cards/components/invoice-items-table/invoice-items-table.component';
 import { InvoicePaymentsListComponent } from '~/app/features/cards/components/invoice-payments-list/invoice-payments-list.component';
 import { InvoiceTotalsComponent } from '~/app/features/cards/components/invoice-totals/invoice-totals.component';
@@ -35,7 +37,9 @@ import type { Account } from '~/modules/accounts/core/types/account';
 import { CardDetailFacade } from '~/modules/cards/core/facades/card-detail.facade';
 import { InvoiceDetailFacade } from '~/modules/cards/core/facades/invoice-detail.facade';
 import type { Invoice } from '~/modules/cards/core/types/invoice';
+import { PeopleListFacade } from '~/modules/people/core/facades/people-list.facade';
 import { formatCompetenceShort } from '~/util/date';
+import type { PersonRef } from '~/util/debt';
 
 @Component({
   selector: 'app-invoice-page',
@@ -47,13 +51,14 @@ import { formatCompetenceShort } from '~/util/date';
     EmptyStateComponent,
     ErrorStateComponent,
     InvoiceTotalsComponent,
+    InvoiceDocumentComponent,
     InvoiceItemsTableComponent,
     InvoicePaymentsListComponent,
     PayInvoiceSheetComponent,
     ClosingBadgeComponent,
     ClosingConfirmModalComponent,
   ],
-  providers: [InvoiceDetailFacade, CardDetailFacade, AccountsListFacade],
+  providers: [InvoiceDetailFacade, CardDetailFacade, AccountsListFacade, PeopleListFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './invoice.page.html',
   styleUrl: './invoice.page.css',
@@ -66,8 +71,9 @@ export class InvoicePage {
   protected readonly t = this.i18n.t;
   protected readonly facade = inject(InvoiceDetailFacade);
   private readonly cardFacade = inject(CardDetailFacade);
+  private readonly injector = inject(Injector);
 
-  readonly id = input.required<string>();
+  readonly id = input<string>();
   readonly invoiceId = input.required<string>();
 
   protected readonly state = this.facade.state;
@@ -76,6 +82,7 @@ export class InvoicePage {
   protected readonly paying = signal(false);
   protected readonly closingOpen = signal(false);
   protected readonly accounts = signal<readonly Account[]>([]);
+  protected readonly people = signal<readonly PersonRef[]>([]);
   protected readonly cashAccounts = computed(() =>
     this.accounts().filter(
       (account) => account.liquidity === 'CASH' && account.status === 'ACTIVE',
@@ -90,7 +97,11 @@ export class InvoicePage {
         })
       : this.t().nav.cards;
   });
-  protected readonly backLink = computed(() => ['/cards', this.id()]);
+  protected readonly cardId = computed(() => this.id() ?? this.invoice()?.cardId ?? null);
+  protected readonly backLink = computed(() => {
+    const cardId = this.cardId();
+    return cardId ? ['/cards', cardId] : ['/cards'];
+  });
   protected readonly canPay = computed(() => {
     const status = this.invoice()?.status;
     return status !== undefined && status !== 'PAID' && status !== 'FUTURE';
@@ -111,7 +122,7 @@ export class InvoicePage {
       label: this.t().cards.invoice.notFound.back,
       available: true,
       primary: true,
-      link: `/cards/${this.id()}`,
+      link: this.cardId() ? `/cards/${this.cardId()}` : '/cards',
     },
   ]);
 
@@ -121,13 +132,33 @@ export class InvoicePage {
       untracked(() => this.facade.load(invoiceId));
     });
     effect(() => {
-      const id = this.id();
-      untracked(() => this.cardFacade.loadCard(id));
+      const id = this.cardId();
+      if (id) untracked(() => this.cardFacade.loadCard(id));
     });
     this.accountsFacade
       .loadAll()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: (accounts) => this.accounts.set(accounts), error: () => undefined });
+    effect(() => {
+      const hasThirdParty = (this.invoice()?.shareByPerson.length ?? 0) > 0;
+      untracked(() => {
+        if (hasThirdParty && !this.peopleRequested) this.loadPeople();
+      });
+    });
+  }
+
+  private peopleRequested = false;
+
+  private loadPeople(): void {
+    this.peopleRequested = true;
+    this.injector
+      .get(PeopleListFacade)
+      .loadAll('ACTIVE')
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (people) => this.people.set(people.map(({ id, name }) => ({ id, name }))),
+        error: () => undefined,
+      });
   }
 
   protected openPay(): void {
@@ -141,13 +172,26 @@ export class InvoicePage {
   protected onPaid(invoice: Invoice): void {
     this.paying.set(false);
     this.facade.replace(invoice);
-    this.cardFacade.loadCard(this.id(), true);
+    this.reloadCard();
+  }
+
+  protected onDocumentSaved(invoice: Invoice): void {
+    this.facade.replace(invoice);
+  }
+
+  protected onDocumentConflict(): void {
+    this.facade.refresh(this.invoiceId());
   }
 
   protected afterClosing(): void {
     this.closingOpen.set(false);
     this.toast.show(this.t().cards.closing.toast);
-    this.cardFacade.loadCard(this.id(), true);
+    this.reloadCard();
+  }
+
+  private reloadCard(): void {
+    const id = this.cardId();
+    if (id) this.cardFacade.loadCard(id, true);
   }
 
   protected retry(): void {

@@ -17,7 +17,7 @@ import {
   NOTE_ID,
   homeResponses,
   incomeExpensesD7,
-  incomeExpensesM12,
+  incomeExpensesM3,
   spendingByCategory,
 } from './support/home-fixtures';
 
@@ -40,25 +40,103 @@ async function openHome(page: Page, responses = homeResponses()): Promise<void> 
   await page.goto('/');
   await waitForApp(page);
   await expect(page.locator('[data-cy="home-dashboard"]')).toBeVisible();
-  await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
+  await expect(page.locator('[data-cy="home-chart-totals"]')).toBeVisible();
 }
 
 test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
-  test('saldo, gasto, receita, resultado e poupança do mês mostram o que o JSON diz', async ({
+  test('saldo disponível, receitas, despesas e resultado do mês mostram o que o JSON diz', async ({
     page,
   }) => {
     await openHome(page);
 
-    await expect(page.locator('[data-cy="kpi-in-accounts-value"]')).toHaveText(fmt('18900.00'));
-    await expect(page.locator('[data-cy="kpi-in-accounts-change"]')).toHaveText(
-      '+8% vs fim do mês passado',
+    await expect(page.locator('[data-cy="home-wallet-label"]')).toHaveText('Disponível');
+    await expect(page.locator('[data-cy="home-wallet-available"]')).toContainText(fmt('17617.00'));
+    await expect(page.locator('[data-cy="home-analytics-income"]')).toContainText(fmt('12000.00'));
+    await expect(page.locator('[data-cy="home-analytics-expenses"]')).toContainText(
+      fmt(CONSUMPTION),
     );
-    await expect(page.locator('[data-cy="kpi-spending-value"]')).toHaveText(fmt(CONSUMPTION));
-    await expect(page.locator('[data-cy="kpi-income-value"]')).toHaveText(fmt('12000.00'));
-    await expect(page.locator('[data-cy="kpi-result-value"]')).toHaveText(fmt('10379.50'));
-    await expect(page.locator('[data-cy="kpi-savings-value"]')).toHaveText('41,2%');
+    await expect(page.locator('[data-cy="home-analytics-net"]')).toContainText(fmt('10379.50'));
+  });
+
+  test('carteira e análise ficam lado a lado e o gráfico ocupa a linha de baixo, sem sobreposição', async ({
+    page,
+  }) => {
+    for (const width of [1200, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      await openHome(page);
+
+      const boxes = await page.evaluate(() =>
+        ['home-wallet-header', 'home-analytics', 'home-chart-panel'].map((id) => {
+          const rect = document.querySelector(`[data-cy="${id}"]`)!.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+        }),
+      );
+      const [wallet, analytics, chart] = boxes as [
+        (typeof boxes)[number],
+        (typeof boxes)[number],
+        (typeof boxes)[number],
+      ];
+      expect(wallet.right, `${width}: carteira antes da análise`).toBeLessThanOrEqual(
+        analytics.left,
+      );
+      expect(Math.abs(wallet.top - analytics.top), `${width}: mesma linha`).toBeLessThan(30);
+      expect(chart.top, `${width}: gráfico abaixo da carteira`).toBeGreaterThanOrEqual(
+        wallet.bottom,
+      );
+      expect(chart.top, `${width}: gráfico abaixo da análise`).toBeGreaterThanOrEqual(
+        analytics.bottom,
+      );
+      await expectNoHorizontalScroll(page);
+    }
+  });
+
+  test('os cartões flutuantes (insight, meta) não cobrem texto nem controle: nenhum interativo se sobrepõe', async ({
+    page,
+  }) => {
+    await openHome(page);
+
+    const overlaps = await page.evaluate(() => {
+      const items = [
+        ...document.querySelectorAll<HTMLElement>(
+          '[data-cy="home-dashboard"] a, [data-cy="home-dashboard"] button',
+        ),
+      ]
+        .map((el) => ({ el, rect: el.getBoundingClientRect() }))
+        .filter(({ rect }) => rect.width > 0 && rect.height > 0);
+      const found: string[] = [];
+      for (let i = 0; i < items.length; i++) {
+        for (let j = i + 1; j < items.length; j++) {
+          const a = items[i]!.rect;
+          const b = items[j]!.rect;
+          const inter =
+            Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 &&
+            Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1;
+          if (inter && !items[i]!.el.contains(items[j]!.el) && !items[j]!.el.contains(items[i]!.el))
+            found.push(`${items[i]!.el.dataset['cy']} x ${items[j]!.el.dataset['cy']}`);
+        }
+      }
+      return found;
+    });
+    expect(overlaps).toEqual([]);
+  });
+
+  test('há uma h1 e cada painel tem a sua h2', async ({ page }) => {
+    await openHome(page);
+
+    await expect(page.locator('main h1')).toHaveCount(1);
+    for (const id of ['home-wallet-header', 'home-analytics', 'home-chart-panel']) {
+      await expect(page.locator(`[data-cy="${id}"] h2`).first(), id).toHaveCount(1);
+    }
+  });
+
+  test('a atividade recente vem do JSON e abre o detalhe', async ({ page }) => {
+    await openHome(page);
+
+    await expect(page.locator('[data-cy="home-recent-item"]').first()).toBeVisible();
+    await page.locator('[data-cy="home-recent-link"]').first().click();
+    await expect(page).toHaveURL(/\/transactions\/[0-9a-f-]+/);
   });
 
   test('os blocos que saíram do Início continuam acessíveis nas telas deles, com os mesmos números', async ({
@@ -68,8 +146,6 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
     for (const id of [
       'home-accounts-section',
       'home-categories-total',
-      'home-recent',
-      'home-insight',
       'home-legacy',
       'home-quick-capture',
       'home-budget',
@@ -118,59 +194,53 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
     );
   });
 
-  test('o gráfico oferece só 7 dias, 30 dias e 12 meses e a tabela equivalente repete o JSON, inclusive o negativo', async ({
+  test('o gráfico oferece os períodos do contrato e a tabela equivalente repete o JSON, inclusive o negativo', async ({
     page,
   }) => {
-    await openHome(page);
-    const rows = page.locator('[data-cy="home-overview-chart-table"] tbody tr');
+    const withRefund = { ...incomeExpensesD7, period: 'D30' as const };
+    await openHome(page, {
+      ...homeResponses(),
+      '/v1/reports/income-expenses?period=D30': withRefund,
+    });
+    const rows = page.locator('[data-cy="home-chart-table"] tbody tr');
 
-    await expect(page.locator('[data-cy="home-overview-period-D30"]')).toHaveAttribute(
+    await expect(page.locator('[data-cy="home-chart-period-D30"]')).toHaveAttribute(
       'aria-checked',
       'true',
     );
-    await expect(page.locator('[data-cy="home-overview-period-M3"]')).toHaveCount(0);
 
-    await page.locator('[data-cy="home-overview-period-D7"]').click();
-    await expect(rows).toHaveCount(incomeExpensesD7.points.length);
-    const refund = incomeExpensesD7.points[5]!;
+    await page.locator('[data-cy="home-chart-table-toggle"]').click();
+    await expect(rows).toHaveCount(withRefund.points.length);
+    const refund = withRefund.points[5]!;
     expect(norm(await rows.nth(5).textContent())).toContain(fmt(refund.expenses.amount));
     expect(fmt(refund.expenses.amount)).toBe('−R$ 50,00');
-    for (const [i, point] of incomeExpensesD7.points.entries()) {
+    for (const [i, point] of withRefund.points.entries()) {
       const text = norm(await rows.nth(i).textContent());
       expect(text).toContain(fmt(point.income.amount));
       expect(text).toContain(fmt(point.expenses.amount));
     }
 
-    await page.locator('[data-cy="home-overview-period-M12"]').click();
-    await expect(rows).toHaveCount(incomeExpensesM12.points.length);
+    await page.locator('[data-cy="home-chart-period-M3"]').click();
+    await expect(rows).toHaveCount(incomeExpensesM3.points.length);
+    await expect(page.locator('[data-cy="home-chart-period-D7"]')).toHaveCount(0);
+    await expect(page.locator('[data-cy="home-chart-period-M12"]')).toHaveCount(0);
   });
 
   test('troca de período pelo teclado (setas do controle segmentado)', async ({ page }) => {
     await openHome(page);
 
-    await page.locator('[data-cy="home-overview-period-D30"]').focus();
+    await page.locator('[data-cy="home-chart-period-D30"]').focus();
     await page.keyboard.press('ArrowRight');
 
-    await expect(page.locator('[data-cy="home-overview-period-M12"]')).toHaveAttribute(
+    await expect(page.locator('[data-cy="home-chart-period-M3"]')).toHaveAttribute(
       'aria-checked',
       'true',
     );
   });
 
-  test('"Ver movimentações" leva à lista de movimentações', async ({ page }) => {
+  test('"+ Registrar" abre o Novo registro e o menu abre o "Emprestei"', async ({ page }) => {
     await openHome(page);
 
-    await page.locator('[data-cy="home-overview-transactions"]').click();
-
-    await expect(page).toHaveURL(/\/transactions/);
-  });
-
-  test('um único botão primário: "+ Registrar" abre o Novo registro e o menu abre o "Emprestei"', async ({
-    page,
-  }) => {
-    await openHome(page);
-
-    await expect(page.locator('main .button--primary, header .button--primary')).toHaveCount(1);
     await expect(page.locator('[data-cy="home-register-open"]')).toHaveClass(/button--primary/);
 
     await page.locator('[data-cy="home-register-menu"]').click();
@@ -183,7 +253,9 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
     await expect(page.locator('[role="dialog"]')).toBeVisible();
   });
 
-  test('o orçamento está na página /budgets "em breve" e ela está na sidebar', async ({ page }) => {
+  test('o orçamento está na página /budgets "em breve" e ela é um item essencial da sidebar', async ({
+    page,
+  }) => {
     await openHome(page);
 
     await page.goto('/budgets');
@@ -192,7 +264,10 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
     await expect(page.locator('[data-cy="empty-state-title"]')).toHaveText(
       'Orçamentos chegam em breve.',
     );
-    await expect(page.locator('[data-cy="sidebar-more"]')).toHaveClass(/is-active/);
+    await expect(page.locator('[data-cy="sidebar-budgets"]')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   test('o tema escuro e o claro não têm violações de acessibilidade no Início', async ({
@@ -204,7 +279,7 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
       await page.emulateMedia({ colorScheme: theme });
       await page.goto('/');
       await waitForApp(page);
-      await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
+      await expect(page.locator('[data-cy="home-chart-totals"]')).toBeVisible();
       await expectNoRawKeys(page);
       expect(await runAxe(page), `axe ${theme}`).toEqual([]);
     }
@@ -214,12 +289,12 @@ test.describe('Início sucinto: valores = JSON do contrato (desktop 1280)', () =
 test.describe('Início: mês em andamento (R5)', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
-  test('com partial = true, os indicadores dizem que o mês está em andamento', async ({ page }) => {
+  test('com partial = true, o painel analítico continua mostrando o mês do servidor', async ({
+    page,
+  }) => {
     await openHome(page, homeResponses({ partial: true }));
 
-    await expect(page.locator('[data-cy="kpi-spending-caption"]')).toHaveText(
-      'Este mês, em andamento',
-    );
+    await expect(page.locator('[data-cy="home-analytics-month"]')).toBeVisible();
   });
 });
 
@@ -295,27 +370,19 @@ test.describe('busca global (T209)', () => {
 test.describe('Início em 375 px (mobile)', () => {
   test.use({ viewport: VIEWPORTS.mobile });
 
-  test('sem rolagem horizontal e uma coluna na ordem indicadores, compromissos, dívida, meta e gráfico', async ({
+  test('sem rolagem horizontal e uma coluna na ordem carteira, análise e gráfico', async ({
     page,
   }) => {
     await openHome(page);
     await expectNoHorizontalScroll(page);
 
     const tops = await page.evaluate(() =>
-      [
-        'home-kpis',
-        'home-upcoming-brief',
-        'home-debts-brief',
-        'home-featured-goal',
-        'home-overview-chart',
-      ].map((id) => document.querySelector(`[data-cy="${id}"]`)?.getBoundingClientRect().top ?? -1),
+      ['home-wallet-header', 'home-analytics', 'home-chart-panel'].map(
+        (id) => document.querySelector(`[data-cy="${id}"]`)?.getBoundingClientRect().top ?? -1,
+      ),
     );
     for (let i = 1; i < tops.length; i++)
       expect(tops[i]!, `bloco ${i}`).toBeGreaterThan(tops[i - 1]!);
-
-    const spending = await page.locator('[data-cy="kpi-spending"]').boundingBox();
-    const income = await page.locator('[data-cy="kpi-income"]').boundingBox();
-    expect(Math.abs(spending!.y - income!.y)).toBeLessThan(2);
   });
 
   test('a busca é um botão de lupa que abre uma folha e devolve o foco ao fechar', async ({
@@ -345,18 +412,40 @@ test.describe('Início em 375 px (mobile)', () => {
     await page.emulateMedia({ colorScheme: 'dark' });
     await page.goto('/');
     await waitForApp(page);
-    await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
+    await expect(page.locator('[data-cy="home-chart-totals"]')).toBeVisible();
     await expectNoHorizontalScroll(page);
     expect(await runAxe(page)).toEqual([]);
   });
 });
 
-test.describe('Início em 768 px (tablet)', () => {
-  test.use({ viewport: VIEWPORTS.tablet });
-
-  test('sem rolagem horizontal e com a busca no cabeçalho', async ({ page }) => {
-    await openHome(page);
-    await expectNoHorizontalScroll(page);
-    await expect(page.locator('[data-cy="global-search-input"]')).toBeVisible();
-  });
+test.describe('Início em tablet (768 a 1199 px)', () => {
+  for (const width of [768, 1024, 1199]) {
+    test(`${width} px: ${width < 1024 ? 'uma coluna' : 'carteira e análise lado a lado'}, sem sobreposição`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1024 });
+      await openHome(page);
+      await expectNoHorizontalScroll(page);
+      await expect(page.locator('[data-cy="global-search-input"]')).toBeVisible();
+      const boxes = await page.evaluate(() =>
+        ['home-wallet-header', 'home-analytics', 'home-chart-panel'].map((id) => {
+          const rect = document.querySelector(`[data-cy="${id}"]`)!.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+        }),
+      );
+      const [wallet, analytics, chart] = boxes as [
+        (typeof boxes)[number],
+        (typeof boxes)[number],
+        (typeof boxes)[number],
+      ];
+      if (width < 1024) {
+        expect(analytics.top).toBeGreaterThanOrEqual(wallet.bottom - 1);
+      } else {
+        expect(wallet.right).toBeLessThanOrEqual(analytics.left);
+      }
+      expect(chart.top).toBeGreaterThanOrEqual(Math.min(wallet.bottom, analytics.bottom) - 1);
+      await expect(page.locator('[data-cy="home-chart-totals"]')).toBeVisible();
+      await expect(page.locator('[data-cy="home-recent-link"]').first()).toBeVisible();
+    });
+  }
 });

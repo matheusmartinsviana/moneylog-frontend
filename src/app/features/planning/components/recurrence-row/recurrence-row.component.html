@@ -18,6 +18,9 @@
         t().recurrences.row.nextMonthIncome
       }}</span>
     }
+    @if (splitText(); as text) {
+      <span class="status" [attr.data-cy]="'recurrence-split-' + r.id">{{ text }}</span>
+    }
     @if (accountToDefine()) {
       <span class="status" [attr.data-cy]="'recurrence-account-tbd-' + r.id">{{
         t().recurrences.row.accountTbd
@@ -55,7 +58,7 @@
     <p class="row__meta" [attr.data-cy]="'recurrence-ends-' + r.id">{{ text }}</p>
   }
 </div>
-<div class="row__actions">
+<div class="row__actions quiet-actions">
   <a
     class="button"
     [routerLink]="['/planning/recurrences', r.id, 'edit']"

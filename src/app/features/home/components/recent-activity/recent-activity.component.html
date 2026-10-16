@@ -1,0 +1,78 @@
+<section class="recent" aria-labelledby="home-recent-title" data-cy="home-recent">
+  <h2 class="recent__title" id="home-recent-title">{{ t().home.recent.title }}</h2>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <p class="recent__status" role="status" data-cy="home-recent-loading">
+        {{ t().home.loading }}
+      </p>
+    }
+    @case ('error') {
+      <app-error-state [problem]="problem()" (retry)="retry.emit()" />
+    }
+    @case ('empty') {
+      <div data-cy="home-recent-empty">
+        <app-empty-state
+          [heading]="t().home.recent.emptyTitle"
+          [description]="t().home.recent.emptyDescription"
+          [actions]="emptyActions()"
+        />
+      </div>
+    }
+    @default {
+      <ul class="rows" [attr.aria-label]="t().home.recent.list">
+        @for (row of rows(); track row.item.id) {
+          <li class="row" data-cy="home-recent-item" [attr.data-type]="row.item.labelKey">
+            <a
+              class="row__link hit"
+              [routerLink]="['/transactions', row.item.id]"
+              data-cy="home-recent-link"
+            >
+              <span class="row__icon" [attr.data-tone]="row.item.tone" aria-hidden="true">
+                <app-icon [name]="row.icon" [size]="18" />
+              </span>
+              <span class="row__main">
+                <span class="row__description" data-cy="home-recent-description">{{
+                  row.item.description
+                }}</span>
+                <span class="row__meta">
+                  <span data-cy="home-recent-kind">{{ row.kind }}</span
+                  >&ngsp;<span data-cy="home-recent-category">{{ row.category }}</span
+                  >&ngsp;<span class="num" data-cy="home-recent-date">{{ row.date }}</span>
+                  @if (row.installments) {
+                    &ngsp;<span class="num" data-cy="home-recent-installments">{{
+                      row.installments
+                    }}</span>
+                  }
+                </span>
+                @if (row.item.voided || row.item.scheduled) {
+                  <span class="badge" data-cy="home-recent-badge">
+                    <app-icon [name]="row.item.voided ? 'minus' : 'calendar'" [size]="14" />
+                    {{ row.item.voided ? t().home.recent.voided : t().home.recent.scheduled }}
+                  </span>
+                }
+              </span>
+              <span
+                class="row__amount num"
+                [attr.data-tone]="row.item.tone"
+                [class.is-voided]="row.item.voided"
+                data-cy="home-recent-amount"
+              >
+                @if (row.sign) {
+                  <span aria-hidden="true" data-cy="home-recent-sign">{{ row.sign }}</span>
+                  @if (row.direction) {
+                    <span class="visually-hidden">{{ row.direction }}</span>
+                  }
+                }
+                <app-money [value]="row.amount" [maskable]="maskable()" />
+              </span>
+            </a>
+          </li>
+        }
+      </ul>
+      <a class="recent__all hit" routerLink="/transactions" data-cy="home-recent-view-all">{{
+        t().home.recent.viewAll
+      }}</a>
+    }
+  }
+</section>

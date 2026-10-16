@@ -17,6 +17,7 @@ import {
 } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { PageLayoutComponent } from '~/app/common/components/page-layout/page-layout.component';
+import { ViewToggleComponent } from '~/app/common/components/view-toggle/view-toggle.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { EntriesTableComponent } from '~/app/features/transactions/components/entries-table/entries-table.component';
 import {
@@ -50,6 +51,7 @@ import { todayIso } from '~/util/date';
     RecordsTableComponent,
     EntriesTableComponent,
     TotalsRowComponent,
+    ViewToggleComponent,
   ],
   providers: [TransactionsListFacade, AccountsListFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,

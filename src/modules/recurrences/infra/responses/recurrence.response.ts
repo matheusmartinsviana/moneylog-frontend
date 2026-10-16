@@ -12,3 +12,4 @@ export type OccurrenceResponse = Schemas['Occurrence'];
 export type OccurrenceSliceResponse = Schemas['OccurrenceSlice'];
 export type RealizeRequest = Schemas['RealizeOccurrenceInput'];
 export type RealizedTransactionResponse = Schemas['Transaction'];
+export type SubscriptionListResponse = Schemas['SubscriptionList'];

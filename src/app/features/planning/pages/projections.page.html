@@ -1,5 +1,5 @@
-<app-page-layout fit [heading]="t().nav.planning">
-  <div class="fit-stack">
+<app-page-layout [heading]="t().nav.planning">
+  <div class="stack">
     <app-planning-nav current="projections" />
 
     <div class="banner banner--projection" role="note" data-cy="projection-banner">
@@ -9,22 +9,28 @@
       <p data-cy="projection-banner-text">{{ t().projections.bannerText }}</p>
     </div>
 
-    <div class="controls">
-      <app-segmented-control
-        [formControl]="horizonControl"
-        fieldId="projection-horizon"
-        [options]="horizonOptions()"
-        [label]="t().projections.horizonLabel"
-      />
-      <app-switch
-        [formControl]="trendControl"
-        fieldId="projection-trend"
-        [label]="t().projections.trend.toggle"
-        [hint]="t().projections.trend.hint"
-      />
-    </div>
+    @if (projection.state().status !== 'ready') {
+      <ng-container *ngTemplateOutlet="controlsTpl" />
+    }
 
-    <div class="fit-scroll">
+    <ng-template #controlsTpl>
+      <div class="controls">
+        <app-segmented-control
+          [formControl]="horizonControl"
+          fieldId="projection-horizon"
+          [options]="horizonOptions()"
+          [label]="t().projections.horizonLabel"
+        />
+        <app-switch
+          [formControl]="trendControl"
+          fieldId="projection-trend"
+          [label]="t().projections.trend.toggle"
+          [hint]="t().projections.trend.hint"
+        />
+      </div>
+    </ng-template>
+
+    <div class="stack">
       @switch (projection.state().status) {
         @case ('loading') {
           <div data-cy="projection-loading">
@@ -49,16 +55,35 @@
         }
         @case ('ready') {
           @if (data(); as p) {
-            <app-section-container
-              [heading]="t().projections.chartLabel"
-              [description]="t().projections.horizons[p.horizon]"
-            >
-              <p class="start" data-cy="projection-start">
-                <span class="start__label">{{ t().projections.startingBalance }}</span>
-                <app-money [value]="p.startingBalance" />
-              </p>
-              <app-sparkline [series]="sparkSeries()" />
-            </app-section-container>
+            <div class="page-grid">
+              <div class="stack span-5">
+                <div class="focus glass-panel glass-panel--strong glass-panel--card">
+                  <p class="start" data-cy="projection-start">
+                    <span class="start__label">{{ t().projections.startingBalance }}</span>
+                    <span class="figure"><app-money [value]="p.startingBalance" /></span>
+                  </p>
+                  <ng-container *ngTemplateOutlet="controlsTpl" />
+                </div>
+              </div>
+              <app-section-container
+                class="span-7"
+                [heading]="t().projections.chartLabel"
+                [description]="t().projections.horizons[p.horizon]"
+              >
+                <button
+                  type="button"
+                  class="link-more hit-area chart-toggle"
+                  data-cy="projection-chart-toggle"
+                  [attr.aria-expanded]="chartOpen()"
+                  (click)="chartOpen.set(!chartOpen())"
+                >
+                  {{ chartOpen() ? t().projections.hideChart : t().projections.showChart }}
+                </button>
+                <div class="chart" [class.is-collapsed]="!chartOpen()">
+                  <app-sparkline [series]="sparkSeries()" />
+                </div>
+              </app-section-container>
+            </div>
 
             <app-disclosure fieldId="projection-more" [heading]="t().brief.more" [headingLevel]="2">
               <div class="more">

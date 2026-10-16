@@ -71,7 +71,7 @@ test.describe('UI Kit (mock)', () => {
     }
   }
 
-  test('os overlays abrem a partir do UI Kit (Select como folha a 375 px, calendário, diálogo)', async ({
+  test('os overlays abrem a partir do UI Kit (Select centrado a 375 px, calendário, diálogo)', async ({
     page,
   }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
@@ -81,7 +81,7 @@ test.describe('UI Kit (mock)', () => {
     await page.locator('[data-cy="light-select-default"]').click();
     await expect(page.locator('[data-cy="light-select-default-panel-panel"]')).toHaveAttribute(
       'data-side',
-      'sheet',
+      'center',
     );
     await page.keyboard.press('Escape');
 
@@ -138,9 +138,7 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
     await expect(menu).toHaveCount(0);
   });
 
-  test('Menu (375 px): abre como folha inferior com alvos de 44 px e fecha pelo botão', async ({
-    page,
-  }) => {
+  test('Menu (375 px): abre centrado com alvos de 44 px e fecha pelo botão', async ({ page }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
     await page.goto('/dev/ui-kit');
     await waitForApp(page);
@@ -150,7 +148,7 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
 
     await trigger.click();
     const panel = page.locator('[data-cy="light-menu-default-panel-panel"]');
-    await expect(panel).toHaveAttribute('data-side', 'sheet');
+    await expect(panel).toHaveAttribute('data-side', 'center');
     await expect(panel).toHaveAttribute('aria-modal', 'true');
     for (const id of ['pay', 'export', 'archive']) {
       const box = await page.locator(`[data-cy="light-menu-default-item-${id}"]`).boundingBox();
@@ -247,7 +245,7 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
     expect(scrolls).toBe(true);
   });
 
-  test('Sheet: folha inferior a 375 px, painel lateral a 1280 px; Esc fecha e devolve o foco', async ({
+  test('Sheet: painel centrado a 375 px, painel lateral a 1280 px; Esc fecha e devolve o foco', async ({
     page,
   }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
@@ -257,12 +255,13 @@ test.describe('UI Kit: componentes do gate G-UI-E3 (mock)', () => {
     await open.scrollIntoViewIfNeeded();
     await open.click();
     const panel = page.locator('[data-cy="light-sheet-panel"]');
-    await expect(panel).toHaveAttribute('data-side', 'sheet');
+    await expect(panel).toHaveAttribute('data-side', 'center');
     await settleAnimations(panel);
     const box = (await panel.boundingBox())!;
-    expect(Math.round(box.x)).toBe(0);
-    expect(Math.round(box.width)).toBe(VIEWPORTS.mobile.width);
-    expect(Math.round(box.y + box.height)).toBe(VIEWPORTS.mobile.height);
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(VIEWPORTS.mobile.width);
+    expect(Math.abs(box.x + box.width / 2 - VIEWPORTS.mobile.width / 2)).toBeLessThanOrEqual(1);
+    expect(box.y + box.height).toBeLessThanOrEqual(VIEWPORTS.mobile.height);
     expect(
       (await page.locator('[data-cy="light-sheet-close"]').boundingBox())!.height,
     ).toBeGreaterThanOrEqual(44);

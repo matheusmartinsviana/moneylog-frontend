@@ -1,0 +1,136 @@
+<app-page-layout [heading]="t().simulator.title" [description]="t().simulator.description">
+  <div class="page-grid">
+    <form
+      class="form span-5"
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      novalidate
+      data-cy="simulator-form"
+    >
+      <app-section-container [heading]="t().simulator.form.title">
+        <div class="fields">
+          <app-money-input
+            formControlName="amount"
+            fieldId="simulator-amount"
+            [label]="t().simulator.form.amount"
+          />
+          <app-number-stepper
+            formControlName="installments"
+            fieldId="simulator-installments"
+            [min]="1"
+            [max]="maxInstallments"
+            [valueText]="installmentsText()"
+            [label]="t().simulator.form.installments"
+          />
+          <app-text-field
+            formControlName="interest"
+            fieldId="simulator-interest"
+            inputmode="decimal"
+            autocomplete="off"
+            [mandatory]="false"
+            [maxlength]="6"
+            [label]="t().simulator.form.interest"
+            [hint]="t().simulator.form.interestHint"
+          />
+          <app-month-picker
+            formControlName="firstMonth"
+            fieldId="simulator-first-month"
+            [min]="minMonth"
+            [max]="maxMonth"
+            [label]="t().simulator.form.firstMonth"
+          />
+        </div>
+
+        <div class="cuts">
+          <h3 class="cuts__title">{{ t().simulator.cuts.title }}</h3>
+          <p class="caption">{{ t().simulator.cuts.description }}</p>
+          @switch (cutsStatus()) {
+            @case ('loading') {
+              <div data-cy="simulator-cuts-loading">
+                <p class="visually-hidden" role="status">{{ t().simulator.cuts.loading }}</p>
+                <div class="list-skeleton" aria-hidden="true">
+                  <div class="list-skeleton__row"></div>
+                  <div class="list-skeleton__row"></div>
+                </div>
+              </div>
+            }
+            @case ('error') {
+              <app-error-state [problem]="subscriptions.error()" (retry)="retryCuts()" />
+            }
+            @case ('empty') {
+              <p class="muted" data-cy="simulator-cuts-empty">{{ t().simulator.cuts.empty }}</p>
+            }
+            @default {
+              <app-subscription-cuts
+                [options]="cutOptions()"
+                [selected]="selectedCuts()"
+                (toggled)="toggleCut($event)"
+              />
+            }
+          }
+        </div>
+      </app-section-container>
+
+      <div class="actions">
+        <button
+          type="button"
+          class="button"
+          data-cy="simulator-reset"
+          [disabled]="simulation.loading()"
+          (click)="reset()"
+        >
+          {{ t().simulator.form.reset }}
+        </button>
+        <button
+          type="submit"
+          class="button button--primary"
+          data-cy="simulator-submit"
+          [disabled]="simulation.loading()"
+          [attr.aria-busy]="simulation.loading()"
+        >
+          {{ simulation.loading() ? t().simulator.form.submitting : t().simulator.form.submit }}
+        </button>
+      </div>
+    </form>
+
+    <div class="output span-7" aria-live="polite" data-cy="simulator-output">
+      @switch (simulation.state().status) {
+        @case ('idle') {
+          <app-empty-state
+            [heading]="t().simulator.idle.title"
+            [description]="t().simulator.idle.description"
+            illustration="timeline"
+          />
+        }
+        @case ('loading') {
+          <div data-cy="simulator-loading">
+            <p class="visually-hidden" role="status">{{ t().simulator.loading }}</p>
+            <div class="list-skeleton" aria-hidden="true">
+              <div class="list-skeleton__row"></div>
+              <div class="list-skeleton__row"></div>
+              <div class="list-skeleton__row"></div>
+            </div>
+          </div>
+        }
+        @case ('error') {
+          <app-error-state [problem]="simulation.problem()" (retry)="onSubmit()" />
+        }
+        @case ('ready') {
+          @if (simulation.result(); as result) {
+            @if (result.months.length === 0) {
+              <app-empty-state
+                [heading]="t().simulator.empty.title"
+                [description]="t().simulator.empty.description"
+                [actions]="emptyActions()"
+                (action)="reset()"
+                illustration="timeline"
+              />
+            } @else {
+              <app-simulation-result [result]="result" />
+            }
+          }
+        }
+      }
+    </div>
+  </div>
+</app-page-layout>

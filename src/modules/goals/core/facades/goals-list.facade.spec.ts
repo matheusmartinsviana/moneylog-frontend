@@ -106,4 +106,59 @@ describe('GoalsListFacade', () => {
 
     expect(facade.state().status).toBe('error');
   });
+
+  it('Dado metas com uma marcada, então o destaque é a marcada', () => {
+    const gateway = new GoalsGatewayStub();
+    gateway.goals = [aGoal({ id: 'g1', featured: false }), aGoal({ id: 'g2', featured: true })];
+    const { facade } = setup(gateway);
+
+    expect(facade.featured()).toBeNull();
+    facade.load('ACTIVE');
+
+    expect(facade.featured()?.id).toBe('g2');
+  });
+
+  it('Dado metas sem nenhuma marcada, então o destaque é a primeira', () => {
+    const gateway = new GoalsGatewayStub();
+    gateway.goals = [aGoal({ id: 'g3', featured: false })];
+    const { facade } = setup(gateway);
+
+    facade.load('ACTIVE');
+
+    expect(facade.featured()?.id).toBe('g3');
+  });
+
+  it('Dado metas só concluídas ou arquivadas, mesmo marcadas, então não há destaque', () => {
+    const gateway = new GoalsGatewayStub();
+    gateway.goals = [
+      aGoal({ id: 'g4', featured: true, status: 'ARCHIVED' }),
+      aGoal({ id: 'g5', featured: false, status: 'ACHIEVED' }),
+    ];
+    const { facade } = setup(gateway);
+
+    facade.load();
+
+    expect(facade.featured()).toBeNull();
+  });
+
+  it('Dado meta arquivada marcada e uma ativa, então o destaque é a ativa', () => {
+    const gateway = new GoalsGatewayStub();
+    gateway.goals = [
+      aGoal({ id: 'g6', featured: true, status: 'ARCHIVED' }),
+      aGoal({ id: 'g7', featured: false, status: 'ACTIVE' }),
+    ];
+    const { facade } = setup(gateway);
+
+    facade.load();
+
+    expect(facade.featured()?.id).toBe('g7');
+  });
+
+  it('Dado nenhuma meta, então não há destaque', () => {
+    const { facade } = setup();
+
+    facade.load('ACTIVE');
+
+    expect(facade.featured()).toBeNull();
+  });
 });

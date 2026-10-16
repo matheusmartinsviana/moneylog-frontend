@@ -6,15 +6,14 @@ import {
   inject,
   InjectionToken,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 import { GlobalSearchComponent } from '~/app/common/components/global-search/global-search.component';
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { LiquidGlassDirective } from '~/app/common/components/liquid-glass/liquid-glass.directive';
 import { ProfileMenuComponent } from '~/app/common/components/profile-menu/profile-menu.component';
 import { TooltipDirective } from '~/app/common/components/tooltip/tooltip.directive';
+import { ValuesToggleComponent } from '~/app/common/components/values-toggle/values-toggle.component';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { ThemeService } from '~/app/common/services/theme.service';
 import { NotificationsPopoverComponent } from '~/app/features/notifications/components/notifications-popover.component';
@@ -41,15 +40,15 @@ export function greetingPeriod(hour: number): GreetingPeriod {
     LiquidGlassDirective,
     NotificationsPopoverComponent,
     ProfileMenuComponent,
+    RouterLink,
     TooltipDirective,
+    ValuesToggleComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './workspace-header.component.html',
   styleUrl: './workspace-header.component.css',
 })
 export class WorkspaceHeaderComponent {
-  private readonly router = inject(Router);
-  private readonly hour = inject(GREETING_HOUR);
   protected readonly t = inject(I18nService).t;
   private readonly unread = inject(UnreadCountFacade);
 
@@ -66,20 +65,7 @@ export class WorkspaceHeaderComponent {
     this.theme.set(this.theme.effective() === 'dark' ? 'light' : 'dark');
   }
 
-  private readonly url = toSignal(
-    this.router.events.pipe(
-      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
-      map((event) => event.urlAfterRedirects),
-    ),
-    { initialValue: this.router.url },
-  );
-
-  protected readonly onHome = computed(() => (this.url().split(/[?#]/)[0] ?? '') === '/');
   constructor() {
     this.unread.connect(inject(DestroyRef));
   }
-
-  protected readonly greeting = computed(
-    () => this.t().header.greeting[greetingPeriod(this.hour())],
-  );
 }

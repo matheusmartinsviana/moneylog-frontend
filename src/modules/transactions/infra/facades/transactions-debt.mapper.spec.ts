@@ -180,6 +180,7 @@ describe('mapper de movimentações de dívida (Etapa 4)', () => {
 
     it('Dado a lista por competência, então debtItems vem completo e os totais são os do backend', () => {
       const slice = toEntrySlice({
+        view: 'MINE',
         items: [],
         hasNext: false,
         totals: { total: brl('80.00'), byCategory: [] },
@@ -210,6 +211,7 @@ describe('mapper de movimentações de dívida (Etapa 4)', () => {
 
     it('Dado a lista sem debtItems (campo opcional), então vem vazia', () => {
       const slice = toEntrySlice({
+        view: 'MINE',
         items: [],
         hasNext: false,
         totals: { total: brl('0.00'), byCategory: [] },

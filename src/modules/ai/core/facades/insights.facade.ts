@@ -25,6 +25,8 @@ export class InsightsFacade {
     return state.status === 'ready' ? state.items : [];
   });
 
+  readonly top = computed(() => this.items()[0] ?? null);
+
   constructor() {
     this.loads
       .pipe(

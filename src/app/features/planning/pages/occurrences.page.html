@@ -1,8 +1,8 @@
-<app-page-layout fit [heading]="t().nav.planning">
-  <div class="fit-stack">
+<app-page-layout [heading]="t().nav.planning">
+  <div class="stack">
     <app-planning-nav current="pending" />
 
-    <div class="fit-scroll">
+    <div class="stack">
       @if (skipError(); as message) {
         <p class="banner" role="alert" data-cy="occurrences-error">{{ message }}</p>
       }
@@ -39,16 +39,18 @@
               <h2 id="occurrences-overdue-title" class="section-title section-title--overdue">
                 {{ t().recurrences.occurrences.overdueSection }}
               </h2>
-              <ul class="list">
-                @for (occurrence of overdue(); track occurrence.recurrenceId + occurrence.date) {
-                  <li
-                    app-occurrence-row
-                    [occurrence]="occurrence"
-                    (realize)="askRealize($event)"
-                    (skip)="askSkip($event)"
-                  ></li>
-                }
-              </ul>
+              <div class="card-flat list-wrap">
+                <ul class="list">
+                  @for (occurrence of overdue(); track occurrence.recurrenceId + occurrence.date) {
+                    <li
+                      app-occurrence-row
+                      [occurrence]="occurrence"
+                      (realize)="askRealize($event)"
+                      (skip)="askSkip($event)"
+                    ></li>
+                  }
+                </ul>
+              </div>
             </section>
           }
           @if (upcoming().length > 0) {
@@ -56,16 +58,31 @@
               <h2 id="occurrences-upcoming-title" class="section-title">
                 {{ t().recurrences.occurrences.upcomingSection }}
               </h2>
-              <ul class="list">
-                @for (occurrence of upcoming(); track occurrence.recurrenceId + occurrence.date) {
-                  <li
-                    app-occurrence-row
-                    [occurrence]="occurrence"
-                    (realize)="askRealize($event)"
-                    (skip)="askSkip($event)"
-                  ></li>
-                }
-              </ul>
+              <div class="card-flat list-wrap">
+                <ul class="list">
+                  @for (
+                    occurrence of visibleUpcoming();
+                    track occurrence.recurrenceId + occurrence.date
+                  ) {
+                    <li
+                      app-occurrence-row
+                      [occurrence]="occurrence"
+                      (realize)="askRealize($event)"
+                      (skip)="askSkip($event)"
+                    ></li>
+                  }
+                </ul>
+              </div>
+              @if (upcoming().length > visibleUpcoming().length || showAllUpcoming()) {
+                <button
+                  type="button"
+                  class="link-more hit-area more"
+                  data-cy="occurrences-show-all"
+                  (click)="showAllUpcoming.set(!showAllUpcoming())"
+                >
+                  {{ showAllUpcoming() ? t().brief.showFewer : t().brief.showAll }}
+                </button>
+              }
             </section>
           }
         }

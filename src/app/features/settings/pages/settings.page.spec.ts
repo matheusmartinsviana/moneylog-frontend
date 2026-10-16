@@ -11,6 +11,7 @@ import { AuthGatewayStub, provideAuthStub } from '~/testing/auth-testing';
 import { provideExportsStub } from '~/testing/etapa5-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
 import { provideNotesStub } from '~/testing/notes-testing';
+import { provideNotificationsStub } from '~/testing/notifications-testing';
 
 describe('SettingsPage', () => {
   async function setup(gateway = new AuthGatewayStub()) {
@@ -21,6 +22,7 @@ describe('SettingsPage', () => {
         provideAuthStub(gateway),
         provideExportsStub(),
         provideNotesStub(),
+        provideNotificationsStub(),
       ],
     });
     return { ...result, gateway };

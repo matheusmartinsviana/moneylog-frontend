@@ -25,9 +25,10 @@ async function setup(
   gateway = new MonthlySummaryGatewayStub(),
   month: string | undefined = '2026-10',
   reports = new ReportsGatewayStub(),
+  view: string | undefined = undefined,
 ) {
   const result = await render(SummaryPage, {
-    inputs: { month },
+    inputs: { month, view },
     providers: [
       provideI18nTesting('pt'),
       provideNotesStub(),
@@ -190,7 +191,84 @@ describe('SummaryPage', () => {
     await userEvent.click(screen.getByTestId('summary-month'));
     await userEvent.click(await screen.findByTestId('summary-month-grid-2026-09'));
 
-    expect(navigate).toHaveBeenCalledWith(['/planning/summary', '2026-09']);
+    expect(navigate).toHaveBeenCalledWith(['/planning/summary', '2026-09'], {
+      queryParams: { view: null },
+    });
+  });
+
+  describe('seletor Minha parte / Bruto', () => {
+    it('Dado a URL sem view, então pede Minha parte (padrão) e marca o botão', async () => {
+      const reports = new ReportsGatewayStub();
+      const { gateway } = await setup(new MonthlySummaryGatewayStub(), '2026-10', reports);
+
+      expect(gateway.views.at(-1) ?? 'MINE').toBe('MINE');
+      expect(reports.spendingViews.at(-1) ?? 'MINE').toBe('MINE');
+      expect(screen.getByTestId('view-hint')).toHaveTextContent(pt.view.hint.MINE);
+    });
+
+    it('Dado ?view=GROSS, então o resumo e os gastos por categoria são pedidos como Bruto', async () => {
+      const reports = new ReportsGatewayStub();
+      const { gateway } = await setup(new MonthlySummaryGatewayStub(), '2026-10', reports, 'GROSS');
+
+      expect(gateway.views.at(-1)).toBe('GROSS');
+      expect(reports.spendingViews.at(-1)).toBe('GROSS');
+      expect(screen.getByTestId('view-hint')).toHaveTextContent(pt.view.hint.GROSS);
+    });
+
+    it('Dado um view inválido na URL, então volta para Minha parte em vez de enviar lixo ao backend', async () => {
+      const { gateway } = await setup(
+        new MonthlySummaryGatewayStub(),
+        '2026-10',
+        new ReportsGatewayStub(),
+        'qualquer',
+      );
+
+      expect(gateway.views.at(-1) ?? 'MINE').toBe('MINE');
+      expect(screen.getByTestId('view-hint')).toHaveTextContent(pt.view.hint.MINE);
+    });
+
+    it('Dado escolher Bruto, então a URL ganha view=GROSS sem empilhar histórico', async () => {
+      const { router } = await setup();
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      await userEvent.click(screen.getByRole('radio', { name: pt.view.GROSS }));
+
+      expect(navigate).toHaveBeenCalledWith([], {
+        queryParams: { view: 'GROSS' },
+        replaceUrl: true,
+      });
+    });
+
+    it('Dado Bruto ativo, quando volto para Minha parte, então o parâmetro some da URL', async () => {
+      const { router } = await setup(
+        new MonthlySummaryGatewayStub(),
+        '2026-10',
+        new ReportsGatewayStub(),
+        'GROSS',
+      );
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      await userEvent.click(screen.getByRole('radio', { name: pt.view.MINE }));
+
+      expect(navigate).toHaveBeenCalledWith([], { queryParams: { view: null }, replaceUrl: true });
+    });
+
+    it('Dado Bruto ativo, quando troco o mês, então a URL mantém view=GROSS', async () => {
+      const { router } = await setup(
+        new MonthlySummaryGatewayStub(),
+        '2026-10',
+        new ReportsGatewayStub(),
+        'GROSS',
+      );
+      const navigate = vi.spyOn(router, 'navigate').mockResolvedValue(true);
+
+      await userEvent.click(screen.getByTestId('summary-month'));
+      await userEvent.click(await screen.findByTestId('summary-month-grid-2026-09'));
+
+      expect(navigate).toHaveBeenCalledWith(['/planning/summary', '2026-09'], {
+        queryParams: { view: 'GROSS' },
+      });
+    });
   });
 
   it('Dado o mês da URL, então o seletor o mostra e o backend recebe esse mês', async () => {

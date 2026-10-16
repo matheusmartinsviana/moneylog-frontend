@@ -63,6 +63,9 @@ export class CardsPage {
   protected readonly filter = computed<CardStatus>(() =>
     this.status() === 'ARCHIVED' ? 'ARCHIVED' : 'ACTIVE',
   );
+  protected readonly hasBlocked = computed(
+    () => this.filter() === 'ACTIVE' && (this.cards.data()?.some((c) => !c.archivable) ?? false),
+  );
   protected readonly pendingArchive = signal<Card | null>(null);
   protected readonly pendingBalance = signal<Card | null>(null);
   protected readonly busy = signal(false);

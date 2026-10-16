@@ -168,31 +168,75 @@
     mix-blend-mode: normal;
   }
 
+  ::view-transition-old(page),
+  ::view-transition-new(page) {
+    mix-blend-mode: normal;
+  }
+
   ::view-transition-old(page) {
-    animation: m-vt-out var(--duration-fast) var(--ease-in) both;
+    animation: m-vt-out var(--duration-instant) linear both;
   }
 
   ::view-transition-new(page) {
-    animation: m-vt-in var(--duration-base) var(--ease-enter) both;
+    animation: m-vt-in var(--duration-base) var(--ease-enter) var(--duration-instant) both;
   }
 
   @keyframes m-vt-out {
     to {
       opacity: 0;
-      transform: translateY(-6px);
     }
   }
 
   @keyframes m-vt-in {
     from {
       opacity: 0;
-      transform: translateY(8px);
+    }
+  }
+
+  @media (width < 768px) {
+    ::view-transition-old(page) {
+      animation: none;
+      opacity: 0;
+    }
+
+    ::view-transition-new(page) {
+      animation: m-vt-in var(--duration-fast) var(--ease-enter) both;
     }
   }
 }
 
 .m-page {
   view-transition-name: page;
+}
+
+.shell__aside {
+  view-transition-name: shell-aside;
+}
+
+app-workspace-header {
+  view-transition-name: shell-header;
+}
+
+.shell__bottom-nav {
+  view-transition-name: shell-bottom-nav;
+}
+
+::view-transition-group(shell-aside),
+::view-transition-group(shell-header),
+::view-transition-group(shell-bottom-nav) {
+  animation: none;
+}
+
+::view-transition-old(shell-aside),
+::view-transition-old(shell-header),
+::view-transition-old(shell-bottom-nav) {
+  display: none;
+}
+
+::view-transition-new(shell-aside),
+::view-transition-new(shell-header),
+::view-transition-new(shell-bottom-nav) {
+  animation: none;
 }
 
 @media print {
@@ -223,7 +267,10 @@
   }
 
   .m-enter,
-  .m-page {
+  .m-page,
+  .shell__aside,
+  app-workspace-header,
+  .shell__bottom-nav {
     view-transition-name: none;
   }
 }
@@ -241,6 +288,9 @@
   transform: none;
 }
 
-[data-motion='off'] .m-page {
+[data-motion='off'] .m-page,
+[data-motion='off'] .shell__aside,
+[data-motion='off'] app-workspace-header,
+[data-motion='off'] .shell__bottom-nav {
   view-transition-name: none;
 }

@@ -5,8 +5,8 @@ const PREFS_KEY = '/__language';
 const DEFAULT_LANGUAGE = 'pt';
 const NOTIFICATIONS_URL = '/notifications';
 const SECURITY_URL = '/';
-const ICON_URL = '/assets/icons/icon-192.png?v=3';
-const BADGE_URL = '/assets/icons/badge-96.png?v=3';
+const ICON_URL = '/assets/icons/icon-192.png?v=5';
+const BADGE_URL = '/assets/icons/badge-96.png?v=5';
 
 const TEXTS = {
   pt: {

@@ -8,9 +8,41 @@ const DEMO_COMMITMENT_IDS = {
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
+const DEMO_INSTALLMENT_IDS = [
+  '00000012-0000-4000-8000-000000000001',
+  '00000012-0000-4000-8000-000000000002',
+  '00000012-0000-4000-8000-000000000003',
+] as const;
+
+export function demoInstallments(
+  w: World,
+  overrides: ReadonlyMap<string, string | null>,
+): S['ThirdPartyInstallment'][] {
+  const share = 10_000;
+  return DEMO_INSTALLMENT_IDS.map((installmentId, index) => {
+    const dueMonth = addMonthsKey(w.month, index + 1);
+    const seeded = index === 1 ? addMonthsKey(w.month, 3) : null;
+    const chosen = overrides.has(installmentId) ? overrides.get(installmentId)! : seeded;
+    const received = index === 0 ? share : 0;
+    return {
+      installmentId,
+      number: index + 1,
+      total: DEMO_INSTALLMENT_IDS.length,
+      consumptionMonth: w.month,
+      dueMonth,
+      expectedMonth: chosen ?? dueMonth,
+      overridden: chosen !== null,
+      owed: money(share),
+      received: money(received),
+      pending: money(share - received),
+    };
+  });
+}
+
 export function thirdPartyReceivablesView(
   w: World,
   month: string | null,
+  overrides: ReadonlyMap<string, string | null> = new Map(),
 ): S['ThirdPartyReceivables'] {
   const competence = month !== null && MONTH.test(month) ? month : w.month;
   const person = w.people[0]!;
@@ -25,7 +57,7 @@ export function thirdPartyReceivablesView(
   const items: S['ThirdPartyItem'][] = [];
   if (expense) {
     items.push({
-      source: 'EXPENSE',
+      source: 'CARD_SHARE',
       refId: expense.id,
       description: expense.description,
       date: expense.date,
@@ -34,6 +66,7 @@ export function thirdPartyReceivablesView(
       received: money(expenseReceived),
       pending: money(expenseOwed - expenseReceived),
       status: 'PARTIAL',
+      installments: demoInstallments(w, overrides),
     });
   }
   const receiptOwed = 5_000;
@@ -48,6 +81,7 @@ export function thirdPartyReceivablesView(
     received: money(receiptReceived),
     pending: money(0),
     status: 'RECEIVED',
+    installments: [],
   });
   items.push({
     source: 'DEBT',
@@ -59,6 +93,7 @@ export function thirdPartyReceivablesView(
     received: money(loanReceived),
     pending: money(loanOwed - loanReceived),
     status: 'OPEN',
+    installments: [],
   });
   const owed = items.reduce((sum, item) => sum + Math.round(Number(item.owed.amount) * 100), 0);
   const received = items.reduce(
@@ -78,6 +113,7 @@ export function thirdPartyReceivablesView(
         owed: money(owed),
         received: money(received),
         pending: money(owed - received),
+        months: [],
         items,
       },
     ],

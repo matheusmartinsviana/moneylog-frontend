@@ -1,0 +1,134 @@
+:host {
+  display: block;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+}
+
+.controls app-month-picker {
+  flex: 0 1 14rem;
+  min-width: 11rem;
+}
+
+.focus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-5) var(--space-8);
+  padding: var(--space-6);
+  border-radius: var(--radius-panel);
+}
+
+.focus__main {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.focus__main .caption {
+  margin: 0;
+  font-weight: var(--weight-regular, 400);
+}
+
+.focus__figure {
+  margin: 0;
+}
+
+.focus__figure.is-negative {
+  color: var(--color-risk);
+}
+
+.focus__aside {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-8);
+  margin: 0;
+}
+
+.focus__aside dd {
+  margin: 0;
+}
+
+.warnings__title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+.warnings__list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.warnings__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-3);
+}
+
+.warnings__link {
+  position: relative;
+  color: var(--color-accent);
+  font-weight: var(--weight-medium);
+}
+
+.warnings__link::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--touch-min));
+  height: var(--touch-min);
+  transform: translate(-50%, -50%);
+}
+
+.receivables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.receivables__row {
+  display: grid;
+  gap: var(--space-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.receivables__row > span:first-child {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.receivables__values {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.receivables__company {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (width <= 640px) {
+  .focus {
+    padding: var(--space-5);
+  }
+
+  .focus__aside {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

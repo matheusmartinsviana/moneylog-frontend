@@ -371,13 +371,24 @@ export function reminderList(w: World, includeDone: boolean): S['Reminder'][] {
   return list;
 }
 
-export function notificationSettings(): S['NotificationSettings'] {
+export interface DemoProfile {
+  displayName: string | null;
+  hasPhoto: boolean;
+  photoVersion: number;
+  version: number;
+}
+
+export function notificationSettings(
+  profile: DemoProfile = { displayName: null, hasPhoto: false, photoVersion: 0, version: 1 },
+): S['NotificationSettings'] {
   return {
     dailySummary: { enabled: true, time: '08:00', frequency: 'DAILY' },
     kinds: {},
     quietHours: { from: '22:00', to: '07:00' },
     push: { enabled: false },
-    displayName: null,
-    version: 1,
+    displayName: profile.displayName,
+    version: profile.version,
+    hasPhoto: profile.hasPhoto,
+    photoVersion: profile.photoVersion,
   };
 }

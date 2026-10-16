@@ -1,0 +1,49 @@
+<app-glass-panel variant="card">
+  <section class="ap" aria-labelledby="home-analytics-title" data-cy="home-analytics">
+    <header class="ap__head">
+      <h2 class="ap__title" id="home-analytics-title">
+        {{ t().home.analytics.title }}
+      </h2>
+      <p class="ap__month" data-cy="home-analytics-month">{{ monthLabel() }}</p>
+    </header>
+
+    @if (summary().status === 'loading') {
+      <p class="ap__state" role="status" data-cy="home-analytics-loading">
+        {{ t().home.analytics.loading }}
+      </p>
+    } @else if (problem(); as p) {
+      <app-error-state [problem]="p" (retry)="retry.emit()" />
+    } @else if (ready(); as data) {
+      @if (empty()) {
+        <app-empty-state
+          [heading]="t().home.analytics.empty.title"
+          [description]="t().home.analytics.empty.description"
+          [actions]="emptyActions()"
+        />
+      } @else {
+        <div class="ap__body" data-cy="home-analytics-summary">
+          <ul class="ap__rows">
+            <li class="ap__row" data-cy="home-analytics-income">
+              <span class="ap__label">{{ t().home.analytics.income }}</span>
+              <span class="ap__value num"
+                ><app-money [value]="data.income" [maskable]="true" [animate]="true"
+              /></span>
+            </li>
+            <li class="ap__row" data-cy="home-analytics-expenses">
+              <span class="ap__label">{{ t().home.analytics.expenses }}</span>
+              <span class="ap__value num"
+                ><app-money [value]="data.expenses" [maskable]="true" [animate]="true"
+              /></span>
+            </li>
+            <li class="ap__row" data-cy="home-analytics-net">
+              <span class="ap__label">{{ t().home.analytics.net }}</span>
+              <span class="ap__value num"
+                ><app-money [value]="data.net" [maskable]="true" [animate]="true"
+              /></span>
+            </li>
+          </ul>
+        </div>
+      }
+    }
+  </section>
+</app-glass-panel>

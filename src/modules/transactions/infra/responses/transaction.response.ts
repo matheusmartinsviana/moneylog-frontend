@@ -10,3 +10,4 @@ export type TransactionCreateRequest = Schemas['TransactionInput'];
 export type TransactionUpdateRequest = Schemas['TransactionUpdate'];
 export type VoidRequest = Schemas['VoidRequest'];
 export type CancelInstallmentsRequest = Schemas['CancelInstallmentsRequest'];
+export type TransactionSharesRequest = Schemas['TransactionSharesUpdate'];

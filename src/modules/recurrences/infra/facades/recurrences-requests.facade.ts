@@ -6,6 +6,7 @@ import {
   OccurrencesQuery,
   RecurrencesGateway,
   RecurrencesQuery,
+  SubscriptionsQuery,
 } from '~/modules/recurrences/core/interfaces/recurrences.gateway';
 import type {
   Occurrence,
@@ -16,12 +17,17 @@ import type {
   RecurrenceSummary,
   RecurrenceUpdate,
 } from '~/modules/recurrences/core/types/recurrence';
+import type {
+  RealizeForeign,
+  SubscriptionsPage,
+} from '~/modules/recurrences/core/types/subscription';
 import { IDEMPOTENCY_HEADER, RECURRENCES_ENDPOINTS } from '~/modules/recurrences/infra/endpoints';
 import {
   toCreateRequest,
   toOccurrence,
   toRealized,
   toRecurrence,
+  toSubscriptionsPage,
   toSummary,
   toUpdateRequest,
 } from '~/modules/recurrences/infra/facades/recurrences-response.mapper';
@@ -34,11 +40,13 @@ import type {
   RecurrenceResponse,
   RecurrenceSliceResponse,
   RecurrenceSummaryResponse,
+  SubscriptionListResponse,
 } from '~/modules/recurrences/infra/responses/recurrence.response';
 import {
   EMPTY_OCCURRENCES,
   EMPTY_RECURRENCE_SUMMARY,
   EMPTY_RECURRENCES,
+  EMPTY_SUBSCRIPTIONS,
 } from '~/modules/recurrences/mock-data/empty-recurrences';
 import { Problem, ProblemError, toProblem } from '~/util/api/problem';
 import type { OccurrenceSlice, Slice } from '~/util/api/slice';
@@ -141,10 +149,18 @@ export class RecurrencesRequestsFacade extends RecurrencesGateway {
     amount: string | null,
     idempotencyKey: string,
     payment: RealizePayment | null = null,
+    foreign: RealizeForeign | null = null,
   ): Observable<RealizedTransaction> {
     if (this.useMocks) return notFound();
     const body: RealizeRequest = {
-      ...(amount === null ? {} : { amount }),
+      ...(amount === null || foreign !== null ? {} : { amount }),
+      ...(foreign
+        ? {
+            originalAmount: { amount: foreign.originalAmount, currency: foreign.currency },
+            fxRate: foreign.fxRate,
+            iofBps: foreign.iofBps,
+          }
+        : {}),
       ...(payment ? { accountId: payment.accountId, method: payment.method } : {}),
     };
     return this.http
@@ -152,6 +168,26 @@ export class RecurrencesRequestsFacade extends RecurrencesGateway {
         headers: new HttpHeaders().set(IDEMPOTENCY_HEADER, idempotencyKey),
       })
       .pipe(map(toRealized), catchError(fail));
+  }
+
+  listSubscriptions(query: SubscriptionsQuery): Observable<SubscriptionsPage> {
+    if (this.useMocks) return of(toSubscriptionsPage(EMPTY_SUBSCRIPTIONS));
+    let params = new HttpParams()
+      .set('status', query.status)
+      .set('page', query.page)
+      .set('pageSize', query.pageSize);
+    if (query.scope !== null) params = params.set('scope', query.scope);
+    return this.http
+      .get<SubscriptionListResponse>(RECURRENCES_ENDPOINTS.subscriptions, { params })
+      .pipe(map(toSubscriptionsPage), catchError(fail));
+  }
+
+  cancelSubscription(id: string, activeUntil: string): Observable<Recurrence> {
+    if (this.useMocks) return notFound();
+    const body: RecurrenceEndRequest = { activeUntil };
+    return this.http
+      .post<RecurrenceResponse>(RECURRENCES_ENDPOINTS.end(id), body)
+      .pipe(map(toRecurrence), catchError(fail));
   }
 
   skip(recurrenceId: string, date: string): Observable<Occurrence> {

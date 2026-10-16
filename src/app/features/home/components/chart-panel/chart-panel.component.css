@@ -1,0 +1,98 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.cp {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  color: var(--color-home-text);
+}
+
+.cp__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+}
+
+.cp__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.cp__totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+.cp__total {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.cp__total dt {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-home-text-muted);
+  font-size: var(--text-xs);
+}
+
+.cp__total dd {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+}
+
+.cp__mark {
+  flex: none;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-income-mark);
+}
+
+.cp__mark--expense {
+  background-color: var(--color-expense-mark);
+}
+
+.cp__chart {
+  --color-chart-1: var(--color-income-mark);
+  --color-chart-2: var(--color-expense-mark);
+  --lc-text-1: var(--color-income-text);
+  --lc-text-2: var(--color-expense-text);
+  --color-text: var(--color-home-text);
+  --color-text-muted: var(--color-home-text-muted);
+}
+
+.cp__basis {
+  margin: 0;
+  color: var(--color-home-text-muted);
+  font-size: var(--text-xs);
+}
+
+.cp__skeleton {
+  height: 14rem;
+  border-radius: var(--radius-control);
+}
+
+.cp__state {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  min-height: 8rem;
+  align-content: center;
+  color: var(--color-home-text-muted);
+}
+
+.cp__state p {
+  margin: 0;
+}

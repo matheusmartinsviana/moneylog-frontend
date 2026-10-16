@@ -19,6 +19,7 @@ export class PurchasePreviewFacade {
       amount: key.amount,
       installments: key.installments,
       date: key.date,
+      split: key.split ?? null,
     }),
   );
 

@@ -61,6 +61,137 @@ describe('NotificationSettingsPage (T136)', () => {
     expect(screen.getByTestId('notification-settings-saved')).toBeInTheDocument();
   });
 
+  it('Dado os parâmetros dos alertas, então preenche, salva e deixa vazio como inativo', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.settingsValue = someSettings({
+      alerts: {
+        subscriptionUnusedDays: 60,
+        invoiceDueLeadDays: 5,
+        documentDivergenceTolerance: '2.00',
+      },
+    });
+    const { fixture } = await setup(gateway);
+
+    expect(screen.getByTestId('settings-unused-days')).toHaveValue('60');
+
+    await userEvent.clear(screen.getByTestId('settings-unused-days'));
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+    await fixture.whenStable();
+
+    expect(gateway.savedSettings[0]?.alerts).toEqual({
+      subscriptionUnusedDays: null,
+      invoiceDueLeadDays: 5,
+      documentDivergenceTolerance: '2.00',
+    });
+  });
+
+  it('Dado a tolerância padrão de 0,00 (contrato 2.32.0), então o salvar funciona sem o usuário mexer nela', async () => {
+    const gateway = new NotificationsGatewayStub();
+    const { fixture } = await setup(gateway);
+
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+    await fixture.whenStable();
+
+    expect(gateway.savedSettings).toHaveLength(1);
+    expect(gateway.savedSettings[0]?.alerts.documentDivergenceTolerance).toBe('0.00');
+  });
+
+  it('Dado a seção de alertas, então oferece um interruptor para cada um dos dez alertas novos', async () => {
+    await setup();
+
+    for (const kind of [
+      'INVOICE_DUE_AUTODEBIT_OFF',
+      'NEGATIVE_MONTH_PROJECTED',
+      'NEW_DEBT_BEFORE_FINANCING',
+      'CARD_CASH_OUT_COST',
+      'SUBSCRIPTION_OVERLAP',
+      'SUBSCRIPTION_UNUSED',
+      'WEEKLY_CHARGE',
+      'THIRD_PARTY_OVERDUE',
+      'BALANCE_BELOW_REAL_ESTATE',
+      'DOCUMENT_DIVERGENCE',
+    ]) {
+      expect(screen.getByTestId(`settings-kind-${kind}`)).toHaveAttribute('aria-checked', 'true');
+    }
+  });
+
+  it.each(['0', '3651', 'abc', '-5'])(
+    'Dado "%s" dias sem uso, então mostra o erro e não salva',
+    async (value) => {
+      const gateway = new NotificationsGatewayStub();
+      gateway.settingsValue = someSettings({
+        alerts: {
+          subscriptionUnusedDays: null,
+          invoiceDueLeadDays: 3,
+          documentDivergenceTolerance: '1.00',
+        },
+      });
+      const { fixture } = await setup(gateway);
+
+      await userEvent.type(screen.getByTestId('settings-unused-days'), value);
+      await userEvent.click(screen.getByTestId('notification-settings-save'));
+      await fixture.whenStable();
+
+      expect(gateway.savedSettings).toEqual([]);
+    },
+  );
+
+  it('Dado a antecedência da fatura e a tolerância alteradas, então o salvar envia os dois do jeito do contrato', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.settingsValue = someSettings({
+      alerts: {
+        subscriptionUnusedDays: 45,
+        invoiceDueLeadDays: 3,
+        documentDivergenceTolerance: '1.00',
+      },
+    });
+    const { fixture } = await setup(gateway);
+
+    await userEvent.click(screen.getByTestId('settings-lead-days-increase'));
+    await userEvent.click(screen.getByTestId('settings-lead-days-increase'));
+    await userEvent.clear(screen.getByTestId('settings-document-tolerance'));
+    await userEvent.type(screen.getByTestId('settings-document-tolerance'), '1,50');
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+    await fixture.whenStable();
+
+    expect(gateway.savedSettings[0]?.alerts).toEqual({
+      subscriptionUnusedDays: 45,
+      invoiceDueLeadDays: 5,
+      documentDivergenceTolerance: '1.50',
+    });
+  });
+
+  it('Dado NOTIFICATION_THRESHOLD_INVALID do servidor, então mostra um aviso e mantém o digitado', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.settingsValue = someSettings({
+      alerts: {
+        subscriptionUnusedDays: 45,
+        invoiceDueLeadDays: 3,
+        documentDivergenceTolerance: '1.00',
+      },
+    });
+    gateway.saveError = aProblem(422, 'NOTIFICATION_THRESHOLD_INVALID');
+    const { fixture } = await setup(gateway);
+
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(screen.getByTestId('notification-settings-error')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-unused-days')).toHaveValue('45');
+  });
+
+  it('Dado um alerta desligado, então o salvar envia o tipo como falso', async () => {
+    const gateway = new NotificationsGatewayStub();
+    const { fixture } = await setup(gateway);
+
+    await userEvent.click(screen.getByTestId('settings-kind-SUBSCRIPTION_UNUSED'));
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+    await fixture.whenStable();
+
+    expect(gateway.savedSettings[0]?.kinds.SUBSCRIPTION_UNUSED).toBe(false);
+  });
+
   it('Dado que escolho os horários no seletor, então o salvar envia o resumo e a janela de silêncio escolhidos', async () => {
     const gateway = new NotificationsGatewayStub();
     const { fixture } = await setup(gateway);

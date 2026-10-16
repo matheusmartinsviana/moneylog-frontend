@@ -1,11 +1,11 @@
 <section
-  class="available surface"
+  class="available glass-panel glass-panel--strong glass-panel--card"
   [attr.aria-labelledby]="headingId"
   data-cy="home-available-section"
 >
   <h2 class="available__title" [id]="headingId">{{ t().home.available.title }}</h2>
   <p class="available__value" [class.is-negative]="negative()" data-cy="home-available">
-    <app-money [value]="balances().available" />
+    <app-money [value]="balances().available" [animate]="true" />
   </p>
   @if (negative()) {
     <p class="available__warning" data-cy="home-available-negative">

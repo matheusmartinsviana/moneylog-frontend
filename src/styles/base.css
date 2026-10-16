@@ -4,9 +4,12 @@
   box-sizing: border-box;
 }
 
-html {
+* {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-control-border) transparent;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   background-color: var(--color-canvas);
@@ -19,47 +22,27 @@ body {
   flex-direction: column;
   min-height: 100dvh;
   background-color: var(--color-canvas);
-  background-image: var(--gradient-glow-top);
+  background-image: var(--gradient-home-bg);
   background-repeat: no-repeat;
-  background-size: 100% 36rem;
+  background-attachment: fixed;
+  background-size: cover;
   color: var(--color-text);
-  overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-x: none;
 }
 
 app-root {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
 }
 
-body:has([data-fit-page]) {
+body:has([data-cy='shell-window']) {
   height: 100dvh;
-}
-
-@media (orientation: landscape) and (max-height: 500px) {
-  body:has([data-fit-page]) {
-    height: auto;
-  }
-}
-
-.shell__content > :has(> [data-fit-page]) {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  min-height: 0;
-}
-
-body::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  z-index: -1;
-  height: 22rem;
-  background-image: var(--gradient-stripes);
-  mask-image: var(--mask-fade-down);
-  pointer-events: none;
+  overflow: hidden;
 }
 
 h1,

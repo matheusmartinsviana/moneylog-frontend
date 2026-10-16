@@ -24,7 +24,7 @@
   <span class="row__label">{{ t().people.columns.nextDue }}</span>
   <span>{{ nextDue() }}</span>
 </p>
-<div class="row__actions">
+<div class="row__actions quiet-actions">
   <a class="button" [routerLink]="['/people', p.id, 'edit']" [attr.data-cy]="'person-edit-' + p.id">
     {{ t().people.row.edit }}
   </a>

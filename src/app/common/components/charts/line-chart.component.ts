@@ -14,7 +14,8 @@ import { revealOnEnter } from '~/app/common/components/charts/reveal';
 import { LiveAnnouncer } from '~/app/common/components/overlay/live-announcer.service';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
-import { formatMoney, type Money } from '~/util/money';
+import { ValuesVisibilityService } from '~/app/common/services/values-visibility.service';
+import { formatMoney, maskedMoney, type Money } from '~/util/money';
 
 export interface LineChartSeries {
   readonly id: string;
@@ -36,6 +37,7 @@ const PAD_X = 16;
 const PAD_TOP = 34;
 const PAD_BOTTOM = 10;
 const MAX_POINTS = 400;
+const MAX_MARKED_POINTS = 31;
 let nextId = 0;
 
 interface Drawn {
@@ -50,22 +52,32 @@ interface Drawn {
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
     '[class.compact]': 'compact()',
+    '[class.area]': "variant() === 'area'",
     '(document:pointerdown)': 'onDocumentPointerDown($event)',
   },
   templateUrl: './line-chart.component.html',
-  styleUrl: './line-chart.component.css',
+  styleUrls: [
+    './line-chart.component.css',
+    './line-chart-detail.component.css',
+    './line-chart-area.component.css',
+  ],
 })
 export class LineChartComponent {
   private readonly announcer = inject(LiveAnnouncer);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly visibility = inject(ValuesVisibilityService);
   protected readonly t = inject(I18nService).t;
 
   readonly label = input.required<string>();
   readonly series = input.required<readonly LineChartSeries[]>();
   readonly keys = input.required<readonly LineChartKey[]>();
   readonly cy = input('line-chart');
-  readonly hero = input(false, { transform: booleanAttribute });
   readonly compact = input(false, { transform: booleanAttribute });
+  readonly maskable = input(false, { transform: booleanAttribute });
+  readonly markers = input(false, { transform: booleanAttribute });
+  readonly variant = input<'line' | 'area'>('line');
+  readonly summaryText = input<string | null>(null);
+  readonly emptyText = input<string | null>(null);
 
   protected readonly uid = ++nextId;
   protected readonly fillId = `line-chart-fill-${this.uid}`;
@@ -91,6 +103,11 @@ export class LineChartComponent {
       }),
     ),
   );
+
+  private readonly money = computed(() => {
+    const masked = this.maskable() && this.visibility.hidden();
+    return (value: Money): string => (masked ? maskedMoney(value.currency) : formatMoney(value));
+  });
 
   protected readonly empty = computed(
     () => this.count() === 0 || this.nums().every((values) => values.every((n) => n === 0)),
@@ -135,6 +152,32 @@ export class LineChartComponent {
     return [...new Set([y(max), y(0), third].map((v) => Math.round(v * 100) / 100))];
   });
 
+  protected readonly marked = computed(() => {
+    if (this.variant() === 'area' || !this.markers() || this.count() > MAX_MARKED_POINTS) return [];
+    return this.drawn().map((item) => ({
+      id: item.series.id,
+      secondary: item.series.tone === 'secondary',
+      dots: item.dots,
+    }));
+  });
+
+  protected readonly directLabels = computed(() => {
+    if (this.variant() === 'area' || !this.markers() || this.count() < 2) return [];
+    const last = this.count() - 1;
+    const lastValues = this.nums().map((values) => values[last] ?? 0);
+    const top = lastValues.indexOf(Math.max(...lastValues));
+    return this.drawn().map((item, s) => {
+      return {
+        id: item.series.id,
+        text: item.series.label,
+        secondary: item.series.tone === 'secondary',
+        above: s === top,
+        leftPct: item.dots[last]?.leftPct ?? 100,
+        topPct: item.dots[last]?.topPct ?? 0,
+      };
+    });
+  });
+
   protected readonly zeroTopPct = computed(() => (this.y()(0) / H) * 100);
 
   private extreme(kind: 'max' | 'min'): { n: number; money: Money } | null {
@@ -151,14 +194,14 @@ export class LineChartComponent {
   protected readonly maxLabel = computed(() => {
     const found = this.extreme('max');
     return found !== null && found.n > 0
-      ? { text: formatMoney(found.money), topPct: (this.y()(this.domain().max) / H) * 100 }
+      ? { text: this.money()(found.money), topPct: (this.y()(this.domain().max) / H) * 100 }
       : null;
   });
 
   protected readonly minLabel = computed(() => {
     const found = this.extreme('min');
     return found !== null && found.n < 0
-      ? { text: formatMoney(found.money), topPct: (this.y()(this.domain().min) / H) * 100 }
+      ? { text: this.money()(found.money), topPct: (this.y()(this.domain().min) / H) * 100 }
       : null;
   });
 
@@ -188,14 +231,16 @@ export class LineChartComponent {
     });
   });
 
-  protected readonly summary = computed(() =>
-    interpolate(this.t().charts.summary, {
-      label: this.label(),
-      series: this.series()
-        .map((s) => s.label)
-        .join(', '),
-      points: String(this.count()),
-    }),
+  protected readonly summary = computed(
+    () =>
+      this.summaryText() ??
+      interpolate(this.t().charts.summary, {
+        label: this.label(),
+        series: this.series()
+          .map((s) => s.label)
+          .join(', '),
+        points: String(this.count()),
+      }),
   );
 
   protected readonly rows = computed(() =>
@@ -203,7 +248,7 @@ export class LineChartComponent {
       .slice(0, this.count())
       .map((key, i) => ({
         label: key.label,
-        cells: this.series().map((s) => formatMoney(s.values[i]!)),
+        cells: this.series().map((s) => this.money()(s.values[i]!)),
       })),
   );
 
@@ -220,7 +265,7 @@ export class LineChartComponent {
         id: s.id,
         label: s.label,
         tone: s.tone,
-        value: formatMoney(s.values[i]!),
+        value: this.money()(s.values[i]!),
         topPct: (this.y()(this.nums()[si]![i]!) / H) * 100,
       })),
     };

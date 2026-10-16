@@ -9,11 +9,13 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-card);
-  background-color: var(--color-surface);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width) solid var(--color-border);
   list-style: none;
+}
+
+:host(.row:last-child) {
+  border-bottom: 0;
 }
 
 .row__main {

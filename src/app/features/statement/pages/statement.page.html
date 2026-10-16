@@ -1,0 +1,152 @@
+<app-page-layout [heading]="t().statement.title" [description]="t().statement.description">
+  <div class="page-grid">
+    <div class="controls span-12">
+      <app-month-picker
+        [formControl]="picker"
+        fieldId="statement-from"
+        [label]="t().statement.fromLabel"
+        [min]="minMonth"
+        [max]="maxMonth"
+        [mandatory]="false"
+      />
+      <app-switch
+        [formControl]="gross"
+        fieldId="statement-gross"
+        [label]="t().statement.grossToggle"
+        [hint]="t().statement.grossHint"
+      />
+    </div>
+
+    @switch (facade.state().status) {
+      @case ('loading') {
+        <div class="span-12" data-cy="statement-loading">
+          <p class="visually-hidden" role="status">{{ t().statement.loading }}</p>
+          <div class="list-skeleton" aria-hidden="true">
+            <div class="list-skeleton__row"></div>
+            <div class="list-skeleton__row"></div>
+            <div class="list-skeleton__row"></div>
+          </div>
+        </div>
+      }
+      @case ('error') {
+        <div class="span-12">
+          <app-error-state [problem]="facade.error()" (retry)="retry()" />
+        </div>
+      }
+      @case ('ready') {
+        @if (data(); as statement) {
+          @if (statement.months.length === 0) {
+            <div class="span-12">
+              <app-empty-state
+                [heading]="t().statement.empty.title"
+                [description]="t().statement.empty.description"
+                [actions]="emptyActions()"
+                illustration="timeline"
+              />
+            </div>
+          } @else {
+            <p class="visually-hidden" role="status" data-cy="statement-announcement">
+              {{ negativeAnnouncement() }}
+            </p>
+
+            @if (focus(); as first) {
+              <section
+                class="focus glass glass--strong span-12"
+                aria-labelledby="statement-focus-title"
+                data-cy="statement-focus"
+              >
+                <div class="focus__main">
+                  <h2 id="statement-focus-title" class="caption">
+                    {{ t().statement.surplus }} · {{ first.label }}
+                  </h2>
+                  <p class="figure figure--hero focus__figure" [class.is-negative]="first.negative">
+                    <app-money [value]="first.surplus" [animate]="true" />
+                  </p>
+                </div>
+                <dl class="focus__aside">
+                  <div>
+                    <dt class="caption">{{ t().statement.endBalance }}</dt>
+                    <dd class="figure figure--md"><app-money [value]="first.endBalance" /></dd>
+                  </div>
+                  <div data-cy="statement-opening-balance">
+                    <dt class="caption">{{ t().statement.openingBalance }}</dt>
+                    <dd class="figure figure--md">
+                      <app-money [value]="statement.openingBalance" [animate]="true" />
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+            }
+
+            @if (warnings().length > 0) {
+              <section
+                class="warnings card-flat card-flat--pad span-12"
+                aria-labelledby="statement-warnings-title"
+                data-cy="statement-warnings"
+              >
+                <h2 id="statement-warnings-title" class="warnings__title">
+                  {{ t().statement.warnings.title }}
+                </h2>
+                <ul class="warnings__list">
+                  @for (warning of warnings(); track warning.key) {
+                    <li class="warnings__item" data-cy="statement-warning">
+                      <span>{{ warning.text }}</span>
+                      @if (warning.addIncome) {
+                        <a
+                          class="warnings__link"
+                          routerLink="/quick-add"
+                          data-cy="statement-add-income"
+                        >
+                          {{ t().statement.warnings.addIncome }}
+                        </a>
+                      }
+                    </li>
+                  }
+                </ul>
+              </section>
+            }
+
+            <app-statement-table
+              class="span-12"
+              [months]="statement.months"
+              [showGross]="showGross()"
+            />
+
+            @if (showGross()) {
+              <p class="caption span-12" data-cy="statement-gross-note">
+                {{ t().statement.grossNote }}
+              </p>
+            }
+
+            <app-section-container
+              class="span-12"
+              [heading]="t().statement.receivables.title"
+              [description]="t().statement.receivables.note"
+            >
+              <ul class="receivables" data-cy="statement-receivables">
+                @for (row of receivables(); track row.competence) {
+                  <li
+                    class="receivables__row"
+                    [attr.data-cy]="'statement-receivable-' + row.competence"
+                  >
+                    <span>{{ row.label }}</span>
+                    <span class="receivables__values">
+                      <span>
+                        {{ t().statement.receivables.pending }}:
+                        <app-money [value]="row.pending" />
+                      </span>
+                      <span class="receivables__company">
+                        {{ t().statement.receivables.company }}:
+                        <app-money [value]="row.company" />
+                      </span>
+                    </span>
+                  </li>
+                }
+              </ul>
+            </app-section-container>
+          }
+        }
+      }
+    }
+  </div>
+</app-page-layout>

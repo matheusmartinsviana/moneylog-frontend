@@ -1,0 +1,81 @@
+.ap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6, 1.5rem);
+  color: var(--color-home-text);
+}
+
+.ap__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.ap__title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.ap__state,
+.ap__month {
+  margin: 0;
+  color: var(--color-home-text-muted);
+  font-size: var(--text-sm);
+}
+
+.ap__month::first-letter {
+  text-transform: uppercase;
+}
+
+.ap__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ap__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ap__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ap__label {
+  color: var(--color-home-text-muted);
+  font-size: var(--text-sm);
+}
+
+.ap__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-medium);
+  text-align: end;
+}
+
+.ap__row:last-child {
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--glass-panel-border);
+}
+
+.ap__row:last-child .ap__label {
+  color: var(--color-home-text);
+  font-weight: var(--weight-medium);
+}
+
+.ap__row:last-child .ap__value {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+}

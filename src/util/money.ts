@@ -47,6 +47,17 @@ export function formatMoney(money: Money): string {
     .join('');
 }
 
+export const MASK_DOTS = '•••••';
+
+export function maskedMoney(currency: string): string {
+  if (!CURRENCY_CODE.test(currency)) return MASK_DOTS;
+  const symbol =
+    formatterFor(currency, 0)
+      .formatToParts(0)
+      .find((part) => part.type === 'currency')?.value ?? currency;
+  return `${symbol} ${MASK_DOTS}`;
+}
+
 const NEGATIVE_ZERO = /^-0+(?:\.0+)?$/;
 
 export function isNegative(money: Money): boolean {

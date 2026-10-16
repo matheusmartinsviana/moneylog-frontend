@@ -41,7 +41,7 @@
   padding: var(--space-1) var(--space-3);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-control);
-  background-color: var(--color-surface);
+  background-color: var(--card-flat-bg);
   color: var(--color-text);
   text-decoration: none;
   transition: background-color var(--duration-fast) var(--ease-standard);

@@ -11,13 +11,29 @@
 
 .list {
   display: grid;
-  gap: var(--space-3);
   margin: 0;
   padding: 0;
 }
 
-.empty,
-.hint {
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
+.list-wrap {
+  overflow: hidden;
+}
+
+.invoices-more {
+  min-height: var(--touch-min);
+  margin-top: var(--space-1);
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+@media (width >= 64rem) {
+  .page-grid > .span-5 {
+    position: sticky;
+    top: calc(var(--page-header-height) + var(--space-3));
+  }
+}
+
+.quiet-actions .button {
+  padding-inline: 0;
 }

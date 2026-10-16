@@ -10,10 +10,12 @@
   >
     {{ a.name }}
   </a>
-  <span class="row__type"><app-account-type-label [type]="a.type" /></span>
-  <span class="row__institution" [attr.data-cy]="'account-institution-' + a.id">{{
-    a.institution
-  }}</span>
+  <span class="row__sub">
+    <span class="row__type"><app-account-type-label [type]="a.type" /></span>
+    <span class="row__institution" [attr.data-cy]="'account-institution-' + a.id">{{
+      a.institution
+    }}</span>
+  </span>
   @if (a.uncovered) {
     <span class="row__uncovered" [attr.data-cy]="'account-uncovered-' + a.id">
       {{ t().accounts.uncovered }}
@@ -33,7 +35,7 @@
     <span class="visually-hidden">{{ t().accounts.negativeBalance }}</span>
   }
 </div>
-<div class="row__actions">
+<div class="row__actions quiet-actions">
   <a
     class="button"
     [routerLink]="['/accounts', a.id, 'edit']"
@@ -54,7 +56,7 @@
     </button>
     @if (!a.archivable) {
       <span
-        class="row__hint"
+        class="row__hint visually-hidden"
         [id]="'archive-hint-' + a.id"
         [attr.data-cy]="'account-archive-hint-' + a.id"
       >

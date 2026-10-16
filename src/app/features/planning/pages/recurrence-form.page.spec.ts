@@ -22,6 +22,7 @@ import {
   provideCategoriesStub,
 } from '~/testing/categories-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
+import { aPerson, PeopleGatewayStub, providePeopleStub } from '~/testing/people-testing';
 import {
   aRecurrence,
   provideRecurrencesStub,
@@ -40,13 +41,18 @@ async function setup({
   accounts = [anAccount({ id: 'acc-1', name: 'Nubank' })],
   cards = [aCard({ id: 'card-1', name: 'Roxinho' })],
   accountsStub = new AccountsGatewayStub(),
+  people = new PeopleGatewayStub(),
 }: {
   gateway?: RecurrencesGatewayStub;
   id?: string;
   accounts?: ReturnType<typeof anAccount>[];
   cards?: ReturnType<typeof aCard>[];
   accountsStub?: AccountsGatewayStub;
+  people?: PeopleGatewayStub;
 } = {}) {
+  if (people.people.length === 0) {
+    people.people = [aPerson({ id: 'person-1', name: 'Ana' })];
+  }
   accountsStub.accounts = accounts;
   const cardsStub = new CardsGatewayStub();
   cardsStub.cards = cards;
@@ -63,6 +69,7 @@ async function setup({
       provideAccountsStub(accountsStub),
       provideCardsStub(cardsStub),
       provideCategoriesStub(categories),
+      providePeopleStub(people),
       provideRouter([{ path: 'planning/recurrences', component: DummyComponent }]),
     ],
   });
@@ -490,6 +497,181 @@ describe('RecurrenceFormPage', () => {
       await fixture.whenStable();
 
       expect(gateway.updates[0]?.endDate).toBe('2027-12-31');
+    });
+  });
+
+  describe('rateio no cartão', () => {
+    const startCard = async () => {
+      await userEvent.click(screen.getByTestId('recurrence-type-CARD_PURCHASE'));
+      await type('recurrence-amount', '100,00');
+      await type('recurrence-description', 'Streaming');
+      await pick('recurrence-category', 'cat-home');
+      await pick('recurrence-card', 'card-1');
+    };
+    const splitWithAna = async () => {
+      await userEvent.click(screen.getByTestId('recurrence-split'));
+      await screen.findByTestId('recurrence-split-field');
+      await pick('recurrence-split-person-0', 'person-1');
+      await type('recurrence-split-owner-percent', '60');
+      await type('recurrence-split-percent-0', '40');
+    };
+
+    it('Dado despesa em conta, então não oferece dividir', async () => {
+      await setup();
+
+      expect(screen.queryByTestId('recurrence-split')).not.toBeInTheDocument();
+    });
+
+    it('Dado compra no cartão, então oferece dividir e avisa que a mudança vale só para o futuro', async () => {
+      await setup();
+      await startCard();
+
+      await userEvent.click(screen.getByTestId('recurrence-split'));
+
+      expect(await screen.findByTestId('recurrence-split-field')).toBeInTheDocument();
+      expect(screen.getByTestId('recurrence-split-future')).toHaveTextContent(
+        pt.recurrences.form.splitFutureOnly,
+      );
+    });
+
+    it('Dado divisão incompleta, então bloqueia o salvar e não envia', async () => {
+      const { gateway } = await setup();
+      await startCard();
+
+      await userEvent.click(screen.getByTestId('recurrence-split'));
+      await screen.findByTestId('recurrence-split-field');
+
+      expect(screen.getByTestId('recurrence-form-save')).toBeDisabled();
+      expect(gateway.creates).toEqual([]);
+    });
+
+    it('Dado 60% para mim e 40% para Ana, então o POST leva a divisão em pontos-base', async () => {
+      const { gateway, fixture } = await setup();
+      await startCard();
+
+      await splitWithAna();
+      await userEvent.click(screen.getByTestId('recurrence-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates[0]).toMatchObject({
+        type: 'CARD_PURCHASE',
+        split: {
+          mode: 'BPS',
+          shares: [
+            { personId: null, bps: 6000 },
+            { personId: 'person-1', bps: 4000 },
+          ],
+        },
+      });
+    });
+
+    it('Dado trocar de cartão para despesa em conta depois de dividir, então a divisão some do envio', async () => {
+      const { gateway, fixture } = await setup();
+      await startCard();
+      await splitWithAna();
+
+      await userEvent.click(screen.getByTestId('recurrence-type-EXPENSE'));
+      await pick('recurrence-account', 'acc-1');
+      await pick('recurrence-method', 'BOLETO');
+      await userEvent.click(screen.getByTestId('recurrence-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.creates[0]).not.toHaveProperty('split');
+    });
+
+    it('Dado editar recorrência dividida, então carrega a divisão atual e o PUT a reenvia com a version', async () => {
+      const gateway = new RecurrencesGatewayStub();
+      gateway.recurrences = [
+        aRecurrence({
+          id: 'rec-card',
+          type: 'CARD_PURCHASE',
+          account: null,
+          method: null,
+          card: { id: 'card-1', name: 'Roxinho' },
+          splitMode: 'BPS',
+          shares: [
+            { personId: null, bps: 6000, amount: null },
+            { personId: 'person-1', bps: 4000, amount: null },
+          ],
+          version: 7,
+        }),
+      ];
+      const { fixture } = await setup({ gateway, id: 'rec-card' });
+      expect(await screen.findByTestId('recurrence-split-field')).toBeInTheDocument();
+      expect(field('recurrence-split-owner-percent').value).toBe('60');
+      expect(field('recurrence-split-percent-0').value).toBe('40');
+      await userEvent.click(screen.getByTestId('recurrence-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.updates[0]).toMatchObject({
+        version: 7,
+        split: {
+          mode: 'BPS',
+          shares: [
+            { personId: null, bps: 6000 },
+            { personId: 'person-1', bps: 4000 },
+          ],
+        },
+      });
+    });
+
+    it('Dado editar recorrência dividida e desligar a divisão, então o PUT envia split nulo', async () => {
+      const gateway = new RecurrencesGatewayStub();
+      gateway.recurrences = [
+        aRecurrence({
+          id: 'rec-card',
+          type: 'CARD_PURCHASE',
+          account: null,
+          method: null,
+          card: { id: 'card-1', name: 'Roxinho' },
+          splitMode: 'BPS',
+          shares: [
+            { personId: null, bps: 6000, amount: null },
+            { personId: 'person-1', bps: 4000, amount: null },
+          ],
+        }),
+      ];
+      const { fixture } = await setup({ gateway, id: 'rec-card' });
+      await screen.findByTestId('recurrence-split-field');
+
+      await userEvent.click(screen.getByTestId('recurrence-split'));
+      await userEvent.click(screen.getByTestId('recurrence-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.updates[0]?.split).toBeNull();
+    });
+
+    it('Dado editar recorrência de cartão sem divisão, então o PUT não toca no rateio atual do servidor', async () => {
+      const gateway = new RecurrencesGatewayStub();
+      gateway.recurrences = [
+        aRecurrence({
+          id: 'rec-card',
+          type: 'CARD_PURCHASE',
+          account: null,
+          method: null,
+          card: { id: 'card-1', name: 'Roxinho' },
+        }),
+      ];
+      const { fixture } = await setup({ gateway, id: 'rec-card' });
+
+      await userEvent.click(screen.getByTestId('recurrence-form-save'));
+      await fixture.whenStable();
+
+      expect(gateway.updates[0]?.split ?? null).toBeNull();
+    });
+
+    it('Dado erro 422 SHARES_INVALID do servidor, então mostra o aviso e mantém a divisão digitada', async () => {
+      const gateway = new RecurrencesGatewayStub();
+      gateway.next = failWith(422, 'SHARES_INVALID');
+      const { fixture } = await setup({ gateway });
+      await startCard();
+      await splitWithAna();
+
+      await userEvent.click(screen.getByTestId('recurrence-form-save'));
+      await fixture.whenStable();
+
+      expect(field('recurrence-split-percent-0').value).toBe('40');
+      expect(screen.getByTestId('recurrence-split-field')).toBeInTheDocument();
     });
   });
 

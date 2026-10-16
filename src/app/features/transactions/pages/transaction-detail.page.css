@@ -7,7 +7,7 @@
   align-content: start;
   gap: var(--space-5);
   padding: var(--space-3) var(--space-4) var(--space-8);
-  background-color: var(--color-surface);
+  background-color: var(--card-flat-bg);
 }
 
 .detail__header {
@@ -75,8 +75,7 @@
 }
 
 .detail__amount {
-  font-size: var(--text-2xl);
-  font-weight: var(--weight-semibold);
+  margin: 0;
 }
 
 .detail__amount.is-voided {
@@ -105,7 +104,9 @@
 
 .fields {
   display: grid;
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-4) var(--space-5);
+  margin: 0;
 }
 
 .fields__row {
@@ -120,6 +121,7 @@
 
 .fields dd {
   margin: 0;
+  font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
 }
 
@@ -139,7 +141,7 @@
     width: 26rem;
     overflow-y: auto;
     border-inline-start: var(--border-width) solid var(--color-border);
-    background-color: var(--color-surface);
+    background-color: var(--card-flat-bg);
     box-shadow: var(--shadow-2);
   }
 
@@ -214,5 +216,20 @@
   gap: var(--space-2);
   margin: 0;
   color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.split-lines {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.split-lines__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
   font-size: var(--text-sm);
 }

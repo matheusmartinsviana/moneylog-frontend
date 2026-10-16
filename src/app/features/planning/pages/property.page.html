@@ -1,0 +1,328 @@
+<app-page-layout [heading]="t().nav.planning">
+  <div class="stack">
+    <app-planning-nav current="commitments" />
+
+    <a class="back hit" [routerLink]="['/planning/commitments', id()]" data-cy="property-back">
+      {{ t().property.back }}
+    </a>
+
+    <div class="stack">
+      @switch (facade.state().status) {
+        @case ('notFound') {
+          <app-empty-state
+            [heading]="t().property.notFound.title"
+            [description]="t().property.notFound.description"
+            [actions]="backActions()"
+            illustration="timeline"
+          />
+        }
+        @case ('notProject') {
+          <app-empty-state
+            [heading]="t().property.notProject.title"
+            [description]="t().property.notProject.description"
+            [actions]="backActions()"
+            illustration="timeline"
+          />
+        }
+        @case ('error') {
+          <app-error-state [problem]="facade.loadProblem()" (retry)="retry()" />
+        }
+        @case ('ready') {
+          @if (commitment(); as c) {
+            <header class="head">
+              <h2 class="head__title" data-cy="property-title">{{ c.name }}</h2>
+              @if (c.counterparty; as name) {
+                <p class="note">{{ t().commitments.detail.counterparty }}: {{ name }}</p>
+              }
+              <p class="note">{{ t().commitments.detail.onlyTracking }}</p>
+              <div class="head__actions">
+                <button
+                  type="button"
+                  class="button"
+                  data-cy="property-export"
+                  [disabled]="facade.exporting()"
+                  [attr.aria-busy]="facade.exporting()"
+                  (click)="exportCsv()"
+                >
+                  {{
+                    facade.exporting() ? t().property.export.exporting : t().property.export.action
+                  }}
+                </button>
+              </div>
+            </header>
+
+            @if (banner(); as message) {
+              <p class="banner" role="alert" data-cy="property-action-error">{{ message }}</p>
+            }
+            @if (exportBanner(); as message) {
+              <p class="banner" role="alert" data-cy="property-export-error">{{ message }}</p>
+            }
+
+            <div class="page-grid">
+              <div class="stack span-5">
+                <app-section-container [heading]="t().property.summary.title" [glow]="true">
+                  <dl class="facts" data-cy="property-summary">
+                    @if (c.nominalBalance; as balance) {
+                      <div class="fact fact--focus">
+                        <dt>{{ t().property.summary.balance }}</dt>
+                        <dd class="figure" data-cy="property-balance">
+                          <app-money [value]="balance" />
+                        </dd>
+                      </div>
+                    }
+                    @if (c.total; as total) {
+                      <div class="fact">
+                        <dt>{{ t().property.summary.total }}</dt>
+                        <dd data-cy="property-total"><app-money [value]="total" /></dd>
+                      </div>
+                    }
+                    @if (c.paid; as paid) {
+                      <div class="fact">
+                        <dt>{{ t().property.summary.paid }}</dt>
+                        <dd data-cy="property-paid"><app-money [value]="paid" /></dd>
+                      </div>
+                    }
+                    @if (progressText(); as text) {
+                      <div class="fact">
+                        <dt>{{ t().property.summary.progress }}</dt>
+                        <dd class="num" data-cy="property-progress">{{ text }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </app-section-container>
+
+                <app-section-container [heading]="t().property.milestones.title">
+                  @if (milestones().length === 0) {
+                    <p class="note" data-cy="property-milestones-empty">
+                      {{ t().property.milestones.empty }}
+                    </p>
+                  } @else {
+                    <ul class="plain" data-cy="property-milestones">
+                      @for (item of milestones(); track item.position) {
+                        <li class="fact" [attr.data-cy]="'property-milestone-' + item.position">
+                          <span>
+                            <strong>{{ item.label }}</strong>
+                            <span class="note"> {{ milestoneDue(item) }}</span>
+                          </span>
+                          <app-money [value]="item.amount" />
+                        </li>
+                      }
+                    </ul>
+                  }
+                </app-section-container>
+
+                <app-section-container [heading]="t().property.clauses.title">
+                  <div sectionActions>
+                    <button
+                      type="button"
+                      class="button"
+                      data-cy="property-edit-clauses"
+                      [disabled]="facade.busy()"
+                      (click)="askClauses()"
+                    >
+                      {{ c.clauses ? t().property.clauses.edit : t().property.clauses.add }}
+                    </button>
+                  </div>
+                  @if (c.clauses; as clauses) {
+                    <dl class="facts" data-cy="property-clauses">
+                      <div class="fact">
+                        <dt>{{ t().property.clauses.lateFee }}</dt>
+                        <dd class="num" data-cy="property-clause-late-fee">{{ lateFee() }}</dd>
+                      </div>
+                      <div class="fact">
+                        <dt>{{ t().property.clauses.monthlyInterest }}</dt>
+                        <dd class="num" data-cy="property-clause-interest">
+                          {{ monthlyInterest() }}
+                        </dd>
+                      </div>
+                      <div class="fact">
+                        <dt>{{ t().property.clauses.retention }}</dt>
+                        <dd class="num" data-cy="property-clause-retention">{{ retention() }}</dd>
+                      </div>
+                      @if (clauses.terminationRetentionAmount; as amount) {
+                        <div class="fact">
+                          <dt>{{ t().property.clauses.retentionAmount }}</dt>
+                          <dd data-cy="property-clause-retention-amount">
+                            <app-money [value]="amount" />
+                          </dd>
+                        </div>
+                      }
+                      @if (clauses.notes; as notes) {
+                        <div class="fact">
+                          <dt>{{ t().property.clauses.notes }}</dt>
+                          <dd class="fact__text">{{ notes }}</dd>
+                        </div>
+                      }
+                    </dl>
+                    <p class="note">{{ t().property.clauses.retentionNote }}</p>
+                  } @else {
+                    <p class="note" data-cy="property-clauses-empty">
+                      {{ t().property.clauses.empty }}
+                    </p>
+                  }
+                </app-section-container>
+              </div>
+              <div class="stack span-7">
+                <app-section-container
+                  [heading]="t().property.totals.title"
+                  [description]="t().property.totals.description"
+                >
+                  @if ((c.totalsByPerson ?? []).length === 0) {
+                    <p class="note" data-cy="property-totals-empty">
+                      {{ t().property.schedule.empty }}
+                    </p>
+                  } @else {
+                    <ul class="plain" data-cy="property-totals">
+                      @for (entry of c.totalsByPerson; track entry.personId ?? 'me') {
+                        <li
+                          class="person"
+                          [attr.data-cy]="'property-person-' + (entry.personId ?? 'me')"
+                        >
+                          <p class="person__name">{{ personName(entry.personId) }}</p>
+                          <dl class="person__values">
+                            <div>
+                              <dt>{{ t().property.totals.paid }}</dt>
+                              <dd><app-money [value]="entry.paid" /></dd>
+                            </div>
+                            <div>
+                              <dt>{{ t().property.totals.pending }}</dt>
+                              <dd><app-money [value]="entry.pending" /></dd>
+                            </div>
+                            <div>
+                              <dt>{{ t().property.totals.total }}</dt>
+                              <dd><app-money [value]="entry.total" /></dd>
+                            </div>
+                          </dl>
+                        </li>
+                      }
+                    </ul>
+                  }
+                </app-section-container>
+
+                <app-section-container [heading]="t().property.schedule.title">
+                  @if (undefinedCount() > 0 && c.schedule.length > 0) {
+                    <p class="banner" role="status" data-cy="property-undefined-banner">
+                      {{ undefinedBanner() }}
+                    </p>
+                  }
+                  @if (c.schedule.length === 0) {
+                    <p class="note" data-cy="property-schedule-empty">
+                      {{ t().property.schedule.empty }}
+                    </p>
+                  } @else {
+                    <ul class="plain" data-cy="property-schedule">
+                      @for (item of visibleSchedule(c.schedule); track item.position) {
+                        <li class="item" [attr.data-cy]="'property-item-' + item.position">
+                          <div class="item__main">
+                            <p class="item__title">{{ item.label }}</p>
+                            <p class="note">
+                              <span class="status">{{ t().commitments.itemTypes[item.type] }}</span>
+                              {{ due(item) }}
+                            </p>
+                            <p
+                              class="note"
+                              [attr.data-cy]="'property-item-status-' + item.position"
+                            >
+                              <span
+                                class="status"
+                                [attr.data-tone]="item.paid ? 'positive' : null"
+                                >{{ paidOn(item) }}</span
+                              >
+                            </p>
+                          </div>
+                          <div class="item__shares">
+                            <p class="item__amount"><app-money [value]="item.amount" /></p>
+                            @if (item.sharesDefined) {
+                              @for (share of item.shares; track share.personId ?? 'me') {
+                                <p
+                                  class="share"
+                                  [attr.data-cy]="
+                                    'property-share-' +
+                                    item.position +
+                                    '-' +
+                                    (share.personId ?? 'me')
+                                  "
+                                >
+                                  <span class="note">{{ shareLabel(share.personId) }}</span>
+                                  <app-money [value]="share.amount" />
+                                </p>
+                              }
+                            } @else {
+                              <p
+                                class="share"
+                                [attr.data-cy]="'property-undefined-' + item.position"
+                              >
+                                <span class="status" data-tone="warning">
+                                  {{ t().property.schedule.undefinedShare }}
+                                </span>
+                                <span class="note">{{ t().property.schedule.estimated }}</span>
+                              </p>
+                            }
+                          </div>
+                          <div class="item__actions">
+                            @if (canEditShares(item)) {
+                              <button
+                                type="button"
+                                class="button"
+                                [attr.data-cy]="'property-edit-shares-' + item.position"
+                                [attr.aria-label]="editLabel(item)"
+                                [disabled]="facade.busy()"
+                                (click)="askShares(item)"
+                              >
+                                {{ t().property.schedule.edit }}
+                              </button>
+                            } @else {
+                              <p class="note">{{ t().property.schedule.multiParty }}</p>
+                            }
+                          </div>
+                        </li>
+                      }
+                    </ul>
+                    @if (
+                      c.schedule.length > visibleSchedule(c.schedule).length || showAllSchedule()
+                    ) {
+                      <button
+                        type="button"
+                        class="link-more hit-area more"
+                        data-cy="property-schedule-toggle"
+                        (click)="showAllSchedule.set(!showAllSchedule())"
+                      >
+                        {{ showAllSchedule() ? t().brief.showFewer : t().brief.showAll }}
+                      </button>
+                    }
+                  }
+                </app-section-container>
+              </div>
+            </div>
+          }
+        }
+        @default {
+          <div data-cy="property-loading">
+            <p class="visually-hidden" role="status">{{ t().property.loading }}</p>
+            <div class="list-skeleton" aria-hidden="true">
+              <div class="list-skeleton__row"></div>
+              <div class="list-skeleton__row"></div>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <app-property-shares-sheet
+    [item]="editingItem()"
+    [people]="peopleOptions()"
+    [busy]="facade.busy()"
+    [problem]="facade.problem()"
+    (closed)="closeShares()"
+    (saved)="saveShares($event)"
+  />
+  <app-property-clauses-sheet
+    [open]="editingClauses()"
+    [clauses]="commitment()?.clauses ?? null"
+    [busy]="facade.busy()"
+    [problem]="facade.problem()"
+    (closed)="closeClauses()"
+    (saved)="saveClauses($event)"
+  />
+</app-page-layout>

@@ -59,8 +59,14 @@ export function anInvoiceItem(overrides: Partial<InvoiceItem> = {}): InvoiceItem
 export function anInvoice(overrides: Partial<Invoice> = {}): Invoice {
   return {
     ...anInvoiceSummary(),
+    myShare: brl('1283.00'),
+    thirdPartyShare: brl('0.00'),
+    shareByPerson: [],
     items: [anInvoiceItem()],
     payments: [],
+    documentAmount: null,
+    documentDivergence: null,
+    documentVersion: 0,
     ...overrides,
   };
 }
@@ -84,6 +90,10 @@ export function aCard(overrides: Partial<Card> = {}): Card {
     committedFuture: brl('1000.00'),
     closingConfirmed: true,
     archivable: false,
+    autoDebit: null,
+    brand: null,
+    bestPurchaseDay: null,
+    lastDigits: [],
     version: 2,
     ...overrides,
   };
@@ -106,6 +116,9 @@ export function aPurchasePreview(overrides: Partial<PurchasePreview> = {}): Purc
         competence: '2026-10',
         invoice,
         lateEntry: false,
+        myAmount: brl('600.01'),
+        thirdPartyAmount: brl('0.00'),
+        byPerson: [],
       },
       {
         number: 2,
@@ -114,11 +127,16 @@ export function aPurchasePreview(overrides: Partial<PurchasePreview> = {}): Purc
         competence: '2026-11',
         invoice: { ...invoice, id: 'inv-2', referenceMonth: '2026-12', dueDate: '2026-12-05' },
         lateEntry: false,
+        myAmount: brl('599.99'),
+        thirdPartyAmount: brl('0.00'),
+        byPerson: [],
       },
     ],
     total: brl('1200.00'),
     availableLimitAfter: brl('6517.00'),
     overLimit: false,
+    splitMode: null,
+    shares: [],
     warnings: [],
     ...overrides,
   };
@@ -168,6 +186,12 @@ export class CardsGatewayStub extends CardsGateway {
   invoice$: Observable<Invoice> | null = null;
   paymentPreview$: Observable<PaymentPreview> | null = null;
   pay$: Observable<Invoice> | null = null;
+  documentAmount$: Observable<Invoice> | null = null;
+  readonly documentAmountCalls: {
+    invoiceId: string;
+    documentAmount: string | null;
+    version: number | null;
+  }[] = [];
 
   list(query: CardsQuery): Observable<Slice<Card>> {
     this.queries.push(query);
@@ -243,6 +267,24 @@ export class CardsGatewayStub extends CardsGateway {
   getInvoice(id: string): Observable<Invoice> {
     this.calls.push(`invoice:${id}`);
     return this.invoice$ ?? of(anInvoice({ id }));
+  }
+
+  changeDocumentAmount(
+    invoiceId: string,
+    documentAmount: string | null,
+    version: number | null,
+  ): Observable<Invoice> {
+    this.documentAmountCalls.push({ invoiceId, documentAmount, version });
+    return (
+      this.documentAmount$ ??
+      of(
+        anInvoice({
+          id: invoiceId,
+          documentAmount: documentAmount === null ? null : brl(documentAmount),
+          documentVersion: (version ?? 0) + 1,
+        }),
+      )
+    );
   }
 
   previewPayment(invoiceId: string, amount: string): Observable<PaymentPreview> {

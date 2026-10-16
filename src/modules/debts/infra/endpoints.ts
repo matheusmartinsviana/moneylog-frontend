@@ -1,5 +1,6 @@
 export const DEBTS_ENDPOINTS = {
   collection: '/v1/debts',
+  cardCashOuts: '/v1/card-cash-outs',
   item: (id: string) => `/v1/debts/${encodeURIComponent(id)}`,
   cancel: (id: string) => `/v1/debts/${encodeURIComponent(id)}/cancel`,
   void: (id: string) => `/v1/debts/${encodeURIComponent(id)}/void`,

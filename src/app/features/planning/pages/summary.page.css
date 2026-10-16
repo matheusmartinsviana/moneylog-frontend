@@ -77,3 +77,15 @@
   gap: var(--section-gap);
   padding-top: var(--space-3);
 }
+
+.main {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+  align-items: start;
+  margin: 0;
+}
+
+.main__focus {
+  grid-column: 1 / -1;
+}

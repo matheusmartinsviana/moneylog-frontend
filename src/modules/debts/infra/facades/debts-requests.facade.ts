@@ -3,9 +3,15 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
 
 import { DebtsGateway, DebtsQuery } from '~/modules/debts/core/interfaces/debts.gateway';
-import type { Debt, DebtInput, DebtUpdate } from '~/modules/debts/core/types/debt';
+import type {
+  CardCashOutInput,
+  Debt,
+  DebtInput,
+  DebtUpdate,
+} from '~/modules/debts/core/types/debt';
 import { DEBTS_ENDPOINTS, IDEMPOTENCY_HEADER } from '~/modules/debts/infra/endpoints';
 import {
+  toCardCashOutRequest,
   toCreateRequest,
   toDebt,
   toUpdateRequest,
@@ -64,6 +70,15 @@ export class DebtsRequestsFacade extends DebtsGateway {
     if (this.useMocks) return notFound();
     return this.http
       .post<DebtResponse>(DEBTS_ENDPOINTS.collection, toCreateRequest(input), {
+        headers: new HttpHeaders().set(IDEMPOTENCY_HEADER, idempotencyKey),
+      })
+      .pipe(map(toDebt), catchError(fail));
+  }
+
+  createCardCashOut(input: CardCashOutInput, idempotencyKey: string): Observable<Debt> {
+    if (this.useMocks) return notFound();
+    return this.http
+      .post<DebtResponse>(DEBTS_ENDPOINTS.cardCashOuts, toCardCashOutRequest(input), {
         headers: new HttpHeaders().set(IDEMPOTENCY_HEADER, idempotencyKey),
       })
       .pipe(map(toDebt), catchError(fail));

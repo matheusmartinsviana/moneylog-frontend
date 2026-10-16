@@ -6,15 +6,23 @@
 :host(.row) {
   position: relative;
   display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-card);
-  background-color: var(--color-surface);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'main balance'
+    'due due'
+    'actions actions';
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width) solid var(--home-divider);
   list-style: none;
 }
 
+:host(.row:last-child) {
+  border-bottom: 0;
+}
+
 .row__main {
+  grid-area: main;
   display: grid;
   gap: var(--space-1);
   min-width: 0;
@@ -40,6 +48,8 @@
 }
 
 .row__balance {
+  grid-area: balance;
+  text-align: right;
   color: var(--color-text);
   font-weight: var(--weight-medium);
 }
@@ -59,24 +69,36 @@
 }
 
 .row__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
+  grid-area: actions;
+  margin-inline: calc(var(--space-3) * -1);
+}
+
+.row__due {
+  grid-area: due;
+  margin: 0;
+}
+
+.row__balance {
+  margin: 0;
+}
+
+.row__label {
+  display: none;
 }
 
 @media (width >= 768px) {
   :host(.row) {
     grid-template-columns: minmax(0, 1.5fr) minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+    grid-template-areas: 'main balance due actions';
     align-items: center;
-    padding: var(--space-3) var(--space-4);
   }
 
-  .row__label {
-    display: none;
+  .row__balance {
+    text-align: left;
   }
 
   .row__actions {
+    margin-inline: 0;
     justify-content: flex-end;
   }
 }

@@ -12,6 +12,7 @@ const money = (value: { amount: string; currency: string }): Money => ({
 
 export function toIncomeExpenseSeries(response: IncomeExpenseSeriesResponse): IncomeExpenseSeries {
   return {
+    view: response.view,
     period: response.period,
     from: response.from,
     to: response.to,
@@ -35,6 +36,7 @@ export function toIncomeExpenseSeries(response: IncomeExpenseSeriesResponse): In
 
 export function toSpendingByCategory(response: SpendingByCategoryResponse): SpendingByCategory {
   return {
+    view: response.view,
     basis: response.basis,
     from: response.from,
     to: response.to,

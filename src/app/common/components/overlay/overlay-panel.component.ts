@@ -23,13 +23,15 @@ import {
 } from '~/app/common/components/overlay/focus-return';
 import { focusableElements, trapTab } from '~/app/common/components/overlay/focus-trap';
 import { lockModal } from '~/app/common/components/overlay/modal-lock';
+import { markOverlayOpen } from '~/app/common/components/overlay/overlay-activity';
 import { computePosition } from '~/app/common/components/overlay/popover-positioner';
 import { ViewportService } from '~/app/common/components/overlay/viewport.service';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
 export type OverlayMode = 'auto' | 'popover' | 'sheet' | 'modal';
 
-export type OverlayLayout = 'bottom' | 'center' | 'side' | 'responsive-center' | 'responsive-side';
+export type OverlayLayout =
+  'bottom' | 'sheet' | 'center' | 'side' | 'full' | 'responsive-center' | 'responsive-side';
 
 export type ModalRole = 'dialog' | 'alertdialog';
 
@@ -51,6 +53,7 @@ const stack: object[] = [];
         [class.backdrop--dialog]="mode() === 'modal'"
         [class.backdrop--center]="kind() === 'center'"
         [class.backdrop--side]="kind() === 'side'"
+        [class.backdrop--full]="kind() === 'full'"
         [attr.data-cy]="cy() + '-backdrop'"
         [style.padding-bottom.px]="
           kind() === 'center' && keyboardOffset() > 0 ? keyboardOffset() + 12 : null
@@ -62,9 +65,11 @@ const stack: object[] = [];
           #panel
           class="panel glass glass--strong"
           [class.panel--modal]="modal()"
+          [class.glass--flat]="modal()"
           [class.panel--sheet]="kind() === 'bottom'"
           [class.panel--center]="kind() === 'center'"
           [class.panel--side]="kind() === 'side'"
+          [class.panel--full]="kind() === 'full'"
           [class.panel--scroll]="scrollBody()"
           [attr.role]="role()"
           [attr.aria-modal]="modal() ? 'true' : null"
@@ -115,7 +120,7 @@ const stack: object[] = [];
     .backdrop--modal {
       background-color: var(--color-scrim);
       pointer-events: auto;
-      animation: overlay-scrim var(--duration-base) var(--ease-standard);
+      animation: overlay-scrim var(--duration-fast) var(--ease-standard);
     }
 
     .backdrop--dialog {
@@ -164,7 +169,7 @@ const stack: object[] = [];
       border-left: 0;
       border-radius: var(--radius-panel) var(--radius-panel) 0 0;
       padding-bottom: env(safe-area-inset-bottom);
-      animation: overlay-sheet var(--duration-slow) var(--ease-emphasized);
+      animation: overlay-sheet var(--duration-fast) var(--ease-emphasized);
     }
 
     .panel--center {
@@ -174,7 +179,7 @@ const stack: object[] = [];
       overscroll-behavior: contain;
       border-radius: var(--radius-card);
       box-shadow: var(--shadow-2);
-      animation: overlay-dialog var(--duration-base) var(--ease-emphasized);
+      animation: overlay-dialog var(--duration-fast) var(--ease-emphasized);
     }
 
     .panel--side {
@@ -188,7 +193,19 @@ const stack: object[] = [];
       border-radius: var(--radius-panel) 0 0 var(--radius-panel);
       padding-bottom: env(safe-area-inset-bottom);
       overscroll-behavior: contain;
-      animation: overlay-side var(--duration-slow) var(--ease-emphasized);
+      animation: overlay-side var(--duration-fast) var(--ease-emphasized);
+    }
+
+    .panel.panel--full {
+      inset: 0;
+      color: var(--color-home-text);
+      background: var(--gradient-focus-full), var(--color-home-bg);
+      width: 100%;
+      height: 100dvh;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      animation: overlay-pop var(--duration-fast) var(--ease-standard);
     }
 
     .panel--scroll .panel__body {
@@ -208,6 +225,15 @@ const stack: object[] = [];
     .panel__title {
       font-size: var(--text-lg);
       font-weight: var(--weight-semibold);
+    }
+
+    .panel--full .panel__title {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
     }
 
     .panel__close {
@@ -304,6 +330,7 @@ export class OverlayPanelComponent implements OnDestroy {
   readonly matchWidth = input(false);
   readonly panelWidth = input<number | null>(null);
   readonly minWidth = input(0);
+  readonly maxHeight = input(360);
   readonly align = input<'start' | 'end'>('start');
   readonly placement = input<'block' | 'inline'>('block');
   readonly cy = input('overlay');
@@ -321,6 +348,7 @@ export class OverlayPanelComponent implements OnDestroy {
   protected readonly kind = computed<'popover' | OverlayLayout>(() => {
     if (!this.modal()) return 'popover';
     const layout = this.layout();
+    if (layout === 'sheet') return 'bottom';
     if (layout === 'responsive-center') return 'center';
     if (layout === 'responsive-side') return this.viewport.compact() ? 'center' : 'side';
     if (layout === 'bottom' && this.viewport.compact()) return 'center';
@@ -375,6 +403,7 @@ export class OverlayPanelComponent implements OnDestroy {
       const focusin = (event: FocusEvent) => this.onDocumentFocusIn(event);
       const reposition = () => this.update();
       const visual = view?.visualViewport ?? null;
+      const releaseActivity = markOverlayOpen(this.document);
       this.document.addEventListener('keydown', keydown, true);
       this.document.addEventListener('pointerdown', pointerdown, true);
       this.document.addEventListener('focusin', focusin, true);
@@ -390,6 +419,7 @@ export class OverlayPanelComponent implements OnDestroy {
         view?.removeEventListener('scroll', reposition, true);
         visual?.removeEventListener('resize', reposition);
         visual?.removeEventListener('scroll', reposition);
+        releaseActivity();
         untracked(() => {
           this.exitGhost();
           this.onClose();
@@ -565,6 +595,7 @@ export class OverlayPanelComponent implements OnDestroy {
         height: visual ? visual.offsetTop + visual.height : view.innerHeight,
       },
       align: this.align(),
+      maxHeight: this.maxHeight(),
       placement: this.placement(),
     });
     this.position.set(result);
