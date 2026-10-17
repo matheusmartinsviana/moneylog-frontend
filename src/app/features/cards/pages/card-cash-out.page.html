@@ -1,0 +1,143 @@
+<app-form-modal
+  #modal
+  [heading]="t().cardCashOut.title"
+  [dirty]="dirty()"
+  [busy]="facade.saving()"
+  (closed)="close()"
+>
+  <form
+    class="form"
+    [formGroup]="form"
+    (ngSubmit)="onSubmit()"
+    novalidate
+    data-cy="card-cash-out-form"
+  >
+    <p class="form__hint">{{ t().cardCashOut.description }}</p>
+
+    @if (loadFailed()) {
+      <p class="banner" role="alert" data-cy="card-cash-out-load-error">
+        {{ t().cardCashOut.loadError }}
+        <button type="button" class="button" data-cy="card-cash-out-reload" (click)="retryLoad()">
+          {{ t().cardCashOut.retry }}
+        </button>
+      </p>
+    }
+    @if (banner(); as message) {
+      <p class="banner" role="alert" data-cy="card-cash-out-error">
+        {{ message }}
+        @if (facade.canRetry()) {
+          <button type="button" class="button" data-cy="card-cash-out-retry" (click)="retry()">
+            {{ t().cardCashOut.retry }}
+          </button>
+        }
+      </p>
+    }
+
+    <app-radio-group
+      formControlName="destination"
+      fieldId="card-cash-out-destination"
+      layout="horizontal"
+      [options]="destinationOptions()"
+      [mandatory]="false"
+      [label]="t().cardCashOut.destination.label"
+    />
+    @if (destination() === 'ME') {
+      <app-select
+        formControlName="accountId"
+        fieldId="card-cash-out-account"
+        [options]="accountOptions()"
+        [label]="t().cardCashOut.account"
+        [hint]="accountOptions().length === 0 && !loadFailed() ? t().cardCashOut.noAccounts : ''"
+      />
+    } @else {
+      <app-select
+        formControlName="personId"
+        fieldId="card-cash-out-person"
+        [options]="personOptions()"
+        [label]="t().cardCashOut.person"
+        [hint]="personOptions().length === 0 && !loadFailed() ? t().cardCashOut.noPeople : ''"
+      />
+    }
+
+    <div class="form__pair">
+      <app-money-input
+        formControlName="principal"
+        fieldId="card-cash-out-principal"
+        [currency]="currency"
+        [label]="t().cardCashOut.principal"
+      />
+      <app-number-stepper
+        formControlName="installments"
+        fieldId="card-cash-out-installments"
+        [min]="1"
+        [max]="maxInstallments"
+        [valueText]="installmentsText()"
+        [label]="t().cardCashOut.installments"
+      />
+    </div>
+    <app-radio-group
+      formControlName="costMode"
+      fieldId="card-cash-out-cost-mode"
+      layout="horizontal"
+      [options]="costModeOptions()"
+      [mandatory]="false"
+      [label]="t().cardCashOut.costMode.label"
+    />
+    @if (costMode() === 'TOTAL') {
+      <app-money-input
+        formControlName="totalWithInterest"
+        fieldId="card-cash-out-total"
+        [currency]="currency"
+        [label]="t().cardCashOut.total"
+        [hint]="t().cardCashOut.totalHint"
+      />
+    } @else {
+      <app-text-field
+        formControlName="rate"
+        fieldId="card-cash-out-rate"
+        autocomplete="off"
+        inputmode="decimal"
+        [maxlength]="6"
+        [label]="t().cardCashOut.rate"
+        [hint]="t().cardCashOut.rateHint"
+      />
+    }
+    <div class="form__pair">
+      <app-date-picker
+        formControlName="firstInvoiceDate"
+        fieldId="card-cash-out-first-invoice"
+        [label]="t().cardCashOut.firstInvoice"
+        [hint]="t().cardCashOut.firstInvoiceHint"
+      />
+      <app-text-field
+        formControlName="channel"
+        fieldId="card-cash-out-channel"
+        autocomplete="off"
+        [maxlength]="60"
+        [mandatory]="false"
+        [label]="t().cardCashOut.channel"
+        [hint]="t().cardCashOut.channelHint"
+      />
+    </div>
+
+    <div class="form__actions">
+      <button
+        type="button"
+        class="button"
+        data-cy="card-cash-out-cancel"
+        (click)="modal.requestClose()"
+      >
+        {{ t().cardCashOut.cancel }}
+      </button>
+      <button
+        type="submit"
+        class="button button--primary"
+        data-cy="card-cash-out-save"
+        [disabled]="facade.saving()"
+        [attr.aria-busy]="facade.saving()"
+      >
+        {{ facade.saving() ? t().cardCashOut.saving : t().cardCashOut.save }}
+      </button>
+    </div>
+  </form>
+</app-form-modal>

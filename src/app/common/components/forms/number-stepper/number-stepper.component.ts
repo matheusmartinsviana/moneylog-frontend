@@ -118,9 +118,10 @@ const MAX_DIGITS = 9;
       align-items: stretch;
       width: 100%;
       max-width: 14rem;
-      border: var(--border-width) solid var(--color-control-border);
-      border-radius: var(--radius-control);
-      background-color: var(--color-surface);
+      border: var(--border-width) solid var(--field-border);
+      border-radius: var(--field-radius);
+      background-color: var(--field-bg);
+      box-shadow: var(--field-shadow);
       transition: border-color var(--duration-fast) var(--ease-standard);
     }
 

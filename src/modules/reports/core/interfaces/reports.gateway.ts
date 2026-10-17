@@ -6,11 +6,16 @@ import type {
   ReportPeriod,
   SpendingByCategory,
 } from '~/modules/reports/core/types/reports';
+import type { ViewMode } from '~/util/view-mode';
 
 export abstract class ReportsGateway {
   abstract readonly isDemo: boolean;
   abstract incomeExpenses(period: ReportPeriod): Observable<IncomeExpenseSeries>;
-  abstract spendingByCategory(month: string, limit?: number): Observable<SpendingByCategory>;
+  abstract spendingByCategory(
+    month: string,
+    limit?: number,
+    view?: ViewMode,
+  ): Observable<SpendingByCategory>;
 }
 
 export const DEMO_REPORTS_GATEWAY = new InjectionToken<ReportsGateway | null>(

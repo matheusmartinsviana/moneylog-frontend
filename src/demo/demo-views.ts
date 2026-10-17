@@ -106,10 +106,22 @@ function invoiceItems(inv: InvoiceDef): S['InvoiceItem'][] {
   }));
 }
 
-export function invoiceView(w: World, inv: InvoiceDef): S['Invoice'] {
+export interface DemoInvoiceDocument {
+  cents: number | null;
+  version: number;
+}
+
+export function invoiceView(
+  w: World,
+  inv: InvoiceDef,
+  document: DemoInvoiceDocument = { cents: null, version: 0 },
+): S['Invoice'] {
   const pay = inv.paymentRecId ? w.recs.find((r) => r.id === inv.paymentRecId) : undefined;
   return {
     ...invoiceCore(w, inv),
+    myShare: money(inv.total),
+    thirdPartyShare: money(0),
+    shareByPerson: [],
     items: invoiceItems(inv),
     payments: pay
       ? [
@@ -121,6 +133,12 @@ export function invoiceView(w: World, inv: InvoiceDef): S['Invoice'] {
           },
         ]
       : [],
+    documentAmount: document.cents === null ? null : money(document.cents),
+    documentDivergence:
+      document.cents === null || document.cents === inv.total
+        ? null
+        : money(inv.total - document.cents),
+    documentVersion: document.version,
   };
 }
 
@@ -158,6 +176,8 @@ export function cardView(w: World): S['Card'] {
     committedFuture: money(future),
     closingConfirmed: true,
     archivable: false,
+    autoDebit: null,
+    lastDigits: [],
     version: 0,
     createdAt: ts(w.accounts[0]!.openingDate),
     updatedAt: ts(w.accounts[0]!.openingDate),
@@ -183,10 +203,27 @@ export function noLimitCardView(w: World): S['Card'] {
     committedFuture: money(0),
     closingConfirmed: false,
     archivable: true,
+    autoDebit: null,
+    lastDigits: [],
     version: 0,
     createdAt: ts(w.accounts[0]!.openingDate),
     updatedAt: ts(w.accounts[0]!.openingDate),
   };
+}
+
+const ISSUER_EXAMPLES: readonly { n: number; name: string; institution: string }[] = [
+  { n: 3, name: 'Cartão Itaú (exemplo)', institution: 'Itaú' },
+  { n: 4, name: 'Cartão BB (exemplo)', institution: 'Banco do Brasil' },
+  { n: 5, name: 'Cartão Mercado Pago (exemplo)', institution: 'Mercado Pago' },
+];
+
+export function issuerExampleCardViews(w: World): S['Card'][] {
+  return ISSUER_EXAMPLES.map((example) => ({
+    ...noLimitCardView(w),
+    id: demoId('card', example.n),
+    name: example.name,
+    institution: example.institution,
+  }));
 }
 
 export function futureInstallments(w: World): S['FutureInstallments'] {
@@ -343,8 +380,9 @@ export function listTransactions(
     .sort((a, b) => (a.date === b.date ? (a.id < b.id ? 1 : -1) : a.date < b.date ? 1 : -1));
   let inCents = 0;
   let outCents = 0;
-  for (const r of filtered) {
-    if (r.type === 'INCOME' || r.type === 'MONEY_RECEIVED') inCents += r.cents;
+  for (const r of filtered.filter((x) => x.date <= w.today)) {
+    if (r.type === 'INCOME' || r.type === 'MONEY_RECEIVED' || r.type === 'REFUND')
+      inCents += r.cents;
     if (r.type === 'EXPENSE' || r.type === 'LOAN_GIVEN' || r.type === 'INVOICE_PAYMENT')
       outCents += r.cents;
   }
@@ -388,6 +426,7 @@ export function listEntries(
   for (const e of all) byCat.set(e.categoryId, (byCat.get(e.categoryId) ?? 0) + e.cents);
   const slice = paged(all, page, pageSize);
   return {
+    view: 'MINE',
     items: slice.items.map((e) => ({
       transactionId: e.rec.id,
       transactionType: e.rec.type,
@@ -519,6 +558,7 @@ export function occurrenceDates(r: RecurrenceDef, after: string, until: string):
 export function recurrenceView(w: World, r: RecurrenceDef): S['Recurrence'] {
   return {
     id: r.id,
+    isSubscription: false,
     type: r.type,
     amount: money(r.cents),
     description: r.description,
@@ -547,6 +587,7 @@ export function recurrenceSummary(w: World): S['RecurrenceSummary'] {
   const sum = (t: string) =>
     w.recurrences.filter((r) => r.type === t).reduce((s, r) => s + r.cents, 0);
   return {
+    view: 'MINE',
     fixedCosts: money(sum('EXPENSE')),
     recurringIncome: money(sum('INCOME')),
     estimate: true,
@@ -693,10 +734,12 @@ export function monthTotals(w: World, month: string) {
   const credit = w.consumption
     .filter((e) => e.via === 'CARD' && e.competence === month)
     .reduce((s, e) => s + e.cents, 0);
-  const cashIn = inMonth
-    .filter((r) => r.type === 'INCOME' || r.type === 'MONEY_RECEIVED')
+  const refunds = inMonth.filter((r) => r.type === 'REFUND').reduce((s, r) => s + r.cents, 0);
+  const inCash = inMonth.filter((r) => r.date <= w.today);
+  const cashIn = inCash
+    .filter((r) => r.type === 'INCOME' || r.type === 'MONEY_RECEIVED' || r.type === 'REFUND')
     .reduce((s, r) => s + r.cents, 0);
-  const cashOut = inMonth
+  const cashOut = inCash
     .filter((r) => r.type === 'EXPENSE' || r.type === 'LOAN_GIVEN' || r.type === 'INVOICE_PAYMENT')
     .reduce((s, r) => s + r.cents, 0);
   const invested = inMonth
@@ -711,7 +754,8 @@ export function monthTotals(w: World, month: string) {
     expenses,
     paid,
     credit,
-    consumption: paid + credit,
+    refunds,
+    consumption: paid + credit - refunds,
     cashIn,
     cashOut,
     invested,
@@ -766,6 +810,7 @@ export function dashboardView(w: World): S['DashboardSummary'] {
     .reduce((s, i) => s + i.total, 0);
   const projected = (list: Commit[]) => money(inAccounts + inn(list) - out(list));
   return {
+    view: 'MINE',
     asOf: w.today,
     isProjection: false,
     hasAccounts: true,
@@ -796,7 +841,7 @@ export function dashboardView(w: World): S['DashboardSummary'] {
       income: money(t.income),
       expensesPaid: { total: money(t.paid), byMethod },
       credit: money(t.credit),
-      refunds: money(0),
+      refunds: money(t.refunds),
       consumption: money(t.consumption),
       cashFlow: { in: money(t.cashIn), out: money(t.cashOut), net: money(t.cashIn - t.cashOut) },
       investedNet: money(t.invested),
@@ -919,6 +964,7 @@ export function summaryView(w: World, month: string): S['MonthlySummary'] {
   const savingsRate = t.income > 0 ? ratio(net, t.income) : null;
   const prevRate = prev.income > 0 ? ratio(prevNet, prev.income) : null;
   return {
+    view: 'MINE',
     competence: month,
     partial: month === w.month,
     isProjection: month > w.month,
@@ -1024,6 +1070,7 @@ export function incomeExpenses(w: World, period: S['ReportPeriod']): S['IncomeEx
     };
   });
   return {
+    view: 'MINE',
     period,
     from,
     to,
@@ -1048,6 +1095,7 @@ export function spendingByCategory(
   const rest = sorted.slice(size);
   const restCents = rest.reduce((s, [, c]) => s + c, 0);
   return {
+    view: 'MINE',
     basis: 'COMPETENCE',
     from: `${month}-01`,
     to: lastDayOf(month),

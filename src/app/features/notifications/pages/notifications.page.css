@@ -41,7 +41,7 @@
   overflow: hidden;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-card);
-  background-color: var(--color-surface);
+  background-color: var(--card-flat-bg);
 }
 
 .list > li + li {

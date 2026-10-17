@@ -4,13 +4,15 @@
 
 <div class="shell">
   <div class="shell__window" data-cy="shell-window">
-    <div class="shell__aside glass">
+    <div class="shell__aside glass-rail">
       <app-sidebar class="shell__sidebar" />
     </div>
     <div class="shell__content">
       <ng-container #pwaNotices />
       <app-workspace-header />
-      <router-outlet />
+      <div class="shell__scroll" data-cy="shell-scroll">
+        <router-outlet />
+      </div>
       <router-outlet name="modal" />
     </div>
     <app-bottom-nav class="shell__bottom-nav" />

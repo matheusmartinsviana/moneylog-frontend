@@ -17,6 +17,10 @@
       />
     </div>
 
+    @if (filters().view === 'entries' && filters().lens === 'CONSUMPTION') {
+      <app-view-toggle [view]="filters().amounts" (viewChange)="patch({ amounts: $event })" />
+    }
+
     @switch (list.state().status) {
       @case ('loading') {
         <div data-cy="transactions-loading">

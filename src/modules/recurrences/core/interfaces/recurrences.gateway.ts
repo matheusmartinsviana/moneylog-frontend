@@ -10,6 +10,11 @@ import type {
   RecurrenceSummary,
   RecurrenceUpdate,
 } from '~/modules/recurrences/core/types/recurrence';
+import type {
+  RealizeForeign,
+  SubscriptionsFilter,
+  SubscriptionsPage,
+} from '~/modules/recurrences/core/types/subscription';
 import type { OccurrenceSlice, Slice } from '~/util/api/slice';
 
 export interface RecurrencesQuery {
@@ -22,6 +27,11 @@ export interface OccurrencesQuery {
   readonly from?: string;
   readonly to?: string;
   readonly status?: OccurrenceStatus;
+  readonly page: number;
+  readonly pageSize: number;
+}
+
+export interface SubscriptionsQuery extends SubscriptionsFilter {
   readonly page: number;
   readonly pageSize: number;
 }
@@ -41,6 +51,9 @@ export abstract class RecurrencesGateway {
     amount: string | null,
     idempotencyKey: string,
     payment?: RealizePayment | null,
+    foreign?: RealizeForeign | null,
   ): Observable<RealizedTransaction>;
+  abstract listSubscriptions(query: SubscriptionsQuery): Observable<SubscriptionsPage>;
+  abstract cancelSubscription(id: string, activeUntil: string): Observable<Recurrence>;
   abstract skip(recurrenceId: string, date: string): Observable<Occurrence>;
 }

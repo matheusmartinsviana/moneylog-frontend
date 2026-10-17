@@ -232,6 +232,7 @@ describe('slices', () => {
 
   it('Dado a página de lançamentos, então copia itens e totais por categoria', () => {
     const slice = toEntrySlice({
+      view: 'MINE',
       items: [
         {
           transactionId: 't',

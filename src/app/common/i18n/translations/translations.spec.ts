@@ -40,6 +40,11 @@ const PROPER_NOUNS = new Set([
   'XLSX',
   'PDF',
   'UTF-8',
+  'IOF',
+  'API',
+  'FGTS',
+  'INSS',
+  'IRRF',
 ]);
 
 function sentenceCaseProblems(text: string): string[] {
@@ -87,7 +92,9 @@ describe('Traduções', () => {
             key !== 'shell.brand' &&
             key !== 'form.date.placeholder' &&
             key !== 'shell.aiOn' &&
-            key !== 'shell.aiOff',
+            key !== 'shell.aiOff' &&
+            key !== 'statement.incomeEstimated' &&
+            key !== 'statement.warnings.thisPeriod',
         )
         .flatMap(([key, value]) => {
           const first = value.trim()[0] ?? '';
@@ -122,6 +129,7 @@ describe('Traduções', () => {
       'ai',
       'auth',
       'brief',
+      'cardCashOut',
       'cards',
       'categories',
       'charts',
@@ -134,27 +142,38 @@ describe('Traduções', () => {
       'errors',
       'exports',
       'form',
+      'glass',
       'goals',
       'header',
       'home',
       'imports',
+      'income',
       'lending',
       'more',
       'nav',
+      'netWorth',
       'notFound',
       'notes',
       'notifications',
       'people',
       'projections',
+      'property',
+      'provenance',
+      'purchaseGroups',
       'pwa',
       'quickAdd',
       'recurrences',
       'search',
       'settings',
       'shell',
+      'simulator',
+      'split',
+      'statement',
+      'subscriptions',
       'summary',
       'thirdParties',
       'transactions',
+      'view',
       'workspacePages',
     ]);
   });

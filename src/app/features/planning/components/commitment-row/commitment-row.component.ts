@@ -13,7 +13,7 @@ import { formatRatio } from '~/util/ratio';
   selector: 'li[app-commitment-row]',
   imports: [RouterLink, MoneyComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  host: { class: 'row row-card', '[attr.data-cy]': "'commitment-row-' + commitment().id" },
+  host: { class: 'row', '[attr.data-cy]': "'commitment-row-' + commitment().id" },
   template: `
     @let c = commitment();
     <div class="row__main">
@@ -71,7 +71,10 @@ import { formatRatio } from '~/util/ratio';
       position: relative;
       display: grid;
       gap: var(--space-3);
-      padding: var(--space-4);
+      padding: var(--space-5);
+      border: var(--border-width) solid var(--glass-panel-border);
+      border-radius: var(--radius-card);
+      background-color: var(--card-flat-bg);
       list-style: none;
     }
 
@@ -108,14 +111,10 @@ import { formatRatio } from '~/util/ratio';
 
     .row__amount {
       display: grid;
-      font-weight: var(--weight-semibold);
-    }
-
-    @media (width >= 768px) {
-      :host {
-        grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1fr);
-        align-items: start;
-      }
+      font-size: var(--text-xl);
+      font-weight: var(--weight-medium);
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
     }
   `,
 })

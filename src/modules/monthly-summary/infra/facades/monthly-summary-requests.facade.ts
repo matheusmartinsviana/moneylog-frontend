@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, of, throwError } from 'rxjs';
 
@@ -10,6 +10,7 @@ import type { MonthlySummaryResponse } from '~/modules/monthly-summary/infra/res
 import { emptySummary } from '~/modules/monthly-summary/mock-data/empty-summary';
 import { ProblemError, toProblem } from '~/util/api/problem';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
+import { DEFAULT_VIEW, type ViewMode } from '~/util/view-mode';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -18,7 +19,7 @@ export class MonthlySummaryRequestsFacade extends MonthlySummaryGateway {
   private readonly http = inject(HttpClient);
   private readonly useMocks = inject(API_MOCKS);
 
-  get(month: string): Observable<MonthlySummary> {
+  get(month: string, view: ViewMode = DEFAULT_VIEW): Observable<MonthlySummary> {
     if (this.useMocks) {
       return MONTH.test(month)
         ? of(toMonthlySummary(mockResponse(SUMMARY_ENDPOINTS.month(month), emptySummary(month))))
@@ -33,7 +34,8 @@ export class MonthlySummaryRequestsFacade extends MonthlySummaryGateway {
               }),
           );
     }
-    return this.http.get<MonthlySummaryResponse>(SUMMARY_ENDPOINTS.month(month)).pipe(
+    const params = view === DEFAULT_VIEW ? new HttpParams() : new HttpParams().set('view', view);
+    return this.http.get<MonthlySummaryResponse>(SUMMARY_ENDPOINTS.month(month), { params }).pipe(
       map(toMonthlySummary),
       catchError((error: unknown) => throwError(() => new ProblemError(toProblem(error)))),
     );

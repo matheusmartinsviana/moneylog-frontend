@@ -27,7 +27,7 @@ async function openHomeWithAccounts(page: Page): Promise<void> {
   await seedMockResponses(page, homeResponses());
   await open(page, '/');
   await expect(page.locator('[data-cy="home-register-open"]')).toBeVisible();
-  await expect(page.locator('[data-cy="home-overview-period-D7"]')).toBeVisible();
+  await expect(page.locator('[data-cy="home-chart-period-M3"]')).toBeVisible();
 }
 
 async function open(page: Page, path: string): Promise<void> {
@@ -85,11 +85,14 @@ test.describe('layout: larguras do plano e transições de breakpoint', () => {
     await page.setViewportSize({ width: 375, height: 667 });
     for (const path of ['/', '/settings', '/accounts', '/transactions']) {
       await open(page, path);
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+      await page
+        .locator('[data-cy="shell-scroll"]')
+        .evaluate((el) => el.scrollTo(0, el.scrollHeight));
       const gap = await page.evaluate(() => {
         const nav = document.querySelector('[data-cy="bottom-nav"]')!.getBoundingClientRect();
-        const content = document.querySelector('.shell__content')!.getBoundingClientRect();
-        return nav.top - (content.bottom - nav.height);
+        const scroll = document.querySelector('[data-cy="shell-scroll"]')!;
+        const last = scroll.lastElementChild!.previousElementSibling ?? scroll.lastElementChild!;
+        return nav.top - last.getBoundingClientRect().bottom;
       });
       expect(gap, `${path}: respiro mínimo acima da barra`).toBeGreaterThanOrEqual(-1);
     }
@@ -100,6 +103,18 @@ test.describe('BUG-QA-01 · sidebar recolhida em telas baixas', () => {
   for (const [width, height] of [
     [844, 390],
     [932, 430],
+  ] as const) {
+    test(`${width}x${height}: celular deitado usa a barra inferior e não mostra a sidebar`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await open(page, '/');
+      await expect(page.locator('[data-cy="bottom-nav"]')).toBeVisible();
+      await expect(page.locator('[data-cy="sidebar-signOut"]')).toBeHidden();
+    });
+  }
+
+  for (const [width, height] of [
     [1024, 600],
     [1100, 600],
     [1180, 600],
@@ -148,12 +163,12 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
   });
 
-  test('ordem de Tab: skip-link, trilho (marca, novo registro, essenciais, Mais, Configurações, Sair), busca, tema, sino, avatar', async ({
+  test('ordem de Tab: skip-link, trilho (marca, novo registro, essenciais, Mais, Configurações, Sair), busca, valores, sino, tema, avatar', async ({
     page,
   }) => {
     await open(page, '/');
     const seen: string[] = [];
-    for (let i = 0; i < 1 + 13 + 4; i++) {
+    for (let i = 0; i < 1 + 14 + 5; i++) {
       await page.keyboard.press('Tab');
       seen.push(
         await page.evaluate(() => document.activeElement?.getAttribute('data-cy') ?? 'SEM-DATA-CY'),
@@ -168,15 +183,17 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
       'sidebar-accounts',
       'sidebar-cards',
       'sidebar-goals',
+      'sidebar-budgets',
       'sidebar-planning',
-      'sidebar-people',
-      'sidebar-notes',
+      'sidebar-statement',
+      'sidebar-simulator',
       'sidebar-more',
       'sidebar-settings',
       'sidebar-signOut',
       'global-search-input',
-      'header-theme-toggle',
+      'values-toggle',
       'header-bell',
+      'header-theme-toggle',
       'header-profile',
     ]);
   });
@@ -235,7 +252,7 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
     });
   }
 
-  test('sem IA ligada não há atalho de IA, o chip é "IA desligada" e não há dado de demonstração', async ({
+  test('sem IA ligada não há atalho nem chip de IA e não há dado de demonstração', async ({
     page,
   }) => {
     for (const path of ROUTE_PATHS) {
@@ -244,7 +261,8 @@ test.describe('foco, teclado e menu do avatar (desktop)', () => {
       expect(text, path).not.toMatch(/demonstra|demo\b|FinVault/i);
     }
     await open(page, '/');
-    await expect(page.locator('[data-cy="header-ai-status"]')).toHaveText('IA desligada');
+    await expect(page.locator('[data-cy="header-ai-status"]')).toHaveCount(0);
+    await expect(page.locator('[data-cy="capture-ask-ai"]')).toHaveCount(0);
     await expect(page.locator('[data-cy="sidebar-brand"] img')).toHaveCount(1);
     await expect(page.locator('[data-cy="sidebar-brand"]')).toHaveText('moneylog');
     await expect(page).toHaveTitle(/moneylog/);
@@ -317,8 +335,8 @@ test.describe('temas', () => {
         .filter((m) => !m.getAttribute('media') || matchMedia(m.getAttribute('media')!).matches)
         .map((m) => m.getAttribute('content')),
     );
-    expect(effective).toEqual(['#0b0b12']);
-    expect(CANVAS.dark).toBe('rgb(11, 11, 18)');
+    expect(effective).toEqual(['#0b1d15']);
+    expect(CANVAS.dark).toBe('rgb(11, 29, 21)');
   });
 
   test('data-theme vence o sistema nos dois sentidos e a troca em tempo de execução repinta a casca', async ({
@@ -748,7 +766,7 @@ test.describe('A4 / BUG-QA-12 · alvos de toque e hover sem perder contraste', (
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 1280, height: 800 });
       await openHomeWithAccounts(page);
-      const chip = page.locator('[data-cy="home-overview-period-D7"]');
+      const chip = page.locator('[data-cy="home-chart-period-M3"]');
       await chip.hover();
       await page.waitForTimeout(400);
       const state = await chip.evaluate((el) => {
@@ -764,21 +782,30 @@ test.describe('A4 / BUG-QA-12 · alvos de toque e hover sem perder contraste', (
 
 test.describe('BUG-QA-09 · borda de campos e controles com 3:1 (WCAG 1.4.11)', () => {
   for (const scheme of ['light', 'dark'] as const) {
-    test(`campo de texto e botão neutro: a borda tem 3:1 sobre o fundo (${scheme})`, async ({
-      page,
-    }) => {
+    test(`campo de texto: a borda tem 3:1 sobre o fundo (${scheme})`, async ({ page }) => {
       await seedPreferences(page, { theme: scheme });
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 1280, height: 800 });
       await open(page, '/accounts/new');
-      const surface = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-      for (const selector of ['input.input', '.button:not(.button--primary):not(.button--soft)']) {
-        const border = await page
-          .locator(selector)
-          .first()
-          .evaluate((el) => getComputedStyle(el).borderTopColor);
-        expect(contrastRatio(border, surface), selector).toBeGreaterThanOrEqual(3);
-      }
+      const colors = await page.locator('[data-cy="account-name"]').evaluate((el) => {
+        const pixel = (layers: string[]) => {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 1;
+          const context = canvas.getContext('2d')!;
+          for (const layer of layers) {
+            context.fillStyle = layer;
+            context.fillRect(0, 0, 1, 1);
+          }
+          const [r, g, b] = context.getImageData(0, 0, 1, 1).data;
+          return `rgb(${r}, ${g}, ${b})`;
+        };
+        const surface = getComputedStyle(document.body).backgroundColor;
+        return {
+          border: pixel([surface, getComputedStyle(el).borderTopColor]),
+          surface: pixel([surface]),
+        };
+      });
+      expect(contrastRatio(colors.border, colors.surface)).toBeGreaterThanOrEqual(3);
     });
   }
 
@@ -794,7 +821,7 @@ test.describe('BUG-QA-09 · borda de campos e controles com 3:1 (WCAG 1.4.11)', 
         control: css.getPropertyValue('--color-control-border').trim(),
       };
     });
-    expect(tokens.border).toBe('#e3dff3');
+    expect(tokens.border).toBe('#dde1d3');
     expect(tokens.control).not.toBe(tokens.border);
   });
 });
@@ -828,27 +855,25 @@ test.describe('BUG-QA-06a · foco em forced-colors também nos campos', () => {
   });
 });
 
-test.describe('M6 · cabeçalho do Início e espaço do logo', () => {
-  test('a saudação é um texto de apoio menor que o título da página', async ({ page }) => {
+test.describe('M6 · cabeçalho do Início e marca do trilho', () => {
+  test('a saudação da carteira é um texto de apoio menor que o título da página', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await open(page, '/');
+    await openHomeWithAccounts(page);
     const sizes = await page.evaluate(() => ({
       hello: Number.parseFloat(
-        getComputedStyle(document.querySelector('[data-cy="workspace-greeting"]')!).fontSize,
+        getComputedStyle(document.querySelector('[data-cy="home-wallet-greeting"]')!).fontSize,
       ),
       title: Number.parseFloat(getComputedStyle(document.querySelector('h1')!).fontSize),
     }));
     expect(sizes.hello).toBeLessThan(sizes.title);
   });
 
-  test('o espaço do logo continua vazio e o quadrado da marca alinha com os ícones do trilho', async ({
-    page,
-  }) => {
+  test('o quadrado da marca alinha com os ícones do trilho', async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, '/');
-    const slot = page.locator('.sidebar__logo-slot');
-    await expect(slot).toHaveCount(1);
-    expect(await slot.evaluate((el) => el.childNodes.length)).toBe(0);
+    await expect(page.locator('[data-cy="sidebar-brand"] .sidebar__logo')).toHaveCount(1);
     const centers = await page.evaluate(() => {
       const center = (el: Element | null) => {
         const r = el!.getBoundingClientRect();

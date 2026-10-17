@@ -18,7 +18,8 @@ const ROUTES = [
   '/budgets',
   '/insights',
 ];
-const WIDTHS = [375, 768, 1280, 1440];
+const READING_ROUTES = new Set(['/ai', '/mcp', '/settings']);
+const WIDTHS = [375, 768, 1024, 1199, 1280, 1440];
 
 for (const width of WIDTHS) {
   test(`mesma margem lateral em todas as telas (${width} px)`, async ({ page }) => {
@@ -38,12 +39,12 @@ for (const width of WIDTHS) {
       boxes[route] = { left: content!.x, right: content!.x + content!.width };
       if (!header) {
         const first = await page
-          .locator('[data-cy="workspace-header"] > :first-child')
+          .locator('[data-cy="workspace-header"] > :visible')
           .first()
           .boundingBox();
         const last = await page
-          .locator('[data-cy="workspace-header"] > :last-child')
-          .first()
+          .locator('[data-cy="workspace-header"] > :visible')
+          .last()
           .boundingBox();
         header = { left: first!.x, right: last!.x + last!.width };
       }
@@ -51,7 +52,13 @@ for (const width of WIDTHS) {
     const reference = boxes['/']!;
     for (const [route, box] of Object.entries(boxes)) {
       expect(Math.abs(box.left - reference.left), `${route}: borda esquerda`).toBeLessThan(1.5);
-      expect(Math.abs(box.right - reference.right), `${route}: borda direita`).toBeLessThan(1.5);
+      if (READING_ROUTES.has(route)) {
+        expect(box.right, `${route}: largura de leitura cabe na coluna`).toBeLessThanOrEqual(
+          reference.right + 1.5,
+        );
+      } else {
+        expect(Math.abs(box.right - reference.right), `${route}: borda direita`).toBeLessThan(1.5);
+      }
     }
     expect(Math.abs(header!.left - reference.left), 'cabeçalho: borda esquerda').toBeLessThan(1.5);
     expect(Math.abs(header!.right - reference.right), 'cabeçalho: borda direita').toBeLessThan(1.5);

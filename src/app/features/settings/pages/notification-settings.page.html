@@ -1,15 +1,19 @@
 <app-page-layout
-  reading
   [heading]="t().notifications.settings.title"
   [description]="t().notifications.settings.description"
 >
-  <a pageActions class="button" routerLink="/settings" data-cy="notification-settings-back">
+  <a
+    pageActions
+    class="link-more hit-area"
+    routerLink="/settings"
+    data-cy="notification-settings-back"
+  >
     {{ t().notifications.settings.back }}
   </a>
 
   @switch (facade.state().status) {
     @case ('loading') {
-      <div data-cy="notification-settings-loading">
+      <div class="state-note" data-cy="notification-settings-loading">
         <p class="visually-hidden" role="status">{{ t().notifications.settings.loading }}</p>
         <div class="list-skeleton" aria-hidden="true">
           <div class="list-skeleton__row"></div>
@@ -22,12 +26,12 @@
     }
     @case ('ready') {
       <form
-        class="form"
+        class="form page-grid"
         [formGroup]="form"
         (ngSubmit)="save()"
         data-cy="notification-settings-form"
       >
-        <app-section-container [heading]="t().notifications.settings.dailyTitle">
+        <app-section-container class="span-5" [heading]="t().notifications.settings.dailyTitle">
           <div class="grid">
             <app-switch
               formControlName="dailyEnabled"
@@ -48,9 +52,9 @@
           </div>
         </app-section-container>
 
-        <app-section-container [heading]="t().notifications.settings.kindsTitle">
+        <app-section-container class="span-7" [heading]="t().notifications.settings.kindsTitle">
           <div class="grid grid--kinds" formGroupName="kinds">
-            @for (kind of kinds; track kind) {
+            @for (kind of baseKinds; track kind) {
               <app-switch
                 [formControlName]="kind"
                 [fieldId]="'settings-kind-' + kind"
@@ -60,7 +64,51 @@
           </div>
         </app-section-container>
 
-        <app-section-container [heading]="t().notifications.settings.quietTitle">
+        <app-section-container
+          class="span-12"
+          [heading]="t().notifications.settings.alerts.title"
+          [description]="t().notifications.settings.alerts.description"
+        >
+          <div class="grid grid--kinds" formGroupName="kinds">
+            @for (kind of alertKinds; track kind) {
+              <app-switch
+                [formControlName]="kind"
+                [fieldId]="'settings-kind-' + kind"
+                [label]="t().notifications.settings.kindsLabels[kind]"
+              />
+            }
+          </div>
+          <div class="grid grid--alerts">
+            <app-text-field
+              formControlName="unusedDays"
+              fieldId="settings-unused-days"
+              inputmode="numeric"
+              autocomplete="off"
+              [mandatory]="false"
+              [maxlength]="4"
+              [label]="t().notifications.settings.alerts.unusedDays"
+              [hint]="t().notifications.settings.alerts.unusedDaysHint"
+            />
+            <app-number-stepper
+              formControlName="leadDays"
+              fieldId="settings-lead-days"
+              [min]="leadMin"
+              [max]="leadMax"
+              [label]="t().notifications.settings.alerts.leadDays"
+              [hint]="t().notifications.settings.alerts.leadDaysHint"
+            />
+            <app-money-input
+              formControlName="tolerance"
+              [allowZero]="true"
+              fieldId="settings-document-tolerance"
+              [currency]="currency"
+              [label]="t().notifications.settings.alerts.tolerance"
+              [hint]="t().notifications.settings.alerts.toleranceHint"
+            />
+          </div>
+        </app-section-container>
+
+        <app-section-container class="span-6" [heading]="t().notifications.settings.quietTitle">
           <div class="grid grid--two">
             <app-time-picker
               formControlName="quietFrom"
@@ -75,7 +123,7 @@
           </div>
         </app-section-container>
 
-        <app-section-container [heading]="t().notifications.settings.displayName">
+        <app-section-container class="span-6" [heading]="t().notifications.settings.displayName">
           <app-text-field
             formControlName="displayName"
             fieldId="settings-display-name"
@@ -88,14 +136,16 @@
         </app-section-container>
 
         @if (saveError(); as message) {
-          <p class="banner" role="alert" data-cy="notification-settings-error">{{ message }}</p>
+          <p class="banner span-12" role="alert" data-cy="notification-settings-error">
+            {{ message }}
+          </p>
         }
         @if (facade.saved()) {
-          <p class="banner" role="status" data-cy="notification-settings-saved">
+          <p class="banner span-12" role="status" data-cy="notification-settings-saved">
             {{ t().notifications.settings.saved }}
           </p>
         }
-        <div>
+        <div class="span-12">
           <button
             type="submit"
             class="button button--primary"

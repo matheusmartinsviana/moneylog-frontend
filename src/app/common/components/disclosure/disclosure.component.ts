@@ -98,8 +98,9 @@ let nextId = 0;
     .disclosure__region {
       display: grid;
       grid-template-rows: 0fr;
+      margin-inline: calc(var(--space-1) * -1);
+      padding-inline: var(--space-1);
       overflow-x: clip;
-      overflow-clip-margin: var(--space-1);
       visibility: hidden;
       transition:
         grid-template-rows var(--duration-base) var(--ease-standard),

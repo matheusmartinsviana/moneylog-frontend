@@ -5,5 +5,7 @@ type Schemas = components['schemas'];
 export type ThirdPartyReceivablesResponse = Schemas['ThirdPartyReceivables'];
 export type ThirdPartyExpenseResponse = Schemas['ThirdPartyExpense'];
 export type ThirdPartyExpenseRequest = Schemas['ThirdPartyExpenseInput'];
+export type ThirdPartyExpectedMonthResponse = Schemas['ThirdPartyExpectedMonth'];
+export type ThirdPartyInstallmentResponse = Schemas['ThirdPartyInstallment'];
 export type ThirdPartyReceiptResponse = Schemas['ThirdPartyReceipt'];
 export type ThirdPartyReceiptRequest = Schemas['ThirdPartyReceiptInput'];

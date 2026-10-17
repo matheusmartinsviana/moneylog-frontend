@@ -2,6 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, exhaustMap, map, of, startWith, Subject, switchMap, tap } from 'rxjs';
 
+import { ProfileFacade } from '~/modules/notifications/core/facades/profile.facade';
 import { NotificationsGateway } from '~/modules/notifications/core/interfaces/notifications.gateway';
 import type { NotificationSettings } from '~/modules/notifications/core/types/notification';
 import { Problem, problemOf } from '~/util/api/problem';
@@ -14,6 +15,7 @@ export type SettingsState =
 @Injectable()
 export class NotificationSettingsFacade {
   private readonly gateway = inject(NotificationsGateway);
+  private readonly profile = inject(ProfileFacade);
   private readonly loads = new Subject<void>();
   private readonly saves = new Subject<NotificationSettings>();
   private readonly current = signal<SettingsState>({ status: 'loading' });
@@ -35,6 +37,7 @@ export class NotificationSettingsFacade {
       .pipe(
         switchMap(() =>
           this.gateway.settings().pipe(
+            tap((settings) => this.profile.adopt(settings)),
             map((settings): SettingsState => ({ status: 'ready', settings })),
             startWith<SettingsState>({ status: 'loading' }),
             catchError((error: unknown) =>
@@ -55,6 +58,7 @@ export class NotificationSettingsFacade {
           return this.gateway.saveSettings(input).pipe(
             tap((settings) => {
               this.current.set({ status: 'ready', settings });
+              this.profile.adopt(settings);
               this.savedState.set(true);
             }),
             map(() => null),

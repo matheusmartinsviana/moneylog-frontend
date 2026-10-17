@@ -1,0 +1,135 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.scroll {
+  overflow-x: auto;
+  contain: paint;
+  border: var(--border-width) solid var(--glass-panel-border);
+  border-radius: var(--radius-card);
+  background: var(--card-flat-bg);
+}
+
+.table {
+  width: 100%;
+  min-width: 28rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table__head {
+  color: var(--color-text-muted);
+  font-weight: var(--weight-semibold);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.table__rowhead {
+  position: sticky;
+  left: 0;
+  min-width: 8rem;
+  background: var(--glass-panel-solid);
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
+  text-align: left;
+}
+
+.table__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.group th,
+.group td {
+  background: transparent;
+}
+
+.group .table__rowhead {
+  background: var(--glass-panel-solid);
+}
+
+.group td strong {
+  font-weight: var(--weight-medium);
+}
+
+.detail td {
+  color: var(--color-text-muted);
+}
+
+.detail .table__rowhead {
+  padding-left: var(--space-6);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-regular, 400);
+}
+
+.result th,
+.result td {
+  font-size: var(--text-base);
+}
+
+.is-negative {
+  background: var(--color-risk-soft);
+  color: var(--color-risk);
+}
+
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+}
+
+.items {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.items__row {
+  display: grid;
+  justify-items: end;
+}
+
+.items__meta,
+.note {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+@media (width <= 640px) {
+  .table th,
+  .table td {
+    padding: var(--space-3);
+  }
+
+  .table__rowhead {
+    min-width: 7.5rem;
+    max-width: 8rem;
+  }
+
+  .detail .table__rowhead {
+    padding-left: var(--space-4);
+  }
+}
+
+.note {
+  margin: var(--space-2) 0 0;
+}

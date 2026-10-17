@@ -65,6 +65,96 @@ describe('modo demonstração (backend de exemplo)', () => {
     expect(goals.items.find((g) => g.reached)).toMatchObject({ stage: 'ACHIEVED' });
   });
 
+  describe('casos de integridade financeira (PR 01)', () => {
+    interface DemoTx {
+      id: string;
+      type: string;
+      date: string;
+      description: string;
+      amount: { amount: string };
+      installments: unknown[];
+    }
+    const all = () => get<{ items: DemoTx[] }>('/v1/transactions?pageSize=500');
+    const asOf = async () => (await get<{ asOf: string }>('/v1/dashboard/summary')).asOf;
+
+    it('Dado o demo, então há transferência de R$ 1.000, fatura paga de R$ 1.283, reembolso de R$ 50 e compra de R$ 1.200 em 6x', async () => {
+      const { items } = await all();
+      const find = (type: string, amount: string) =>
+        items.find((t) => t.type === type && t.amount.amount === amount);
+
+      expect(find('TRANSFER', '1000.00')).toBeDefined();
+      expect(find('INVOICE_PAYMENT', '1283.00')).toBeDefined();
+      expect(find('REFUND', '50.00')).toBeDefined();
+      expect(find('CARD_PURCHASE', '1200.00')?.installments).toHaveLength(6);
+    });
+
+    it('Dado o demo, então há um lançamento agendado depois de hoje, e a lista até hoje não o traz', async () => {
+      const today = await asOf();
+      const { items } = await all();
+      const scheduled = items.filter((t) => t.date > today);
+      const upToToday = await get<{ items: DemoTx[] }>(
+        `/v1/transactions?pageSize=5&to=${today}&status=ACTIVE`,
+      );
+
+      expect(scheduled).toHaveLength(1);
+      expect(upToToday.items.every((t) => t.date <= today)).toBe(true);
+      expect(upToToday.items).toHaveLength(5);
+    });
+
+    it('Dado o lançamento agendado, então o fluxo de caixa do mês e o total da lista não o contam, e o consumo do mês o inclui como competência', async () => {
+      const today = await asOf();
+      const month = today.slice(0, 7);
+      const { items } = await all();
+      const seguro = items.find((t) => t.description === 'Seguro do celular')!;
+      const dash = await get<{
+        month: {
+          cashFlow: { out: { amount: string }; in: { amount: string } };
+          consumption: { amount: string };
+        };
+      }>('/v1/dashboard/summary');
+      const outTypes = ['EXPENSE', 'LOAN_GIVEN', 'INVOICE_PAYMENT'];
+      const inTypes = ['INCOME', 'MONEY_RECEIVED', 'REFUND'];
+      const sumOf = (types: string[], onlyRealized: boolean) =>
+        items
+          .filter(
+            (t) =>
+              types.includes(t.type) &&
+              t.date.startsWith(month) &&
+              (!onlyRealized || t.date <= today),
+          )
+          .reduce((s, t) => s + cents(t.amount), 0);
+      const listed = await get<{
+        totals: { cashFlow: { out: { amount: string }; in: { amount: string } } };
+      }>(`/v1/transactions?from=${month}-01&to=${month}-31&pageSize=1`);
+
+      expect(seguro.date > today).toBe(true);
+      expect(cents(seguro.amount)).toBe(9000);
+      expect(cents(dash.month.cashFlow.out)).toBe(sumOf(outTypes, true));
+      expect(cents(dash.month.cashFlow.in)).toBe(sumOf(inTypes, true));
+      expect(cents(listed.totals.cashFlow.out)).toBe(sumOf(outTypes, true));
+      if (seguro.date.startsWith(month)) {
+        expect(cents(listed.totals.cashFlow.out)).not.toBe(sumOf(outTypes, false));
+        expect(sumOf(outTypes, false) - sumOf(outTypes, true)).toBe(9000);
+      }
+    });
+
+    it('Dado o reembolso, então o consumo do mês continua batendo entre painel, resumo e gasto por categoria', async () => {
+      const dash = await get<{
+        asOf: string;
+        month: { consumption: { amount: string }; refunds: { amount: string } };
+      }>('/v1/dashboard/summary');
+      const month = dash.asOf.slice(0, 7);
+      const spending = await get<{ total: { amount: string } }>(
+        `/v1/reports/spending-by-category?month=${month}&limit=5`,
+      );
+      const { items } = await all();
+      const refundInMonth = items.some((t) => t.type === 'REFUND' && t.date.startsWith(month));
+
+      expect(cents(spending.total)).toBe(cents(dash.month.consumption));
+      expect(cents(dash.month.refunds) > 0).toBe(refundInMonth);
+    });
+  });
+
   it('Dado qualquer alteração, então responde erro de modo demonstração', async () => {
     const backend = new DemoHttpBackend();
     await expect(
@@ -233,5 +323,15 @@ describe('modo demonstração (backend de exemplo)', () => {
         });
       }
     });
+  });
+
+  it('Dado a lista de cartões de exemplo, então inclui Itaú, Nubank, Banco do Brasil e Mercado Pago rotulados como exemplo', async () => {
+    const cards = await get<{ items: { institution: string | null; name: string }[] }>('/v1/cards');
+    const institutions = cards.items.map((card) => card.institution);
+
+    expect(institutions).toEqual(
+      expect.arrayContaining(['Itaú', 'Nubank', 'Banco do Brasil', 'Mercado Pago']),
+    );
+    expect(cards.items.filter((card) => card.name.includes('(exemplo)'))).toHaveLength(3);
   });
 });

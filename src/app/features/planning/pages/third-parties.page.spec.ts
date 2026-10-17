@@ -1,11 +1,19 @@
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { NEVER, of } from 'rxjs';
 
 import { pt } from '~/app/common/i18n/translations/pt';
+import { ToastService } from '~/app/common/services/toast.service';
 import { ThirdPartiesPage } from '~/app/features/planning/pages/third-parties.page';
-import { brl, failWith } from '~/testing/accounts-testing';
+import {
+  AccountsGatewayStub,
+  anAccount,
+  brl,
+  failWith,
+  provideAccountsStub,
+} from '~/testing/accounts-testing';
 import { axeViolations, describeViolations } from '~/testing/axe';
 import { provideI18nTesting } from '~/testing/i18n-testing';
 import {
@@ -23,9 +31,18 @@ const text = (el: HTMLElement) =>
     .replace(/\u00a0/g, ' ')
     .trim();
 
-async function setup(gateway = new ThirdPartiesGatewayStub()) {
+async function setup(
+  gateway = new ThirdPartiesGatewayStub(),
+  accounts = new AccountsGatewayStub(),
+) {
+  if (accounts.accounts.length === 0 && !accounts.listError) accounts.accounts = [anAccount()];
   const result = await render(ThirdPartiesPage, {
-    providers: [provideI18nTesting('pt'), provideRouter([]), provideThirdPartiesStub(gateway)],
+    providers: [
+      provideI18nTesting('pt'),
+      provideRouter([]),
+      provideThirdPartiesStub(gateway),
+      provideAccountsStub(accounts),
+    ],
   });
   await result.fixture.whenStable();
   return { ...result, gateway };
@@ -131,6 +148,7 @@ describe('ThirdPartiesPage', () => {
               received: brl('50.00'),
               pending: brl('0.00'),
               status: 'RECEIVED',
+              installments: [],
             },
           ],
         },
@@ -151,17 +169,32 @@ describe('ThirdPartiesPage', () => {
     expect(gateway.gets).toEqual([null, null]);
   });
 
-  it('Dado registrar recebimento, então o modal envia pessoa, valor, data e vínculo opcional ao backend', async () => {
+  it('Dado registrar recebimento, então a escolha entre conta e saldo é obrigatória e nada é enviado sem ela', async () => {
     const user = userEvent.setup();
     const { gateway } = await setup();
 
     await user.click(screen.getByTestId('tp-register-receipt'));
-    expect(await screen.findByTestId('tpr-description')).toHaveTextContent(
-      pt.thirdParties.receipts.modal.description,
-    );
-    await user.click(screen.getByTestId('tpr-person'));
+    await user.click(await screen.findByTestId('tpr-person'));
     await user.click(await screen.findByRole('option', { name: 'Ana' }));
     await user.type(screen.getByTestId('tpr-amount'), '50,00');
+
+    expect(screen.getByTestId('tpr-save')).toBeDisabled();
+    expect(gateway.receipts).toHaveLength(0);
+  });
+
+  it('Dado "já está no saldo", então avisa o efeito no patrimônio e envia sem conta', async () => {
+    const user = userEvent.setup();
+    const { gateway } = await setup();
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '50,00');
+    await user.click(screen.getByTestId('tpr-mode-IN_BALANCE'));
+
+    expect(screen.getByTestId('tpr-balance-warning')).toHaveTextContent(
+      pt.thirdParties.receipts.modal.balanceWarning,
+    );
     await user.click(screen.getByTestId('tpr-save'));
 
     expect(gateway.receipts).toHaveLength(1);
@@ -169,7 +202,199 @@ describe('ThirdPartiesPage', () => {
       personId: 'person-1',
       amount: '50.00',
       transactionId: null,
+      accountId: null,
     });
     expect(gateway.gets).toEqual([null, null]);
+  });
+
+  it('Dado "mover para uma conta", então exige a conta e envia o accountId escolhido', async () => {
+    const user = userEvent.setup();
+    const { gateway } = await setup();
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '50,00');
+    await user.click(screen.getByTestId('tpr-mode-MOVE'));
+    await user.click(await screen.findByTestId('tpr-account'));
+    await user.click(await screen.findByRole('option', { name: anAccount().name }));
+    await user.click(screen.getByTestId('tpr-save'));
+
+    expect(gateway.receipts[0]!.input).toMatchObject({ accountId: 'acc-1' });
+  });
+
+  it.each([
+    ['ACCOUNT_MOVEMENT', 'O valor entrou na conta e a parte a receber diminuiu.'],
+    ['EQUITY_OFFSET', 'porque o dinheiro já estava no saldo'],
+    ['NONE', 'Nada mudou nas contas.'],
+  ] as const)(
+    'Dado o efeito %s do servidor, então o aviso conta o que aconteceu no razão',
+    async (effect, expected) => {
+      const user = userEvent.setup();
+      const gateway = new ThirdPartiesGatewayStub();
+      gateway.recordReceipt$ = of({
+        id: 'rcp-1',
+        personId: 'person-1',
+        transactionId: null,
+        amount: brl('50.00'),
+        receivedOn: '2026-10-05',
+        note: null,
+        settlement: effect === 'ACCOUNT_MOVEMENT' ? 'ACCOUNT' : 'ALREADY_IN_BALANCE',
+        ledgerEffect: effect,
+      });
+      await setup(gateway);
+
+      await user.click(screen.getByTestId('tp-register-receipt'));
+      await user.click(await screen.findByTestId('tpr-person'));
+      await user.click(await screen.findByRole('option', { name: 'Ana' }));
+      await user.type(screen.getByTestId('tpr-amount'), '50,00');
+      await user.click(screen.getByTestId('tpr-mode-IN_BALANCE'));
+      await user.click(screen.getByTestId('tpr-save'));
+
+      expect(TestBed.inject(ToastService).toasts()[0]?.message).toContain(expected);
+    },
+  );
+
+  it('Dado um efeito desconhecido do servidor, então o aviso é o genérico de recebimento registrado', async () => {
+    const user = userEvent.setup();
+    const gateway = new ThirdPartiesGatewayStub();
+    gateway.recordReceipt$ = of({
+      id: 'rcp-1',
+      personId: 'person-1',
+      transactionId: null,
+      amount: brl('50.00'),
+      receivedOn: '2026-10-05',
+      note: null,
+      settlement: 'ALREADY_IN_BALANCE',
+      ledgerEffect: null,
+    });
+    await setup(gateway);
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '50,00');
+    await user.click(screen.getByTestId('tpr-mode-IN_BALANCE'));
+    await user.click(screen.getByTestId('tpr-save'));
+
+    expect(TestBed.inject(ToastService).toasts()[0]?.message).toBe('Recebimento registrado.');
+  });
+
+  it('Dado trocar de "mover para uma conta" para "já está no saldo", então o accountId escolhido não é enviado', async () => {
+    const user = userEvent.setup();
+    const { gateway } = await setup();
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '50,00');
+    await user.click(screen.getByTestId('tpr-mode-MOVE'));
+    await user.click(await screen.findByTestId('tpr-account'));
+    await user.click(await screen.findByRole('option', { name: anAccount().name }));
+    await user.click(screen.getByTestId('tpr-mode-IN_BALANCE'));
+    await user.click(screen.getByTestId('tpr-save'));
+
+    expect(gateway.receipts[0]!.input).toMatchObject({ accountId: null });
+  });
+
+  it('Dado o recebimento acima do devido, então o erro do servidor aparece no campo do valor e o modal fica aberto', async () => {
+    const user = userEvent.setup();
+    const gateway = new ThirdPartiesGatewayStub();
+    gateway.recordReceipt$ = failWith(422, 'DEBT_SETTLEMENT_EXCEEDS_OUTSTANDING');
+    await setup(gateway);
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '5.000,00');
+    await user.click(screen.getByTestId('tpr-mode-IN_BALANCE'));
+    await user.click(screen.getByTestId('tpr-save'));
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(gateway.gets).toEqual([null]);
+  });
+
+  it('Dado o clique duplo em salvar, então só um recebimento é enviado', async () => {
+    const user = userEvent.setup();
+    const gateway = new ThirdPartiesGatewayStub();
+    gateway.recordReceipt$ = NEVER;
+    await setup(gateway);
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '50,00');
+    await user.click(screen.getByTestId('tpr-mode-IN_BALANCE'));
+    await user.click(screen.getByTestId('tpr-save'));
+    await user.click(screen.getByTestId('tpr-save'));
+
+    expect(gateway.receipts).toHaveLength(1);
+  });
+
+  it('Dado falha ao carregar as contas no modo "mover", então avisa e deixa tentar de novo', async () => {
+    const user = userEvent.setup();
+    const accounts = new AccountsGatewayStub();
+    accounts.listError = failWith(500, 'INTERNAL');
+    await setup(new ThirdPartiesGatewayStub(), accounts);
+
+    await user.click(screen.getByTestId('tp-register-receipt'));
+    await user.click(await screen.findByTestId('tpr-person'));
+    await user.click(await screen.findByRole('option', { name: 'Ana' }));
+    await user.type(screen.getByTestId('tpr-amount'), '50,00');
+    await user.click(screen.getByTestId('tpr-mode-MOVE'));
+
+    expect(await screen.findByTestId('tpr-accounts-error')).toBeInTheDocument();
+    expect(screen.getByTestId('tpr-accounts-retry')).toBeInTheDocument();
+  });
+
+  it('Dado uma pessoa com divisão de cartão, então lista as competências com devido, recebido e pendente da API', async () => {
+    const gateway = new ThirdPartiesGatewayStub();
+    const base = aReceivables();
+    const person = base.people[0]!;
+    gateway.receivables$ = of({
+      ...base,
+      people: [
+        {
+          ...person,
+          months: [
+            {
+              competence: '2026-11',
+              owed: brl('50.00'),
+              received: brl('0.00'),
+              pending: brl('50.00'),
+            },
+            {
+              competence: '2026-12',
+              owed: brl('50.00'),
+              received: brl('0.00'),
+              pending: brl('50.00'),
+            },
+          ],
+        },
+      ],
+    });
+    await setup(gateway);
+
+    expect(screen.getByTestId('tp-months-person-1')).toBeInTheDocument();
+    expect(text(screen.getByTestId('tp-month-person-1-2026-11'))).toContain('R$ 50,00');
+    expect(screen.getByTestId('tp-separate')).toHaveTextContent(pt.thirdParties.total.separate);
+  });
+
+  it('Dado um item de origem desconhecida, então usa o rótulo genérico em vez de quebrar', async () => {
+    const gateway = new ThirdPartiesGatewayStub();
+    const base = aReceivables();
+    const person = base.people[0]!;
+    gateway.receivables$ = of({
+      ...base,
+      people: [
+        {
+          ...person,
+          items: [{ ...person.items[0]!, refId: 'x-1', source: 'FUTURE_SOURCE' as never }],
+        },
+      ],
+    });
+    await setup(gateway);
+
+    expect(text(screen.getByTestId('tp-item-x-1'))).toContain(pt.thirdParties.people.sourceOther);
   });
 });

@@ -1,6 +1,7 @@
 export const RECURRENCES_ENDPOINTS = {
   collection: '/v1/recurrences',
   summary: '/v1/recurrences/summary',
+  subscriptions: '/v1/subscriptions',
   occurrences: '/v1/recurrences/occurrences',
   item: (id: string) => `/v1/recurrences/${encodeURIComponent(id)}`,
   end: (id: string) => `/v1/recurrences/${encodeURIComponent(id)}/end`,

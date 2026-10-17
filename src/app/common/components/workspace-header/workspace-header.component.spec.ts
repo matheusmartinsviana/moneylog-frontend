@@ -9,8 +9,6 @@ import {
   greetingPeriod,
   WorkspaceHeaderComponent,
 } from '~/app/common/components/workspace-header/workspace-header.component';
-import { en } from '~/app/common/i18n/translations/en';
-import { es } from '~/app/common/i18n/translations/es';
 import { pt } from '~/app/common/i18n/translations/pt';
 import { provideAuthenticatedSession } from '~/testing/auth-testing';
 import { axeViolations, describeViolations } from '~/testing/axe';
@@ -61,25 +59,14 @@ describe('greetingPeriod (FE-S-211: só o texto, sem efeito financeiro)', () => 
 });
 
 describe('WorkspaceHeaderComponent', () => {
-  it.each([
-    [9, 'Bom dia'],
-    [14, 'Boa tarde'],
-    [21, 'Boa noite'],
-  ])('Dado o Início às %ih, então saúda "%s" sem nome, com o subtítulo', async (hour, text) => {
-    await setup({ hour });
+  it('Dado o Início, então o cabeçalho não saúda e traz olho, sino, tema e usuário', async () => {
+    await setup({ url: '/' });
 
-    expect(screen.getByTestId('workspace-greeting')).toHaveTextContent(text);
-    expect(screen.getByTestId('workspace-subtitle')).toHaveTextContent(pt.header.subtitle);
-    expect(screen.getByTestId('workspace-greeting').textContent?.trim()).toBe(text);
-  });
-
-  it.each([
-    ['en', en.header.greeting.evening],
-    ['es', es.header.greeting.evening],
-  ] as const)('Dado o idioma %s, então a saudação vem das traduções', async (language, text) => {
-    await setup({ hour: 21, language });
-
-    expect(screen.getByTestId('workspace-greeting')).toHaveTextContent(text);
+    expect(screen.queryByTestId('workspace-greeting')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('workspace-subtitle')).not.toBeInTheDocument();
+    expect(screen.getByTestId('values-toggle')).toBeInTheDocument();
+    expect(screen.getByTestId('header-bell')).toBeInTheDocument();
+    expect(screen.getByTestId('header-profile')).toBeInTheDocument();
   });
 
   it('Dado outra tela que não o Início, então não há saudação (o h1 da página não duplica)', async () => {
@@ -94,7 +81,6 @@ describe('WorkspaceHeaderComponent', () => {
     expect(screen.queryByTestId('header-actions')).not.toBeInTheDocument();
     expect(container.querySelector('.button--primary')).toBeNull();
     expect(screen.getByTestId('header-theme-toggle')).toBeInTheDocument();
-    expect(screen.getByTestId('header-bell')).toBeInTheDocument();
     expect(screen.getByTestId('header-profile')).toBeInTheDocument();
   });
 
@@ -106,7 +92,7 @@ describe('WorkspaceHeaderComponent', () => {
   });
 
   it('Dado o cabeçalho, então não há chip de IA (o estado fica na sidebar) e o sino abre um pop-up em vez de navegar', async () => {
-    await setup();
+    await setup({ url: '/transactions' });
 
     expect(screen.queryByTestId('header-ai-status')).not.toBeInTheDocument();
     const bell = screen.getByRole('button', { name: pt.notifications.bell.label });

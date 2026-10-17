@@ -10,10 +10,18 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { merge } from 'rxjs';
 
+import { DisclosureComponent } from '~/app/common/components/disclosure/disclosure.component';
 import { EmptyStateComponent } from '~/app/common/components/empty-state/empty-state.component';
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import { FormModalComponent } from '~/app/common/components/form-modal/form-modal.component';
@@ -24,6 +32,7 @@ import {
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { MoneyInputComponent } from '~/app/common/components/forms/money-input/money-input.component';
 import { NumberStepperComponent } from '~/app/common/components/forms/number-stepper/number-stepper.component';
+import { RadioGroupComponent } from '~/app/common/components/forms/radio-group/radio-group.component';
 import { SelectComponent } from '~/app/common/components/forms/select/select.component';
 import { TextFieldComponent } from '~/app/common/components/forms/text-field/text-field.component';
 import { dirtySignal } from '~/app/common/forms/dirty-signal';
@@ -45,6 +54,7 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   CARD_NAME_TOO_LONG: 'name',
   CARD_INSTITUTION_TOO_LONG: 'institution',
   CARD_INVALID_LIMIT: 'limit',
+  CARD_LAST_DIGITS_INVALID: 'lastDigits',
   AMOUNT_ABOVE_LIMIT: 'limit',
   TRANSACTION_ACCOUNT_NOT_CASH: 'defaultPaymentAccountId',
   ACCOUNT_ARCHIVED: 'defaultPaymentAccountId',
@@ -52,6 +62,37 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
 };
 
 const MAX_DAY = 31;
+const LAST_DIGITS = /^\d{4}$/;
+const MAX_LAST_DIGITS = 5;
+const LAST_DIGITS_SEPARATOR = /[\s,;]+/;
+type AutoDebitChoice = 'on' | 'off' | 'unknown';
+const AUTO_DEBIT_CHOICES: readonly AutoDebitChoice[] = ['on', 'off', 'unknown'];
+
+function autoDebitChoice(value: boolean | null): AutoDebitChoice {
+  return value === null ? 'unknown' : value ? 'on' : 'off';
+}
+
+function autoDebitValue(choice: string | null): boolean | null {
+  return choice === 'on' ? true : choice === 'off' ? false : null;
+}
+
+function parseLastDigits(text: string): string[] {
+  return text
+    .split(LAST_DIGITS_SEPARATOR)
+    .map((part) => part.trim())
+    .filter((part) => part !== '');
+}
+
+function lastDigitsValidator(control: AbstractControl): ValidationErrors | null {
+  const parts = parseLastDigits(String(control.value ?? ''));
+  const valid =
+    parts.every((part) => LAST_DIGITS.test(part)) &&
+    parts.length <= MAX_LAST_DIGITS &&
+    new Set(parts).size === parts.length;
+  return valid ? null : { pattern: true };
+}
+
+const INSTITUTION_SUGGESTIONS = ['Itaú', 'Nubank', 'Banco do Brasil', 'Mercado Pago'] as const;
 
 @Component({
   selector: 'app-card-form-page',
@@ -65,7 +106,9 @@ const MAX_DAY = 31;
     MoneyInputComponent,
     NumberStepperComponent,
     SelectComponent,
+    RadioGroupComponent,
     BillingChangeNoticeComponent,
+    DisclosureComponent,
   ],
   providers: [CardFormFacade, BillingChangePreviewFacade, AccountsListFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -93,6 +136,7 @@ export class CardFormPage {
   protected readonly billing = inject(BillingChangePreviewFacade);
   protected readonly currency = CARD_CURRENCY;
   protected readonly maxDay = MAX_DAY;
+  protected readonly institutionSuggestions = INSTITUTION_SUGGESTIONS;
 
   readonly id = input<string>();
 
@@ -112,7 +156,18 @@ export class CardFormPage {
     closingDay: new FormControl<number | null>(null, [Validators.required]),
     dueDay: new FormControl<number | null>(null, [Validators.required]),
     defaultPaymentAccountId: new FormControl<string | null>(null),
+    autoDebit: new FormControl<string | null>('unknown'),
+    brand: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(40)] }),
+    bestPurchaseDay: new FormControl<number | null>(null),
+    lastDigits: new FormControl('', { nonNullable: true, validators: [lastDigitsValidator] }),
   });
+
+  protected readonly autoDebitOptions = computed<readonly ChoiceOption[]>(() =>
+    AUTO_DEBIT_CHOICES.map((value) => ({
+      value,
+      label: this.t().cards.form.autoDebitOptions[value],
+    })),
+  );
 
   protected readonly dirty = dirtySignal(this.form);
 
@@ -173,6 +228,10 @@ export class CardFormPage {
           closingDay: card.closingDay,
           dueDay: card.dueDay,
           defaultPaymentAccountId: card.defaultPaymentAccountId,
+          autoDebit: autoDebitChoice(card.autoDebit),
+          brand: card.brand ?? '',
+          bestPurchaseDay: card.bestPurchaseDay,
+          lastDigits: card.lastDigits.join(', '),
         });
         this.staleBilling.set(false);
         this.updateBillingPreview();
@@ -237,6 +296,10 @@ export class CardFormPage {
       closingDay: value.closingDay ?? 0,
       dueDay: value.dueDay ?? 0,
       defaultPaymentAccountId: value.defaultPaymentAccountId,
+      autoDebit: autoDebitValue(value.autoDebit),
+      brand: value.brand.trim() === '' ? null : value.brand.trim(),
+      bestPurchaseDay: value.bestPurchaseDay,
+      lastDigits: parseLastDigits(value.lastDigits),
     };
     const card = this.card();
     const id = this.id();
@@ -258,6 +321,11 @@ export class CardFormPage {
       return;
     }
     this.facade.save({ kind: 'create', input: base });
+  }
+
+  protected suggestInstitution(name: string): void {
+    this.form.controls.institution.setValue(name);
+    this.form.controls.institution.markAsDirty();
   }
 
   protected retryLoad(): void {

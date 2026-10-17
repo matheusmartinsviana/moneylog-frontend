@@ -1,0 +1,19 @@
+<div class="cuts" role="group" [attr.aria-label]="t().simulator.cuts.groupLabel">
+  <p class="cuts__summary" role="status" data-cy="simulator-cuts-summary">{{ summary() }}</p>
+  <ul class="cuts__list" data-cy="simulator-cuts-list">
+    @for (option of options(); track option.id) {
+      <li class="cuts__item">
+        <app-checkbox
+          [fieldId]="'simulator-cut-' + option.id"
+          [label]="option.name"
+          [ngModel]="isSelected(option.id)"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="toggle(option.id, $event)"
+        />
+        <span class="cuts__amount">
+          {{ perMonth(option) }}
+        </span>
+      </li>
+    }
+  </ul>
+</div>

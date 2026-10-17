@@ -10,12 +10,21 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { MoneyInputComponent } from '~/app/common/components/forms/money-input/money-input.component';
 import { SelectComponent } from '~/app/common/components/forms/select/select.component';
+import { TextFieldComponent } from '~/app/common/components/forms/text-field/text-field.component';
 import { SheetComponent } from '~/app/common/components/sheet/sheet.component';
 import { applyProblemToForm } from '~/app/common/forms/problem-form';
 import { HTML_LANG } from '~/app/common/i18n/i18n';
@@ -29,8 +38,10 @@ import type {
   RealizedTransaction,
   RecurrenceMethod,
 } from '~/modules/recurrences/core/types/recurrence';
+import type { CurrencyCode, RealizeForeign } from '~/modules/recurrences/core/types/subscription';
 import { formatIsoDate } from '~/util/date';
 import type { Money } from '~/util/money';
+import { bpsToPercentText, percentTextToBps } from '~/util/ratio';
 
 export interface RealizeTarget {
   readonly recurrenceId: string;
@@ -39,6 +50,22 @@ export interface RealizeTarget {
   readonly label: string;
   readonly viaCard: boolean | null;
   readonly accountToDefine?: boolean;
+  readonly foreign?: RealizeTargetForeign | null;
+}
+
+export interface RealizeTargetForeign {
+  readonly currency: CurrencyCode;
+  readonly originalAmount: string;
+  readonly fxRate: string | null;
+  readonly iofBps: number | null;
+}
+
+const DEFAULT_IOF_BPS = 350;
+const FX_RATE = /^\d{1,6}(?:\.\d{1,6})?$/;
+
+export function normalizeFxRate(text: string): string | null {
+  const value = text.trim().replace(',', '.');
+  return FX_RATE.test(value) && /[1-9]/.test(value) ? value : null;
 }
 
 const PAYMENT_METHODS: readonly RecurrenceMethod[] = [
@@ -66,11 +93,19 @@ const CODE_TO_FIELD: Readonly<Record<string, string>> = {
   TRANSACTION_PAYMENT_METHOD_REQUIRED: 'method',
   TRANSACTION_AMOUNT_NOT_POSITIVE: 'amount',
   AMOUNT_ABOVE_LIMIT: 'amount',
+  FX_RATE_REQUIRED: 'fxRate',
+  FX_INVALID: 'fxRate',
 };
 
 @Component({
   selector: 'app-realize-sheet',
-  imports: [ReactiveFormsModule, SheetComponent, MoneyInputComponent, SelectComponent],
+  imports: [
+    ReactiveFormsModule,
+    SheetComponent,
+    MoneyInputComponent,
+    SelectComponent,
+    TextFieldComponent,
+  ],
   providers: [OccurrenceRealizeFacade, AccountsListFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './realize-sheet.component.html',
@@ -97,7 +132,21 @@ export class RealizeSheetComponent {
       Validators.required,
     ]),
     method: new FormControl<string | null>({ value: null, disabled: true }, [Validators.required]),
+    originalAmount: new FormControl<string | null>({ value: null, disabled: true }),
+    fxRate: new FormControl<string | null>({ value: null, disabled: true }, [
+      this.textValidator(
+        (value) => normalizeFxRate(value) !== null,
+        () => this.t().recurrences.realize.foreign.fxInvalid,
+      ),
+    ]),
+    iof: new FormControl<string | null>({ value: null, disabled: true }, [
+      this.textValidator(
+        (value) => percentTextToBps(value) !== null,
+        () => this.t().recurrences.realize.foreign.iofInvalid,
+      ),
+    ]),
   });
+  protected readonly foreign = computed(() => this.target().foreign ?? null);
   protected readonly needsAccount = signal(false);
   protected readonly accountOptions = computed<readonly ChoiceOption[]>(() =>
     (this.accounts.data() ?? [])
@@ -134,8 +183,17 @@ export class RealizeSheetComponent {
       untracked(() => {
         if (!open) return;
         this.facade.reopen(target.recurrenceId, target.date);
-        this.form.reset({ amount: target.amount.amount, accountId: null, method: null });
+        const foreign = target.foreign ?? null;
+        this.form.reset({
+          amount: target.amount.amount,
+          accountId: null,
+          method: null,
+          originalAmount: foreign?.originalAmount ?? null,
+          fxRate: foreign?.fxRate ?? '',
+          iof: bpsToPercentText(foreign?.iofBps ?? DEFAULT_IOF_BPS),
+        });
         this.requireAccount(target.accountToDefine === true);
+        this.requireForeign(foreign !== null);
       });
     });
     effect(() => {
@@ -182,19 +240,54 @@ export class RealizeSheetComponent {
     }
   }
 
+  private requireForeign(needs: boolean): void {
+    const { amount, originalAmount, fxRate, iof } = this.form.controls;
+    if (needs) {
+      amount.disable({ emitEvent: false });
+      originalAmount.enable({ emitEvent: false });
+      fxRate.enable({ emitEvent: false });
+      iof.enable({ emitEvent: false });
+    } else {
+      amount.enable({ emitEvent: false });
+      originalAmount.disable({ emitEvent: false });
+      fxRate.disable({ emitEvent: false });
+      iof.disable({ emitEvent: false });
+    }
+  }
+
+  private textValidator(valid: (value: string) => boolean, message: () => string): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      return typeof value === 'string' && valid(value) ? null : { message: message() };
+    };
+  }
+
+  private foreignPayload(target: RealizeTarget): RealizeForeign | null {
+    const foreign = target.foreign ?? null;
+    if (foreign === null) return null;
+    const { originalAmount, fxRate, iof } = this.form.getRawValue();
+    const rate = normalizeFxRate(fxRate ?? '');
+    const bps = percentTextToBps(iof ?? '');
+    if (originalAmount === null || rate === null || bps === null) return null;
+    return { originalAmount, currency: foreign.currency, fxRate: rate, iofBps: bps };
+  }
+
   protected onSubmit(): void {
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
     const target = this.target();
     const amount = this.form.controls.amount.value;
     const { accountId, method } = this.form.getRawValue();
+    const foreign = this.foreignPayload(target);
+    if (target.foreign && foreign === null) return;
     this.facade.realize(
       target.recurrenceId,
       target.date,
-      amount === null || amount === target.amount.amount ? null : amount,
+      foreign !== null || amount === null || amount === target.amount.amount ? null : amount,
       this.needsAccount() && accountId !== null && method !== null
         ? { accountId, method: method as RecurrenceMethod }
         : null,
+      foreign,
     );
   }
 

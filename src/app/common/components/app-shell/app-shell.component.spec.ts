@@ -14,6 +14,7 @@ import {
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { pt } from '~/app/common/i18n/translations/pt';
 import { I18nTitleStrategy } from '~/app/common/services/i18n-title.strategy';
+import { ValuesVisibilityService } from '~/app/common/services/values-visibility.service';
 import { provideAuthenticatedSession } from '~/testing/auth-testing';
 import { axeViolations, describeViolations } from '~/testing/axe';
 import { provideDashboardMock } from '~/testing/dashboard-testing';
@@ -92,71 +93,73 @@ const IMPLEMENTED = new Set<NavKey>([
 ]);
 
 describe('App shell e rotas', () => {
-  it('Dado a barra inferior, então tem exatamente Início · Movimentações · + · Metas · Mais, nessa ordem', async () => {
+  it('Dado a barra inferior, então tem exatamente Visão geral · Transações · Orçamentos · Metas · Configurações, nessa ordem', async () => {
     await navigate('/');
 
     const nav = screen.getByRole('navigation', { name: pt.shell.bottomNavigation });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent?.trim())).toEqual([
-      'Início',
-      'MovimentaçõesExtrato',
-      'Novo registro',
-      'Metas',
-      'Mais',
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/',
+      '/transactions',
+      '/budgets',
+      '/goals',
+      '/settings',
     ]);
-    expect(within(nav).getByRole('link', { name: 'Movimentações' })).toBe(links[1]);
-    expect(links[2]).toHaveAttribute('href', '/quick-add');
+    expect(
+      links.map((link) =>
+        (
+          link.querySelector('.bottom-nav__label-full') ?? link.querySelector('.bottom-nav__label')
+        )?.textContent?.trim(),
+      ),
+    ).toEqual(['Visão geral', 'Transações', 'Orçamentos', 'Metas', 'Configurações']);
     expect(links.every((link) => link.hasAttribute('data-cy'))).toBe(true);
     expect(BOTTOM_NAV_ITEMS.map((item) => item.key)).toEqual([
       'home',
       'transactions',
-      'quickAdd',
+      'budgets',
       'goals',
-      'more',
+      'settings',
     ]);
+    expect(within(nav).queryByTestId('bottom-nav-quickAdd')).toBeNull();
+    expect(within(nav).queryByTestId('bottom-nav-more')).toBeNull();
   });
 
-  it('Dado o "+" da barra inferior, quando clico, então navega para /quick-add sem recarregar', async () => {
+  it('Dado o cabeçalho, então o botão de menu leva a /more sem recarregar', async () => {
     const { fixture } = await navigate('/');
 
-    await userEvent.click(screen.getByTestId('bottom-nav-quickAdd'));
+    const menu = screen.getByTestId('header-menu');
+    expect(menu).toHaveAccessibleName('Mais');
+    await userEvent.click(menu);
     await fixture.whenStable();
 
-    expect(TestBed.inject(Router).url).toBe('/(modal:quick-add)');
-    expect(screen.getByRole('dialog', { name: pt.quickAdd.modes.titles.expense })).toBeVisible();
+    expect(TestBed.inject(Router).url).toBe('/more');
+  });
+
+  it('Dado a barra inferior, então usa o trilho de vidro em barra', async () => {
+    await navigate('/');
+
+    const nav = screen.getByTestId('bottom-nav');
+    expect(nav).toHaveClass('glass-rail', 'glass-rail--bar');
   });
 
   it.each([
-    ['pt', 'Novo registro'],
-    ['en', 'New entry'],
-    ['es', 'Nuevo registro'],
+    ['pt', ['Visão geral', 'Transações', 'Orçamentos', 'Metas', 'Configurações']],
+    ['en', ['Overview', 'Transactions', 'Budgets', 'Goals', 'Settings']],
+    ['es', ['Resumen', 'Transacciones', 'Presupuestos', 'Metas', 'Ajustes']],
   ] as const)(
-    'Dado o idioma %s, então o botão da sidebar, o "+" e o título de /quick-add têm um nome só: "%s" (S-57)',
-    async (language, name) => {
-      const { fixture } = await navigate('/', language);
+    'Dado o idioma %s, então a barra inferior traz os 5 rótulos',
+    async (language, names) => {
+      await navigate('/', language);
 
-      const sidebarButton = screen.getByTestId('sidebar-quickAdd');
-      expect(sidebarButton).toHaveTextContent(name);
-      expect(sidebarButton).toHaveAttribute('href', '/quick-add');
-      const plus = screen.getByTestId('bottom-nav-quickAdd');
-      expect(plus).toHaveAccessibleName(name);
-
-      await userEvent.click(plus);
-      await fixture.whenStable();
-
-      expect(TestBed.inject(Router).url).toBe('/(modal:quick-add)');
-      expect(screen.getByRole('dialog')).toBeVisible();
+      const nav = screen.getByTestId('bottom-nav');
+      const full = Array.from(nav.querySelectorAll('li a'), (link) =>
+        (
+          link.querySelector('.bottom-nav__label-full') ?? link.querySelector('.bottom-nav__label')
+        )?.textContent?.trim(),
+      );
+      expect(full).toEqual(names);
     },
   );
-
-  it('Dado o item de Movimentações da barra inferior, então o nome acessível contém o texto visível (WCAG 2.5.3)', async () => {
-    await navigate('/');
-
-    const link = screen.getByTestId('bottom-nav-transactions');
-    const visible = link.querySelector('.bottom-nav__label-full')?.textContent?.trim();
-    expect(visible).toBe(pt.nav.transactions);
-    expect(link).toHaveAccessibleName(expect.stringContaining(visible!));
-  });
 
   it('Dado a sidebar, então lista só o essencial, "Mais" e o rodapé (Configurações e Sair), sem Dream Board', async () => {
     await navigate('/');
@@ -168,9 +171,10 @@ describe('App shell e rotas', () => {
       'Contas',
       'Cartões',
       'Metas',
+      'Orçamentos',
       'Planejamento',
-      'Pessoas',
-      'Notas',
+      'Resumo do mês',
+      'Posso comprar?',
     ]);
     expect(within(nav).getByTestId('sidebar-more')).toHaveAccessibleName('Mais');
     const footer = nav.querySelector('.sidebar__footer')!;
@@ -179,7 +183,7 @@ describe('App shell e rotas', () => {
       '/settings',
     );
     expect(footer.querySelector('[data-cy="sidebar-signOut"]')).toBeInTheDocument();
-    expect(SIDEBAR_ITEMS).toHaveLength(16);
+    expect(SIDEBAR_ITEMS).toHaveLength(18);
     expect(screen.queryByText(/dream board/i)).not.toBeInTheDocument();
   });
 
@@ -196,9 +200,10 @@ describe('App shell e rotas', () => {
       'sidebar-accounts',
       'sidebar-cards',
       'sidebar-goals',
+      'sidebar-budgets',
       'sidebar-planning',
-      'sidebar-people',
-      'sidebar-notes',
+      'sidebar-statement',
+      'sidebar-simulator',
       'sidebar-more',
       'sidebar-settings',
       'sidebar-signOut',
@@ -218,8 +223,9 @@ describe('App shell e rotas', () => {
         .getAllByRole('menuitem')
         .map((item) => item.textContent?.trim()),
     ).toEqual([
-      'Orçamentos',
       'Vault',
+      'Notas',
+      'Pessoas',
       'Insights',
       'IA (desligada)',
       'MCP',
@@ -235,7 +241,7 @@ describe('App shell e rotas', () => {
 
     expect(screen.getByTestId('shell-window')).toBeInTheDocument();
     expect(screen.getByTestId('workspace-header')).toBeInTheDocument();
-    expect(screen.getByTestId('workspace-greeting')).toBeInTheDocument();
+    expect(screen.queryByTestId('workspace-greeting')).not.toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getAllByRole('main')).toHaveLength(1);
   });
@@ -267,7 +273,7 @@ describe('App shell e rotas', () => {
       'aria-current',
       'page',
     );
-    expect(within(bottom).getByRole('link', { name: 'Início' })).not.toHaveAttribute(
+    expect(within(bottom).getByRole('link', { name: 'Visão geral' })).not.toHaveAttribute(
       'aria-current',
     );
   });
@@ -283,8 +289,9 @@ describe('App shell e rotas', () => {
     ).toEqual([
       'Contas',
       'Cartões',
-      'Orçamentos',
       'Planejamento',
+      'Resumo do mês',
+      'Posso comprar?',
       'Vault',
       'Notas',
       'Pessoas',
@@ -293,13 +300,13 @@ describe('App shell e rotas', () => {
       'MCP',
       'Importar extrato',
       'Notificações',
-      'Configurações',
     ]);
     expect(MORE_ITEMS.map((item) => item.path)).toEqual([
       '/accounts',
       '/cards',
-      '/budgets',
       '/planning',
+      '/statement',
+      '/simulator',
       '/vault',
       '/notes',
       '/people',
@@ -308,7 +315,6 @@ describe('App shell e rotas', () => {
       '/mcp',
       '/import',
       '/notifications',
-      '/settings',
     ]);
   });
 
@@ -360,6 +366,17 @@ describe('App shell e rotas', () => {
     expect(document.title).toBe(`${pt.nav.cards} · moneylog`);
   });
 
+  it('Dado valores ocultos ou visíveis, então o título do documento nunca contém valores', async () => {
+    await navigate('/accounts');
+    const hidden = TestBed.inject(ValuesVisibilityService);
+
+    for (const state of [false, true]) {
+      hidden.set(state);
+      expect(document.title).toBe(`${pt.nav.accounts} · moneylog`);
+      expect(document.title).not.toMatch(/\d|R\$|•/);
+    }
+  });
+
   it('Dado uma rota desconhecida, então mostra "não encontrada" com link para o Início', async () => {
     await navigate('/rota-que-nao-existe');
 
@@ -372,7 +389,7 @@ describe('App shell e rotas', () => {
     const children = (routes.find((route) => route.component)?.children ?? []).filter(
       (route) => !route.path?.startsWith('dev/') && !route.outlet,
     );
-    expect(children).toHaveLength(20);
+    expect(children).toHaveLength(22);
     children.forEach((route) => {
       expect(route.loadChildren).toBeTypeOf('function');
       expect(route.component).toBeUndefined();
@@ -431,16 +448,20 @@ describe('App shell e rotas', () => {
     await userEvent.tab();
     expect(screen.getByTestId('skip-to-content')).toHaveFocus();
     await userEvent.tab();
+    expect(screen.getByTestId('header-menu')).toHaveFocus();
+    await userEvent.tab();
     expect(screen.getByTestId('global-search-input')).toHaveFocus();
     await userEvent.tab();
-    expect(screen.getByTestId('header-theme-toggle')).toHaveFocus();
+    expect(screen.getByTestId('values-toggle')).toHaveFocus();
     await userEvent.tab();
     expect(screen.getByTestId('header-bell')).toHaveFocus();
+    await userEvent.tab();
+    expect(screen.getByTestId('header-theme-toggle')).toHaveFocus();
     await userEvent.tab();
     expect(screen.getByTestId('header-profile')).toHaveFocus();
     for (let i = 0; i < 10 && document.activeElement !== screen.getByTestId('bottom-nav-home'); i++)
       await userEvent.tab();
-    for (const key of ['home', 'transactions', 'quickAdd', 'goals', 'more']) {
+    for (const key of ['home', 'transactions', 'budgets', 'goals', 'settings']) {
       expect(screen.getByTestId(`bottom-nav-${key}`)).toHaveFocus();
       await userEvent.tab();
     }

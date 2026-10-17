@@ -14,6 +14,7 @@ import { IDEMPOTENCY_HEADER, TRANSACTIONS_ENDPOINTS } from '~/modules/transactio
 import {
   toEntrySlice,
   toRequestBody,
+  toShareBody,
   toTransaction,
   toTransactionSlice,
   toUpdateBody,
@@ -24,6 +25,7 @@ import type {
   TransactionSliceResponse,
   VoidRequest,
   CancelInstallmentsRequest,
+  TransactionSharesRequest,
 } from '~/modules/transactions/infra/responses/transaction.response';
 import {
   EMPTY_ENTRY_SLICE,
@@ -34,6 +36,8 @@ import { Problem, ProblemError, toProblem } from '~/util/api/problem';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
 import { normalizeAmount } from '~/util/money-input';
 import { cleanSearchTerm } from '~/util/search-term';
+import type { SplitInput } from '~/util/split';
+import { DEFAULT_VIEW } from '~/util/view-mode';
 
 function fail(error: unknown): Observable<never> {
   return throwError(() => new ProblemError(toProblem(error)));
@@ -70,6 +74,7 @@ export function entriesParams(filters: ListFilters, page: number, pageSize: numb
   if (filters.accountId) params = params.set('accountId', filters.accountId);
   if (filters.categoryId) params = params.set('categoryId', filters.categoryId);
   if (filters.method) params = params.set('method', filters.method);
+  if (filters.amounts !== DEFAULT_VIEW) params = params.set('view', filters.amounts);
   return params;
 }
 
@@ -135,6 +140,18 @@ export class TransactionsRequestsFacade extends TransactionsGateway {
     if (this.useMocks) return throwError(() => new ProblemError(NOT_FOUND));
     return this.http
       .put<TransactionResponse>(TRANSACTIONS_ENDPOINTS.item(id), toUpdateBody(input, version))
+      .pipe(map(toTransaction), catchError(fail));
+  }
+
+  updateShares(id: string, split: SplitInput, version: number): Observable<Transaction> {
+    if (this.useMocks) return throwError(() => new ProblemError(NOT_FOUND));
+    const body: TransactionSharesRequest = {
+      splitMode: split.mode,
+      shares: toShareBody(split.shares),
+      version,
+    };
+    return this.http
+      .put<TransactionResponse>(TRANSACTIONS_ENDPOINTS.shares(id), body)
       .pipe(map(toTransaction), catchError(fail));
   }
 

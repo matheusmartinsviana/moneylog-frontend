@@ -1,0 +1,96 @@
+<app-overlay-panel
+  mode="modal"
+  layout="full"
+  cy="pomodoro-focus"
+  panelCy="pomodoro-focus"
+  [open]="open()"
+  [label]="t().home.pomodoro.focus"
+  (closed)="closed.emit()"
+>
+  @if (open()) {
+    <section
+      class="focus"
+      [class.focus--running]="pomodoro.running()"
+      data-cy="pomodoro-focus-body"
+    >
+      @if (fullscreenAvailable()) {
+        <button
+          type="button"
+          class="icon-button focus__fullscreen"
+          data-autofocus
+          data-cy="pomodoro-focus-fullscreen"
+          [attr.aria-pressed]="fullscreen()"
+          [attr.aria-label]="
+            fullscreen() ? t().home.pomodoro.exitFullscreen : t().home.pomodoro.fullscreen
+          "
+          (click)="toggleFullscreen()"
+        >
+          <app-icon name="expand" [size]="20" />
+        </button>
+      }
+
+      <p class="focus__date" data-cy="pomodoro-focus-date">{{ today() }}</p>
+
+      <p class="focus__phrase" data-cy="pomodoro-focus-phrase">{{ pomodoro.phrase() }}</p>
+
+      <div class="focus__modes" role="group" [attr.aria-label]="t().home.pomodoro.modes">
+        @for (item of pomodoro.modes; track item) {
+          <button
+            type="button"
+            class="focus__chip"
+            [attr.aria-pressed]="pomodoro.mode() === item"
+            [attr.data-cy]="'pomodoro-focus-mode-' + item"
+            (click)="pomodoro.selectMode(item)"
+          >
+            {{ pomodoro.modeLabel(item) }}
+          </button>
+        }
+      </div>
+
+      <div
+        class="focus__display"
+        role="timer"
+        data-cy="pomodoro-focus-timer"
+        [attr.aria-label]="pomodoro.timerLabel()"
+      >
+        <span class="focus__halo" aria-hidden="true"></span>
+        <app-pomodoro-clock [digits]="pomodoro.digits()" />
+      </div>
+
+      <div class="focus__controls">
+        <button
+          type="button"
+          class="button button--primary focus__main"
+          data-cy="pomodoro-focus-toggle"
+          (click)="pomodoro.toggle()"
+        >
+          {{ pomodoro.mainLabel() }}
+        </button>
+        <button
+          type="button"
+          class="button focus__stop"
+          data-cy="pomodoro-focus-stop"
+          [attr.aria-label]="t().home.pomodoro.stopLabel"
+          (click)="pomodoro.stop()"
+        >
+          {{ t().home.pomodoro.stop }}
+        </button>
+      </div>
+
+      <p
+        class="focus__dots"
+        role="img"
+        data-cy="pomodoro-focus-cycles"
+        [attr.aria-label]="pomodoro.cyclesLabel()"
+      >
+        @for (dot of pomodoro.dots; track dot) {
+          <span class="focus__dot" [class.focus__dot--on]="dot < pomodoro.filledDots()"></span>
+        }
+      </p>
+
+      <p class="visually-hidden" role="status" aria-live="polite" data-cy="pomodoro-focus-live">
+        {{ pomodoro.announcement() }}
+      </p>
+    </section>
+  }
+</app-overlay-panel>

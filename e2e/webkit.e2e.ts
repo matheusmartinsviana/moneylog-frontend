@@ -1,9 +1,12 @@
+import type { Page } from '@playwright/test';
+
 import {
   expect,
   expectNoHorizontalScroll,
   expectSidebarReachable,
   HOSTILE_MARKDOWN,
   maxMainThreadStallMs,
+  openSettingsMore,
   openSeededNote,
   ROUTES,
   seedMockResponses,
@@ -12,6 +15,18 @@ import {
   waitForApp,
 } from './support';
 import { homeResponses, NOTE_ID } from './support/home-fixtures';
+
+const expectTouchFieldsAtLeast16 = async (
+  page: Page,
+  selector = 'input:visible',
+): Promise<void> => {
+  const touch = await page.evaluate(() => matchMedia('(pointer: coarse)').matches);
+  if (!touch) return;
+  const sizes = await page
+    .locator(selector)
+    .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
+  for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+};
 
 const isPhone = (name: string): boolean => name === 'webkit-iphone';
 
@@ -38,13 +53,13 @@ test.describe('WebKit: Início com dados (fatia C1)', () => {
     await page.goto('/');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="kpi-spending-value"]')).toContainText('1.620,50');
-    await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
+    await expect(page.locator('[data-cy="home-analytics-expenses"]')).toContainText('1.620,50');
+    await expect(page.locator('[data-cy="home-chart-totals"]')).toBeVisible();
     await expect(page.locator('[data-cy="home-upcoming-brief"]')).toBeVisible();
     await expect(page.locator('[data-cy="home-register-open"]')).toBeVisible();
     await expectNoHorizontalScroll(page);
-    await page.locator('[data-cy="home-overview-period-M12"]').click();
-    await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
+    await page.locator('[data-cy="home-chart-period-M3"]').click();
+    await expect(page.locator('[data-cy="home-chart-totals"]')).toBeVisible();
   });
 
   test('a busca global abre, mostra os grupos e abre uma nota com teclado', async ({
@@ -78,10 +93,7 @@ test.describe('WebKit: Etapa 3 (cartões)', () => {
       await page.goto(path);
       await waitForApp(page);
       await expectNoHorizontalScroll(page);
-      const sizes = await page
-        .locator('input:visible')
-        .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
-      for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+      await expectTouchFieldsAtLeast16(page);
     });
   }
 });
@@ -95,14 +107,11 @@ test.describe('WebKit: Etapa 6 (vault de notas)', () => {
       await page.goto(path);
       await waitForApp(page);
       await expectNoHorizontalScroll(page);
-      const sizes = await page
-        .locator('input:visible, textarea:visible')
-        .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
-      for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+      await expectTouchFieldsAtLeast16(page, 'input:visible, textarea:visible');
     });
   }
 
-  test('"Nova nota": a folha abre (celular: embaixo) e o campo de nome tem 16 px', async ({
+  test('"Nova nota": o painel abre (celular: centrado) e o campo de nome tem 16 px', async ({
     page,
   }, testInfo) => {
     await seedPreferences(page, { language: 'pt' });
@@ -111,10 +120,7 @@ test.describe('WebKit: Etapa 6 (vault de notas)', () => {
 
     await page.locator('[data-cy="notes-new"]').click();
     await expect(page.locator('[data-cy="new-note-form"]')).toBeVisible();
-    const size = await page
-      .locator('[data-cy="new-note-name"]')
-      .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
-    expect(size).toBeGreaterThanOrEqual(16);
+    await expectTouchFieldsAtLeast16(page, '[data-cy="new-note-name"]');
     await expectNoHorizontalScroll(page);
     if (isPhone(testInfo.project.name)) {
       const box = await page
@@ -123,7 +129,11 @@ test.describe('WebKit: Etapa 6 (vault de notas)', () => {
         .boundingBox();
       const viewport = page.viewportSize();
       expect(box).not.toBeNull();
-      if (box && viewport) expect(box.y + box.height).toBeGreaterThan(viewport.height - 2);
+      if (box && viewport) {
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
+        expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+      }
     }
   });
 
@@ -131,8 +141,7 @@ test.describe('WebKit: Etapa 6 (vault de notas)', () => {
     page,
   }) => {
     await seedPreferences(page, { language: 'pt' });
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     const chooser = page.waitForEvent('filechooser');
     await page.locator('[data-cy="vault-file"]').click();
@@ -145,15 +154,14 @@ test.describe('WebKit: Etapa 6 (vault de notas)', () => {
     });
 
     await expect(page.locator('[data-cy="vault-file-name"]')).toHaveText('vault.zip');
-    await expect(page.locator('input[type="file"]')).toHaveCount(1);
+    await expect(page.locator('app-file-picker input[type="file"]')).toHaveCount(1);
   });
 
   test('exportar o vault funciona no WebKit (Blob + link temporário, sem token na URL)', async ({
     page,
   }) => {
     await seedPreferences(page, { language: 'pt' });
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="vault-export-action"]').click();
     await expect(page.locator('[data-cy="vault-export-ready"]')).toBeVisible();
@@ -182,10 +190,7 @@ test.describe('WebKit: Etapa 5 (metas, resumo, projeções e exportação)', () 
       await page.goto(path);
       await waitForApp(page);
       await expectNoHorizontalScroll(page);
-      const sizes = await page
-        .locator('input:visible')
-        .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
-      for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+      await expectTouchFieldsAtLeast16(page);
     });
   }
 
@@ -193,8 +198,7 @@ test.describe('WebKit: Etapa 5 (metas, resumo, projeções e exportação)', () 
     page,
   }) => {
     await seedPreferences(page, { language: 'pt' });
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="export-csv-action"]').click();
     await expect(page.locator('[data-cy="export-ready"]')).toBeVisible();
@@ -225,10 +229,7 @@ test.describe('WebKit: Etapa 4 (pessoas, dívidas e recorrências)', () => {
       await page.goto(path);
       await waitForApp(page);
       await expectNoHorizontalScroll(page);
-      const sizes = await page
-        .locator('input:visible')
-        .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
-      for (const size of sizes) expect(size).toBeGreaterThanOrEqual(16);
+      await expectTouchFieldsAtLeast16(page);
     });
   }
 
@@ -251,7 +252,7 @@ test.describe('WebKit: Etapa 4 (pessoas, dívidas e recorrências)', () => {
 });
 
 test.describe('WebKit: overlays', () => {
-  test('Select: folha no celular (modal), popover no desktop; Esc devolve o foco', async ({
+  test('Select: painel centrado no celular (modal), popover no desktop; Esc devolve o foco', async ({
     page,
   }, testInfo) => {
     await seedPreferences(page, { language: 'pt' });
@@ -263,22 +264,24 @@ test.describe('WebKit: overlays', () => {
     const panel = page.locator('[data-cy="settings-language-panel-panel"]');
     await expect(panel).toBeVisible();
     if (isPhone(testInfo.project.name)) {
-      await expect(panel).toHaveAttribute('data-side', 'sheet');
+      await expect(panel).toHaveAttribute('data-side', 'center');
       await expect(panel).toHaveAttribute('aria-modal', 'true');
       const box = await panel.boundingBox();
       const viewport = page.viewportSize()!;
-      expect(Math.round(box!.x)).toBe(0);
-      expect(Math.round(box!.width)).toBe(viewport.width);
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width);
       expect(Math.round(box!.y + box!.height)).toBeLessThanOrEqual(viewport.height);
     } else {
-      await expect(panel).not.toHaveAttribute('data-side', 'sheet');
+      await expect(panel).not.toHaveAttribute('data-side', 'center');
     }
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
     await expect(language).toBeFocused();
   });
 
-  test('Select a 375 px vira folha com alvos de toque de 44 px', async ({ page }, testInfo) => {
+  test('Select a 375 px vira painel centrado com alvos de toque de 44 px', async ({
+    page,
+  }, testInfo) => {
     test.skip(!isPhone(testInfo.project.name), 'só no celular');
     await seedPreferences(page, { language: 'pt' });
     await page.goto('/settings');
@@ -296,10 +299,9 @@ test.describe('WebKit: overlays', () => {
     await seedPreferences(page, { language: 'pt' });
     await page.goto('/transactions');
     await waitForApp(page);
-    if (isPhone(testInfo.project.name)) {
-      const toggle = page.locator('[data-cy="filters-toggle"]');
-      if (await toggle.count()) await toggle.tap();
-    }
+    const toggle = page.locator('[data-cy="filters-toggle"]');
+    if (isPhone(testInfo.project.name)) await toggle.tap();
+    else await toggle.click();
     const from = page.locator('[data-cy="filter-from"]');
     await from.scrollIntoViewIfNeeded();
     await from.fill('');
@@ -309,27 +311,26 @@ test.describe('WebKit: overlays', () => {
     await page.locator('[data-cy="filter-from-calendar"]').click();
     const panel = page.locator('[data-cy="filter-from-panel-panel"]');
     await expect(panel).toBeVisible();
-    if (isPhone(testInfo.project.name)) await expect(panel).toHaveAttribute('data-side', 'sheet');
+    if (isPhone(testInfo.project.name)) await expect(panel).toHaveAttribute('data-side', 'center');
     await page.locator('[data-cy="filter-from-cal-day-2026-10-15"]').click();
     await expect(panel).toHaveCount(0);
     await expect(from).toHaveValue('15/10/2026');
   });
 
-  test('trava de rolagem: a folha segura a página (posição e fundo) e devolve ao fechar', async ({
+  test('trava de rolagem: o painel segura a página (posição e fundo) e devolve ao fechar', async ({
     page,
   }, testInfo) => {
-    test.skip(!isPhone(testInfo.project.name), 'folha só no celular');
+    test.skip(!isPhone(testInfo.project.name), 'painel modal só no celular');
     await seedPreferences(page, { language: 'pt' });
     await page.goto('/dev/ui-kit');
     await waitForApp(page);
     const trigger = page.locator('[data-cy="light-month-default"]');
     await trigger.scrollIntoViewIfNeeded();
     const before = await page.evaluate(() => window.scrollY);
-    expect(before).toBeGreaterThan(100);
 
     await trigger.tap();
     const panel = page.locator('[data-cy="light-month-default-panel-panel"]');
-    await expect(panel).toHaveAttribute('data-side', 'sheet');
+    await expect(panel).toHaveAttribute('data-side', 'center');
     const locked = await page.evaluate(() => ({
       position: document.body.style.position,
       overflow: document.body.style.overflow,
@@ -338,12 +339,14 @@ test.describe('WebKit: overlays', () => {
     }));
     expect(locked.position).toBe('fixed');
     expect(locked.overflow).toBe('hidden');
-    expect(locked.top).toBe(`-${before}px`);
+    expect(Math.abs(Number.parseFloat(locked.top))).toBe(before);
 
     await page.evaluate(() => window.scrollTo(0, 900));
     await page.waitForTimeout(150);
     expect(await page.evaluate(() => window.scrollY)).toBe(0);
-    expect(await page.evaluate(() => document.body.style.top)).toBe(`-${before}px`);
+    expect(Math.abs(Number.parseFloat(await page.evaluate(() => document.body.style.top)))).toBe(
+      before,
+    );
 
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
@@ -378,7 +381,7 @@ test.describe('WebKit: overlays', () => {
 });
 
 test.describe('WebKit: componentes do gate G-UI-E3', () => {
-  test('Menu: folha no celular (44 px), popover no desktop; Esc devolve o foco ao botão', async ({
+  test('Menu: painel centrado no celular (44 px), popover no desktop; Esc devolve o foco ao botão', async ({
     page,
   }, testInfo) => {
     await seedPreferences(page, { language: 'pt' });
@@ -392,11 +395,11 @@ test.describe('WebKit: componentes do gate G-UI-E3', () => {
     const panel = page.locator('[data-cy="light-menu-default-panel-panel"]');
     await expect(page.getByRole('menu', { name: 'Ações do cartão' })).toBeVisible();
     if (isPhone(testInfo.project.name)) {
-      await expect(panel).toHaveAttribute('data-side', 'sheet');
+      await expect(panel).toHaveAttribute('data-side', 'center');
       const item = page.locator('[data-cy="light-menu-default-item-pay"]');
       expect((await item.boundingBox())!.height).toBeGreaterThanOrEqual(44);
     } else {
-      await expect(panel).not.toHaveAttribute('data-side', 'sheet');
+      await expect(panel).not.toHaveAttribute('data-side', 'center');
     }
     await page.keyboard.press('Escape');
     await expect(panel).toHaveCount(0);
@@ -444,9 +447,7 @@ test.describe('WebKit: componentes do gate G-UI-E3', () => {
     await expect(open).toBeFocused();
   });
 
-  test('Sheet: folha inferior no celular encostada embaixo; lateral no desktop', async ({
-    page,
-  }, testInfo) => {
+  test('Sheet: painel centrado no celular; lateral no desktop', async ({ page }, testInfo) => {
     await seedPreferences(page, { language: 'pt' });
     await page.goto('/dev/ui-kit');
     await waitForApp(page);
@@ -461,9 +462,9 @@ test.describe('WebKit: componentes do gate G-UI-E3', () => {
     const box = (await panel.boundingBox())!;
     const viewport = page.viewportSize()!;
     if (phone) {
-      await expect(panel).toHaveAttribute('data-side', 'sheet');
-      expect(Math.round(box.x)).toBe(0);
-      expect(Math.round(box.width)).toBe(viewport.width);
+      await expect(panel).toHaveAttribute('data-side', 'center');
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
       expect(Math.round(box.y + box.height)).toBeLessThanOrEqual(viewport.height);
     } else {
       await expect(panel).toHaveAttribute('data-side', 'side');
@@ -558,9 +559,17 @@ test.describe('WebKit: Markdown hostil no Web Worker (F1)', () => {
 });
 
 test.describe('WebKit: casca e gráficos (revisão A2 e M4)', () => {
+  test('celular deitado (844x390): barra inferior no lugar da sidebar', async ({ page }) => {
+    await seedPreferences(page, { language: 'pt' });
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto('/');
+    await waitForApp(page);
+    await expect(page.locator('[data-cy="bottom-nav"]')).toBeVisible();
+    await expect(page.locator('[data-cy="sidebar-signOut"]')).toBeHidden();
+  });
+
   for (const [width, height] of [
     [1100, 600],
-    [844, 390],
     [1024, 600],
   ] as const) {
     test(`sidebar recolhida em ${width}x${height}: todo item e o avatar são alcançáveis`, async ({

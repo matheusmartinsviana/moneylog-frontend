@@ -54,6 +54,22 @@
         [label]="t().cards.form.institution"
         [hint]="t().cards.form.optional"
       />
+      <div
+        class="form__suggestions"
+        role="group"
+        [attr.aria-label]="t().cards.form.institutionSuggestions"
+      >
+        @for (name of institutionSuggestions; track name) {
+          <button
+            type="button"
+            class="button form__suggestion"
+            [attr.data-cy]="'card-form-institution-' + $index"
+            (click)="suggestInstitution(name)"
+          >
+            {{ name }}
+          </button>
+        }
+      </div>
       <app-money-input
         formControlName="limit"
         fieldId="card-limit"
@@ -105,6 +121,49 @@
             : t().cards.form.defaultAccountHint
         "
       />
+
+      <app-radio-group
+        formControlName="autoDebit"
+        fieldId="card-auto-debit"
+        layout="horizontal"
+        [options]="autoDebitOptions()"
+        [mandatory]="false"
+        [label]="t().cards.form.autoDebit"
+        [hint]="t().cards.form.autoDebitHint"
+      />
+      <app-disclosure fieldId="card-form-more" [heading]="t().brief.more" [headingLevel]="3">
+        <div class="form form--nested">
+          <app-text-field
+            formControlName="brand"
+            fieldId="card-brand"
+            autocomplete="off"
+            [maxlength]="40"
+            [mandatory]="false"
+            [label]="t().cards.form.brand"
+            [hint]="t().cards.form.brandHint"
+          />
+          <app-number-stepper
+            formControlName="bestPurchaseDay"
+            fieldId="card-best-purchase-day"
+            [min]="1"
+            [max]="maxDay"
+            [mandatory]="false"
+            [valueText]="dayText()"
+            [label]="t().cards.form.bestPurchaseDay"
+            [hint]="t().cards.form.bestPurchaseDayHint"
+          />
+          <app-text-field
+            formControlName="lastDigits"
+            fieldId="card-last-digits"
+            autocomplete="off"
+            inputmode="numeric"
+            [maxlength]="60"
+            [mandatory]="false"
+            [label]="t().cards.form.lastDigits"
+            [hint]="t().cards.form.lastDigitsHint"
+          />
+        </div>
+      </app-disclosure>
 
       <p class="form__hint" data-cy="card-form-privacy">{{ t().cards.form.privacy }}</p>
 

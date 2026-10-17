@@ -1,3 +1,8 @@
+import type { CardCashOutCopy } from '~/app/common/i18n/sections/card-cash-out';
+import type { IncomeCopy } from '~/app/common/i18n/sections/income';
+import type { NetWorthCopy } from '~/app/common/i18n/sections/net-worth';
+import type { PurchaseGroupsCopy } from '~/app/common/i18n/sections/purchase-groups';
+
 export const SUPPORTED_LANGUAGES = ['pt', 'en', 'es'] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
 
@@ -22,7 +27,12 @@ export abstract class AppI18n {
     readonly aiOff: string;
     readonly primaryNavigation: string;
     readonly bottomNavigation: string;
-    readonly transactionsShort: string;
+    readonly bottomNavLabels: Readonly<
+      Record<
+        'home' | 'transactions' | 'budgets' | 'goals' | 'settings',
+        { readonly label: string; readonly short: string }
+      >
+    >;
     readonly sidebarExpand: string;
     readonly sidebarCollapse: string;
   };
@@ -52,6 +62,8 @@ export abstract class AppI18n {
     readonly cards: string;
     readonly accounts: string;
     readonly planning: string;
+    readonly statement: string;
+    readonly simulator: string;
     readonly people: string;
     readonly notes: string;
     readonly import: string;
@@ -188,13 +200,192 @@ export abstract class AppI18n {
     readonly budgets: EmptyStateCopy;
   };
 
+  abstract readonly glass: {
+    readonly trend: {
+      readonly up: string;
+      readonly down: string;
+      readonly none: string;
+      readonly flat: string;
+    };
+    readonly status: Readonly<
+      Record<
+        | 'EXPENSE'
+        | 'CARD_PURCHASE'
+        | 'INCOME'
+        | 'REFUND'
+        | 'TRANSFER'
+        | 'CONTRIBUTION'
+        | 'REDEMPTION'
+        | 'INVOICE_PAYMENT'
+        | 'LOAN_GIVEN'
+        | 'MONEY_RECEIVED'
+        | 'DEBT_PAYMENT'
+        | 'ADJUSTMENT'
+        | 'UNKNOWN'
+        | 'SCHEDULED'
+        | 'VOIDED',
+        string
+      >
+    >;
+    readonly values: {
+      readonly hide: string;
+      readonly show: string;
+      readonly hidden: string;
+    };
+  };
+
   abstract readonly home: {
+    readonly goal: {
+      readonly title: string;
+      readonly current: string;
+      readonly target: string;
+      readonly remaining: string;
+      readonly progress: string;
+      readonly open: string;
+      readonly error: string;
+    };
+    readonly insight: {
+      readonly title: string;
+      readonly source: string;
+      readonly loading: string;
+      readonly open: string;
+    };
+    readonly pomodoro: {
+      readonly title: string;
+      readonly phraseFocus: string;
+      readonly phraseShortBreak: string;
+      readonly phraseLongBreak: string;
+      readonly phraseDone: string;
+      readonly modes: string;
+      readonly focus: string;
+      readonly shortBreak: string;
+      readonly longBreak: string;
+      readonly start: string;
+      readonly pause: string;
+      readonly resume: string;
+      readonly stop: string;
+      readonly stopLabel: string;
+      readonly cycles: string;
+      readonly minute: string;
+      readonly minutes: string;
+      readonly second: string;
+      readonly seconds: string;
+      readonly timerLabel: string;
+      readonly finished: string;
+      readonly focusMode: string;
+      readonly fullscreen: string;
+      readonly exitFullscreen: string;
+    };
+    readonly analytics: {
+      readonly title: string;
+      readonly loading: string;
+      readonly income: string;
+      readonly expenses: string;
+      readonly net: string;
+      readonly comparisonNote: string;
+      readonly savingsRate: string;
+      readonly savingsRateEmpty: string;
+      readonly largestCategory: string;
+      readonly largestCategoryEmpty: string;
+      readonly committed30d: string;
+      readonly committedEmpty: string;
+      readonly views: {
+        readonly label: string;
+        readonly summary: string;
+        readonly metrics: string;
+        readonly announce: string;
+      };
+      readonly empty: {
+        readonly title: string;
+        readonly description: string;
+        readonly action: string;
+      };
+    };
+    readonly cardCarousel: {
+      readonly title: string;
+      readonly region: string;
+      readonly loading: string;
+      readonly error: EmptyStateCopy & { readonly retry: string };
+      readonly empty: EmptyStateCopy & { readonly action: string };
+      readonly invoice: string;
+      readonly noInvoice: string;
+      readonly availableLimit: string;
+      readonly overLimit: string;
+      readonly position: string;
+      readonly previous: string;
+      readonly next: string;
+      readonly goTo: string;
+      readonly open: string;
+      readonly numberHidden: string;
+      readonly noInstitution: string;
+    };
+    readonly chart: {
+      readonly title: string;
+      readonly periodLabel: string;
+      readonly periods: Readonly<Record<'D7' | 'D30' | 'M3' | 'M12', string>>;
+      readonly basis: Readonly<Record<'DATE' | 'COMPETENCE', string>>;
+      readonly income: string;
+      readonly expenses: string;
+      readonly totalIncome: string;
+      readonly totalExpenses: string;
+      readonly summary: string;
+      readonly empty: string;
+      readonly emptyAction: string;
+      readonly loading: string;
+      readonly error: string;
+      readonly retry: string;
+      readonly forbidden: string;
+    };
     readonly asOf: string;
+    readonly activity: { readonly unknown: string };
+    readonly recent: {
+      readonly title: string;
+      readonly viewAll: string;
+      readonly list: string;
+      readonly emptyTitle: string;
+      readonly emptyDescription: string;
+      readonly register: string;
+      readonly installments: string;
+      readonly uncategorized: string;
+      readonly incoming: string;
+      readonly outgoing: string;
+      readonly scheduled: string;
+      readonly voided: string;
+      readonly kinds: {
+        readonly EXPENSE: string;
+        readonly CARD_PURCHASE: string;
+        readonly INCOME: string;
+        readonly REFUND: string;
+        readonly TRANSFER: string;
+        readonly CONTRIBUTION: string;
+        readonly REDEMPTION: string;
+        readonly INVOICE_PAYMENT: string;
+        readonly LOAN_GIVEN: string;
+        readonly MONEY_RECEIVED: string;
+        readonly DEBT_PAYMENT: string;
+        readonly ADJUSTMENT: string;
+        readonly UNKNOWN: string;
+      };
+    };
     readonly projection: string;
     readonly loading: string;
     readonly refreshFailed: string;
     readonly error: EmptyStateCopy & { readonly retry: string };
     readonly forbidden: EmptyStateCopy;
+    readonly wallet: {
+      readonly region: string;
+      readonly greetingNamed: string;
+      readonly available: string;
+      readonly negative: string;
+      readonly newTransaction: string;
+    };
+    readonly quick: {
+      readonly title: string;
+      readonly newTransaction: string;
+      readonly transfer: string;
+      readonly payInvoice: string;
+      readonly monthSummary: string;
+    };
     readonly available: {
       readonly title: string;
       readonly description: string;
@@ -493,6 +684,22 @@ export abstract class AppI18n {
     readonly themeLight: string;
     readonly themeDark: string;
     readonly languageNames: Readonly<Record<Language, string>>;
+    readonly profile: {
+      readonly title: string;
+      readonly description: string;
+      readonly loading: string;
+      readonly photoLabel: string;
+      readonly changePhoto: string;
+      readonly addPhoto: string;
+      readonly removePhoto: string;
+      readonly photoUpdated: string;
+      readonly photoRemoved: string;
+      readonly nickname: string;
+      readonly nicknameHint: string;
+      readonly save: string;
+      readonly saving: string;
+      readonly saved: string;
+    };
   };
 
   abstract readonly form: {
@@ -970,6 +1177,12 @@ export abstract class AppI18n {
 
   abstract readonly entryForm: {
     readonly pixLoanToggle: string;
+    readonly nature: {
+      readonly label: string;
+      readonly hint: string;
+      readonly empty: string;
+      readonly options: Readonly<Record<'FIXED' | 'VARIABLE', string>>;
+    };
     readonly amount: string;
     readonly description: string;
     readonly category: string;
@@ -1084,10 +1297,20 @@ export abstract class AppI18n {
       readonly name: string;
       readonly institution: string;
       readonly optional: string;
+      readonly institutionSuggestions: string;
       readonly limit: string;
       readonly limitHint: string;
       readonly closingDay: string;
       readonly dueDay: string;
+      readonly autoDebit: string;
+      readonly autoDebitHint: string;
+      readonly autoDebitOptions: Readonly<Record<'on' | 'off' | 'unknown', string>>;
+      readonly brand: string;
+      readonly brandHint: string;
+      readonly bestPurchaseDay: string;
+      readonly bestPurchaseDayHint: string;
+      readonly lastDigits: string;
+      readonly lastDigitsHint: string;
       readonly dayValue: string;
       readonly daysHint: string;
       readonly defaultAccount: string;
@@ -1124,6 +1347,7 @@ export abstract class AppI18n {
       readonly totalCommittedLabel: string;
       readonly actionsLabel: string;
       readonly payInvoice: string;
+      readonly cashOut: string;
       readonly newPurchase: string;
       readonly edit: string;
       readonly nothingToPay: string;
@@ -1136,6 +1360,8 @@ export abstract class AppI18n {
       };
       readonly invoicesLoading: string;
       readonly invoicesEmpty: string;
+      readonly invoicesAll: string;
+      readonly invoicesFewer: string;
       readonly futureLoading: string;
       readonly futureEmpty: string;
       readonly futureTotal: string;
@@ -1182,6 +1408,25 @@ export abstract class AppI18n {
       readonly overdueWarning: string;
       readonly pay: string;
       readonly payBlocked: Readonly<Record<'PAID' | 'FUTURE', string>>;
+      readonly share: {
+        readonly full: string;
+        readonly mine: string;
+        readonly thirdParty: string;
+        readonly byPerson: string;
+        readonly otherPerson: string;
+        readonly note: string;
+      };
+      readonly document: {
+        readonly title: string;
+        readonly hint: string;
+        readonly label: string;
+        readonly save: string;
+        readonly saving: string;
+        readonly clear: string;
+        readonly divergence: string;
+        readonly saved: string;
+        readonly cleared: string;
+      };
     };
     readonly pay: {
       readonly title: string;
@@ -1217,6 +1462,9 @@ export abstract class AppI18n {
       readonly installments: string;
       readonly installmentsOne: string;
       readonly installmentsMany: string;
+      readonly lastDigits: string;
+      readonly lastDigitsHint: string;
+      readonly noLastDigits: string;
       readonly lockedHint: string;
       readonly preview: {
         readonly title: string;
@@ -1229,11 +1477,14 @@ export abstract class AppI18n {
         readonly total: string;
         readonly availableAfter: string;
         readonly unavailable: string;
+        readonly mine: string;
+        readonly otherPerson: string;
         readonly warnings: {
           readonly OVER_LIMIT: string;
           readonly LATE_ENTRY: string;
           readonly LATE_ENTRY_HINT: string;
           readonly FUTURE_DATE: string;
+          readonly FINANCING_PENDING: string;
         };
       };
     };
@@ -1437,6 +1688,71 @@ export abstract class AppI18n {
     };
   };
 
+  abstract readonly split: {
+    readonly toggle: string;
+    readonly legend: string;
+    readonly modeLabel: string;
+    readonly modes: Readonly<Record<'BPS' | 'EQUAL' | 'AMOUNT', string>>;
+    readonly owner: string;
+    readonly includeOwner: string;
+    readonly person: string;
+    readonly percent: string;
+    readonly percentHint: string;
+    readonly amount: string;
+    readonly amountHint: string;
+    readonly add: string;
+    readonly row: string;
+    readonly remove: string;
+    readonly removeUnnamed: string;
+    readonly removeShort: string;
+    readonly problems: Readonly<
+      Record<
+        | 'PERSON_MISSING'
+        | 'PERSON_REPEATED'
+        | 'PERCENT_INVALID'
+        | 'PERCENT_SUM'
+        | 'AMOUNT_MISSING'
+        | 'NO_ONE',
+        string
+      >
+    >;
+    readonly peopleLoading: string;
+    readonly peopleError: string;
+    readonly peopleRetry: string;
+    readonly summary: {
+      readonly mine: string;
+      readonly otherPerson: string;
+    };
+    readonly detail: {
+      readonly title: string;
+      readonly mine: string;
+      readonly thirdParty: string;
+      readonly none: string;
+      readonly edit: string;
+      readonly owner: string;
+      readonly bps: string;
+      readonly equal: string;
+      readonly receive: string;
+    };
+    readonly edit: {
+      readonly title: string;
+      readonly description: string;
+      readonly closedNote: string;
+      readonly clear: string;
+      readonly save: string;
+      readonly saving: string;
+      readonly cancel: string;
+      readonly toast: string;
+    };
+  };
+
+  abstract readonly view: {
+    readonly label: string;
+    readonly MINE: string;
+    readonly GROSS: string;
+    readonly hint: Readonly<Record<'MINE' | 'GROSS', string>>;
+  };
+
   abstract readonly lending: {
     readonly person: string;
     readonly expectedDate: string;
@@ -1508,7 +1824,11 @@ export abstract class AppI18n {
       readonly debts: string;
       readonly thirdParties: string;
       readonly commitments: string;
+      readonly subscriptions: string;
       readonly overview: string;
+      readonly purchases: string;
+      readonly income: string;
+      readonly netWorth: string;
     };
     readonly summary: {
       readonly title: string;
@@ -1540,6 +1860,8 @@ export abstract class AppI18n {
       readonly deactivate: string;
       readonly actionsLabel: string;
       readonly accountTbd: string;
+      readonly splitOne: string;
+      readonly splitMany: string;
     };
     readonly endSheet: {
       readonly title: string;
@@ -1571,6 +1893,7 @@ export abstract class AppI18n {
       readonly method: string;
       readonly card: string;
       readonly cardNote: string;
+      readonly splitFutureOnly: string;
       readonly accountTbd: string;
       readonly accountTbdHint: string;
       readonly frequency: string;
@@ -1637,6 +1960,16 @@ export abstract class AppI18n {
       readonly cancel: string;
       readonly toast: string;
       readonly viewInvoice: string;
+      readonly foreign: {
+        readonly note: string;
+        readonly originalAmount: string;
+        readonly fxRate: string;
+        readonly fxHint: string;
+        readonly fxInvalid: string;
+        readonly iof: string;
+        readonly iofHint: string;
+        readonly iofInvalid: string;
+      };
     };
   };
 
@@ -2018,6 +2351,8 @@ export abstract class AppI18n {
     readonly assumptions: Readonly<Record<string, string>>;
     readonly assumptionUnknown: string;
     readonly startingBalance: string;
+    readonly hideChart: string;
+    readonly showChart: string;
     readonly chartLabel: string;
     readonly table: {
       readonly caption: string;
@@ -2635,7 +2970,17 @@ export abstract class AppI18n {
         | 'DAILY_SUMMARY'
         | 'REMINDER'
         | 'GOAL_DEADLINE'
-        | 'GROUPED',
+        | 'GROUPED'
+        | 'INVOICE_DUE_AUTODEBIT_OFF'
+        | 'NEGATIVE_MONTH_PROJECTED'
+        | 'NEW_DEBT_BEFORE_FINANCING'
+        | 'CARD_CASH_OUT_COST'
+        | 'SUBSCRIPTION_OVERLAP'
+        | 'SUBSCRIPTION_UNUSED'
+        | 'WEEKLY_CHARGE'
+        | 'THIRD_PARTY_OVERDUE'
+        | 'BALANCE_BELOW_REAL_ESTATE'
+        | 'DOCUMENT_DIVERGENCE',
         string
       >
     >;
@@ -2689,10 +3034,30 @@ export abstract class AppI18n {
           | 'DEBT_PAYABLE_DUE'
           | 'RECURRENCE_PENDING'
           | 'COMMITTED_NEXT_MONTH'
-          | 'GOAL_DEADLINE',
+          | 'GOAL_DEADLINE'
+          | 'INVOICE_DUE_AUTODEBIT_OFF'
+          | 'NEGATIVE_MONTH_PROJECTED'
+          | 'NEW_DEBT_BEFORE_FINANCING'
+          | 'CARD_CASH_OUT_COST'
+          | 'SUBSCRIPTION_OVERLAP'
+          | 'SUBSCRIPTION_UNUSED'
+          | 'WEEKLY_CHARGE'
+          | 'THIRD_PARTY_OVERDUE'
+          | 'BALANCE_BELOW_REAL_ESTATE'
+          | 'DOCUMENT_DIVERGENCE',
           string
         >
       >;
+      readonly alerts: {
+        readonly title: string;
+        readonly description: string;
+        readonly unusedDays: string;
+        readonly unusedDaysHint: string;
+        readonly leadDays: string;
+        readonly leadDaysHint: string;
+        readonly tolerance: string;
+        readonly toleranceHint: string;
+      };
       readonly quietTitle: string;
       readonly quietFrom: string;
       readonly quietTo: string;
@@ -2891,6 +3256,7 @@ export abstract class AppI18n {
       readonly pending: string;
       readonly asOf: string;
       readonly note: string;
+      readonly separate: string;
     };
     readonly people: {
       readonly title: string;
@@ -2900,7 +3266,22 @@ export abstract class AppI18n {
       readonly none: string;
       readonly noDescription: string;
       readonly expected: string;
-      readonly source: Readonly<Record<'DEBT' | 'EXPENSE' | 'RECEIPT', string>>;
+      readonly source: Readonly<Record<'DEBT' | 'EXPENSE' | 'RECEIPT' | 'CARD_SHARE', string>>;
+      readonly sourceOther: string;
+      readonly monthsTitle: string;
+      readonly monthsNote: string;
+    };
+    readonly installments: {
+      readonly part: string;
+      readonly expectedAt: string;
+      readonly change: string;
+      readonly changeLabel: string;
+      readonly reset: string;
+      readonly monthLabel: string;
+      readonly save: string;
+      readonly saving: string;
+      readonly cancel: string;
+      readonly toast: { readonly changed: string; readonly reset: string };
     };
     readonly receipts: {
       readonly register: string;
@@ -2912,10 +3293,28 @@ export abstract class AppI18n {
         readonly description: string;
         readonly confirm: string;
       };
-      readonly toast: { readonly recorded: string; readonly removed: string };
+      readonly toast: {
+        readonly recorded: string;
+        readonly removed: string;
+        readonly byEffect: Readonly<Record<'ACCOUNT_MOVEMENT' | 'EQUITY_OFFSET' | 'NONE', string>>;
+      };
       readonly modal: {
         readonly title: string;
         readonly description: string;
+        readonly mode: {
+          readonly label: string;
+          readonly hint: string;
+          readonly MOVE: string;
+          readonly IN_BALANCE: string;
+          readonly required: string;
+        };
+        readonly account: string;
+        readonly accountsLoading: string;
+        readonly accountsError: string;
+        readonly accountsRetry: string;
+        readonly noAccounts: string;
+        readonly moveNote: string;
+        readonly balanceWarning: string;
         readonly noPeople: string;
         readonly person: string;
         readonly amount: string;
@@ -2940,6 +3339,157 @@ export abstract class AppI18n {
       readonly reimbursed: string;
       readonly pending: string;
       readonly note: string;
+    };
+  };
+
+  abstract readonly subscriptions: {
+    readonly title: string;
+    readonly description: string;
+    readonly loading: string;
+    readonly filters: {
+      readonly statusLabel: string;
+      readonly status: Readonly<Record<'ACTIVE' | 'ENDED' | 'ALL', string>>;
+      readonly scopeLabel: string;
+      readonly scope: Readonly<Record<'ALL' | 'PERSONAL' | 'COMPANY', string>>;
+    };
+    readonly scopes: Readonly<Record<'PERSONAL' | 'COMPANY', string>>;
+    readonly totals: {
+      readonly title: string;
+      readonly monthly: string;
+      readonly mine: string;
+      readonly byScope: string;
+      readonly note: string;
+    };
+    readonly empty: {
+      readonly title: string;
+      readonly description: string;
+      readonly emptyEnded: string;
+      readonly action: string;
+    };
+    readonly row: {
+      readonly channel: string;
+      readonly monthly: string;
+      readonly mine: string;
+      readonly companyNote: string;
+      readonly lastCharged: string;
+      readonly original: string;
+      readonly fx: string;
+      readonly iof: string;
+      readonly activeUntil: string;
+      readonly ended: string;
+      readonly lastUsed: string;
+      readonly next: string;
+      readonly noNext: string;
+      readonly overlap: string;
+      readonly charge: string;
+      readonly chargeLabel: string;
+      readonly cancel: string;
+      readonly cancelLabel: string;
+    };
+    readonly overlaps: {
+      readonly title: string;
+      readonly description: string;
+      readonly group: string;
+      readonly monthly: string;
+    };
+    readonly cancelSheet: {
+      readonly title: string;
+      readonly description: string;
+      readonly date: string;
+      readonly submit: string;
+      readonly submitting: string;
+      readonly cancel: string;
+    };
+    readonly toast: string;
+  };
+
+  abstract readonly property: {
+    readonly title: string;
+    readonly open: string;
+    readonly back: string;
+    readonly loading: string;
+    readonly notFound: { readonly title: string; readonly description: string };
+    readonly notProject: { readonly title: string; readonly description: string };
+    readonly summary: {
+      readonly title: string;
+      readonly total: string;
+      readonly paid: string;
+      readonly balance: string;
+      readonly progress: string;
+    };
+    readonly milestones: {
+      readonly title: string;
+      readonly empty: string;
+      readonly due: string;
+      readonly noDate: string;
+    };
+    readonly schedule: {
+      readonly title: string;
+      readonly empty: string;
+      readonly me: string;
+      readonly mine: string;
+      readonly coBuyer: string;
+      readonly otherPerson: string;
+      readonly undefinedShare: string;
+      readonly estimated: string;
+      readonly undefinedBanner: string;
+      readonly paidOn: string;
+      readonly pending: string;
+      readonly due: string;
+      readonly noDate: string;
+      readonly edit: string;
+      readonly editLabel: string;
+      readonly multiParty: string;
+    };
+    readonly editShares: {
+      readonly title: string;
+      readonly description: string;
+      readonly mine: string;
+      readonly coBuyer: string;
+      readonly coBuyerNone: string;
+      readonly coBuyerAmount: string;
+      readonly save: string;
+      readonly saving: string;
+      readonly cancel: string;
+      readonly toast: string;
+    };
+    readonly totals: {
+      readonly title: string;
+      readonly description: string;
+      readonly paid: string;
+      readonly pending: string;
+      readonly total: string;
+    };
+    readonly clauses: {
+      readonly title: string;
+      readonly empty: string;
+      readonly add: string;
+      readonly edit: string;
+      readonly lateFee: string;
+      readonly monthlyInterest: string;
+      readonly retention: string;
+      readonly retentionAmount: string;
+      readonly retentionNote: string;
+      readonly notes: string;
+    };
+    readonly editClauses: {
+      readonly title: string;
+      readonly description: string;
+      readonly lateFee: string;
+      readonly monthlyInterest: string;
+      readonly retention: string;
+      readonly percentHint: string;
+      readonly percentInvalid: string;
+      readonly notes: string;
+      readonly save: string;
+      readonly saving: string;
+      readonly cancel: string;
+      readonly toast: string;
+    };
+    readonly export: {
+      readonly action: string;
+      readonly exporting: string;
+      readonly saved: string;
     };
   };
 
@@ -2997,6 +3547,8 @@ export abstract class AppI18n {
         readonly due: string;
         readonly markPaid: string;
         readonly markPaidFor: string;
+        readonly all: string;
+        readonly fewer: string;
         readonly dialog: {
           readonly title: string;
           readonly description: string;
@@ -3051,6 +3603,8 @@ export abstract class AppI18n {
   };
 
   abstract readonly brief: {
+    readonly showAll: string;
+    readonly showFewer: string;
     readonly register: string;
     readonly registerMore: string;
     readonly result: string;
@@ -3083,8 +3637,130 @@ export abstract class AppI18n {
     readonly more: string;
   };
 
+  abstract readonly provenance: {
+    readonly origin: Readonly<Record<'PRINT' | 'PAYSLIP' | 'CONTRACT' | 'INFORMED', string>>;
+    readonly confidence: Readonly<Record<'CONFIRMED' | 'ESTIMATED', string>>;
+  };
+
+  abstract readonly simulator: {
+    readonly title: string;
+    readonly description: string;
+    readonly form: {
+      readonly title: string;
+      readonly amount: string;
+      readonly installments: string;
+      readonly installmentsValue: string;
+      readonly interest: string;
+      readonly interestHint: string;
+      readonly firstMonth: string;
+      readonly submit: string;
+      readonly submitting: string;
+      readonly reset: string;
+    };
+    readonly cuts: {
+      readonly title: string;
+      readonly description: string;
+      readonly loading: string;
+      readonly empty: string;
+      readonly perMonth: string;
+      readonly selected: string;
+      readonly none: string;
+      readonly groupLabel: string;
+    };
+    readonly idle: { readonly title: string; readonly description: string };
+    readonly loading: string;
+    readonly empty: { readonly title: string; readonly description: string };
+    readonly summary: {
+      readonly installment: string;
+      readonly total: string;
+      readonly minBalance: string;
+      readonly minBalanceWithCuts: string;
+    };
+    readonly table: {
+      readonly caption: string;
+      readonly month: string;
+      readonly before: string;
+      readonly after: string;
+      readonly delta: string;
+      readonly cuts: string;
+      readonly afterCuts: string;
+      readonly negative: string;
+      readonly estimated: string;
+    };
+    readonly classification: Readonly<
+      Record<
+        'SUSTAINABLE' | 'VIABLE_WITH_PLANNING' | 'RISKY' | 'INCOMPATIBLE',
+        { readonly label: string; readonly explanation: string }
+      >
+    >;
+    readonly reasonsTitle: string;
+    readonly reasons: Readonly<Record<string, string>>;
+    readonly horizonTitle: string;
+    readonly horizon: string;
+    readonly financingTitle: string;
+    readonly financing: string;
+    readonly estimatedNote: string;
+    readonly monthsList: string;
+  };
+
+  abstract readonly statement: {
+    readonly title: string;
+    readonly description: string;
+    readonly fromLabel: string;
+    readonly loading: string;
+    readonly tableCaption: string;
+    readonly rowsLabel: string;
+    readonly openingBalance: string;
+    readonly income: string;
+    readonly incomeItems: string;
+    readonly incomeReceived: string;
+    readonly incomePlanned: string;
+    readonly incomeEstimated: string;
+    readonly appliedToDebt: string;
+    readonly outflow: string;
+    readonly cardsMine: string;
+    readonly cardsGross: string;
+    readonly realEstate: string;
+    readonly fixed: string;
+    readonly variable: string;
+    readonly surplus: string;
+    readonly endBalance: string;
+    readonly grossToggle: string;
+    readonly grossHint: string;
+    readonly grossNote: string;
+    readonly negativeTag: string;
+    readonly negativeAnnouncement: string;
+    readonly allPositiveAnnouncement: string;
+    readonly receivables: {
+      readonly title: string;
+      readonly note: string;
+      readonly pending: string;
+      readonly company: string;
+    };
+    readonly warnings: {
+      readonly title: string;
+      readonly thisPeriod: string;
+      readonly openingBalanceNotProjected: string;
+      readonly incomeMissing: string;
+      readonly realEstateShareUndefined: string;
+      readonly taxTableUnavailable: string;
+      readonly unknown: string;
+      readonly addIncome: string;
+    };
+    readonly empty: {
+      readonly title: string;
+      readonly description: string;
+      readonly action: string;
+    };
+  };
+
   abstract readonly notFound: EmptyStateCopy & {
     readonly pageTitle: string;
     readonly goHome: string;
   };
+
+  abstract readonly purchaseGroups: PurchaseGroupsCopy;
+  abstract readonly income: IncomeCopy;
+  abstract readonly netWorth: NetWorthCopy;
+  abstract readonly cardCashOut: CardCashOutCopy;
 }

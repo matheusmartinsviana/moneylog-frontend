@@ -35,7 +35,7 @@
     <span>{{ t().cards.noInvoice }}</span>
   }
 </p>
-<div class="row__actions">
+<div class="row__actions quiet-actions">
   <a class="button" [routerLink]="['/cards', c.id, 'edit']" [attr.data-cy]="'card-edit-' + c.id">
     {{ t().cards.edit }}
   </a>
@@ -52,7 +52,7 @@
     </button>
     @if (!c.archivable) {
       <span
-        class="row__hint"
+        class="row__hint visually-hidden"
         [id]="'card-archive-hint-' + c.id"
         [attr.data-cy]="'card-archive-hint-' + c.id"
       >

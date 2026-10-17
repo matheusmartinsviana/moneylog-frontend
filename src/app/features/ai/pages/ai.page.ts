@@ -66,7 +66,7 @@ import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
           </div>
         </app-disclosure>
 
-        <a class="ai__link" routerLink="/settings" data-cy="ai-settings-link">{{
+        <a class="ai__link hit" routerLink="/settings" data-cy="ai-settings-link">{{
           t().nav.settings
         }}</a>
       </div>

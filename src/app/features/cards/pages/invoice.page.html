@@ -1,4 +1,4 @@
-<app-page-layout fit [heading]="heading()" [description]="card()?.name">
+<app-page-layout [heading]="heading()" [description]="card()?.name">
   @if (invoice(); as inv) {
     <div pageActions class="actions">
       <a class="button" [routerLink]="backLink()" data-cy="invoice-back">
@@ -17,8 +17,8 @@
     </div>
   }
 
-  <div class="fit-stack">
-    <div class="fit-scroll">
+  <div class="stack">
+    <div class="stack">
       @switch (state().status) {
         @case ('notFound') {
           <app-empty-state
@@ -58,33 +58,43 @@
               </p>
             }
 
-            <app-invoice-totals [invoice]="inv" />
+            <div class="page-grid">
+              <app-invoice-totals class="span-5 sticky" [invoice]="inv" [people]="people()" />
 
-            <section class="section surface" aria-labelledby="invoice-items-title">
-              <h2 class="section__title" id="invoice-items-title">
-                {{ t().cards.invoice.itemsTitle }}
-              </h2>
-              @if (inv.items.length === 0) {
-                <p class="empty" data-cy="invoice-items-empty">
-                  {{ t().cards.invoice.itemsEmpty }}
-                </p>
-              } @else {
-                <app-invoice-items-table [items]="inv.items" />
-              }
-            </section>
+              <div class="stack span-7">
+                <app-invoice-document
+                  [invoice]="inv"
+                  (saved)="onDocumentSaved($event)"
+                  (conflict)="onDocumentConflict()"
+                />
 
-            <section class="section surface" aria-labelledby="invoice-payments-title">
-              <h2 class="section__title" id="invoice-payments-title">
-                {{ t().cards.invoice.paymentsTitle }}
-              </h2>
-              @if (inv.payments.length === 0) {
-                <p class="empty" data-cy="invoice-payments-empty">
-                  {{ t().cards.invoice.paymentsEmpty }}
-                </p>
-              } @else {
-                <app-invoice-payments-list [payments]="inv.payments" [accounts]="accounts()" />
-              }
-            </section>
+                <section class="section card-flat" aria-labelledby="invoice-items-title">
+                  <h2 class="section__title" id="invoice-items-title">
+                    {{ t().cards.invoice.itemsTitle }}
+                  </h2>
+                  @if (inv.items.length === 0) {
+                    <p class="state-note" data-cy="invoice-items-empty">
+                      {{ t().cards.invoice.itemsEmpty }}
+                    </p>
+                  } @else {
+                    <app-invoice-items-table [items]="inv.items" />
+                  }
+                </section>
+
+                <section class="section card-flat" aria-labelledby="invoice-payments-title">
+                  <h2 class="section__title" id="invoice-payments-title">
+                    {{ t().cards.invoice.paymentsTitle }}
+                  </h2>
+                  @if (inv.payments.length === 0) {
+                    <p class="state-note" data-cy="invoice-payments-empty">
+                      {{ t().cards.invoice.paymentsEmpty }}
+                    </p>
+                  } @else {
+                    <app-invoice-payments-list [payments]="inv.payments" [accounts]="accounts()" />
+                  }
+                </section>
+              </div>
+            </div>
 
             <app-disclosure
               fieldId="invoice-more"

@@ -1,0 +1,51 @@
+@let copy = t().cards.invoice.document;
+<section
+  class="document card-flat"
+  aria-labelledby="invoice-document-title"
+  data-cy="invoice-document"
+>
+  <h2 class="document__title" id="invoice-document-title">{{ copy.title }}</h2>
+  <p class="document__hint">{{ copy.hint }}</p>
+
+  <form class="document__form" (submit)="$event.preventDefault(); save()" novalidate>
+    <app-money-input
+      [formControl]="control"
+      fieldId="invoice-document-amount"
+      [currency]="invoice().total.currency"
+      [allowZero]="true"
+      [mandatory]="false"
+      [label]="copy.label"
+    />
+    <div class="document__actions">
+      @if (hasValue()) {
+        <button
+          type="button"
+          class="button"
+          data-cy="invoice-document-clear"
+          [disabled]="facade.saving()"
+          (click)="clear()"
+        >
+          {{ copy.clear }}
+        </button>
+      }
+      <button
+        type="submit"
+        class="button button--primary"
+        data-cy="invoice-document-save"
+        [disabled]="facade.saving()"
+        [attr.aria-busy]="facade.saving()"
+      >
+        {{ facade.saving() ? copy.saving : copy.save }}
+      </button>
+    </div>
+  </form>
+
+  @if (errorText(); as message) {
+    <p class="document__error" role="alert" data-cy="invoice-document-error">{{ message }}</p>
+  }
+  @if (divergenceText(); as text) {
+    <p class="document__divergence" role="status" data-cy="invoice-document-divergence">
+      {{ text }}
+    </p>
+  }
+</section>

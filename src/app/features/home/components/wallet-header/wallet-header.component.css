@@ -1,0 +1,89 @@
+:host {
+  display: block;
+}
+
+.wallet {
+  display: grid;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-6) var(--space-5);
+}
+
+.wallet__hello {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.wallet__greeting {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wallet__balance {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.wallet__label {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.wallet__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  color: var(--color-text);
+  font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
+  font-weight: var(--weight-medium);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+}
+
+.wallet__value.is-negative {
+  color: var(--color-risk);
+}
+
+.wallet__warning {
+  color: var(--color-risk);
+  font-size: var(--text-sm);
+}
+
+.wallet__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  padding-inline: var(--space-5);
+  text-decoration: none;
+}
+
+.wallet__action:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.wallet__value,
+.wallet__action {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (width < 48rem) {
+  .wallet {
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
+
+  .wallet__action {
+    width: 100%;
+    min-height: 3rem;
+  }
+}

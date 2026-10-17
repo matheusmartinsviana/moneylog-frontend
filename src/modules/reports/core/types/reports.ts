@@ -1,4 +1,5 @@
 import type { Money } from '~/util/money';
+import type { ViewMode } from '~/util/view-mode';
 
 export type ReportPeriod = 'D7' | 'D30' | 'M3' | 'M12';
 export const REPORT_PERIODS: readonly ReportPeriod[] = ['D7', 'D30', 'M3', 'M12'];
@@ -15,6 +16,7 @@ export interface IncomeExpensePoint {
 }
 
 export interface IncomeExpenseSeries {
+  readonly view: ViewMode;
   readonly period: ReportPeriod;
   readonly from: string;
   readonly to: string;
@@ -42,6 +44,7 @@ export interface SpendingOther {
 }
 
 export interface SpendingByCategory {
+  readonly view: ViewMode;
   readonly basis: 'COMPETENCE';
   readonly from: string;
   readonly to: string;

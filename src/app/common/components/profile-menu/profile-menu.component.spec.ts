@@ -8,13 +8,14 @@ import { pt } from '~/app/common/i18n/translations/pt';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 import { AuthGatewayStub, provideAuthStub } from '~/testing/auth-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
+import { provideNotificationsStub } from '~/testing/notifications-testing';
 
 async function setup() {
   const gateway = new AuthGatewayStub();
   const result = await render(ProfileMenuComponent, {
     inputs: { cy: 'profile' },
     routes: [{ path: '**', children: [] }],
-    providers: [provideI18nTesting('pt'), provideAuthStub(gateway)],
+    providers: [provideI18nTesting('pt'), provideAuthStub(gateway), provideNotificationsStub()],
   });
   const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
   return { ...result, gateway, navigate };

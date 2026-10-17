@@ -8,3 +8,4 @@ export type DebtSliceResponse = Schemas['DebtSlice'];
 export type DebtCreateRequest = Schemas['DebtInput'];
 export type DebtUpdateRequest = Schemas['DebtUpdate'];
 export type DebtReasonRequest = Schemas['DebtReasonInput'];
+export type CardCashOutRequest = Schemas['CardCashOutInput'];

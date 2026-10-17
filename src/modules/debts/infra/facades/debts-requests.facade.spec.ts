@@ -233,4 +233,95 @@ describe('DebtsRequestsFacade', () => {
       expect((await result).person).toMatchObject({ id: 'person-1' });
     });
   });
+
+  describe('Pix no crédito (ADR-031)', () => {
+    const cashOut = {
+      cardId: 'card-1',
+      accountId: 'acc-1',
+      beneficiaryPersonId: null,
+      principal: '1000.00',
+      installments: 4,
+      totalWithInterest: '1120.00',
+      rateBps: null,
+      firstInvoiceDate: '2026-11-05',
+      channel: null,
+    };
+
+    it('Dado o Pix para mim com total, então POST /v1/card-cash-outs com a chave e sem rateBps nem beneficiário', async () => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(gateway.createCardCashOut(cashOut, 'key-cash'));
+      const req = http.expectOne(DEBTS_ENDPOINTS.cardCashOuts);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.headers.get('Idempotency-Key')).toBe('key-cash');
+      expect(req.request.body).toEqual({
+        cardId: 'card-1',
+        accountId: 'acc-1',
+        principal: '1000.00',
+        installments: 4,
+        totalWithInterest: '1120.00',
+        firstInvoiceDate: '2026-11-05',
+      });
+      req.flush(
+        aDebtResponse({
+          kind: 'CARD_CASH_OUT',
+          effectiveRate: { monthlyBps: 372, annualBps: 5430, method: 'IRR' },
+        }),
+      );
+
+      expect((await result).effectiveRate).toEqual({ monthlyBps: 372, annualBps: 5430 });
+    });
+
+    it('Dado o Pix para uma pessoa com taxa, então leva o beneficiário e o rateBps, sem conta nem total', async () => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(
+        gateway.createCardCashOut(
+          {
+            ...cashOut,
+            accountId: 'acc-1',
+            beneficiaryPersonId: 'person-1',
+            totalWithInterest: null,
+            rateBps: 250,
+            channel: ' Pix ',
+          },
+          'key-2',
+        ),
+      );
+      const req = http.expectOne(DEBTS_ENDPOINTS.cardCashOuts);
+      expect(req.request.body).toEqual({
+        cardId: 'card-1',
+        beneficiaryPersonId: 'person-1',
+        principal: '1000.00',
+        installments: 4,
+        rateBps: 250,
+        firstInvoiceDate: '2026-11-05',
+        channel: 'Pix',
+      });
+      req.flush(aDebtResponse());
+      await result;
+    });
+
+    it('Dado dívida sem taxa efetiva, então o mapa devolve null', async () => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(gateway.get('debt-1'));
+      http.expectOne(DEBTS_ENDPOINTS.item('debt-1')).flush(aDebtResponse());
+
+      expect(await result).toMatchObject({
+        kind: 'PERSONAL',
+        effectiveRate: null,
+        channel: null,
+      });
+    });
+
+    it('Dado o mock, então o Pix no crédito dá 404 sem requisição', async () => {
+      const { gateway, http } = setup(true);
+
+      await expect(firstValueFrom(gateway.createCardCashOut(cashOut, 'k'))).rejects.toMatchObject({
+        problem: { code: 'DEBT_NOT_FOUND' },
+      });
+      http.expectNone(() => true);
+    });
+  });
 });

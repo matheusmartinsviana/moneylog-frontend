@@ -1,6 +1,8 @@
 import { Observable } from 'rxjs';
 
 import type {
+  ThirdPartyExpectedMonth,
+  ThirdPartyExpectedMonthInput,
   ThirdPartyExpense,
   ThirdPartyExpenseInput,
   ThirdPartyReceipt,
@@ -19,4 +21,7 @@ export abstract class ThirdPartiesGateway {
     idempotencyKey: string,
   ): Observable<ThirdPartyReceipt>;
   abstract deleteReceipt(id: string): Observable<void>;
+  abstract changeExpectedMonth(
+    input: ThirdPartyExpectedMonthInput,
+  ): Observable<ThirdPartyExpectedMonth>;
 }

@@ -2,6 +2,7 @@ import {
   expect,
   expectNoHorizontalScroll,
   expectNoRawKeys,
+  openSettingsMore,
   runAxe,
   seedPreferences,
   test,
@@ -26,6 +27,7 @@ test.describe('/notes vazio', () => {
     await expect(page.locator('[data-cy="empty-state-title"]')).toHaveText(
       'Nenhuma nota no vault.',
     );
+    await page.locator('[data-cy="notes-vault-toggle"]').click();
     await expect(page.locator('[data-cy="notes-storage"]')).toContainText(
       'Guardado no servidor do moneylog. Exporte quando quiser uma cópia em Markdown.',
     );
@@ -92,8 +94,7 @@ test.describe('importar e exportar', () => {
     page,
   }) => {
     await seedPreferences(page, { language: 'pt' });
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="vault-export-action"]').click();
     await expect(page.locator('[data-cy="vault-export-ready"]')).toBeVisible();
@@ -146,8 +147,7 @@ test.describe('importar e exportar', () => {
   });
 
   test('importar: arquivo que não é .zip é recusado no campo, sem enviar', async ({ page }) => {
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="vault-file-native"]').setInputFiles({
       name: 'notas.txt',
@@ -162,8 +162,7 @@ test.describe('importar e exportar', () => {
   });
 
   test('importar: acima de 20 MB é recusado no campo antes de subir', async ({ page }) => {
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="vault-file-native"]').setInputFiles({
       name: 'grande.zip',
@@ -179,8 +178,7 @@ test.describe('importar e exportar', () => {
   test('o teclado alcança o botão do seletor e Enter abre o seletor de arquivos', async ({
     page,
   }) => {
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="vault-file"]').focus();
     const chooser = page.waitForEvent('filechooser');
@@ -191,8 +189,7 @@ test.describe('importar e exportar', () => {
   test('o texto da seção é honesto: guardado no servidor, exporte uma cópia em Markdown (zip do Obsidian)', async ({
     page,
   }) => {
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await expect(page.locator('[data-cy="vault-storage"]')).toContainText(
       'guardadas no servidor do moneylog',
@@ -248,6 +245,7 @@ test.describe('acessibilidade, 375 px e idiomas', () => {
       await waitForApp(page);
 
       await expect(page.locator('[data-cy="empty-state-title"]')).toHaveText(title);
+      await page.locator('[data-cy="notes-vault-toggle"]').click();
       await expect(page.locator('[data-cy="notes-storage"]')).toContainText(storage);
       await expectNoRawKeys(page);
     });

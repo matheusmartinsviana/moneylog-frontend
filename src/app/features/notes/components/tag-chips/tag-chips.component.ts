@@ -28,6 +28,24 @@ import type { TagCount } from '~/modules/notes/core/types/note';
       flex-wrap: wrap;
       gap: var(--space-2);
     }
+
+    @media (width <= 640px) {
+      .tags {
+        flex-wrap: nowrap;
+        margin-inline: calc(var(--page-gutter) * -1);
+        padding-inline: var(--page-gutter);
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .tags::-webkit-scrollbar {
+        display: none;
+      }
+
+      .tags > * {
+        flex: none;
+      }
+    }
   `,
 })
 export class TagChipsComponent {

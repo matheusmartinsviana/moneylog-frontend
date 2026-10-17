@@ -8,8 +8,8 @@ export const VIEWPORTS = {
 export type ViewportName = keyof typeof VIEWPORTS;
 
 export const CANVAS = {
-  light: 'rgb(246, 245, 251)',
-  dark: 'rgb(11, 11, 18)',
+  light: 'rgb(241, 242, 234)',
+  dark: 'rgb(11, 29, 21)',
 } as const;
 
 export type Lang = 'pt' | 'en' | 'es';
@@ -26,6 +26,8 @@ export const NAV_LABELS: Record<Lang, Record<string, string>> = {
     cards: 'Cartões',
     accounts: 'Contas',
     planning: 'Planejamento',
+    statement: 'Resumo do mês',
+    simulator: 'Posso comprar?',
     people: 'Pessoas',
     notes: 'Notas',
     import: 'Importar extrato',
@@ -46,6 +48,8 @@ export const NAV_LABELS: Record<Lang, Record<string, string>> = {
     cards: 'Cards',
     accounts: 'Accounts',
     planning: 'Planning',
+    statement: 'Month statement',
+    simulator: 'Purchase check',
     people: 'People',
     notes: 'Notes',
     import: 'Import statement',
@@ -66,6 +70,8 @@ export const NAV_LABELS: Record<Lang, Record<string, string>> = {
     cards: 'Tarjetas',
     accounts: 'Cuentas',
     planning: 'Planificación',
+    statement: 'Resumen del mes',
+    simulator: '¿Puedo comprar?',
     people: 'Personas',
     notes: 'Notas',
     import: 'Importar extracto',
@@ -93,6 +99,8 @@ export const ROUTES = [
   { path: '/cards', key: 'cards' },
   { path: '/accounts', key: 'accounts' },
   { path: '/planning', key: 'planning' },
+  { path: '/statement', key: 'statement' },
+  { path: '/simulator', key: 'simulator' },
   { path: '/people', key: 'people' },
   { path: '/notes', key: 'notes' },
   { path: '/import', key: 'import' },
@@ -105,13 +113,52 @@ export const ROUTES = [
   { path: '/notifications', key: 'notifications' },
 ] as const;
 
-export const BOTTOM_NAV_ORDER = ['home', 'transactions', 'quickAdd', 'goals', 'more'];
+export const BOTTOM_NAV_ORDER = ['home', 'transactions', 'budgets', 'goals', 'settings'];
+export const BOTTOM_NAV_SHORT_LABELS: Record<Lang, Record<string, string>> = {
+  pt: { settings: 'Ajustes' },
+  en: {},
+  es: { transactions: 'Movimientos', budgets: 'Presup.' },
+};
+export const BOTTOM_NAV_LABELS: Record<Lang, Record<string, string>> = {
+  pt: {
+    home: 'Visão geral',
+    transactions: 'Transações',
+    budgets: 'Orçamentos',
+    goals: 'Metas',
+    settings: 'Configurações',
+  },
+  en: {
+    home: 'Overview',
+    transactions: 'Transactions',
+    budgets: 'Budgets',
+    goals: 'Goals',
+    settings: 'Settings',
+  },
+  es: {
+    home: 'Resumen',
+    transactions: 'Transacciones',
+    budgets: 'Presupuestos',
+    goals: 'Metas',
+    settings: 'Ajustes',
+  },
+};
 export const SIDEBAR_GROUP_ORDER = {
-  overview: ['home', 'transactions', 'accounts', 'cards', 'goals', 'budgets', 'planning'],
+  overview: [
+    'home',
+    'transactions',
+    'accounts',
+    'cards',
+    'goals',
+    'budgets',
+    'planning',
+    'statement',
+    'simulator',
+  ],
   workspace: ['vault', 'notes', 'people', 'insights', 'ai', 'mcp'],
   system: ['import', 'notifications', 'settings'],
 } as const;
 export const SIDEBAR_ORDER: string[] = Object.values(SIDEBAR_GROUP_ORDER).flat();
+export const RAIL_ORDER: string[] = [...SIDEBAR_GROUP_ORDER.overview, 'settings'];
 export const MORE_ORDER = SIDEBAR_ORDER.filter((key) => !BOTTOM_NAV_ORDER.includes(key));
 
 const RAW_KEY =
@@ -202,6 +249,14 @@ export async function seedPreferences(
       if (p.theme) localStorage.setItem('moneylog.theme', p.theme);
     } catch {}
   }, prefs);
+}
+
+export async function openSettingsMore(page: Page): Promise<void> {
+  await page.goto('/settings');
+  await waitForApp(page);
+  const toggle = page.locator('[data-cy="settings-more-toggle"]');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 }
 
 export async function expectNoHorizontalScroll(page: Page): Promise<void> {
@@ -338,7 +393,7 @@ export async function expectSidebarReachable(page: Page): Promise<void> {
   const keys = await page
     .locator('[data-cy="sidebar"] a, [data-cy="sidebar"] button')
     .evaluateAll((els) => els.map((el) => el.getAttribute('data-cy') ?? ''));
-  expect(keys, 'marca, novo registro, 8 itens, Mais, Configurações e Sair').toHaveLength(13);
+  expect(keys, 'marca, novo registro, 9 itens, Mais, Configurações e Sair').toHaveLength(14);
   const viewport = page.viewportSize()!;
   const signOut = (await page.locator('[data-cy="sidebar-signOut"]').boundingBox())!;
   expect(signOut.y, 'o Sair já está à vista, sem rolar').toBeGreaterThanOrEqual(0);

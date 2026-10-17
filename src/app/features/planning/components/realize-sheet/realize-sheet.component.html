@@ -12,13 +12,43 @@
         <span class="form__label">{{ t().recurrences.realize.date }}</span>
         {{ dateText() }}
       </p>
-      <app-money-input
-        formControlName="amount"
-        fieldId="realize-amount"
-        [currency]="target().amount.currency"
-        [label]="t().recurrences.realize.amount"
-        [hint]="t().recurrences.realize.amountHint"
-      />
+      @if (foreign(); as foreignTarget) {
+        <p class="form__note" data-cy="realize-foreign-note">
+          {{ t().recurrences.realize.foreign.note }}
+        </p>
+        <app-money-input
+          formControlName="originalAmount"
+          fieldId="realize-original-amount"
+          [currency]="foreignTarget.currency"
+          [label]="t().recurrences.realize.foreign.originalAmount"
+        />
+        <app-text-field
+          formControlName="fxRate"
+          fieldId="realize-fx-rate"
+          inputmode="decimal"
+          autocomplete="off"
+          [maxlength]="14"
+          [label]="t().recurrences.realize.foreign.fxRate"
+          [hint]="t().recurrences.realize.foreign.fxHint"
+        />
+        <app-text-field
+          formControlName="iof"
+          fieldId="realize-iof"
+          inputmode="decimal"
+          autocomplete="off"
+          [maxlength]="6"
+          [label]="t().recurrences.realize.foreign.iof"
+          [hint]="t().recurrences.realize.foreign.iofHint"
+        />
+      } @else {
+        <app-money-input
+          formControlName="amount"
+          fieldId="realize-amount"
+          [currency]="target().amount.currency"
+          [label]="t().recurrences.realize.amount"
+          [hint]="t().recurrences.realize.amountHint"
+        />
+      }
       @if (needsAccount()) {
         <p class="form__note" data-cy="realize-account-note">
           {{ t().recurrences.realize.accountNote }}

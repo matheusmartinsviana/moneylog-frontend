@@ -17,6 +17,15 @@ import { problemMessage } from '~/app/common/i18n/problem-message';
 import type { Problem } from '~/util/api/problem';
 import { todayIso } from '~/util/date';
 
+export interface EndSheetCopy {
+  readonly title: string;
+  readonly description: string;
+  readonly date: string;
+  readonly submit: string;
+  readonly submitting: string;
+  readonly cancel: string;
+}
+
 @Component({
   selector: 'app-end-recurrence-sheet',
   imports: [ReactiveFormsModule, SheetComponent, DatePickerComponent],
@@ -25,18 +34,14 @@ import { todayIso } from '~/util/date';
     <app-sheet
       cy="end-sheet"
       [open]="open()"
-      [heading]="t().recurrences.endSheet.title"
-      [description]="t().recurrences.endSheet.description"
+      [heading]="copy().title"
+      [description]="copy().description"
       [dismissable]="!busy()"
       (closed)="close()"
     >
       @if (open()) {
         <form class="form" [formGroup]="form" (ngSubmit)="onSubmit()" novalidate data-cy="end-form">
-          <app-date-picker
-            formControlName="date"
-            fieldId="end-date"
-            [label]="t().recurrences.endSheet.date"
-          />
+          <app-date-picker formControlName="date" fieldId="end-date" [label]="copy().date" />
           @if (banner(); as message) {
             <p class="banner" role="alert" data-cy="end-error">{{ message }}</p>
           }
@@ -48,7 +53,7 @@ import { todayIso } from '~/util/date';
               [disabled]="busy()"
               (click)="close()"
             >
-              {{ t().recurrences.endSheet.cancel }}
+              {{ copy().cancel }}
             </button>
             <button
               type="submit"
@@ -57,7 +62,7 @@ import { todayIso } from '~/util/date';
               [disabled]="busy()"
               [attr.aria-busy]="busy()"
             >
-              {{ busy() ? t().recurrences.endSheet.submitting : t().recurrences.endSheet.submit }}
+              {{ busy() ? copy().submitting : copy().submit }}
             </button>
           </div>
         </form>
@@ -88,11 +93,16 @@ export class EndRecurrenceSheetComponent {
   readonly open = input.required<boolean>();
   readonly busy = input(false);
   readonly problem = input<Problem | null>(null);
+  readonly texts = input<Partial<EndSheetCopy> | null>(null);
 
   readonly closed = output<void>();
   readonly confirmed = output<string>();
 
   protected readonly form = new FormGroup({ date: new FormControl<string | null>(todayIso()) });
+  protected readonly copy = computed<EndSheetCopy>(() => ({
+    ...this.t().recurrences.endSheet,
+    ...this.texts(),
+  }));
   protected readonly banner = computed(() => {
     const problem = this.problem();
     return problem ? problemMessage(problem, this.t().errors) : null;

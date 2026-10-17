@@ -144,6 +144,7 @@ describe('QuickAddPage', () => {
         'entry-date',
         'entry-date-calendar',
         'entry-method',
+        'entry-nature',
         'entry-split',
       ]);
     });
@@ -304,6 +305,33 @@ describe('QuickAddPage', () => {
       await userEvent.click(screen.getByTestId('entry-category'));
       expect(screen.getByTestId('entry-category-option-cat-food')).toBeInTheDocument();
       expect(screen.queryByTestId('entry-category-option-cat-salary')).not.toBeInTheDocument();
+    });
+
+    it('Dado a natureza escolhida na despesa, então o POST leva nature; sem escolher, não leva', async () => {
+      const { transactions } = await setup();
+      await userEvent.click(screen.getByTestId('entry-category'));
+      await userEvent.click(screen.getByTestId('entry-category-option-cat-food'));
+      await fillAmountAndDescription('90,00', 'internet');
+      await pick('entry-nature', 'FIXED');
+      await userEvent.click(screen.getByTestId('form-save'));
+
+      expect(transactions.creates[0]?.input).toMatchObject({ type: 'EXPENSE', nature: 'FIXED' });
+    });
+
+    it('Dado a despesa sem natureza, então o POST não leva nature', async () => {
+      const { transactions } = await setup();
+      await userEvent.click(screen.getByTestId('entry-category'));
+      await userEvent.click(screen.getByTestId('entry-category-option-cat-food'));
+      await fillAmountAndDescription('90,00', 'mercado');
+      await userEvent.click(screen.getByTestId('form-save'));
+
+      expect(transactions.creates[0]?.input).not.toHaveProperty('nature');
+    });
+
+    it('Dado Receita, então não oferece natureza', async () => {
+      await setup({ url: '/quick-add?mode=income' });
+
+      expect(screen.queryByTestId('entry-nature')).not.toBeInTheDocument();
     });
 
     it('Dado Receita, então só aparecem categorias INCOME e o método é opcional', async () => {
@@ -950,6 +978,9 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
               competence: '2026-10',
               invoice: invoice('i1', '2026-11', '2026-11-05'),
               lateEntry: false,
+              myAmount: brl('200.07'),
+              thirdPartyAmount: brl('0.00'),
+              byPerson: [],
             },
             {
               number: 2,
@@ -958,6 +989,9 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
               competence: '2026-11',
               invoice: invoice('i2', '2026-12', '2026-12-05'),
               lateEntry: false,
+              myAmount: brl('199.99'),
+              thirdPartyAmount: brl('0.00'),
+              byPerson: [],
             },
             {
               number: 3,
@@ -966,6 +1000,9 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
               competence: '2026-12',
               invoice: invoice('i3', '2027-01', '2027-01-05'),
               lateEntry: false,
+              myAmount: brl('199.98'),
+              thirdPartyAmount: brl('0.00'),
+              byPerson: [],
             },
             {
               number: 4,
@@ -974,6 +1011,9 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
               competence: '2027-01',
               invoice: invoice('i4', '2027-02', '2027-02-05'),
               lateEntry: false,
+              myAmount: brl('200.01'),
+              thirdPartyAmount: brl('0.00'),
+              byPerson: [],
             },
             {
               number: 5,
@@ -982,6 +1022,9 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
               competence: '2027-02',
               invoice: invoice('i5', '2027-03', '2027-03-05'),
               lateEntry: false,
+              myAmount: brl('199.97'),
+              thirdPartyAmount: brl('0.00'),
+              byPerson: [],
             },
             {
               number: 6,
@@ -990,6 +1033,9 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
               competence: '2027-03',
               invoice: invoice('i6', '2027-04', '2027-04-05'),
               lateEntry: false,
+              myAmount: brl('199.98'),
+              thirdPartyAmount: brl('0.00'),
+              byPerson: [],
             },
           ],
         }),
@@ -1010,7 +1056,7 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
       const last = cardsGateway.purchaseRequests.at(-1)!;
       expect(last).toEqual({
         cardId: 'card-1',
-        request: { amount: '1200.00', installments: 6, date: todayIso() },
+        request: { amount: '1200.00', installments: 6, date: todayIso(), split: null },
       });
       expect(screen.getByTestId('purchase-preview-summary')).toHaveTextContent(
         '6 parcelas, a primeira na fatura de nov/2026 (vence 5 de nov.)',
@@ -1188,6 +1234,45 @@ describe('QuickAddPage: Crédito, compra no cartão (T67)', () => {
       });
       expect(transactions.creates[0]?.input).not.toHaveProperty('accountId');
       expect(transactions.creates[0]?.key).toBeTruthy();
+    });
+
+    it('Dado cartão com finais cadastrados e um final escolhido, então o POST leva lastDigits', async () => {
+      const { transactions, fixture } = await setup({
+        url: '/quick-add?mode=credit',
+        cards: [aCard({ id: 'card-1', name: 'Roxinho', lastDigits: ['1234', '5678'] })],
+      });
+      await fillPurchase();
+      await pick('entry-last-digits', '5678');
+
+      await userEvent.click(screen.getByTestId('form-save'));
+      await fixture.whenStable();
+
+      expect(transactions.creates[0]?.input).toMatchObject({
+        type: 'CARD_PURCHASE',
+        lastDigits: '5678',
+      });
+    });
+
+    it('Dado cartão com finais e nenhum escolhido, então o POST não leva lastDigits', async () => {
+      const { transactions, fixture } = await setup({
+        url: '/quick-add?mode=credit',
+        cards: [aCard({ id: 'card-1', name: 'Roxinho', lastDigits: ['1234'] })],
+      });
+      await fillPurchase();
+
+      await userEvent.click(screen.getByTestId('form-save'));
+      await fixture.whenStable();
+
+      expect(transactions.creates[0]?.input).not.toHaveProperty('lastDigits');
+    });
+
+    it('Dado cartão sem finais cadastrados, então não mostra o campo de final', async () => {
+      await setup({
+        url: '/quick-add?mode=credit',
+        cards: [aCard({ id: 'card-1', name: 'Roxinho', lastDigits: [] })],
+      });
+
+      expect(screen.queryByTestId('entry-last-digits')).not.toBeInTheDocument();
     });
 
     it('Dado sucesso, então o aviso oferece "Ver fatura" (a da 1ª parcela), lembra o cartão e limpa valor e descrição', async () => {

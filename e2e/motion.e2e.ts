@@ -17,6 +17,6 @@ test('o Início entra em cascata e termina visível e clicável', async ({ page 
     await expect(child).toHaveCSS('opacity', '1', { timeout: 3000 });
   }
   await expect(page.locator('.m-enter')).toHaveCount(0, { timeout: 4000 });
-  await page.locator('[data-cy="home-overview-transactions"]').click();
-  await expect(page).toHaveURL(/\/transactions/);
+  await page.locator('[data-cy="home-recent-link"]').first().click();
+  await expect(page).toHaveURL(/\/transactions\//);
 });

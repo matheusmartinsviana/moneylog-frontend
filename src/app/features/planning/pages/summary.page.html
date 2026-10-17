@@ -1,5 +1,5 @@
-<app-page-layout fit [heading]="title()">
-  <div class="fit-stack">
+<app-page-layout [heading]="title()">
+  <div class="stack">
     <app-planning-nav current="summary" />
 
     <div class="picker">
@@ -15,7 +15,11 @@
       </span>
     </div>
 
-    <div class="fit-scroll">
+    @if (validMonth()) {
+      <app-view-toggle [view]="currentView()" (viewChange)="changeView($event)" />
+    }
+
+    <div class="stack">
       @if (!validMonth()) {
         <app-empty-state
           [heading]="t().summary.invalidMonth.title"
@@ -52,58 +56,63 @@
                 </p>
               }
 
-              <app-section-container [heading]="monthLabel()">
-                <dl class="grid" data-cy="summary-main">
-                  <div
-                    app-summary-block
-                    cy="summary-income"
-                    [label]="t().summary.income"
-                    [value]="s.income"
-                  ></div>
-                  <div
-                    app-summary-block
-                    cy="summary-expenses"
-                    [label]="t().summary.expenses"
-                    [value]="s.expenses"
-                    [note]="t().summary.expensesNote"
-                  ></div>
-                  <div
-                    app-summary-block
-                    cy="summary-investments"
-                    [label]="t().summary.investments"
-                    [value]="s.investments"
-                    [note]="t().summary.investmentsNote"
-                  ></div>
-                  <div
-                    app-summary-block
-                    cy="summary-net"
-                    [label]="t().summary.net"
-                    [value]="s.net"
-                  ></div>
-                  @if (savingsRate(); as rate) {
+              <div class="page-grid">
+                <app-section-container class="span-7" [heading]="monthLabel()" [glow]="true">
+                  <dl class="main" data-cy="summary-main">
                     <div
                       app-summary-block
-                      cy="summary-savings"
-                      [label]="t().summary.savingsRate"
-                      [text]="rate"
+                      class="main__focus"
+                      focus
+                      cy="summary-net"
+                      [label]="t().summary.net"
+                      [value]="s.net"
                     ></div>
-                  } @else {
                     <div
                       app-summary-block
-                      cy="summary-savings"
-                      [label]="t().summary.savingsRate"
-                      text="—"
-                      [note]="t().summary.savingsRateEmpty"
+                      cy="summary-income"
+                      [label]="t().summary.income"
+                      [value]="s.income"
                     ></div>
-                  }
-                </dl>
-              </app-section-container>
+                    <div
+                      app-summary-block
+                      cy="summary-expenses"
+                      [label]="t().summary.expenses"
+                      [value]="s.expenses"
+                      [note]="t().summary.expensesNote"
+                    ></div>
+                    <div
+                      app-summary-block
+                      cy="summary-investments"
+                      [label]="t().summary.investments"
+                      [value]="s.investments"
+                      [note]="t().summary.investmentsNote"
+                    ></div>
+                    @if (savingsRate(); as rate) {
+                      <div
+                        app-summary-block
+                        cy="summary-savings"
+                        [label]="t().summary.savingsRate"
+                        [text]="rate"
+                      ></div>
+                    } @else {
+                      <div
+                        app-summary-block
+                        cy="summary-savings"
+                        [label]="t().summary.savingsRate"
+                        text="—"
+                        [note]="t().summary.savingsRateEmpty"
+                      ></div>
+                    }
+                  </dl>
+                </app-section-container>
 
-              <app-category-spending
-                [state]="categories.state()"
-                [month]="current()"
-                (retry)="categories.retry()"
-              />
+                <app-category-spending
+                  class="span-5"
+                  [state]="categories.state()"
+                  [month]="current()"
+                  (retry)="categories.retry()"
+                />
+              </div>
 
               <app-disclosure fieldId="summary-more" [heading]="t().brief.more" [headingLevel]="2">
                 <div class="more">

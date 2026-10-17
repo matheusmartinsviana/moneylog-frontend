@@ -57,7 +57,7 @@ import { highlightSegments } from '~/util/highlight';
   styles: `
     :host {
       display: block;
-      border-bottom: var(--border-width) solid var(--color-border);
+      border-bottom: var(--border-width) solid var(--home-divider);
     }
 
     :host(:last-child) {
@@ -67,7 +67,8 @@ import { highlightSegments } from '~/util/highlight';
     .note-row__link {
       display: grid;
       gap: var(--space-1);
-      padding: var(--space-3) var(--space-2);
+      min-height: var(--touch-min);
+      padding: var(--space-3) var(--space-3);
       border-radius: var(--radius-control);
       color: inherit;
       text-decoration: none;
@@ -96,6 +97,10 @@ import { highlightSegments } from '~/util/highlight';
     }
 
     .note-row__snippet {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
       overflow-wrap: anywhere;
       color: var(--color-text-muted);
       font-size: var(--text-sm);

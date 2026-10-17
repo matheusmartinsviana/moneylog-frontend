@@ -3,8 +3,13 @@ import { RouterLink } from '@angular/router';
 
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
+import { ValuesVisibilityService } from '~/app/common/services/values-visibility.service';
 import { NotificationIconComponent } from '~/app/features/notifications/components/notification-icon.component';
-import { notificationLink, notificationText } from '~/app/features/notifications/notification-text';
+import {
+  kindLabel,
+  notificationLink,
+  notificationText,
+} from '~/app/features/notifications/notification-text';
 import type { AppNotification } from '~/modules/notifications/core/types/notification';
 
 @Component({
@@ -30,7 +35,7 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
       <p class="row__body" data-cy="notification-body">{{ text().body }}</p>
       <div class="row__actions">
         <a
-          class="row__action row__action--primary"
+          class="row__action row__action--primary hit"
           [routerLink]="link()"
           data-cy="notification-open"
         >
@@ -39,7 +44,7 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
         @if (unread()) {
           <button
             type="button"
-            class="row__action"
+            class="row__action hit"
             data-cy="notification-mark-read"
             (click)="markRead.emit()"
           >
@@ -62,8 +67,9 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
 
     .row__dot {
       position: absolute;
-      top: 1.25rem;
-      left: 0.3125rem;
+      top: calc(var(--space-3) + 1.25rem);
+      left: calc(var(--space-4) / 2);
+      translate: -50% -50%;
       width: 0.5rem;
       height: 0.5rem;
       border-radius: var(--radius-pill);
@@ -134,6 +140,7 @@ import type { AppNotification } from '~/modules/notifications/core/types/notific
 })
 export class NotificationRowComponent {
   private readonly i18n = inject(I18nService);
+  private readonly visibility = inject(ValuesVisibilityService);
   protected readonly t = this.i18n.t;
 
   readonly notification = input.required<AppNotification>();
@@ -141,10 +148,15 @@ export class NotificationRowComponent {
 
   protected readonly unread = computed(() => this.notification().readAt === null);
   protected readonly text = computed(() =>
-    notificationText(this.notification(), this.t().notifications, HTML_LANG[this.i18n.language()]),
+    notificationText(
+      this.notification(),
+      this.t().notifications,
+      HTML_LANG[this.i18n.language()],
+      this.visibility.hidden(),
+    ),
   );
-  protected readonly kindLabel = computed(
-    () => this.t().notifications.kinds[this.notification().kind],
+  protected readonly kindLabel = computed(() =>
+    kindLabel(this.t().notifications, this.notification().kind),
   );
   protected readonly link = computed(() => notificationLink(this.notification()));
 }

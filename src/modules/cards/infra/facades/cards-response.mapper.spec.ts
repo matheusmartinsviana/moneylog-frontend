@@ -98,6 +98,9 @@ describe('cards-response.mapper', () => {
             status: 'OPEN',
           },
           lateEntry: true,
+          myAmount: brl('600.01'),
+          thirdPartyAmount: brl('0.00'),
+          byPerson: [],
         },
       ],
       total: brl('9.99'),
@@ -240,5 +243,58 @@ describe('cards-response.mapper (sem limite e fechamento)', () => {
     });
 
     expect(body.limit).toBeNull();
+  });
+});
+
+describe('cards-response.mapper, campos do cartão de 2.32.0', () => {
+  const base = {
+    name: 'Roxinho',
+    institution: null,
+    limit: null,
+    closingDay: 25,
+    dueDay: 5,
+    defaultPaymentAccountId: null,
+  };
+
+  it('Dado débito automático desconhecido, então o cartão carrega null e não vira falso', () => {
+    const card = toCard(aCardResponse({ autoDebit: null }));
+
+    expect(card.autoDebit).toBeNull();
+    expect(card.lastDigits).toEqual([]);
+  });
+
+  it('Dado bandeira, melhor dia e finais, então o cartão os carrega', () => {
+    const card = toCard(
+      aCardResponse({
+        autoDebit: true,
+        brand: 'Visa',
+        bestPurchaseDay: 20,
+        lastDigits: ['1234', '9876'],
+      }),
+    );
+
+    expect(card.autoDebit).toBe(true);
+    expect(card.brand).toBe('Visa');
+    expect(card.bestPurchaseDay).toBe(20);
+    expect(card.lastDigits).toEqual(['1234', '9876']);
+  });
+
+  it('Dado os campos novos no formulário, então o pedido envia os três estados do débito automático', () => {
+    expect(toCreateRequest({ ...base, autoDebit: false }).autoDebit).toBe(false);
+    expect(toCreateRequest({ ...base, autoDebit: true }).autoDebit).toBe(true);
+    expect(toCreateRequest({ ...base, autoDebit: null }).autoDebit).toBeNull();
+  });
+
+  it('Dado bandeira e finais, então o pedido os envia limpos', () => {
+    const request = toCreateRequest({
+      ...base,
+      brand: ' Visa ',
+      bestPurchaseDay: 20,
+      lastDigits: ['1234'],
+    });
+
+    expect(request.brand).toBe('Visa');
+    expect(request.bestPurchaseDay).toBe(20);
+    expect(request.lastDigits).toEqual(['1234']);
   });
 });

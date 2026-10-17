@@ -1,0 +1,40 @@
+<ng-template #body>
+  <section class="wallet" aria-labelledby="home-wallet-title" data-cy="home-wallet-header">
+    <h2 class="visually-hidden" id="home-wallet-title">{{ t().home.wallet.region }}</h2>
+    <div class="wallet__hello">
+      <app-avatar size="sm" [name]="displayName()" [src]="photoUrl()" />
+      <p class="wallet__greeting" data-cy="home-wallet-greeting">{{ greeting() }}</p>
+    </div>
+
+    <div class="wallet__balance">
+      <p class="wallet__label" data-cy="home-wallet-label">{{ t().home.wallet.available }}</p>
+      <p class="wallet__value" [class.is-negative]="negative()" data-cy="home-wallet-available">
+        <app-money [value]="available()" [maskable]="true" [animate]="true" />
+      </p>
+      @if (negative()) {
+        <p class="wallet__warning" data-cy="home-wallet-negative">
+          {{ t().home.wallet.negative }}
+        </p>
+      }
+    </div>
+
+    @if (showAction()) {
+      <a
+        class="button button--primary wallet__action"
+        routerLink="/quick-add"
+        data-cy="home-wallet-new"
+      >
+        <app-icon name="plus" [size]="18" />
+        {{ t().home.wallet.newTransaction }}
+      </a>
+    }
+  </section>
+</ng-template>
+
+@if (embedded()) {
+  <ng-container [ngTemplateOutlet]="body" />
+} @else {
+  <app-glass-panel variant="wallet" [strong]="true">
+    <ng-container [ngTemplateOutlet]="body" />
+  </app-glass-panel>
+}

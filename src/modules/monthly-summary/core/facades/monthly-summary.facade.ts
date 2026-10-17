@@ -6,6 +6,7 @@ import { MonthlySummaryGateway } from '~/modules/monthly-summary/core/interfaces
 import type { MonthlySummary } from '~/modules/monthly-summary/core/types/monthly-summary';
 import { LEDGER_GATE } from '~/util/api/ledger-gate';
 import { Problem, problemOf } from '~/util/api/problem';
+import { DEFAULT_VIEW, type ViewMode } from '~/util/view-mode';
 
 export type MonthlySummaryState =
   | { readonly status: 'loading' }
@@ -18,7 +19,7 @@ const PRIORITY = 0;
 export class MonthlySummaryFacade {
   private readonly gateway = inject(MonthlySummaryGateway);
   private readonly gate = inject(LEDGER_GATE, { optional: true });
-  private readonly loads = new Subject<string>();
+  private readonly loads = new Subject<{ month: string; view: ViewMode }>();
   private readonly current = signal<MonthlySummaryState>({ status: 'loading' });
 
   readonly state = this.current.asReadonly();
@@ -34,10 +35,10 @@ export class MonthlySummaryFacade {
   constructor() {
     this.loads
       .pipe(
-        switchMap((month) =>
+        switchMap(({ month, view }) =>
           (this.gate
-            ? this.gate.run(this.gateway.get(month), PRIORITY)
-            : this.gateway.get(month)
+            ? this.gate.run(this.gateway.get(month, view), PRIORITY)
+            : this.gateway.get(month, view)
           ).pipe(
             map((data): MonthlySummaryState => ({ status: 'ready', data })),
             startWith<MonthlySummaryState>({ status: 'loading' }),
@@ -51,7 +52,7 @@ export class MonthlySummaryFacade {
       .subscribe((state) => this.current.set(state));
   }
 
-  load(month: string): void {
-    this.loads.next(month);
+  load(month: string, view: ViewMode = DEFAULT_VIEW): void {
+    this.loads.next({ month, view });
   }
 }

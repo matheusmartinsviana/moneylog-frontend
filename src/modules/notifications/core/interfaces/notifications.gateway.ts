@@ -5,6 +5,7 @@ import type {
   DailyMessage,
   NotificationSettings,
   NotificationsQuery,
+  ProfilePhoto,
   PushConfig,
   PushSubscriptionInput,
   Reminder,
@@ -30,6 +31,10 @@ export abstract class NotificationsGateway {
 
   abstract settings(): Observable<NotificationSettings>;
   abstract saveSettings(settings: NotificationSettings): Observable<NotificationSettings>;
+
+  abstract uploadProfilePhoto(file: Blob, fileName: string): Observable<ProfilePhoto>;
+  abstract profilePhotoContent(): Observable<Blob>;
+  abstract removeProfilePhoto(): Observable<void>;
 
   abstract pushConfig(): Observable<PushConfig>;
   abstract subscribePush(input: PushSubscriptionInput): Observable<string>;

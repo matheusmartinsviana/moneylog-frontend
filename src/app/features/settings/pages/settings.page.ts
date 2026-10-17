@@ -18,6 +18,7 @@ import {
 } from '~/app/common/components/empty-state/empty-state.component';
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
 import { SelectComponent } from '~/app/common/components/forms/select/select.component';
+import { IconComponent } from '~/app/common/components/icon/icon.component';
 import { PageLayoutComponent } from '~/app/common/components/page-layout/page-layout.component';
 import { SectionContainerComponent } from '~/app/common/components/section-container/section-container.component';
 import { SUPPORTED_LANGUAGES } from '~/app/common/i18n/i18n';
@@ -30,11 +31,13 @@ import {
 } from '~/app/common/services/theme.service';
 import { VaultSectionComponent } from '~/app/features/notes/components/vault-section/vault-section.component';
 import { ExportSectionComponent } from '~/app/features/settings/components/export-section/export-section.component';
+import { ProfileSectionComponent } from '~/app/features/settings/components/profile-section/profile-section.component';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 
 @Component({
   selector: 'app-settings-page',
   imports: [
+    IconComponent,
     ReactiveFormsModule,
     RouterLink,
     SelectComponent,
@@ -43,6 +46,7 @@ import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
     DisclosureComponent,
     EmptyStateComponent,
     ExportSectionComponent,
+    ProfileSectionComponent,
     VaultSectionComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

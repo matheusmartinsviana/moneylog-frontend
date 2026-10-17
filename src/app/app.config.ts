@@ -11,6 +11,7 @@ import {
   provideRouter,
   TitleStrategy,
   withComponentInputBinding,
+  withPreloading,
   withViewTransitions,
 } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -21,6 +22,7 @@ import { provideI18n } from '~/app/common/i18n/i18n.providers';
 import { authInterceptor } from '~/app/common/interceptors/auth.interceptor';
 import { unauthorizedInterceptor } from '~/app/common/interceptors/unauthorized.interceptor';
 import { motionEnabled } from '~/app/common/motion/motion';
+import { IdlePreloadStrategy } from '~/app/common/routing/idle-preload.strategy';
 import { isModalNavigation } from '~/app/common/routing/modal-route';
 import { provideRouteScroll } from '~/app/common/routing/route-scroll';
 import { FeedbackToastService } from '~/app/common/services/feedback-toast.service';
@@ -46,6 +48,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(
       routes,
       withComponentInputBinding(),
+      withPreloading(IdlePreloadStrategy),
       ...(motionEnabled()
         ? [
             withViewTransitions({

@@ -19,6 +19,7 @@ export function dashboardSummary(
   overrides: Partial<S['DashboardSummary']> = {},
 ): S['DashboardSummary'] {
   return {
+    view: 'MINE',
     asOf: '2026-10-10',
     isProjection: false,
     hasAccounts: true,
@@ -93,6 +94,7 @@ export const upcoming: S['Upcoming'] = {
 
 export function monthlySummary(overrides: Partial<S['MonthlySummary']> = {}): S['MonthlySummary'] {
   return {
+    view: 'MINE',
     competence: '2026-10',
     partial: false,
     isProjection: false,
@@ -194,6 +196,9 @@ export const cards: S['CardSlice'] = {
       creditBalance: zero,
       usedRatio: 0.2283,
       closingDay: 25,
+      closingConfirmed: true,
+      autoDebit: null,
+      lastDigits: [],
       dueDay: 5,
       defaultPaymentAccountId: ACCOUNT_ID,
       status: 'ACTIVE',
@@ -293,6 +298,7 @@ const day = (
 });
 
 export const incomeExpensesD7: S['IncomeExpenseSeries'] = {
+  view: 'MINE',
   period: 'D7',
   from: '2026-10-04',
   to: '2026-10-10',
@@ -325,6 +331,7 @@ export const incomeExpensesD30: S['IncomeExpenseSeries'] = {
 };
 
 export const incomeExpensesM3: S['IncomeExpenseSeries'] = {
+  view: 'MINE',
   period: 'M3',
   from: '2026-07-10',
   to: '2026-10-10',
@@ -339,6 +346,7 @@ export const incomeExpensesM3: S['IncomeExpenseSeries'] = {
 };
 
 export const incomeExpensesM12: S['IncomeExpenseSeries'] = {
+  view: 'MINE',
   period: 'M12',
   from: '2025-11-01',
   to: '2026-10-31',
@@ -353,6 +361,7 @@ export const incomeExpensesM12: S['IncomeExpenseSeries'] = {
 };
 
 export const spendingByCategory: S['SpendingByCategory'] = {
+  view: 'MINE',
   basis: 'COMPETENCE',
   from: '2026-10-01',
   to: '2026-10-31',

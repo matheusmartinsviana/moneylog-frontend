@@ -25,6 +25,7 @@ export function demoSpendingByCategory(month: string, limit = 5): SpendingByCate
   const rest = CATEGORIES.slice(size);
   const restCents = rest.reduce((sum, c) => sum + c.cents, 0);
   return {
+    view: 'MINE',
     basis: 'COMPETENCE',
     from: `${month}-01`,
     to: lastDayOfMonth(year!, mm!),

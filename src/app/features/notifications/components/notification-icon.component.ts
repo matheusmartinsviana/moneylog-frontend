@@ -6,7 +6,7 @@ import type { NotificationKind } from '~/modules/notifications/core/types/notifi
 
 type Tone = 'accent' | 'positive' | 'warning' | 'risk' | 'neutral';
 
-const VISUAL: Readonly<Record<NotificationKind, { icon: IconName; tone: Tone }>> = {
+const VISUAL: Readonly<Partial<Record<NotificationKind, { icon: IconName; tone: Tone }>>> = {
   INVOICE_DUE: { icon: 'cards', tone: 'warning' },
   DEBT_COLLECT: { icon: 'plus', tone: 'positive' },
   DEBT_PAYABLE_DUE: { icon: 'minus', tone: 'risk' },
@@ -16,7 +16,19 @@ const VISUAL: Readonly<Record<NotificationKind, { icon: IconName; tone: Tone }>>
   REMINDER: { icon: 'bell', tone: 'warning' },
   GOAL_DEADLINE: { icon: 'goals', tone: 'accent' },
   GROUPED: { icon: 'more', tone: 'neutral' },
+  INVOICE_DUE_AUTODEBIT_OFF: { icon: 'cards', tone: 'warning' },
+  NEGATIVE_MONTH_PROJECTED: { icon: 'calendar', tone: 'risk' },
+  NEW_DEBT_BEFORE_FINANCING: { icon: 'minus', tone: 'warning' },
+  CARD_CASH_OUT_COST: { icon: 'cards', tone: 'warning' },
+  SUBSCRIPTION_OVERLAP: { icon: 'planning', tone: 'neutral' },
+  SUBSCRIPTION_UNUSED: { icon: 'planning', tone: 'neutral' },
+  WEEKLY_CHARGE: { icon: 'calendar', tone: 'neutral' },
+  THIRD_PARTY_OVERDUE: { icon: 'plus', tone: 'warning' },
+  BALANCE_BELOW_REAL_ESTATE: { icon: 'accounts', tone: 'risk' },
+  DOCUMENT_DIVERGENCE: { icon: 'notes', tone: 'warning' },
 };
+
+const FALLBACK: { icon: IconName; tone: Tone } = { icon: 'bell', tone: 'neutral' };
 
 @Component({
   selector: 'app-notification-icon',
@@ -62,5 +74,5 @@ const VISUAL: Readonly<Record<NotificationKind, { icon: IconName; tone: Tone }>>
 export class NotificationIconComponent {
   readonly kind = input.required<NotificationKind>();
 
-  protected readonly visual = computed(() => VISUAL[this.kind()]);
+  protected readonly visual = computed(() => VISUAL[this.kind()] ?? FALLBACK);
 }

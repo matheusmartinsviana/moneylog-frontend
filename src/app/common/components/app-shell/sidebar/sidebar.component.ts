@@ -25,7 +25,8 @@ import {
   SIDEBAR_SETTINGS_ITEM,
 } from '~/app/common/components/app-shell/navigation';
 import { IconComponent } from '~/app/common/components/icon/icon.component';
-import { MenuComponent, MenuItem } from '~/app/common/components/menu/menu.component';
+import type { MenuItem } from '~/app/common/components/menu/menu.component';
+import { MenuComponent } from '~/app/common/components/menu/menu.component';
 import { TooltipDirective } from '~/app/common/components/tooltip/tooltip.directive';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';

@@ -1,0 +1,63 @@
+.lc__plot--area {
+  height: 13rem;
+  background-image: none;
+}
+
+.lc__plot--area .lc__grid {
+  stroke: var(--color-text-muted);
+  stroke-opacity: 0.14;
+}
+
+.lc__plot--area .lc__guide {
+  stroke: var(--color-text-muted);
+  stroke-opacity: 0.45;
+}
+
+.lc__plot--area .lc__stop {
+  stop-opacity: 0.34;
+}
+
+.lc__plot--area .lc__stop:last-child {
+  stop-opacity: 0;
+}
+
+.lc__plot--area .lc__line {
+  stroke-width: 2;
+}
+
+.lc__plot--area .lc__line--secondary {
+  stroke-width: 1.25;
+  stroke-dasharray: none;
+  stroke-opacity: 0.85;
+}
+
+.lc__plot--area .lc__y {
+  opacity: 0.8;
+}
+
+.lc__plot--area .lc__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--lc-tone, var(--color-chart-1));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--lc-tone, var(--color-chart-1)) 22%, transparent);
+}
+
+:host(.area) .lc__swatch {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--lc-tone, var(--color-chart-1));
+}
+
+@media (width <= 400px) {
+  .lc__plot--area {
+    height: 10.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host(.area) .lc__svg {
+    transition: none;
+  }
+}

@@ -91,8 +91,16 @@ import { formatIsoDate } from '~/util/date';
     }
     :host(.is-workspace) {
       align-items: center;
-      padding-inline: var(--space-2);
-      border-radius: var(--radius-control);
+      min-height: 3.5rem;
+      margin-bottom: 0;
+      padding: var(--space-3) var(--space-4);
+      border: 0;
+      border-bottom: var(--border-width) solid var(--home-divider);
+      border-radius: 0;
+      background-color: transparent;
+    }
+    :host(.is-workspace:last-child) {
+      border-bottom: 0;
     }
     :host(:focus-visible) {
       outline: none;

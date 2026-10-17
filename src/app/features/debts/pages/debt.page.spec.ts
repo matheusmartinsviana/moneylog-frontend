@@ -294,6 +294,48 @@ describe('DebtPage', () => {
     expect(screen.getByTestId('debt-edit-conflict')).toHaveTextContent(pt.debts.edit.conflict);
   });
 
+  describe('taxa efetiva', () => {
+    it('Dado Pix no crédito com taxa, então mostra a taxa ao mês e ao ano devolvidas pelo backend, o tipo e o canal', async () => {
+      const debts = new DebtsGatewayStub();
+      debts.debts = [
+        aDebt({
+          kind: 'CARD_CASH_OUT',
+          channel: 'App do banco',
+          person: null,
+          creditorName: 'Banco',
+          direction: 'PAYABLE',
+          effectiveRate: { monthlyBps: 372, annualBps: 5430 },
+        }),
+      ];
+      await setup(debts);
+
+      expect(text(await screen.findByTestId('debt-rate-monthly'))).toBe('3,72%');
+      expect(text(screen.getByTestId('debt-rate-annual'))).toBe('54,3%');
+      expect(screen.getByTestId('debt-kind')).toHaveTextContent('Pix no crédito');
+      expect(screen.getByTestId('debt-field-channel')).toHaveTextContent('App do banco');
+    });
+
+    it('Dado Pix no crédito sem taxa calculável, então diz que não há dados para calcular', async () => {
+      const debts = new DebtsGatewayStub();
+      debts.debts = [aDebt({ kind: 'CARD_CASH_OUT', effectiveRate: null })];
+      await setup(debts);
+
+      expect(await screen.findByTestId('debt-rate-none')).toHaveTextContent(
+        'Sem dados para calcular a taxa.',
+      );
+      expect(screen.queryByTestId('debt-rate-monthly')).not.toBeInTheDocument();
+    });
+
+    it('Dado dívida pessoal, então não mostra o bloco de taxa', async () => {
+      const debts = new DebtsGatewayStub();
+      debts.debts = [aDebt()];
+      await setup(debts);
+
+      await screen.findByTestId('debt-summary');
+      expect(screen.queryByTestId('debt-effective-rate')).not.toBeInTheDocument();
+    });
+  });
+
   it('Dado atrasada, então diz "Atrasada" em texto', async () => {
     const debts = new DebtsGatewayStub();
     debts.debts = [aDebt({ overdue: true })];

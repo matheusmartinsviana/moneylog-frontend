@@ -1,4 +1,4 @@
-import { formatMoney, isNegative, TYPOGRAPHIC_MINUS } from '~/util/money';
+import { formatMoney, isNegative, maskedMoney, TYPOGRAPHIC_MINUS } from '~/util/money';
 
 const plain = (value: string) => value.replace(/\u00a0/g, ' ');
 
@@ -51,5 +51,16 @@ describe('isNegative', () => {
     ['12.50', false],
   ])('Dado %s, então lê só o sinal e responde %s', (amount, expected) => {
     expect(isNegative({ amount, currency: 'BRL' })).toBe(expected);
+  });
+});
+
+describe('maskedMoney', () => {
+  it('Dado uma moeda, então mostra o símbolo da moeda do dado e pontos, sem valor', () => {
+    expect(maskedMoney('BRL')).toBe('R$ •••••');
+    expect(maskedMoney('USD')).toBe('$ •••••');
+  });
+
+  it('Dado um código inválido, então só os pontos', () => {
+    expect(maskedMoney('x')).toBe('•••••');
   });
 });

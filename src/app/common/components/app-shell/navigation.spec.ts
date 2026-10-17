@@ -13,7 +13,20 @@ describe('Navegação em grupos (DS 02, T193)', () => {
   it('Dado a sidebar, então tem OVERVIEW, WORKSPACE e SYSTEM, nessa ordem e com estes itens', () => {
     expect(SIDEBAR_GROUPS.map((group) => [group.key, group.items.map((item) => item.key)])).toEqual(
       [
-        ['overview', ['home', 'transactions', 'accounts', 'cards', 'goals', 'budgets', 'planning']],
+        [
+          'overview',
+          [
+            'home',
+            'transactions',
+            'accounts',
+            'cards',
+            'goals',
+            'budgets',
+            'planning',
+            'statement',
+            'simulator',
+          ],
+        ],
         ['workspace', ['vault', 'notes', 'people', 'insights', 'ai', 'mcp']],
         ['system', ['import', 'notifications', 'settings']],
       ],
@@ -33,6 +46,8 @@ describe('Navegação em grupos (DS 02, T193)', () => {
         '/goals',
         '/budgets',
         '/planning',
+        '/statement',
+        '/simulator',
         '/vault',
         '/notes',
         '/people',
@@ -51,11 +66,21 @@ describe('Navegação em grupos (DS 02, T193)', () => {
     for (const key of ['vault', 'ai', 'mcp', 'budgets']) expect(keys).toContain(key);
   });
 
+  it('Dado a barra inferior, então tem os 5 itens com as rotas reais', () => {
+    expect(BOTTOM_NAV_ITEMS.map((item) => [item.key, item.path])).toEqual([
+      ['home', '/'],
+      ['transactions', '/transactions'],
+      ['budgets', '/budgets'],
+      ['goals', '/goals'],
+      ['settings', '/settings'],
+    ]);
+  });
+
   it('Dado /more, então lista os itens fora da barra inferior sob os mesmos grupos, sem grupo vazio', () => {
     expect(MORE_GROUPS.map((group) => [group.key, group.items.map((item) => item.key)])).toEqual([
-      ['overview', ['accounts', 'cards', 'budgets', 'planning']],
+      ['overview', ['accounts', 'cards', 'planning', 'statement', 'simulator']],
       ['workspace', ['vault', 'notes', 'people', 'insights', 'ai', 'mcp']],
-      ['system', ['import', 'notifications', 'settings']],
+      ['system', ['import', 'notifications']],
     ]);
     expect(MORE_GROUPS.flatMap((group) => group.items)).toEqual([...MORE_ITEMS]);
     for (const bottom of BOTTOM_NAV_ITEMS) expect(MORE_ITEMS).not.toContain(bottom);

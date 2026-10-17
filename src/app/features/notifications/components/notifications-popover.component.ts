@@ -17,13 +17,35 @@ import { OverlayPanelComponent } from '~/app/common/components/overlay/overlay-p
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
+import { ValuesVisibilityService } from '~/app/common/services/values-visibility.service';
 import { NotificationIconComponent } from '~/app/features/notifications/components/notification-icon.component';
-import { notificationLink, notificationText } from '~/app/features/notifications/notification-text';
+import {
+  kindLabel,
+  notificationLink,
+  notificationText,
+} from '~/app/features/notifications/notification-text';
 import { NotificationsCenterFacade } from '~/modules/notifications/core/facades/notifications-center.facade';
 import { UnreadCountFacade } from '~/modules/notifications/core/facades/unread-count.facade';
 import type { AppNotification } from '~/modules/notifications/core/types/notification';
 
-export const POPOVER_LIMIT = 8;
+export const POPOVER_LIMIT = 4;
+
+const RELATIVE_STEPS: readonly (readonly [Intl.RelativeTimeFormatUnit, number])[] = [
+  ['year', 31_536_000],
+  ['month', 2_592_000],
+  ['day', 86_400],
+  ['hour', 3_600],
+  ['minute', 60],
+];
+
+function relativeTime(iso: string, locale: string): string {
+  const seconds = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
+  if (Number.isNaN(seconds)) return '';
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' });
+  const step = RELATIVE_STEPS.find(([, size]) => Math.abs(seconds) >= size);
+  if (!step) return formatter.format(0, 'minute');
+  return formatter.format(Math.round(seconds / step[1]), step[0]);
+}
 
 @Component({
   selector: 'app-notifications-popover',
@@ -63,8 +85,9 @@ export const POPOVER_LIMIT = 8;
         [label]="t().notifications.popover.title"
         [align]="'end'"
         [minWidth]="320"
-        [panelWidth]="384"
-        [scrollBody]="true"
+        [panelWidth]="400"
+        [maxHeight]="480"
+        layout="sheet"
         cy="header-notifications"
         (closed)="close()"
       >
@@ -135,17 +158,20 @@ export const POPOVER_LIMIT = 8;
                         @if (item.unread) {
                           <span class="np__dot" aria-hidden="true"></span>
                         }
-                        <app-notification-icon [kind]="item.rawKind" />
+                        <app-notification-icon class="np__icon" [kind]="item.rawKind" />
                         <span class="np__main">
-                          <span class="np__kind">
-                            {{ item.kind }}
-                            @if (item.unread) {
-                              <span
-                                class="np__badge visually-hidden"
-                                data-cy="notifications-popover-unread"
-                                >{{ t().notifications.center.unreadMark }}</span
-                              >
-                            }
+                          <span class="np__meta">
+                            <span class="np__kind">
+                              {{ item.kind }}
+                              @if (item.unread) {
+                                <span
+                                  class="np__badge visually-hidden"
+                                  data-cy="notifications-popover-unread"
+                                  >{{ t().notifications.center.unreadMark }}</span
+                                >
+                              }
+                            </span>
+                            <span class="np__time num">{{ item.when }}</span>
                           </span>
                           <span class="np__item-title">{{ item.title }}</span>
                           <span class="np__item-body">{{ item.body }}</span>
@@ -190,25 +216,24 @@ export const POPOVER_LIMIT = 8;
 
     .np__count {
       position: absolute;
-      top: -0.375rem;
-      right: -0.375rem;
+      top: -0.25rem;
+      right: -0.25rem;
       min-width: 1.125rem;
-      padding: 0 var(--space-1);
-      border: 2px solid var(--color-canvas);
+      height: 1.125rem;
+      padding: 0 0.3125rem;
       border-radius: var(--radius-pill);
       background-color: var(--color-accent);
       color: var(--color-on-accent);
-      font-size: var(--text-xs);
+      font-size: 0.6875rem;
       font-weight: var(--weight-semibold);
-      line-height: 1rem;
+      line-height: 1.125rem;
       text-align: center;
     }
 
     .np__body {
       display: grid;
-      gap: var(--space-2);
       min-width: 0;
-      padding: var(--space-3);
+      padding: var(--space-2) 0 0;
     }
 
     .np__header {
@@ -216,12 +241,13 @@ export const POPOVER_LIMIT = 8;
       align-items: center;
       justify-content: space-between;
       gap: var(--space-3);
-      padding: 0 var(--space-1);
+      padding: var(--space-1) var(--space-4) var(--space-2);
     }
 
     .np__title {
       font-size: var(--text-md);
       font-weight: var(--weight-semibold);
+      line-height: 1.5rem;
     }
 
     @media (width <= 640px) {
@@ -235,8 +261,9 @@ export const POPOVER_LIMIT = 8;
     }
 
     .np__link {
-      min-height: var(--touch-min);
+      min-height: 2rem;
       padding: 0 var(--space-2);
+      margin-right: calc(var(--space-2) * -1);
       border: 0;
       border-radius: var(--radius-control);
       background: transparent;
@@ -245,61 +272,93 @@ export const POPOVER_LIMIT = 8;
       font-weight: var(--weight-medium);
     }
 
+    .np__link:hover:not(:disabled) {
+      background-color: var(--color-accent-soft);
+    }
+
     .np__link:disabled {
       color: var(--color-text-muted);
       cursor: not-allowed;
     }
 
-    .np__list {
-      display: grid;
-      gap: 2px;
-      max-height: min(13.5rem, 34dvh);
-      overflow-y: auto;
+    @media (width <= 767px), (pointer: coarse) {
+      .np__link {
+        min-height: var(--touch-min);
+      }
     }
 
-    @media (max-height: 500px) {
-      .np__list {
-        max-height: none;
-        overflow-y: visible;
-      }
+    .np__list {
+      display: grid;
+      margin: 0;
+      padding: 0 var(--space-2);
+      list-style: none;
+    }
+
+    .np__list > li + li {
+      border-top: var(--border-width) solid var(--color-border);
     }
 
     .np__item {
       position: relative;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: var(--space-3);
-      padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+      padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
       border-radius: var(--radius-icon);
       color: inherit;
       text-decoration: none;
     }
 
+    .np__icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius-control);
+    }
+
     .np__dot {
       position: absolute;
-      top: 1.375rem;
-      left: 0.3125rem;
-      width: 0.5rem;
-      height: 0.5rem;
+      top: 50%;
+      left: 0.375rem;
+      width: 0.375rem;
+      height: 0.375rem;
       border-radius: var(--radius-pill);
       background-color: var(--color-accent);
+      transform: translateY(-50%);
     }
 
     .np__main {
       display: grid;
-      gap: 2px;
+      flex: 1 1 auto;
+      gap: 1px;
       min-width: 0;
     }
 
-    .np__kind {
+    .np__meta {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--space-2);
       color: var(--color-text-muted);
-      font-size: var(--text-xs);
+      font-size: 0.6875rem;
+    }
+
+    .np__kind,
+    .np__time {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .np__time {
+      flex: none;
     }
 
     .np__item-title {
+      overflow: hidden;
       font-size: var(--text-sm);
       font-weight: var(--weight-medium);
-      overflow-wrap: anywhere;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .np__item.is-unread .np__item-title {
@@ -307,14 +366,16 @@ export const POPOVER_LIMIT = 8;
     }
 
     .np__item-body {
+      overflow: hidden;
       color: var(--color-text-muted);
       font-size: var(--text-xs);
-      overflow-wrap: anywhere;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .np__note,
     .np__error {
-      padding: var(--space-3);
+      padding: var(--space-3) var(--space-4);
       color: var(--color-text-muted);
       font-size: var(--text-sm);
     }
@@ -334,15 +395,15 @@ export const POPOVER_LIMIT = 8;
       display: flex;
       align-items: flex-start;
       gap: var(--space-3);
-      padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+      padding: var(--space-2) var(--space-3) var(--space-2) var(--space-4);
     }
 
     .np__sk-tile {
       display: block;
       flex: none;
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: var(--radius-icon);
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius-control);
     }
 
     .np__sk-text {
@@ -374,6 +435,8 @@ export const POPOVER_LIMIT = 8;
 
     .np__footer {
       display: grid;
+      margin-top: var(--space-1);
+      border-top: var(--border-width) solid var(--color-border);
     }
 
     .np__all {
@@ -381,9 +444,7 @@ export const POPOVER_LIMIT = 8;
       align-items: center;
       justify-content: center;
       width: 100%;
-      min-height: var(--touch-min);
-      border-radius: var(--radius-control);
-      background-color: var(--color-accent-soft);
+      min-height: 2.75rem;
       color: var(--color-accent);
       font-size: var(--text-sm);
       font-weight: var(--weight-medium);
@@ -392,11 +453,17 @@ export const POPOVER_LIMIT = 8;
     }
 
     .np__all:hover {
-      background-color: var(--color-accent-soft-hover);
+      background-color: var(--color-accent-soft);
+    }
+
+    .np__all:focus-visible {
+      outline: none;
+      box-shadow: inset var(--focus-ring);
     }
   `,
 })
 export class NotificationsPopoverComponent {
+  private readonly visibility = inject(ValuesVisibilityService);
   private readonly i18n = inject(I18nService);
   private readonly unread = inject(UnreadCountFacade);
   private readonly injector = inject(Injector);
@@ -424,16 +491,18 @@ export class NotificationsPopoverComponent {
   protected readonly items = computed(() => {
     const copy = this.t().notifications;
     const locale = HTML_LANG[this.i18n.language()];
+    const hidden = this.visibility.hidden();
     return this.all()
       .slice(0, POPOVER_LIMIT)
       .map((n) => {
-        const text = notificationText(n, copy, locale);
+        const text = notificationText(n, copy, locale, hidden);
         return {
           id: n.id,
-          kind: copy.kinds[n.kind],
+          kind: kindLabel(copy, n.kind),
           rawKind: n.kind,
           title: text.title,
           body: text.body,
+          when: relativeTime(n.createdAt, locale),
           unread: n.readAt === null,
           link: notificationLink(n),
         };

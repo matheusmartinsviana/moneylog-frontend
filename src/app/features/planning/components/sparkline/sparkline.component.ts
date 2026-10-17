@@ -8,8 +8,8 @@ export interface SparklineSeries {
 }
 
 const WIDTH = 320;
-const HEIGHT = 96;
-const PAD = 8;
+const HEIGHT = 140;
+const PAD = 12;
 
 interface DrawnSeries {
   readonly id: string;
@@ -73,7 +73,7 @@ interface DrawnSeries {
     .spark__line {
       fill: none;
       stroke: var(--color-accent);
-      stroke-width: 2;
+      stroke-width: 2.5;
       stroke-linejoin: round;
       stroke-linecap: round;
       vector-effect: non-scaling-stroke;

@@ -1,0 +1,169 @@
+<div class="result" data-cy="simulator-result">
+  <section
+    class="verdict glass glass--strong"
+    [attr.data-classification]="classification().kind"
+    data-cy="simulator-classification"
+    aria-labelledby="simulator-verdict-title"
+  >
+    <div class="verdict__head">
+      <span class="verdict__icon" aria-hidden="true"
+        ><app-icon [name]="classification().icon"
+      /></span>
+      <div class="verdict__text">
+        <h2
+          id="simulator-verdict-title"
+          class="verdict__title"
+          data-cy="simulator-classification-label"
+        >
+          {{ classification().label }}
+        </h2>
+        <p class="verdict__explanation" data-cy="simulator-classification-explanation">
+          {{ classification().explanation }}
+        </p>
+      </div>
+    </div>
+
+    <dl class="summary" data-cy="simulator-summary">
+      <div class="summary__item summary__item--main">
+        <dt>{{ t().simulator.summary.installment }}</dt>
+        <dd class="figure figure--hero" data-cy="simulator-installment">
+          <app-money [value]="result().installmentAmount" />
+        </dd>
+      </div>
+      <div class="summary__item">
+        <dt>{{ t().simulator.summary.total }}</dt>
+        <dd class="figure figure--md" data-cy="simulator-total">
+          <app-money [value]="result().total" />
+        </dd>
+      </div>
+      <div class="summary__item">
+        <dt>{{ t().simulator.summary.minBalance }}</dt>
+        <dd class="figure figure--md" data-cy="simulator-min-balance">
+          <app-money [value]="result().endBalanceMin" />
+        </dd>
+      </div>
+      @if (result().endBalanceMinWithCuts; as withCuts) {
+        <div class="summary__item">
+          <dt>{{ t().simulator.summary.minBalanceWithCuts }}</dt>
+          <dd class="figure figure--md" data-cy="simulator-min-balance-cuts">
+            <app-money [value]="withCuts" />
+          </dd>
+        </div>
+      }
+    </dl>
+  </section>
+
+  @if (result().horizon.limited) {
+    <section
+      class="notice card-flat card-flat--pad"
+      role="note"
+      data-cy="simulator-horizon-warning"
+    >
+      <h3 class="notice__title">{{ t().simulator.horizonTitle }}</h3>
+      <p class="notice__text">{{ horizonText() }}</p>
+    </section>
+  }
+
+  @if (result().financingWarning) {
+    <section
+      class="notice card-flat card-flat--pad"
+      role="note"
+      data-cy="simulator-financing-warning"
+    >
+      <h3 class="notice__title">{{ t().simulator.financingTitle }}</h3>
+      <p class="notice__text">{{ t().simulator.financing }}</p>
+    </section>
+  }
+
+  @if (reasons().length > 0) {
+    <section
+      class="reasons card-flat card-flat--pad"
+      aria-labelledby="simulator-reasons-title"
+      data-cy="simulator-reasons"
+    >
+      <h3 id="simulator-reasons-title" class="reasons__title">
+        {{ t().simulator.reasonsTitle }}
+      </h3>
+      <ul class="reasons__list">
+        @for (reason of reasons(); track reason.key) {
+          <li data-cy="simulator-reason">{{ reason.text }}</li>
+        }
+      </ul>
+    </section>
+  }
+
+  <div class="months-card card-flat">
+    <table class="months" data-cy="simulator-months">
+      <caption class="visually-hidden">
+        {{
+          t().simulator.table.caption
+        }}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t().simulator.table.month }}</th>
+          <th scope="col" class="num">{{ t().simulator.table.before }}</th>
+          <th scope="col" class="num">{{ t().simulator.table.after }}</th>
+          <th scope="col" class="num">{{ t().simulator.table.delta }}</th>
+          @if (withCuts()) {
+            <th scope="col" class="num">{{ t().simulator.table.cuts }}</th>
+            <th scope="col" class="num">{{ t().simulator.table.afterCuts }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of rows(); track row.month.competence) {
+          <tr [attr.data-cy]="'simulator-month-' + row.month.competence">
+            <th scope="row" class="months__month">
+              <span>{{ row.label }}</span>
+              @if (row.month.estimated) {
+                <app-provenance-badge confidence="ESTIMATED" [showOrigin]="false" />
+              }
+            </th>
+            <td class="num" [attr.data-label]="t().simulator.table.before">
+              <app-money [value]="row.month.surplusBefore" />
+            </td>
+            <td
+              class="num"
+              [class.is-negative]="row.month.negativeAfter"
+              [attr.data-label]="t().simulator.table.after"
+              [attr.data-negative]="row.month.negativeAfter"
+            >
+              <app-money [value]="row.month.surplusAfter" />
+              @if (row.month.negativeAfter) {
+                <span class="flag">{{ t().simulator.table.negative }}</span>
+              }
+            </td>
+            <td class="num" [attr.data-label]="t().simulator.table.delta">
+              <app-money [value]="row.month.delta" />
+            </td>
+            @if (withCuts()) {
+              <td class="num" [attr.data-label]="t().simulator.table.cuts">
+                @if (row.month.cutsMonthly; as cuts) {
+                  <app-money [value]="cuts" />
+                }
+              </td>
+              <td
+                class="num"
+                [class.is-negative]="row.month.negativeAfterWithCuts"
+                [attr.data-label]="t().simulator.table.afterCuts"
+                [attr.data-negative]="row.month.negativeAfterWithCuts"
+              >
+                @if (row.month.surplusAfterWithCuts; as afterCuts) {
+                  <app-money [value]="afterCuts" />
+                }
+                @if (row.month.negativeAfterWithCuts) {
+                  <span class="flag">{{ t().simulator.table.negative }}</span>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (anyEstimated()) {
+    <p class="note" data-cy="simulator-estimated-note">{{ t().simulator.estimatedNote }}</p>
+  }
+</div>

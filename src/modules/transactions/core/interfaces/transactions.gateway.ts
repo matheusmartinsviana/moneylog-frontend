@@ -5,6 +5,7 @@ import type { ListFilters } from '~/modules/transactions/core/types/list-filters
 import type { Transaction, TransactionTotals } from '~/modules/transactions/core/types/transaction';
 import type { TransactionInput } from '~/modules/transactions/core/types/transaction-input';
 import type { Slice } from '~/util/api/slice';
+import type { SplitInput } from '~/util/split';
 
 export type TransactionSlice = Slice<Transaction> & { readonly totals: TransactionTotals };
 export type EntrySlice = Slice<Entry> & {
@@ -26,6 +27,8 @@ export abstract class TransactionsGateway {
   abstract create(input: TransactionInput, idempotencyKey: string): Observable<Transaction>;
 
   abstract update(id: string, input: TransactionInput, version: number): Observable<Transaction>;
+
+  abstract updateShares(id: string, split: SplitInput, version: number): Observable<Transaction>;
 
   abstract void(id: string, reason: string): Observable<Transaction>;
 

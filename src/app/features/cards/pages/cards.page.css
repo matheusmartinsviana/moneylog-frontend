@@ -4,13 +4,12 @@
 
 .list {
   display: grid;
-  gap: var(--space-3);
   margin: 0;
   padding: 0;
 }
 
-.empty-note {
-  color: var(--color-text-muted);
+.list-wrap {
+  overflow: hidden;
 }
 
 .banner {
@@ -26,7 +25,7 @@
   .table-head {
     display: grid;
     grid-template-columns: minmax(0, 1.5fr) minmax(12rem, 2fr) minmax(0, 2fr) minmax(0, 1.5fr);
-    padding: 0 var(--space-4);
+    padding: var(--space-3) var(--space-5) 0;
     color: var(--color-text-muted);
     font-size: var(--text-xs);
     font-weight: var(--weight-medium);

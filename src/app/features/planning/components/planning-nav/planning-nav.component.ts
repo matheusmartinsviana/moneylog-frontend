@@ -44,6 +44,14 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
       </a>
       <a
         class="tab"
+        routerLink="/planning/subscriptions"
+        data-cy="planning-tab-subscriptions"
+        [attr.aria-current]="current() === 'subscriptions' ? 'page' : null"
+      >
+        {{ t().recurrences.tabs.subscriptions }}
+      </a>
+      <a
+        class="tab"
         routerLink="/planning/occurrences"
         data-cy="planning-tab-pending"
         [attr.aria-current]="current() === 'pending' ? 'page' : null"
@@ -90,6 +98,30 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
       >
         {{ t().recurrences.tabs.commitments }}
       </a>
+      <a
+        class="tab"
+        routerLink="/planning/purchases"
+        data-cy="planning-tab-purchases"
+        [attr.aria-current]="current() === 'purchases' ? 'page' : null"
+      >
+        {{ t().recurrences.tabs.purchases }}
+      </a>
+      <a
+        class="tab"
+        routerLink="/planning/income"
+        data-cy="planning-tab-income"
+        [attr.aria-current]="current() === 'income' ? 'page' : null"
+      >
+        {{ t().recurrences.tabs.income }}
+      </a>
+      <a
+        class="tab"
+        routerLink="/planning/net-worth"
+        data-cy="planning-tab-net-worth"
+        [attr.aria-current]="current() === 'netWorth' ? 'page' : null"
+      >
+        {{ t().recurrences.tabs.netWorth }}
+      </a>
     </nav>
   `,
 })
@@ -107,11 +139,15 @@ export class PlanningNavComponent {
   readonly current = input.required<
     | 'overview'
     | 'recurrences'
+    | 'subscriptions'
     | 'pending'
     | 'summary'
     | 'projections'
     | 'debts'
     | 'thirdParties'
     | 'commitments'
+    | 'purchases'
+    | 'income'
+    | 'netWorth'
   >();
 }

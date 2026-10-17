@@ -1,6 +1,8 @@
 <app-page-layout reading [heading]="t().nav.settings">
-  <div class="settings">
-    <app-section-container [heading]="t().settings.preferences">
+  <div class="page-grid settings">
+    <app-profile-section class="span-12" />
+
+    <app-section-container class="span-7" [heading]="t().settings.preferences">
       <div class="preferences">
         <app-select
           [formControl]="languageControl"
@@ -17,33 +19,31 @@
       </div>
     </app-section-container>
 
-    <app-section-container [heading]="t().auth.session.title">
-      <button
-        type="button"
-        class="button"
-        data-cy="settings-sign-out"
-        [disabled]="signingOut()"
-        (click)="signOut()"
+    <nav class="links card-flat span-5" [attr.aria-label]="t().brief.settingsLinks">
+      <a class="links__row" routerLink="/settings/categories" data-cy="settings-categories-link">
+        <span>{{ t().categories.settingsLink }}</span>
+        <app-icon name="chevronRight" [size]="18" />
+      </a>
+      <a
+        class="links__row"
+        routerLink="/settings/notifications"
+        data-cy="settings-notifications-link"
       >
-        {{ signingOut() ? t().auth.session.signingOut : t().auth.session.signOut }}
-      </button>
-    </app-section-container>
-
-    <nav class="links" [attr.aria-label]="t().brief.settingsLinks">
-      <a class="pill" routerLink="/settings/categories" data-cy="settings-categories-link">
-        {{ t().categories.settingsLink }}
+        <span>{{ t().notifications.settings.title }}</span>
+        <app-icon name="chevronRight" [size]="18" />
       </a>
-      <a class="pill" routerLink="/settings/notifications" data-cy="settings-notifications-link">
-        {{ t().notifications.settings.title }}
+      <a class="links__row" routerLink="/ai" data-cy="settings-ai-link">
+        <span>{{ t().nav.ai }}</span>
+        <app-icon name="chevronRight" [size]="18" />
       </a>
-      <a class="pill" routerLink="/ai" data-cy="settings-ai-link">{{ t().nav.ai }}</a>
-      <a class="pill" routerLink="/vault" data-cy="settings-vault-link">
-        {{ t().workspacePages.vault.cardTitle }}
+      <a class="links__row" routerLink="/vault" data-cy="settings-vault-link">
+        <span>{{ t().workspacePages.vault.cardTitle }}</span>
+        <app-icon name="chevronRight" [size]="18" />
       </a>
     </nav>
 
     <app-disclosure
-      class="settings__more"
+      class="settings__more span-12"
       fieldId="settings-more"
       [heading]="t().brief.more"
       [headingLevel]="2"
@@ -59,5 +59,17 @@
         />
       </div>
     </app-disclosure>
+
+    <div class="quiet-actions span-12">
+      <button
+        type="button"
+        class="button"
+        data-cy="settings-sign-out"
+        [disabled]="signingOut()"
+        (click)="signOut()"
+      >
+        {{ signingOut() ? t().auth.session.signingOut : t().auth.session.signOut }}
+      </button>
+    </div>
   </div>
 </app-page-layout>

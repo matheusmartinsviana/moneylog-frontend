@@ -75,6 +75,18 @@
     />
   }
 
+  @if (type() === 'EXPENSE' && !loaning()) {
+    <app-select
+      formControlName="nature"
+      fieldId="entry-nature"
+      [options]="natureOptions()"
+      [mandatory]="false"
+      [emptyLabel]="t().entryForm.nature.empty"
+      [label]="t().entryForm.nature.label"
+      [hint]="t().entryForm.nature.hint"
+    />
+  }
+
   @if (showLoanSwitch()) {
     <app-switch [formControl]="loan" fieldId="entry-loan" [label]="t().entryForm.pixLoanToggle" />
   }

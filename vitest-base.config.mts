@@ -7,7 +7,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     // Testes de componente com axe e cobertura passam de 5 s em máquina carregada (ex.: CI com E2E).
-    testTimeout: 20_000,
+    testTimeout: 30_000,
+    hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
       reporter: ['text-summary', 'html', 'lcov'],

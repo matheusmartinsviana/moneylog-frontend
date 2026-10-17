@@ -10,6 +10,7 @@ export type ReminderSliceResponse = Schemas['ReminderSlice'];
 export type ReminderRequest = Schemas['ReminderInput'];
 export type SnoozeRequest = Schemas['SnoozeInput'];
 export type NotificationSettingsResponse = Schemas['NotificationSettings'];
+export type ProfilePhotoResponse = Schemas['ProfilePhoto'];
 export type PushConfigResponse = Schemas['PushConfig'];
 export type PushSubscriptionRequest = Schemas['PushSubscriptionInput'];
 export type PushSubscriptionResponse = Schemas['PushSubscription'];

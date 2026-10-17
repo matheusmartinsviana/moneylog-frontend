@@ -1,7 +1,7 @@
 import type { AppI18n } from '~/app/common/i18n/i18n';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import type { Insight } from '~/modules/ai/core/types/ai';
-import { formatMoney } from '~/util/money';
+import { formatMoney, maskedMoney } from '~/util/money';
 
 const DATA_CURRENCY = 'BRL';
 const PERCENT_POINTS = /^-?\d+(?:\.\d+)?$/;
@@ -19,13 +19,16 @@ function formatPercentPoints(value: string, locale: string): string {
   return `${formatter.format(unsigned as Intl.StringNumericLiteral)}%`;
 }
 
-const money = (amount: string | undefined) =>
-  formatMoney({ amount: amount ?? '0', currency: DATA_CURRENCY });
+const money = (amount: string | undefined, masked: boolean) =>
+  masked
+    ? maskedMoney(DATA_CURRENCY)
+    : formatMoney({ amount: amount ?? '0', currency: DATA_CURRENCY });
 
 export function insightText(
   insight: Insight,
   copy: AppI18n['ai']['insights'],
   locale: string,
+  maskValues = false,
 ): string | null {
   const p = insight.params;
   switch (insight.key) {
@@ -37,14 +40,14 @@ export function insightText(
         {
           category: p['categoryName'],
           percent: formatPercentPoints(p['deltaPercent'], locale),
-          previous: money(p['previous']),
-          current: money(p['current']),
+          previous: money(p['previous'], maskValues),
+          current: money(p['current'], maskValues),
         },
       );
     }
     case 'insight.card.committed':
       if (p['amount'] === undefined) return null;
-      return interpolate(copy.cardCommitted, { amount: money(p['amount']) });
+      return interpolate(copy.cardCommitted, { amount: money(p['amount'], maskValues) });
     default:
       return null;
   }

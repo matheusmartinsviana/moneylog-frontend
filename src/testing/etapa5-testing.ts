@@ -10,11 +10,13 @@ import { ProjectionsGateway } from '~/modules/projections/core/interfaces/projec
 import type { Projection, ProjectionQuery } from '~/modules/projections/core/types/projection';
 import type { ProjectionResponse } from '~/modules/projections/infra/responses/projection.response';
 import { brl } from '~/testing/accounts-testing';
+import type { ViewMode } from '~/util/view-mode';
 
 const r = (amount: string) => ({ amount, currency: 'BRL' as const });
 
 export function aSummary(overrides: Partial<MonthlySummary> = {}): MonthlySummary {
   return {
+    view: 'MINE',
     competence: '2026-10',
     partial: true,
     isProjection: false,
@@ -59,6 +61,7 @@ export function aSummaryResponse(
   overrides: Partial<MonthlySummaryResponse> = {},
 ): MonthlySummaryResponse {
   return {
+    view: 'MINE',
     competence: '2026-10',
     partial: true,
     isProjection: false,
@@ -101,14 +104,16 @@ export function aSummaryResponse(
 
 export class MonthlySummaryGatewayStub extends MonthlySummaryGateway {
   readonly months: string[] = [];
+  readonly views: (ViewMode | undefined)[] = [];
   result: ((month: string) => Observable<MonthlySummary>) | null = null;
 
   resultOf(month: string): Observable<MonthlySummary> {
     return of(aSummary({ competence: month }));
   }
 
-  get(month: string): Observable<MonthlySummary> {
+  get(month: string, view?: ViewMode): Observable<MonthlySummary> {
     this.months.push(month);
+    this.views.push(view);
     return this.result ? this.result(month) : this.resultOf(month);
   }
 }

@@ -215,9 +215,9 @@ import { todayIso } from '~/util/date';
     .date-box__shortcut {
       min-height: 2.75rem;
       padding: 0 var(--space-4);
-      border: var(--border-width) solid var(--color-control-border);
-      border-radius: var(--radius-control);
-      background-color: var(--color-surface);
+      border: var(--border-width) solid var(--field-border);
+      border-radius: var(--radius-pill);
+      background-color: var(--field-bg);
       color: var(--color-text);
       font-size: var(--text-sm);
       font-weight: var(--weight-medium);

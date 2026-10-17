@@ -40,6 +40,12 @@ export class RecurrenceRowComponent {
     const name = recurrence.card?.name ?? recurrence.account?.name;
     return name ? interpolate(this.t().recurrences.row.on, { name }) : null;
   });
+  protected readonly splitText = computed(() => {
+    const count = this.recurrence().shares.filter((share) => share.personId !== null).length;
+    if (count === 0) return null;
+    const copy = this.t().recurrences.row;
+    return count === 1 ? copy.splitOne : interpolate(copy.splitMany, { count: String(count) });
+  });
   protected readonly accountToDefine = computed(() => isAccountToDefine(this.recurrence()));
   protected readonly next = computed(() => {
     const date = this.recurrence().nextOccurrence;

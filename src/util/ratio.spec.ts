@@ -1,4 +1,13 @@
-import { formatPoints, formatRatio, ratioForBar, ratioMagnitude, ratioSign } from '~/util/ratio';
+import {
+  bpsToPercentText,
+  formatBps,
+  formatPoints,
+  formatRatio,
+  percentTextToBps,
+  ratioForBar,
+  ratioMagnitude,
+  ratioSign,
+} from '~/util/ratio';
 
 describe('ratio', () => {
   it('Dado 0.4250 em pt-BR, então formata 42,5% sem calcular no front', () => {
@@ -49,5 +58,29 @@ describe('ratio', () => {
     expect(formatPoints('0.0380', 'en', { signed: true })).toBe('+3.8');
     expect(formatPoints('0.0000', 'pt-BR', { signed: true })).toBe('0');
     expect(formatPoints('abc', 'pt-BR')).toBe('abc');
+  });
+});
+
+describe('pontos-base', () => {
+  it('Dado 350 em pt-BR, então formata 3,5%', () => {
+    expect(formatBps(350, 'pt-BR')).toBe('3,5%');
+  });
+
+  it('Dado 705 pontos-base, então o texto do campo é 7.05', () => {
+    expect(bpsToPercentText(705)).toBe('7.05');
+    expect(bpsToPercentText(700)).toBe('7');
+    expect(bpsToPercentText(750)).toBe('7.5');
+  });
+
+  it('Dado "7,5" ou "7.05", então converte para pontos-base sem float', () => {
+    expect(percentTextToBps('7,5')).toBe(750);
+    expect(percentTextToBps('7.05')).toBe(705);
+    expect(percentTextToBps('100')).toBe(10000);
+  });
+
+  it('Dado texto inválido ou acima de 100%, então devolve null', () => {
+    expect(percentTextToBps('abc')).toBeNull();
+    expect(percentTextToBps('100.01')).toBeNull();
+    expect(percentTextToBps('')).toBeNull();
   });
 });

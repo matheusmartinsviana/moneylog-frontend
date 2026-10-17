@@ -1,0 +1,16 @@
+<div class="clock__digits" aria-hidden="true" data-cy="home-pomodoro-clock">
+  @for (digit of digits(); track $index) {
+    @if ($index === 2) {
+      <span class="clock__colon"><i></i><i></i></span>
+    }
+    <svg class="clock__digit" viewBox="0 0 60 100" focusable="false">
+      @for (segment of digit; track segment.name) {
+        <polygon
+          class="clock__segment"
+          [class.clock__segment--lit]="segment.lit"
+          [attr.points]="segment.points"
+        />
+      }
+    </svg>
+  }
+</div>

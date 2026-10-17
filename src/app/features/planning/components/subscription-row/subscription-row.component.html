@@ -1,0 +1,108 @@
+@let s = subscription();
+@let r = recurrence();
+<div class="row__main">
+  <p class="row__title" [attr.data-cy]="'subscription-title-' + r.id">{{ title() }}</p>
+  <p class="row__meta">
+    <span class="status" [attr.data-cy]="'subscription-scope-' + r.id">
+      {{ t().subscriptions.scopes[r.scope] }}
+    </span>
+    <span>{{ frequency() }}</span>
+    @if (channel(); as text) {
+      <span [attr.data-cy]="'subscription-channel-' + r.id">{{ text }}</span>
+    }
+    @if (overlapping()) {
+      <span class="row__overlap" [attr.data-cy]="'subscription-overlap-' + r.id">
+        <app-icon name="link" [size]="16" />
+        {{ t().subscriptions.row.overlap }}
+      </span>
+    }
+  </p>
+  @if (foreign() && r.originalAmount; as original) {
+    <p class="row__meta" [attr.data-cy]="'subscription-foreign-' + r.id">
+      <span>{{ t().subscriptions.row.original }} <app-money [value]="original" /></span>
+      @if (r.referenceFxRate; as rate) {
+        <span>
+          {{ t().subscriptions.row.fx }} <span class="num">{{ rate }}</span>
+        </span>
+      }
+      @if (iof(); as rateText) {
+        <span>
+          {{ t().subscriptions.row.iof }} <span class="num">{{ rateText }}</span>
+        </span>
+      }
+    </p>
+  }
+  @if (lastUsed(); as text) {
+    <p class="row__meta" [attr.data-cy]="'subscription-last-used-' + r.id">{{ text }}</p>
+  }
+</div>
+
+<div class="row__values">
+  <p class="row__amount" [attr.data-cy]="'subscription-amount-' + r.id">
+    <app-money [value]="r.amount" />
+  </p>
+  @if (s.monthlyEquivalent.amount !== r.amount.amount) {
+    <p class="row__meta" [attr.data-cy]="'subscription-monthly-' + r.id">
+      <span>{{ t().subscriptions.row.monthly }}</span>
+      <app-money [value]="s.monthlyEquivalent" />
+    </p>
+  }
+  @if (company()) {
+    <p class="row__meta" [attr.data-cy]="'subscription-company-' + r.id">
+      {{ t().subscriptions.row.companyNote }}
+    </p>
+  } @else if (s.monthlyEquivalentMine.amount !== s.monthlyEquivalent.amount) {
+    <p class="row__meta" [attr.data-cy]="'subscription-mine-' + r.id">
+      <span>{{ t().subscriptions.row.mine }}</span>
+      <app-money [value]="s.monthlyEquivalentMine" />
+    </p>
+  }
+  @if (s.lastChargedAmount; as last) {
+    @if (last.amount !== r.amount.amount) {
+      <p class="row__meta" [attr.data-cy]="'subscription-last-charged-' + r.id">
+        <span>{{ t().subscriptions.row.lastCharged }}</span>
+        <app-money [value]="last" />
+      </p>
+    }
+  }
+</div>
+
+<div class="row__when">
+  @if (s.ended) {
+    <p class="row__ended" [attr.data-cy]="'subscription-ended-' + r.id">
+      {{ t().subscriptions.row.ended }}
+    </p>
+  } @else {
+    <p [attr.data-cy]="'subscription-next-' + r.id">{{ next() }}</p>
+  }
+  @if (activeUntil(); as text) {
+    <p class="row__meta" [attr.data-cy]="'subscription-active-until-' + r.id">{{ text }}</p>
+  }
+</div>
+
+<div class="row__actions">
+  @if (canCharge()) {
+    <button
+      type="button"
+      class="button button--primary"
+      [attr.data-cy]="'subscription-charge-' + r.id"
+      [attr.aria-label]="chargeLabel()"
+      [disabled]="busy()"
+      (click)="chargeRequested.emit(s)"
+    >
+      {{ t().subscriptions.row.charge }}
+    </button>
+  }
+  @if (canAct()) {
+    <button
+      type="button"
+      class="button button--soft"
+      [attr.data-cy]="'subscription-cancel-' + r.id"
+      [attr.aria-label]="cancelLabel()"
+      [disabled]="busy()"
+      (click)="cancelRequested.emit(s)"
+    >
+      {{ t().subscriptions.row.cancel }}
+    </button>
+  }
+</div>

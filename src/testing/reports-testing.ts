@@ -19,6 +19,7 @@ import { SearchGateway } from '~/modules/search/core/interfaces/search.gateway';
 import type { SearchResults } from '~/modules/search/core/types/search';
 import { toSearchResults } from '~/modules/search/infra/facades/search-response.mapper';
 import type { SearchResultsResponse } from '~/modules/search/infra/responses/search.response';
+import type { ViewMode } from '~/util/view-mode';
 
 const brl = (amount: string) => ({ amount, currency: 'BRL' as const });
 const day = (date: string, income: string, expenses: string, net: string, partial = false) => ({
@@ -34,6 +35,7 @@ export function anIncomeExpenseSeriesResponse(
   overrides: Partial<IncomeExpenseSeriesResponse> = {},
 ): IncomeExpenseSeriesResponse {
   return {
+    view: 'MINE',
     period: 'D7',
     from: '2026-10-04',
     to: '2026-10-10',
@@ -63,6 +65,7 @@ export function aSpendingByCategoryResponse(
   overrides: Partial<SpendingByCategoryResponse> = {},
 ): SpendingByCategoryResponse {
   return {
+    view: 'MINE',
     basis: 'COMPETENCE',
     from: '2026-10-01',
     to: '2026-10-31',
@@ -148,6 +151,7 @@ export class ReportsGatewayStub extends ReportsGateway {
   readonly isDemo = false;
   readonly periods: ReportPeriod[] = [];
   readonly months: string[] = [];
+  readonly spendingViews: (ViewMode | undefined)[] = [];
   incomeExpensesResult: (period: ReportPeriod) => Observable<IncomeExpenseSeries> = (period) =>
     of(anIncomeExpenseSeries({ period }));
   spendingResult: (month: string) => Observable<SpendingByCategory> = () =>
@@ -158,8 +162,13 @@ export class ReportsGatewayStub extends ReportsGateway {
     return this.incomeExpensesResult(period);
   }
 
-  spendingByCategory(month: string): Observable<SpendingByCategory> {
+  spendingByCategory(
+    month: string,
+    _limit?: number,
+    view?: ViewMode,
+  ): Observable<SpendingByCategory> {
     this.months.push(month);
+    this.spendingViews.push(view);
     return this.spendingResult(month);
   }
 }

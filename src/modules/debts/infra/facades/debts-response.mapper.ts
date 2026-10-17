@@ -1,5 +1,11 @@
-import type { Debt, DebtInput, DebtUpdate } from '~/modules/debts/core/types/debt';
 import type {
+  CardCashOutInput,
+  Debt,
+  DebtInput,
+  DebtUpdate,
+} from '~/modules/debts/core/types/debt';
+import type {
+  CardCashOutRequest,
   DebtCreateRequest,
   DebtResponse,
   DebtUpdateRequest,
@@ -14,6 +20,14 @@ const money = (value: { amount: string; currency: string }): Money => ({
 export function toDebt(response: DebtResponse): Debt {
   return {
     id: response.id,
+    kind: response.kind ?? 'PERSONAL',
+    channel: response.channel ?? null,
+    effectiveRate: response.effectiveRate
+      ? {
+          monthlyBps: response.effectiveRate.monthlyBps,
+          annualBps: response.effectiveRate.annualBps,
+        }
+      : null,
     person: response.person ? { id: response.person.id, name: response.person.name } : null,
     creditorName: response.creditorName ?? null,
     direction: response.direction,
@@ -65,5 +79,26 @@ export function toUpdateRequest(input: DebtUpdate): DebtUpdateRequest {
     ...(input.description.trim() !== '' ? { description: input.description.trim() } : {}),
     expectedDate: input.expectedDate,
     version: input.version,
+  };
+}
+
+export function toCardCashOutRequest(input: CardCashOutInput): CardCashOutRequest {
+  const channel = input.channel?.trim() ?? '';
+  return {
+    cardId: input.cardId,
+    ...(input.beneficiaryPersonId
+      ? { beneficiaryPersonId: input.beneficiaryPersonId }
+      : input.accountId
+        ? { accountId: input.accountId }
+        : {}),
+    principal: input.principal,
+    installments: input.installments,
+    ...(input.totalWithInterest !== null
+      ? { totalWithInterest: input.totalWithInterest }
+      : input.rateBps !== null
+        ? { rateBps: input.rateBps }
+        : {}),
+    firstInvoiceDate: input.firstInvoiceDate,
+    ...(channel !== '' ? { channel } : {}),
   };
 }

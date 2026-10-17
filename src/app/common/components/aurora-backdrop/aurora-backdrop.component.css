@@ -1,0 +1,166 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.aurora {
+  position: absolute;
+  width: 70vmax;
+  height: 70vmax;
+  border-radius: 50%;
+  opacity: 0.7;
+  will-change: transform, opacity;
+  animation:
+    aurora-drift 64s ease-in-out infinite alternate,
+    aurora-breathe 48s ease-in-out infinite alternate;
+}
+
+.aurora--forest {
+  top: -25vmax;
+  left: -15vmax;
+  background: var(--gradient-aurora-forest);
+}
+
+.aurora--sage {
+  right: -20vmax;
+  bottom: -30vmax;
+  background: var(--gradient-aurora-sage);
+  animation-duration: 72s, 56s;
+  animation-delay:
+    -18s,
+    -20s;
+}
+
+.aurora--olive {
+  top: 35%;
+  right: -10vmax;
+  width: 50vmax;
+  height: 50vmax;
+  background: var(--gradient-aurora-olive);
+  opacity: 0;
+  animation-name: aurora-drift, aurora-olive-cycle;
+  animation-duration: 88s, 80s;
+  animation-delay:
+    -40s,
+    -10s;
+}
+
+.aurora--ivory {
+  top: 20%;
+  left: 30%;
+  width: 55vmax;
+  height: 55vmax;
+  background: var(--gradient-aurora-ivory);
+  animation-duration: 80s, 64s;
+  animation-delay:
+    -30s,
+    -32s;
+}
+
+.grain {
+  position: absolute;
+  inset: -200px;
+  background-image: var(--grain-image);
+  background-size: 200px 200px;
+  background-repeat: repeat;
+  opacity: var(--grain-opacity);
+  mix-blend-mode: var(--grain-blend);
+  will-change: transform;
+  animation: grain-shift 0.9s steps(1, end) infinite;
+}
+
+:host(.aurora-backdrop--paused) .aurora,
+:host(.aurora-backdrop--paused) .grain,
+:host-context(html.overlay-open) .aurora,
+:host-context(html.overlay-open) .grain {
+  animation-play-state: paused;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(6vmax, 4vmax, 0) scale(1.08);
+  }
+
+  100% {
+    transform: translate3d(-4vmax, 7vmax, 0) scale(0.96);
+  }
+}
+
+@keyframes aurora-breathe {
+  0% {
+    opacity: 0.55;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes aurora-olive-cycle {
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.1;
+  }
+}
+
+@keyframes grain-shift {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  12.5% {
+    transform: translate3d(-47px, 83px, 0);
+  }
+
+  25% {
+    transform: translate3d(112px, -29px, 0);
+  }
+
+  37.5% {
+    transform: translate3d(-93px, -121px, 0);
+  }
+
+  50% {
+    transform: translate3d(61px, 147px, 0);
+  }
+
+  62.5% {
+    transform: translate3d(-138px, 19px, 0);
+  }
+
+  75% {
+    transform: translate3d(34px, -76px, 0);
+  }
+
+  87.5% {
+    transform: translate3d(129px, 102px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .grain {
+    animation: none;
+    will-change: auto;
+  }
+
+  .aurora--olive {
+    opacity: 0.5;
+  }
+}

@@ -76,6 +76,7 @@ import { formatIsoDate } from '~/util/date';
       justify-content: space-between;
       gap: var(--space-3);
       padding: var(--space-3) 0;
+      min-height: var(--touch-min);
       border-bottom: var(--border-width) solid var(--color-border);
     }
 
@@ -98,7 +99,7 @@ import { formatIsoDate } from '~/util/date';
 
     .item__meta {
       color: var(--color-text-muted);
-      font-size: var(--text-xs);
+      font-size: var(--text-sm);
     }
 
     .item__tag {
@@ -112,7 +113,8 @@ import { formatIsoDate } from '~/util/date';
     }
 
     .item__amount {
-      font-weight: var(--weight-semibold);
+      font-weight: var(--weight-medium);
+      font-variant-numeric: tabular-nums;
       white-space: nowrap;
     }
 

@@ -1,6 +1,6 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, of, throwError } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap, throwError } from 'rxjs';
 
 import {
   CommitmentsGateway,
@@ -8,14 +8,19 @@ import {
 } from '~/modules/commitments/core/interfaces/commitments.gateway';
 import type {
   Commitment,
+  CommitmentClausesInput,
+  CommitmentCsvFile,
   CommitmentInput,
   CommitmentProgressInput,
+  CommitmentSharesInput,
 } from '~/modules/commitments/core/types/commitment';
 import { COMMITMENT_ENDPOINTS } from '~/modules/commitments/infra/endpoints';
 import {
+  toClausesRequest,
   toCommitment,
   toCommitmentRequest,
   toProgressRequest,
+  toSharesRequest,
 } from '~/modules/commitments/infra/facades/commitments-response.mapper';
 import type {
   CommitmentPayRequest,
@@ -23,6 +28,8 @@ import type {
   CommitmentSliceResponse,
 } from '~/modules/commitments/infra/responses/commitment.response';
 import { emptyCommitments } from '~/modules/commitments/mock-data/empty-commitments';
+import { problemFromBlobError } from '~/util/api/blob-problem';
+import { safeFilenameFromContentDisposition } from '~/util/api/content-disposition';
 import { ProblemError, toProblem } from '~/util/api/problem';
 import type { Slice } from '~/util/api/slice';
 import { API_MOCKS } from '~/util/api-mocks';
@@ -89,6 +96,47 @@ export class CommitmentsRequestsFacade extends CommitmentsGateway {
     return this.http
       .post<CommitmentResponse>(COMMITMENT_ENDPOINTS.progress(id), toProgressRequest(input))
       .pipe(map(toCommitment), catchError(fail));
+  }
+
+  updateShares(id: string, position: number, input: CommitmentSharesInput): Observable<Commitment> {
+    if (this.useMocks) return notFound();
+    return this.http
+      .put<CommitmentResponse>(COMMITMENT_ENDPOINTS.shares(id, position), toSharesRequest(input))
+      .pipe(map(toCommitment), catchError(fail));
+  }
+
+  updateClauses(id: string, input: CommitmentClausesInput): Observable<Commitment> {
+    if (this.useMocks) return notFound();
+    return this.http
+      .put<CommitmentResponse>(COMMITMENT_ENDPOINTS.clauses(id), toClausesRequest(input))
+      .pipe(map(toCommitment), catchError(fail));
+  }
+
+  byPersonCsv(id: string, language: string): Observable<CommitmentCsvFile> {
+    if (this.useMocks) return notFound();
+    const params = new HttpParams().set('format', 'csv');
+    const headers = new HttpHeaders().set('Accept-Language', language === 'en' ? 'en' : 'pt');
+    return this.http
+      .get(COMMITMENT_ENDPOINTS.byPerson(id), {
+        params,
+        headers,
+        observe: 'response',
+        responseType: 'blob',
+      })
+      .pipe(
+        map((response: HttpResponse<Blob>) => ({
+          blob: response.body ?? new Blob([]),
+          filename: safeFilenameFromContentDisposition(
+            response.headers.get('Content-Disposition'),
+            'moneylog-imovel-por-pessoa.csv',
+          ),
+        })),
+        catchError((error: unknown) =>
+          from(problemFromBlobError(error)).pipe(
+            switchMap((problem) => throwError(() => new ProblemError(problem))),
+          ),
+        ),
+      );
   }
 
   private toSlice(slice: CommitmentSliceResponse): Slice<Commitment> {

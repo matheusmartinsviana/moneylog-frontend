@@ -163,7 +163,7 @@ const LIST_LIMIT = 20;
       padding: var(--space-2) var(--space-3);
       border: var(--border-width) solid var(--color-border);
       border-radius: var(--radius-control);
-      background-color: var(--color-surface);
+      background-color: var(--card-flat-bg);
     }
 
     .report__count dt {

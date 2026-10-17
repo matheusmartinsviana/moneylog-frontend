@@ -1,0 +1,171 @@
+@font-face {
+  font-family: 'Old London';
+  src: url('/assets/fonts/old-london.ttf') format('truetype');
+  font-display: swap;
+}
+
+:host {
+  display: contents;
+}
+
+.focus {
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: var(--space-5) var(--space-4) var(--space-8);
+  overflow-y: auto;
+  color: var(--color-home-text);
+  font-family: var(--font-sans);
+}
+
+.focus__fullscreen {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-3);
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: var(--color-home-text-muted);
+}
+
+.focus__date {
+  margin: 0;
+  font-family: 'Old London', var(--font-sans);
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-text-stroke: 0.008em currentcolor;
+  paint-order: stroke fill;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n' x='0' y='0' width='100%' height='100%'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.6 2.35'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23n)'/%3E%3C/svg%3E");
+  mask-size: 160px 160px;
+  line-height: 1.1;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.focus__phrase {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.focus__modes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.focus__chip {
+  min-height: 2.75rem;
+  padding: var(--space-1) var(--space-4);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-home-text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.focus__chip[aria-pressed='true'] {
+  border-color: var(--color-border);
+  background: color-mix(in srgb, var(--color-home-action) 12%, transparent);
+  color: var(--color-home-text);
+}
+
+.focus__chip:focus-visible,
+.focus__main:focus-visible,
+.focus__stop:focus-visible,
+.focus__fullscreen:focus-visible {
+  outline: none;
+  box-shadow: var(--home-focus-ring);
+}
+
+.focus__display {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: min(100%, 44rem);
+  padding: var(--space-6) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: color-mix(in srgb, var(--color-home-action) 7%, transparent);
+  --clock-digit-width: clamp(2.4rem, 12vw, 8rem);
+}
+
+.focus__display app-pomodoro-clock {
+  position: relative;
+}
+
+.focus__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 56px color-mix(in srgb, var(--color-home-action) 22%, transparent);
+  opacity: 0.35;
+}
+
+.focus--running .focus__halo {
+  animation: focus-breathe calc(var(--duration-hero) * 10) ease-in-out infinite;
+}
+
+.focus__controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.focus__main {
+  min-width: 10rem;
+  min-height: 3rem;
+}
+
+.focus__stop {
+  min-height: 3rem;
+}
+
+.focus__dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.focus__dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--color-home-action);
+  opacity: 0.18;
+}
+
+.focus__dot--on {
+  opacity: 0.85;
+}
+
+@keyframes focus-breathe {
+  50% {
+    opacity: 1;
+    transform: scale(1.015);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focus--running .focus__halo {
+    animation: none;
+  }
+}
+
+:root[data-motion='off'] .focus--running .focus__halo {
+  animation: none;
+}

@@ -1,0 +1,131 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.recent {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.recent__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+}
+
+.recent__status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  border-bottom: var(--border-width) solid var(--glass-panel-border);
+}
+
+.row:last-child {
+  border-bottom: 0;
+}
+
+.row__link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.row__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-pill);
+  border: var(--border-width) solid var(--glass-panel-border);
+  color: var(--color-neutral-mark);
+}
+
+.row__icon[data-tone='income'] {
+  color: var(--color-income-mark);
+}
+
+.row__icon[data-tone='expense'] {
+  color: var(--color-expense-mark);
+}
+
+.row__main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.row__description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.row__meta > span + span::before {
+  content: '·';
+  margin-right: var(--space-2);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  justify-self: start;
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--glass-panel-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-neutral-text);
+  font-size: var(--text-xs);
+}
+
+.row__amount {
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  color: var(--color-neutral-text);
+}
+
+.row__amount[data-tone='income'] {
+  color: var(--color-income-text);
+}
+
+.row__amount[data-tone='expense'] {
+  color: var(--color-expense-text);
+}
+
+.row__amount.is-voided {
+  text-decoration: line-through;
+}
+
+.recent__all {
+  justify-self: end;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.recent__all:hover {
+  text-decoration: underline;
+}

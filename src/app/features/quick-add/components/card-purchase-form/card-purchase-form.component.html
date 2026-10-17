@@ -5,6 +5,17 @@
     [options]="cardOptions()"
     [label]="t().cards.purchase.card"
   />
+  @if (!editing() && lastDigitsOptions().length > 0) {
+    <app-select
+      formControlName="lastDigits"
+      fieldId="entry-last-digits"
+      [options]="lastDigitsOptions()"
+      [mandatory]="false"
+      [emptyLabel]="t().cards.purchase.noLastDigits"
+      [label]="t().cards.purchase.lastDigits"
+      [hint]="t().cards.purchase.lastDigitsHint"
+    />
+  }
   <app-money-input
     formControlName="amount"
     fieldId="entry-amount"
@@ -37,6 +48,20 @@
     [valueText]="installmentsText()"
     [label]="t().cards.purchase.installments"
   />
+  @if (!editing()) {
+    <app-switch [formControl]="splitOn" fieldId="entry-split" [label]="t().split.toggle" />
+    @if (splitting()) {
+      <app-split-field
+        [group]="form.controls.split"
+        [people]="people()"
+        [peopleStatus]="peopleStatus()"
+        [createPerson]="createPerson()"
+        [currency]="currency"
+        idPrefix="entry-split"
+        (peopleRetry)="peopleRetry.emit()"
+      />
+    }
+  }
   @if (editing()) {
     <app-text-field
       formControlName="notes"
@@ -52,6 +77,7 @@
       [preview]="preview()"
       [loading]="previewLoading()"
       [problem]="previewProblem()"
+      [people]="people()"
     />
   }
 
@@ -59,6 +85,7 @@
     [banner]="banner()"
     [canRetry]="canRetry()"
     [saving]="saving()"
+    [disabled]="splitBlocked()"
     [submitLabel]="submitLabel()"
     [cancelLink]="cancelLink()"
     (retry)="retry.emit()"

@@ -15,7 +15,7 @@ export type ThirdPartyReceivablesState =
 @Injectable()
 export class ThirdPartyReceivablesFacade {
   private readonly gateway = inject(ThirdPartiesGateway);
-  private readonly loads = new Subject<string | null>();
+  private readonly loads = new Subject<{ month: string | null; silent: boolean }>();
   private readonly current = signal<ThirdPartyReceivablesState>({ status: 'loading' });
   private readonly monthState = signal<string | null>(null);
 
@@ -33,7 +33,7 @@ export class ThirdPartyReceivablesFacade {
   constructor() {
     this.loads
       .pipe(
-        switchMap((month) =>
+        switchMap(({ month, silent }) =>
           this.gateway.receivables(month).pipe(
             map((data): ThirdPartyReceivablesState => ({
               status:
@@ -42,7 +42,9 @@ export class ThirdPartyReceivablesFacade {
                   : 'ready',
               data,
             })),
-            startWith<ThirdPartyReceivablesState>({ status: 'loading' }),
+            silent
+              ? (source) => source
+              : startWith<ThirdPartyReceivablesState>({ status: 'loading' }),
             catchError((error: unknown) =>
               of<ThirdPartyReceivablesState>({ status: 'error', problem: problemOf(error) }),
             ),
@@ -55,7 +57,11 @@ export class ThirdPartyReceivablesFacade {
 
   load(month: string | null = this.monthState()): void {
     this.monthState.set(month);
-    this.loads.next(month);
+    this.loads.next({ month, silent: false });
+  }
+
+  refresh(): void {
+    this.loads.next({ month: this.monthState(), silent: true });
   }
 }
 

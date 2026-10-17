@@ -3,7 +3,9 @@ import type {
   AdjustmentKind,
   InvestmentDirection,
   PaymentMethod,
+  TransactionNature,
 } from '~/modules/transactions/core/types/transaction-enums';
+import type { SplitInput } from '~/util/split';
 
 interface BaseInput {
   readonly amount: string;
@@ -28,6 +30,7 @@ export interface ExpenseInput extends BaseInput {
   readonly accountId: string;
   readonly categoryId: string;
   readonly method?: PaymentMethod;
+  readonly nature?: TransactionNature;
   readonly shares?: readonly ExpenseShareInput[];
 }
 
@@ -92,6 +95,8 @@ export interface CardPurchaseInput extends BaseInput {
   readonly cardId: string;
   readonly categoryId: string;
   readonly installments: number;
+  readonly lastDigits?: string | null;
+  readonly split?: SplitInput | null;
 }
 
 export type TransactionInput =

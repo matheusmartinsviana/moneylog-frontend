@@ -23,6 +23,7 @@ import {
 } from '~/modules/reports/mock-data/empty-reports';
 import { ProblemError, toProblem } from '~/util/api/problem';
 import { API_MOCKS, mockResponse } from '~/util/api-mocks';
+import { DEFAULT_VIEW, type ViewMode } from '~/util/view-mode';
 
 const fail = (error: unknown) => throwError(() => new ProblemError(toProblem(error)));
 
@@ -46,7 +47,11 @@ export class ReportsRequestsFacade extends ReportsGateway {
     return source.pipe(map(toIncomeExpenseSeries), catchError(fail));
   }
 
-  spendingByCategory(month: string, limit = 5): Observable<SpendingByCategory> {
+  spendingByCategory(
+    month: string,
+    limit = 5,
+    view: ViewMode = DEFAULT_VIEW,
+  ): Observable<SpendingByCategory> {
     const source: Observable<SpendingByCategoryResponse> = this.useMocks
       ? of(
           mockResponse(
@@ -55,7 +60,10 @@ export class ReportsRequestsFacade extends ReportsGateway {
           ),
         )
       : this.http.get<SpendingByCategoryResponse>(REPORTS_ENDPOINTS.spendingByCategory, {
-          params: new HttpParams().set('month', month).set('limit', limit),
+          params:
+            view === DEFAULT_VIEW
+              ? new HttpParams().set('month', month).set('limit', limit)
+              : new HttpParams().set('month', month).set('limit', limit).set('view', view),
         });
     return source.pipe(map(toSpendingByCategory), catchError(fail));
   }

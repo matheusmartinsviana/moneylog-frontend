@@ -19,6 +19,11 @@
   overflow-wrap: anywhere;
 }
 
+.head__link {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
 .note {
   margin: 0;
   color: var(--color-text-muted);
@@ -47,7 +52,9 @@
 
 .fact dd {
   margin: 0;
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .fact__text {
@@ -67,7 +74,12 @@
 .item {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: var(--space-3) 0;
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.item:last-child {
+  border-bottom: 0;
 }
 
 .item__main,
@@ -111,4 +123,21 @@
     grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) auto;
     align-items: center;
   }
+}
+
+.fact--focus {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.fact--focus dd {
+  font-size: var(--text-3xl);
+}
+
+.more {
+  min-height: var(--touch-min);
+  margin-top: var(--space-2);
+  border: 0;
+  background: none;
+  cursor: pointer;
 }

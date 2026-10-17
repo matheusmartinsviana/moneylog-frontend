@@ -16,7 +16,15 @@ export const COMMITMENT_ITEM_TYPES = [
   'FINANCING',
 ] as const satisfies readonly CommitmentItemType[];
 
+export interface CommitmentShare {
+  readonly personId: string | null;
+  readonly amount: Money;
+}
+
 export interface CommitmentItem {
+  readonly shares?: readonly CommitmentShare[];
+  readonly sharesDefined?: boolean;
+  readonly coBuyerPersonId?: string | null;
   readonly position: number;
   readonly label: string;
   readonly type: CommitmentItemType;
@@ -31,7 +39,24 @@ export interface CommitmentMonth {
   readonly amount: Money;
 }
 
+export interface CommitmentClauses {
+  readonly lateFeeBps: number;
+  readonly monthlyInterestBps: number;
+  readonly terminationRetentionBps: number;
+  readonly terminationRetentionAmount: Money | null;
+  readonly notes: string | null;
+}
+
+export interface CommitmentPersonTotals {
+  readonly personId: string | null;
+  readonly paid: Money;
+  readonly pending: Money;
+  readonly total: Money;
+}
+
 export interface Commitment {
+  readonly clauses?: CommitmentClauses | null;
+  readonly totalsByPerson?: readonly CommitmentPersonTotals[];
   readonly id: string;
   readonly kind: CommitmentKind;
   readonly name: string;
@@ -79,4 +104,32 @@ export interface CommitmentProgressInput {
   readonly nextDueDate: string | null;
   readonly notes: string | null;
   readonly version: number;
+}
+
+export interface ShareInput {
+  readonly personId: string | null;
+  readonly amount: string;
+}
+
+export interface CommitmentSharesInput {
+  readonly shares: readonly ShareInput[];
+  readonly coBuyerPersonId: string | null;
+  readonly version: number;
+}
+
+export interface CommitmentClausesInput {
+  readonly lateFeeBps: number;
+  readonly monthlyInterestBps: number;
+  readonly terminationRetentionBps: number;
+  readonly notes: string | null;
+  readonly version: number;
+}
+
+export function isSharesDefined(item: CommitmentItem): boolean {
+  return item.sharesDefined === true;
+}
+
+export interface CommitmentCsvFile {
+  readonly blob: Blob;
+  readonly filename: string;
 }

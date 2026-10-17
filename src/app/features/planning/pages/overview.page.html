@@ -1,4 +1,4 @@
-<app-page-layout fit [heading]="t().nav.planning" [description]="t().brief.panorama.description">
+<app-page-layout [heading]="t().nav.planning" [description]="t().brief.panorama.description">
   <div class="ov">
     <app-planning-nav current="overview" />
 
@@ -55,31 +55,35 @@
                 </button>
               </p>
             }
-            <div class="dashboard" data-cy="home-legacy">
-              <div class="col col--main">
-                <app-section-container
-                  fill
-                  scroll
-                  [heading]="t().home.upcoming.title"
-                  [description]="t().home.upcoming.description"
-                >
-                  <app-upcoming-list [upcoming]="data.upcoming" (realize)="openRealize($event)" />
-                </app-section-container>
+            <div class="page-grid" data-cy="home-legacy">
+              <div class="stack span-5">
+                <app-available-balance [balances]="data.summary.balances" />
               </div>
 
-              <div class="col col--side">
-                <app-available-balance [balances]="data.summary.balances" />
+              <app-section-container
+                class="span-7 ov__upcoming"
+                [heading]="t().home.upcoming.title"
+                [description]="t().home.upcoming.description"
+              >
+                <app-upcoming-list
+                  [upcoming]="data.upcoming"
+                  [limit]="6"
+                  (realize)="openRealize($event)"
+                />
+              </app-section-container>
 
-                <app-section-container
-                  [heading]="t().home.committed.title"
-                  [description]="t().home.committed.description"
-                >
-                  <app-commitments
-                    [committed]="data.summary.committed"
-                    [projected]="data.summary.projected"
-                  />
-                </app-section-container>
+              <app-section-container
+                class="span-5"
+                [heading]="t().home.committed.title"
+                [description]="t().home.committed.description"
+              >
+                <app-commitments
+                  [committed]="data.summary.committed"
+                  [projected]="data.summary.projected"
+                />
+              </app-section-container>
 
+              <div class="span-12">
                 <app-disclosure
                   fieldId="overview-more"
                   [heading]="t().brief.more"

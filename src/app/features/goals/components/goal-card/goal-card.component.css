@@ -7,10 +7,10 @@
   position: relative;
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--glass-panel-border);
   border-radius: var(--radius-card);
-  background-color: var(--color-surface);
+  background-color: var(--card-flat-bg);
   list-style: none;
 }
 
@@ -69,7 +69,10 @@
 
 .fact__value {
   margin: 0;
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .card__meta {
@@ -92,10 +95,9 @@
   font-weight: var(--weight-medium);
 }
 
-.card__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+.card__actions .button {
+  min-height: var(--touch-min);
+  padding-inline: 0;
 }
 
 .card__actions:empty {

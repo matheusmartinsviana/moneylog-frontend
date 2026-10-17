@@ -420,6 +420,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/transactions/{id}/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Altera o rateio de uma compra no cartão (fatura aberta ou fechada)
+         * @description ADR-022. Reclassifica as parcelas entre `EXPENSE` (minha parte) e `RECEIVABLE` (partes de terceiros) por revisão em
+         *     `transaction_revisions`; `CARD`, fatura, limite e caixa **não mudam**; o patrimônio muda exatamente pela variação da minha parte (aumentar a minha parte em X reduz o patrimônio em X, porque X deixa de ser a receber). O valor da compra não é editável (`PUT` da compra com outro `amount` → `422 TRANSACTION_NOT_EDITABLE`). Vale em fatura
+         *     fechada porque é só interno. Soma inválida, `personId` repetido ou `AMOUNT` que não soma a parcela → `422 SHARES_INVALID`; o novo
+         *     devido de uma pessoa abaixo do que ela já pagou → `422 SHARES_BELOW_RECEIVED` (nada é gravado); movimentação que não é compra no cartão →
+         *     `422 TRANSACTION_NOT_EDITABLE`; compra estornada → `422 TRANSACTION_ALREADY_VOIDED`; `version` desatualizada → `409`. Outro usuário →
+         *     `404`. Devolve a compra com o rateio novo.
+         */
+        put: operations["updateTransactionShares"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/cards": {
         parameters: {
             query?: never;
@@ -743,6 +770,30 @@ export interface paths {
          */
         get: operations["getInvoice"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invoices/{id}/document-amount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Informa ou limpa o valor do documento da fatura
+         * @description O dono preenche o valor que consta no documento (extrato) da fatura; `null` limpa. O valor é só de comparação e não altera `total`, saldo nem razão. A diferença
+         *     para o `total` calculado aparece em `documentDivergence` e, acima de `documentDivergenceTolerance`, vira o alerta `DOCUMENT_DIVERGENCE`. Devolve a fatura atualizada.
+         *     `version` é opcional: enviada e diferente de `documentVersion` → `409 VERSION_CONFLICT`. Valor negativo → `422 INVOICE_DOCUMENT_AMOUNT_INVALID`.
+         */
+        put: operations["changeInvoiceDocumentAmount"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1098,6 +1149,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/third-party-expenses/share-migration/dry-run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simula a migração das marcas legadas de terceiro para o rateio, sem gravar
+         * @description Sem corpo. Calcula, para as compras de cartão marcadas como de terceiro no modelo legado, o que passaria a ser rateio (consumo `MINE` do dono e
+         *     recebível da pessoa), por compra e por mês, e lista as exceções com o motivo. Não grava nada. `hash` identifica o relatório e é o que
+         *     `POST /v1/third-party-expenses/share-migration/apply` exige. `receivableRecognized` é o recebível que a migração passa a reconhecer;
+         *     `refundsNeutralized` é o reembolso legado que deixa de reduzir o consumo.
+         */
+        post: operations["previewShareMigration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/third-party-expenses/share-migration/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aplica a migração aprovada no dry-run (idempotente pelo hash)
+         * @description Exige o `reportHash` do dry-run e `backupConfirmed = true`. Se os dados mudaram desde o dry-run → `409 SHARE_MIGRATION_REPORT_MISMATCH` (gere o
+         *     relatório de novo); `backupConfirmed` falso → `422 SHARE_MIGRATION_BACKUP_REQUIRED`; nada elegível → `422 SHARE_MIGRATION_NOTHING_TO_APPLY`.
+         *     Repetir com o mesmo `reportHash` já aplicado devolve `alreadyApplied = true` e não grava de novo. Tudo ou nada, numa transação.
+         */
+        post: operations["applyShareMigration"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/third-party-receipts": {
         parameters: {
             query?: never;
@@ -1108,12 +1204,54 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Registra um recebimento de terceiro já refletido no saldo, sem movimento de conta
-         * @description Para o dinheiro que a pessoa já enviou e que **já está no saldo observado**: nada é lançado no razão (sem conta, sem renda, sem consumo). Com
-         *     `transactionId` (despesa marcada como de terceiro, da mesma pessoa) reduz o pendente dela; sem, aparece como item `RECEIPT` já recebido,
-         *     "origem a confirmar". `Idempotency-Key` opcional.
+         * Registra um recebimento de terceiro (movendo uma conta ou já refletido no saldo)
+         * @description Para despesa marcada como de terceiro (legado) e sem `transactionId`: nada é lançado no razão (sem conta, sem renda, sem consumo); com
+         *     `transactionId` reduz o pendente da pessoa; sem, aparece como item `RECEIPT` já recebido, "origem a confirmar". `Idempotency-Key`
+         *     opcional. A resposta traz `settlement = ALREADY_IN_BALANCE` e `ledgerEffect = NONE` nesses casos (só registro informativo; sem `accountId`).
+         *
+         *     **Compra de cartão rateada (2.24.0, ADR-022), dois modos, `accountId` opcional (emenda 2.24.0 / A1b):**
+         *     - **Com `accountId`** (`settlement = ACCOUNT`): o dinheiro entra numa conta `CASH`; `ACCOUNT +X / RECEIVABLE −X`. Patrimônio inalterado.
+         *     - **Sem `accountId`** (`settlement = ALREADY_IN_BALANCE`, "já está no saldo"): o dinheiro já está no saldo real da conta, sem movimento novo;
+         *       `RECEIVABLE(pessoa) −X / EQUITY +X` (o mesmo livro `EQUITY` do saldo inicial e da fatura histórica; soma zero). Não cria `ACCOUNT`,
+         *       `INCOME` nem `REFUND`. Efeito: o patrimônio cai exatamente X (o recebível deixa de existir e o caixa já o continha: eliminação de
+         *       contagem dupla, não perda). O cliente deve exigir escolha explícita entre os dois modos.
+         *
+         *     **Fonte e data do posting (2.32.1):** o `RECEIVABLE −X / EQUITY +X` usa a fonte própria `THIRD_PARTY_RECEIPT_IN_BALANCE` (id = id do recebimento),
+         *     distinta do saldo inicial e do cancelamento de dívida, e tem como data o `receivedOn` (ausente = a data do dia, no fuso do usuário); isso permite listar
+         *     esses lançamentos na conciliação. **`Idempotency-Key` é obrigatório quando não há `accountId`** em compra rateada (ausente → `400 VALIDATION_FAILED`):
+         *     repetir a chamada com a mesma chave devolve o mesmo recebimento e não baixa o recebível duas vezes.
+         *
+         *     Nos dois modos o recebimento não é renda, não reduz consumo (`MINE` e `GROSS` inalterados) e não é `REFUND`. Acima do pendente da pessoa →
+         *     `422 DEBT_SETTLEMENT_EXCEEDS_OUTSTANDING`, nada gravado; dois recebimentos concorrentes nunca excedem o devido (ADR-008).
          */
         post: operations["recordThirdPartyReceipt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/third-party-receivables/{transactionId}/installments/{installmentId}/people/{personId}/expected-month": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionId: string;
+                installmentId: string;
+                personId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Define (ou limpa) o mês em que o recebimento de uma parcela rateada está previsto
+         * @description Padrão = mês do vencimento da fatura da parcela. Vale o último valor; o recebível só conta no mês escolhido em `receivablesPending` do `owner-statement`. Não move
+         *     dinheiro, não é renda e não altera o razão nem o consumo. Idempotente (mesmo valor, mesmo resultado). Devolve a parcela atualizada.
+         *     Recebível já recebido por inteiro → `422 RECEIVABLE_ALREADY_RECEIVED`; mês fora de 2000-01..2100-12 → `422 RECEIVABLE_EXPECTED_MONTH_INVALID`;
+         *     formato diferente de `YYYY-MM` → `400`; inexistente ou de outro usuário → `404 RECEIVABLE_NOT_FOUND`; `version` desatualizada → `409 VERSION_CONFLICT`.
+         */
+        put: operations["setReceivableExpectedMonth"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1178,6 +1316,8 @@ export interface paths {
          *     (padrão: mês atual) traz o **bruto** (`grossConsumption` = despesas pagas + cartão + dívidas de consumo, antes dos reembolsos), os
          *     `refunds`, o `personalNet` (= consumo do livro = bruto − reembolsos), o consumo de terceiro (`thirdPartyConsumption`), o já
          *     reembolsado (`thirdPartyReimbursed`) e o `thirdPartyPending` (de terceiro e ainda não reembolsado, dentro do bruto).
+         *     **Rateio de cartão (2.24.0, ADR-022):** os itens `CARD_SHARE` e `people[].months[]` vêm do `RECEIVABLE` gravado na compra; o bloco `month`
+         *     mantém o significado acima para as marcas legadas.
          */
         get: operations["getThirdPartyReceivables"];
         put?: never;
@@ -1364,6 +1504,8 @@ export interface paths {
          * Custo fixo mensal e receita recorrente mensal (estimativa)
          * @description Σ das recorrências ativas **e não encerradas** normalizadas para o mês (semanal × 52/12, diária × 365/12, anual ÷ 12). Uma
          *     recorrência encerrada (`Recurrence.ended`: sem ocorrência hoje nem depois) e a desativada não entram (S-235). Sempre estimativa (S-146).
+         *     **2.24.0 (A1b, ADR-022):** `view=MINE` (padrão) soma só a minha parte das recorrências rateadas; `GROSS` soma o valor cheio. A resposta
+         *     devolve `view`. Sem recorrência rateada, os números não mudam.
          */
         get: operations["getRecurrenceSummary"];
         put?: never;
@@ -1439,7 +1581,7 @@ export interface paths {
         put?: never;
         /**
          * Encerra a recorrência numa data
-         * @description Define `endDate` (padrão: hoje); nada é apagado. Data anterior ao início ou à última ocorrência realizada/pulada → `422 RECURRENCE_INVALID`.
+         * @description Define `endDate` (ou `activeUntil`, 2.27.0; padrão: hoje); nada é apagado. Data anterior ao início ou à última ocorrência realizada/pulada → `422 RECURRENCE_INVALID`. Devolve a recorrência atualizada.
          */
         post: operations["endRecurrence"];
         delete?: never;
@@ -2000,18 +2142,47 @@ export interface paths {
         };
         /**
          * Backup completo dos dados do usuário (JSON)
-         * @description Todas as contas, categorias, cartões, movimentações (com parcelas), dívidas, pessoas, recorrências, metas (com reservas) e os
-         *     lançamentos do razão, versionado por `schemaVersion`. **Nunca** traz hash de senha, refresh token, chave de idempotência nem
-         *     segredo. A soma dos `ledgerPostings` ativos do livro `ACCOUNT` de uma conta (até hoje) fecha com o `currentBalance` da API. É
-         *     uma **exportação** (a restauração é por `pg_dump`, runbook da Etapa 9). Download, `Cache-Control: no-store`. O dia do nome do
+         * @description Todas as contas, categorias, cartões, movimentações (com parcelas e rateio), dívidas, pessoas, recorrências, metas (com reservas), ativos,
+         *     perfis de renda, compromissos, grupos de compra, marcas e recebimentos de terceiros e os lançamentos do razão, versionado por `schemaVersion`. **Nunca** traz hash de senha, refresh token, chave de idempotência nem
+         *     segredo. A soma dos `ledgerPostings` ativos do livro `ACCOUNT` de uma conta (até hoje) fecha com o `currentBalance` da API. A
+         *     restauração por API é `POST /v1/backups/restore` (a de desastre segue por `pg_dump`, runbook da Etapa 9). Download, `Cache-Control: no-store`. O dia do nome do
          *     arquivo é o do usuário (`America/Sao_Paulo`, S-261). **Limites (S-260):** no máximo **200.000 movimentações**; acima,
          *     `422 EXPORT_TOO_LARGE`. No máximo 6 pedidos de exportação por usuário por minuto; acima, `429 TOO_MANY_ATTEMPTS` com `Retry-After`.
-         *     O `schemaVersion` 1 não traz `realizedDates` das recorrências nem `createdAt`/`version` (deriváveis das movimentações; um futuro
-         *     restaurador os lerá de `occurrenceDate`).
+         *     Não traz `realizedDates` das recorrências nem `createdAt`/`version` (deriváveis das movimentações; a restauração os lê de `occurrenceDate`).
+         *     `schemaVersion` 2 (2.33.0) acrescenta os campos novos e as listas de ativos, renda, compromissos, grupos de compra e terceiros; o 1 é só lido na restauração.
+         *     Restaura-se com `POST /v1/backups/restore`.
          */
         get: operations["exportBackup"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/backups/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restaura um backup (versão 1 ou 2) em conta sem dados financeiros
+         * @description Lê o JSON de `GET /v1/exports/backup` e grava tudo ou nada (uma transação), na ordem das chaves estrangeiras: categorias, contas, cartões, pessoas, dívidas,
+         *     recorrências, movimentações (parcelas, rateio, câmbio), razão, aplicações de consignado, metas, ativos, perfis de renda, grupos de compra, compromissos e terceiros.
+         *     O razão restaurado é o do arquivo e a abertura das contas é recalculada dela; os saldos fecham com os do arquivo. Os `id` do arquivo são mantidos.
+         *     **Só** em conta sem dados financeiros (sem contas, cartões, pessoas, movimentações, dívidas, recorrências, metas, ativos, perfis, compromissos, grupos, terceiros,
+         *     regras nem importações e sem categoria própria); as categorias de sistema recém-criadas são trocadas pelas do arquivo e as que faltarem são recriadas.
+         *     `schemaVersion` 1 é lido (o que não existia vem com o padrão do servidor); fora de 1 e 2 → `422 BACKUP_SCHEMA_UNSUPPORTED`. Arquivo ilegível, com referência para algo
+         *     que não está nele, com razão que não fecha ou com campo inválido → `422 BACKUP_INVALID`. Conta com dados → `409 RESTORE_TARGET_NOT_EMPTY`; `id` que já existe
+         *     (inclusive de outro usuário, sem dizer de quem) → `409 RESTORE_CONFLICT`. Origem `IMPORT` volta como `MANUAL`; fotos de metas ficam fora. O corpo cabe no limite de
+         *     JSON do servidor (`moneylog.web.max-json-body-bytes`, 1 MiB por padrão: `413 PAYLOAD_TOO_LARGE` acima). Mesmo limite de pedidos da exportação (`429 TOO_MANY_ATTEMPTS`).
+         */
+        post: operations["restoreBackup"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2861,6 +3032,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/profile/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Substitui a foto de perfil do usuário autenticado
+         * @description Foto única por usuário: um novo envio troca a anterior. Mesma validação das fotos de meta (magic bytes JPEG ou PNG, dimensões lidas do cabeçalho, recodificação
+         *     que derruba EXIF/GPS, exibição até 1280 px e miniatura até 320 px). Tipo inválido → `422 GOAL_PHOTO_UNSUPPORTED_TYPE`; imagem ilegível → `422 GOAL_PHOTO_INVALID_IMAGE`;
+         *     acima de 8 MB → `422 GOAL_PHOTO_TOO_LARGE`; dimensões acima do limite → `422 GOAL_PHOTO_DIMENSIONS_EXCEEDED`. Limite de envios por minuto → `429`.
+         *     A operação é naturalmente idempotente (substituir), então não há `Idempotency-Key`. Devolve `hasPhoto` e o `photoVersion` novo.
+         */
+        put: operations["replaceProfilePhoto"];
+        post?: never;
+        /**
+         * Remove a foto de perfil (idempotente)
+         * @description Sem foto, também responde `204`.
+         */
+        delete: operations["deleteProfilePhoto"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/profile/photo/content": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Bytes da foto de perfil (JPEG), autenticado
+         * @description Rota protegida por Bearer: o front busca com o `HttpClient` como `Blob` e usa `URL.createObjectURL`; use `photoVersion` de `NotificationSettings` para saber quando buscar de novo.
+         *     Resposta com `Cache-Control: no-store`, `X-Content-Type-Options: nosniff` e `Content-Type: image/jpeg`. Sem foto → `404 PROFILE_PHOTO_NOT_FOUND`. Só devolve a foto do próprio usuário.
+         */
+        get: operations["getProfilePhotoContent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/push/config": {
         parameters: {
             query?: never;
@@ -3187,6 +3406,552 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/owner-statement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Resumo do mês do dono (entradas, saídas, sobra e saldo por mês)
+         * @description Tudo calculado pelo backend, na visão `MINE` (ADR-022, ADR-023). Coluna do mês M: **entradas** = renda de competência M-1 (`incomeLagMonths = 1`),
+         *     com as parcelas de pagamento dessa competência e a data real de cada uma; **saídas** = o que **vence** em M (a fatura conta no mês do
+         *     vencimento), em `outflow`; `surplus = income.total − outflow.total`; `endBalance = openingBalance + surplus` (encadeado por mês em `months > 1`).
+         *     `outflow.total = cardsMine + offCard.fixed + offCard.variable + realEstateMine`; `subscriptionsMine` é recorte informativo de `cardsMine`
+         *     (`includedInCards`) e `cardsGross` é só a leitura bruta: nenhum dos dois soma de novo. Cada item entra uma só vez, pela chave de
+         *     deduplicação da ADR-023 (fatura, parcela futura, ocorrência prevista, lançamento, item de compromisso); pagar fatura e transferir
+         *     entre contas nunca são saída. O que me devem (`receivablesPending`) nunca entra em `income` nem em `endBalance`.
+         *
+         *     `openingBalance` = saldo atual das contas `CASH`. Com `from` posterior ao mês corrente, não se projeta o resto do mês corrente e vem o aviso
+         *     `OPENING_BALANCE_NOT_PROJECTED`. Mês sem renda de competência: `income.total = 0` e aviso `INCOME_MISSING`. Cota do imóvel não definida:
+         *     conta 100% minha com aviso `REAL_ESTATE_SHARE_UNDEFINED`. `status` do item de renda é derivado na leitura e `confidence` é `CONFIRMED`
+         *     até existir proveniência. Recurso de outro usuário nunca aparece.
+         */
+        get: operations["getOwnerStatement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/purchase-groups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista os grupos de compra parcelada (ordem `name asc`)
+         * @description `status` padrão `ACTIVE` (ainda há parcela a vencer); `DONE` = todas as parcelas dos membros já passaram ou foram canceladas.
+         *     Valores calculados pelo backend a partir das parcelas dos membros; nada é somado no cliente.
+         */
+        get: operations["listPurchaseGroups"];
+        put?: never;
+        /**
+         * Cria um grupo e as compras dos membros
+         * @description Cada membro vira uma compra pelos caminhos existentes: com `remainingInstallments` menor que `totalInstallments` é compra em andamento
+         *     (`POST /v1/cards/{id}/ongoing-installments`: só as parcelas que faltam, sem consumo retroativo); sem ele, compra comum de
+         *     `installmentAmount x totalInstallments`. `splitMode`/`shares` do membro seguem a ADR-022. O total do grupo é **derivado** da soma dos
+         *     membros; se `declaredTotal` vier e for diferente, o grupo é criado e `divergence` informa a diferença (nunca bloqueia). Tudo ou nada:
+         *     um membro inválido (`422 PURCHASE_GROUP_INVALID`, `422 SHARES_INVALID`) não grava nenhum. `Idempotency-Key` opcional.
+         */
+        post: operations["createPurchaseGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/purchase-groups/commitments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Comprometido nas parcelas até um mês
+         * @description Σ das parcelas ainda não pagas (da fatura corrente em diante) das compras parceladas de cartão até a competência `until`
+         *     (inclusive). `committed` é o valor cheio e `committedMine` considera o rateio (minha parte). Compras fora de grupo entram uma só vez
+         *     e compras de grupo também: o grupo não duplica o valor dos membros. `byMonth` tem um item por competência do mês corrente até `until`.
+         */
+        get: operations["getPurchaseGroupCommitments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/purchase-groups/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        /** Detalha um grupo */
+        get: operations["getPurchaseGroup"];
+        /**
+         * Edita o nome e o indicador de juros
+         * @description Só `name` e `interest` (os valores vêm dos membros). `version` desatualizada → `409 VERSION_CONFLICT`.
+         */
+        put: operations["updatePurchaseGroup"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/purchase-groups/{id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Vincula uma compra existente ao grupo
+         * @description A compra tem de ser parcelada de cartão, ativa, do usuário e sem grupo; outra do usuário ou de outro usuário → `404`. Não altera a compra,
+         *     o razão nem a fatura. Devolve o grupo recalculado (`200`).
+         */
+        post: operations["addPurchaseGroupMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/purchase-groups/{id}/members/{transactionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Desvincula uma compra do grupo
+         * @description Só desfaz o vínculo; a compra continua existindo e fora do grupo. Devolve o grupo recalculado (`200`).
+         */
+        delete: operations["removePurchaseGroupMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Assinaturas (recorrências de despesa marcadas) com custo mensal equivalente e sobreposições
+         * @description Lista só as recorrências de despesa (`EXPENSE` e `CARD_PURCHASE`) **marcadas como assinatura** (`Recurrence.isSubscription = true`, 2.32.1); aluguel, luz e
+         *     parcela de cartão não marcados ficam de fora de `totalMonthly`, das sobreposições e de `SUBSCRIPTION_UNUSED`. Migração conceitual: toda recorrência
+         *     `CARD_PURCHASE` existente passa a `true` (o dono revisa). `monthlyEquivalent` = valor da cobrança normalizado para o mês
+         *     (semanal x 52/12, diária x 365/12, anual / 12), somado **sem arredondar antes** e arredondado uma vez no final. `status`: `ACTIVE` (padrão),
+         *     `ENDED` (encerradas ou desativadas) ou `ALL`. `totalMonthly` soma todas as listadas; `totalMonthlyMine` soma só `PERSONAL` e pela **minha
+         *     parte** (rateio, ADR-022); `COMPANY` fica fora (P-10) e vai em `byScope`. `overlaps` lista os `overlapGroup` com 2 ou mais **ativas** (uma só não
+         *     é sobreposição). Tudo calculado pelo backend.
+         */
+        get: operations["listSubscriptions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/income-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista os perfis de renda (ordem `source asc`) */
+        get: operations["listIncomeProfiles"];
+        put?: never;
+        /**
+         * Cria um perfil de renda
+         * @description Valores em `AmountInput`; percentuais em pontos-base inteiros. Rubrica com `amount` **ou** `percentBps` (percentual do bruto), nunca os dois;
+         *     `debtId` só em `LOAN` e deve ser dívida `PAYABLE` do usuário (outra → `404`). `Idempotency-Key` opcional.
+         */
+        post: operations["createIncomeProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/income-profiles/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        /** Consulta um perfil de renda */
+        get: operations["getIncomeProfile"];
+        /**
+         * Edita um perfil de renda
+         * @description O corpo do `POST` + `version` (desatualizada → `409 VERSION_CONFLICT`). Perfil arquivado → `422 INCOME_PROFILE_ARCHIVED`. Ocorrências já geradas não mudam.
+         */
+        put: operations["updateIncomeProfile"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/income-profiles/{id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Arquiva um perfil de renda
+         * @description Nada é apagado; o perfil deixa de gerar ocorrências. Devolve o perfil atualizado.
+         */
+        post: operations["archiveIncomeProfile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/income-profiles/{id}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Prévia do líquido do mês (INSS, IRRF, rubricas, adiantamento e saldo)
+         * @description Tudo calculado pelo backend em BRL exato. O INSS usa a tabela vigente na **competência** `month` e o IRRF a tabela vigente na **data de pagamento**
+         *     (as vigências são distintas, ADR-026). `advance + balance = net`; o adiantamento é `net x percentBps / 10000` arredondado para baixo e o saldo é o
+         *     restante. Rubrica `LOAN` vinculada e no período entra em `loanDeductions` (o consignado é desconto em folha). Rubrica fora do período não reduz o líquido.
+         *     `thirteenth` traz a **1ª parcela** (sem descontos) no mês em que é paga; a 2ª parcela fica fora desta versão. Sem tabela vigente → `422 TAX_TABLE_UNAVAILABLE`.
+         */
+        get: operations["previewIncomeProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/income-profiles/{id}/generate-occurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Gera as receitas previstas de cada pagamento do período
+         * @description Cria uma receita recorrente prevista por pagamento (adiantamento, saldo e 1ª parcela do 13º) entre `from` e `to` (inclusive), cada uma com a
+         *     `incomeCompetence` da competência que ela paga (ADR-017). **Idempotente**: rodar de novo não duplica (cada pagamento é identificado por
+         *     perfil + competência + tipo) e as já criadas voltam com `created = false`. Nunca lança movimentação; a confirmação continua sendo do usuário.
+         *     Sem tabela vigente → `422 TAX_TABLE_UNAVAILABLE`. Janela máxima de 12 meses.
+         */
+        post: operations["generateIncomeOccurrences"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tax-tables": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tabelas de INSS e IRRF vigentes em um ano
+         * @description Somente leitura. Cada tabela traz `effectiveFrom`, `effectiveTo`, `basis` (`COMPETENCE` para o INSS, `PAYMENT_DATE` para o IRRF) e a **fonte**
+         *     (órgão, norma, URL e data de consulta). Correção de tabela = nova versão por migração; a aplicada nunca é editada. Sem tabela no ano → lista vazia.
+         */
+        get: operations["listTaxTables"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/card-cash-outs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra um Pix no crédito como empréstimo
+         * @description O principal **não é consumo**; o custo é só o juro (ADR-031). Para mim (`beneficiaryPersonId` nulo, `accountId` obrigatório): `ACCOUNT +principal`,
+         *     `EXPENSE +juros`, `CARD -total`. Para uma pessoa (`beneficiaryPersonId`, sem `accountId`): `RECEIVABLE(pessoa) +principal`, `EXPENSE +juros` (o juro que eu
+         *     absorvo), `CARD -total`. Soma zero. As parcelas entram na fatura cheia. O total vem de `totalWithInterest` **ou** de `rateBps` (taxa mensal em
+         *     pontos-base), nunca os dois. Devolve a dívida (`kind = CARD_CASH_OUT`) com a taxa efetiva. `Idempotency-Key` opcional.
+         */
+        post: operations["createCardCashOut"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista os ativos (ordem `name asc`) */
+        get: operations["listAssets"];
+        put?: never;
+        /**
+         * Cria um ativo
+         * @description `FGTS` é sempre `RESERVED` (`availability = AVAILABLE` → `422 ASSET_INVALID`). O saldo inicial entra no histórico. Não gera movimentação, renda
+         *     nem lançamento. `Idempotency-Key` opcional.
+         */
+        post: operations["createAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        /** Consulta um ativo, com o histórico de saldo */
+        get: operations["getAsset"];
+        /**
+         * Edita os dados de um ativo (não o saldo)
+         * @description O saldo só muda por `POST /v1/assets/{id}/balance` (preserva o histórico). `version` desatualizada → `409 VERSION_CONFLICT`. Arquivado → `422 ASSET_ARCHIVED`.
+         */
+        put: operations["updateAsset"];
+        post?: never;
+        /**
+         * Arquiva um ativo
+         * @description Nada é apagado (o histórico permanece); o ativo sai das somas. Devolve o ativo arquivado (`200`). Já arquivado → `422 ASSET_ARCHIVED`.
+         */
+        delete: operations["archiveAsset"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/assets/{id}/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Atualiza o saldo de um ativo (preserva o histórico)
+         * @description Acrescenta uma linha ao histórico e passa a ser o saldo atual se `date` não for anterior à última. Data anterior grava só no histórico. Não gera
+         *     movimentação, renda nem lançamento. Devolve o ativo atualizado. Arquivado → `422 ASSET_ARCHIVED`.
+         */
+        post: operations["updateAssetBalance"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/simulations/purchase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simula uma compra parcelada e classifica o impacto (não grava nada)
+         * @description Calcula, no backend, o efeito da compra na sobra de cada mês do `owner-statement` (visão `MINE`), com a mesma parcela do `purchase-preview` (centavos
+         *     no mesmo arredondamento da criação; o resto vai na primeira parcela). **Nada é gravado**: nenhuma movimentação, parcela, fatura ou dívida é criada.
+         *
+         *     Por mês: `surplusBefore` (sobra sem a compra), `surplusAfter = surplusBefore - parcela` (sem cortes) e `negativeAfter`. Com `cancelSubscriptionIds`,
+         *     `surplusAfterWithCuts` soma de volta o equivalente mensal das assinaturas ativas escolhidas, a partir da data atual, e `negativeAfterWithCuts` diz se
+         *     ainda fica negativo; sem cortes esses campos vêm `null`. Assinatura que não está ativa é `422 SIMULATION_INVALID`; de outro usuário é `404`.
+         *
+         *     **Horizonte (`horizon`):** só se calcula a janela que o motor cobre (`from` a `to`, `calculatedMonths`). `requiredMonths` é quanto a compra pede
+         *     (da primeira parcela à última). Com `limited = true` (as parcelas vão além da janela), `reasons` traz `HORIZON_LIMITED` e a classificação **nunca é
+         *     `SUSTAINABLE`**: o melhor resultado é `RISKY`. O front mostra o aviso e não infere o que está fora da janela.
+         *
+         *     **Classificação** (ADR-030, regra estrutural, sem limiar numérico, em um único lugar do código), avaliada nos meses calculados:
+         *     `INCOMPATIBLE` = algum mês com `surplusAfter < 0` mesmo aplicando os cortes informados (sem cortes, qualquer mês negativo);
+         *     `VIABLE_WITH_PLANNING` = algum mês negativo sem os cortes e nenhum negativo com eles (só com `cancelSubscriptionIds` informado);
+         *     `RISKY` = nenhum mês negativo, mas há `financingWarning`, ou a sobra só é `>= 0` contando renda `ESTIMATED`, ou o horizonte é limitado;
+         *     `SUSTAINABLE` = os demais casos. `reasons` explica o ramo e os avisos. `financingWarning` = há financiamento pendente (item `FINANCING` de um
+         *     `LONG_TERM_PROJECT` não pago; P-20).
+         *
+         *     Erros: `400` (corpo inválido), `422 SIMULATION_INVALID`, `422 AMOUNT_ABOVE_LIMIT`.
+         */
+        post: operations["simulatePurchase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/net-worth/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Patrimônio por disponibilidade e reserva de emergência
+         * @description `availableCash` = saldo das contas `CASH` (a mesma fonte de `balances.inAccounts` do Início); limite de cartão e cheque especial ficam de fora.
+         *     `availableAssets` = ativos `AVAILABLE` informados. `reservedAssets` = ativos `RESERVED` (FGTS): **nunca** entram na reserva de emergência nem no
+         *     disponível (PR 01, regra 10). `receivablesPending` = o que me devem. `debts` = total de dívidas (ADR-013). `emergencyReserve.amount` = Σ dos ativos
+         *     `AVAILABLE` com `countsAsReserve`; `monthlyBase` = saídas **fixas** da minha parte do mês `month`; `coverageMonths = amount / monthlyBase` (uma casa;
+         *     `null` se a base é zero). Conta de investimento do razão não entra (decisão provisória, 2.32.1; se passar a contar, será por marca na conta, nunca
+         *     por ativo espelho). **Não informe como ativo um saldo que já está numa conta**: duplicaria o patrimônio (PR 01, regra 1). Com `targetMonths`, devolve também `targetAmount` e quanto falta. Sem ativos o resultado é o de hoje.
+         */
+        get: operations["getNetWorthOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/commitments/{id}/schedule/{position}/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+                /** @description Posição do item no cronograma (1..n). */
+                position: number;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Define ou corrige a cota por pessoa de um item do cronograma
+         * @description Só em `LONG_TERM_PROJECT`. Σ das cotas = valor do item (`422 COMMITMENT_SHARES_INVALID`). Item já pago: a cota registrada na hora do pagamento é
+         *     a paga; corrigir vale para o que falta e o histórico fica auditado. Devolve o compromisso atualizado. Posição inexistente →
+         *     `404 COMMITMENT_SCHEDULE_ITEM_NOT_FOUND`; `version` diferente → `409 VERSION_CONFLICT`.
+         */
+        put: operations["updateCommitmentItemShares"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/commitments/{id}/clauses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Define ou corrige as cláusulas do projeto
+         * @description Só em `LONG_TERM_PROJECT`. Devolve o compromisso atualizado. `version` diferente → `409 VERSION_CONFLICT`.
+         */
+        put: operations["updateCommitmentClauses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/commitments/{id}/by-person": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        /**
+         * Cronograma por pessoa (pago, pendente e total), em JSON ou CSV
+         * @description Só em `LONG_TERM_PROJECT`. Item sem cota definida soma em "eu" e vem listado em `undefinedItems`. Com `format=csv`: UTF-8 com BOM, separador `;`,
+         *     `CRLF`, vírgula decimal, datas ISO, colunas `posição;descrição;tipo;vencimento;pessoa;valor;pago`, uma linha por item e pessoa; cabeçalho conforme
+         *     `Accept-Language`; texto que começa com `=`, `+`, `-`, `@`, tabulação ou retorno de carro recebe um `'` na frente. Download com
+         *     `Content-Disposition: attachment` e `Cache-Control: no-store`. Compromisso que não é projeto → `422 COMMITMENT_INVALID`.
+         */
+        get: operations["getCommitmentByPerson"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -3418,6 +4183,7 @@ export interface components {
         };
         /** @description Despesa paga de conta (`EXPENSE`). */
         ExpenseInput: {
+            nature?: components["schemas"]["TransactionNature"];
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -3586,6 +4352,7 @@ export interface components {
         };
         /** @description Edição: o corpo do `POST` do tipo + `version`. Despesa paga de conta (`EXPENSE`). */
         ExpenseUpdate: {
+            nature?: components["schemas"]["TransactionNature"];
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -3859,6 +4626,13 @@ export interface components {
         };
         /** @description Movimentação. O mapa para `TransactionInput` está descrito em `TransactionInput`. */
         Transaction: {
+            /** @description Valor na moeda original (2.27.0); `null` em BRL. */
+            originalAmount?: components["schemas"]["OriginalAmount"] | null;
+            /** @description Câmbio gravado nesta cobrança (2.27.0); `null` em BRL. */
+            fxRate?: components["schemas"]["FxRate"] | null;
+            iofBps?: components["schemas"]["IofBps"] | null;
+            /** @description Natureza da despesa (2.25.0). `null` fora de despesa. Registro antigo = `VARIABLE`; recorrência de despesa = `FIXED`. */
+            nature?: components["schemas"]["TransactionNature"] | null;
             /** Format: uuid */
             id: string;
             type: components["schemas"]["TransactionType"];
@@ -3894,7 +4668,7 @@ export interface components {
              *     `DEBT_PAYMENT`: a quitada). `null` nas demais. Campo opcional: aditivo (Etapa 4).
              */
             debt?: components["schemas"]["DebtSummary"] | null;
-            /** @description As dívidas que nasceram das partes de uma `EXPENSE` dividida (uma por parte); vazio nas demais. Campo opcional (Etapa 4). */
+            /** @description As dívidas que nasceram das partes de uma `EXPENSE` dividida em conta (uma por parte); vazio nas demais. Não é o rateio de compra no cartão, que está em `personShares`. Campo opcional (Etapa 4). */
             shares?: components["schemas"]["DebtSummary"][];
             /**
              * Format: uuid
@@ -3906,11 +4680,21 @@ export interface components {
              * @description Data da ocorrência realizada (`source: RECURRENCE`). Campo opcional (Etapa 4).
              */
             occurrenceDate?: string | null;
+            /** @description Final do cartão da compra (só em `CARD_PURCHASE`, 2.32.0). */
+            lastDigits?: components["schemas"]["CardLastDigits"] | null;
             /**
              * @description Mês a que a receita pertence quando declarado (ADR-017); `null` = o mês da `date`. Só em `INCOME`. A competência efetiva da renda é
              *     `incomeCompetence` ou, se `null`, o mês de `date`. Campo opcional (2.18.0).
              */
             incomeCompetence?: string | null;
+            /** @description Modo do rateio de uma compra no cartão (ADR-022); `null` sem rateio e nos demais tipos. Campo opcional (2.24.0). */
+            splitMode?: components["schemas"]["SplitMode"] | null;
+            /** @description Rateio gravado da compra no cartão, como informado; vazio sem rateio. Distinto de `shares` (dívidas da despesa dividida em conta). Campo opcional (2.24.0). */
+            personShares?: components["schemas"]["PersonShareLine"][];
+            /** @description Minha parte do valor total da compra; `null` nos tipos sem rateio. Campo opcional (2.24.0). */
+            myAmount?: components["schemas"]["Money"] | null;
+            /** @description Parte de terceiros do valor total da compra; `null` nos tipos sem rateio. Campo opcional (2.24.0). */
+            thirdPartyAmount?: components["schemas"]["Money"] | null;
             impact: components["schemas"]["Impact"];
             /** @description Ativa, de tipo editável e sem conta arquivada (S-62, S-88). */
             editable: boolean;
@@ -3987,6 +4771,7 @@ export interface components {
             byCategory: components["schemas"]["CategoryAmount"][];
         };
         EntrySlice: components["schemas"]["SliceBase"] & {
+            view: components["schemas"]["ViewMode"];
             items: components["schemas"]["Entry"][];
             totals: components["schemas"]["EntryTotals"];
             /**
@@ -4088,6 +4873,7 @@ export interface components {
             cardFutureInstallments: components["schemas"]["Money"];
         };
         DashboardSummary: {
+            view: components["schemas"]["ViewMode"];
             /** Format: date */
             asOf: string;
             isProjection: boolean;
@@ -4226,8 +5012,22 @@ export interface components {
             date: string;
         };
         Invoice: components["schemas"]["InvoiceCore"] & {
+            /** @description Minha parte da fatura (ADR-022). `total` = `myShare` + `thirdPartyShare`; o valor devido não muda. */
+            myShare: components["schemas"]["Money"];
+            /** @description Parte de terceiros da fatura, a receber deles. */
+            thirdPartyShare: components["schemas"]["Money"];
+            shareByPerson: components["schemas"]["PersonAmount"][];
             items: components["schemas"]["InvoiceItem"][];
             payments: components["schemas"]["InvoicePayment"][];
+            /** @description Valor que o dono informou do documento da fatura (2.37.0); `null` sem valor. Só comparação. */
+            documentAmount?: components["schemas"]["Money"] | null;
+            /** @description `total` − `documentAmount`, com sinal (2.37.0); `null` sem valor informado ou quando fecham. */
+            documentDivergence?: components["schemas"]["Money"] | null;
+            /**
+             * Format: int64
+             * @description Versão do registro da fatura para o `version` opcional do `PUT` (2.37.0).
+             */
+            documentVersion?: number;
         };
         InvoiceSlice: components["schemas"]["SliceBase"] & {
             items: components["schemas"]["InvoiceSummary"][];
@@ -4256,6 +5056,13 @@ export interface components {
          *     não os soma.
          */
         Card: {
+            /** @description Débito automático da fatura. `null` = desconhecido (cartões existentes): sem alerta até o dono marcar. */
+            autoDebit: boolean | null;
+            brand?: string | null;
+            /** @description Melhor dia de compra (informativo). */
+            bestPurchaseDay?: number | null;
+            /** @description Finais (4 dígitos) dos cartões físicos e virtuais ligados a este cartão. A fatura é uma só por cartão, sem quebra por final. */
+            lastDigits: components["schemas"]["CardLastDigits"][];
             /** Format: uuid */
             id: string;
             name: string;
@@ -4298,6 +5105,13 @@ export interface components {
             updatedAt: string;
         };
         CardInput: {
+            /** @description Débito automático da fatura. `null` = desconhecido (cartões existentes): sem alerta até o dono marcar. */
+            autoDebit?: boolean | null;
+            brand?: string | null;
+            /** @description Melhor dia de compra (informativo). */
+            bestPurchaseDay?: number | null;
+            /** @description Finais (4 dígitos) dos cartões físicos e virtuais ligados a este cartão. A fatura é uma só por cartão, sem quebra por final. */
+            lastDigits?: components["schemas"]["CardLastDigits"][];
             /** @description Obrigatório e até 100 caracteres (senão `422 CARD_NAME_REQUIRED` / `CARD_NAME_TOO_LONG`). */
             name: string;
             /** @description Até 100 caracteres (senão `422 CARD_INSTITUTION_TOO_LONG`). */
@@ -4315,6 +5129,13 @@ export interface components {
             defaultPaymentAccountId?: string | null;
         };
         CardUpdate: {
+            /** @description Débito automático da fatura. `null` = desconhecido (cartões existentes): sem alerta até o dono marcar. */
+            autoDebit?: boolean | null;
+            brand?: string | null;
+            /** @description Melhor dia de compra (informativo). */
+            bestPurchaseDay?: number | null;
+            /** @description Finais (4 dígitos) dos cartões físicos e virtuais ligados a este cartão. A fatura é uma só por cartão, sem quebra por final. */
+            lastDigits?: components["schemas"]["CardLastDigits"][];
             /** @description Obrigatório e até 100 caracteres (senão `422 CARD_NAME_REQUIRED` / `CARD_NAME_TOO_LONG`). */
             name: string;
             /** @description Até 100 caracteres (senão `422 CARD_INSTITUTION_TOO_LONG`). */
@@ -4382,6 +5203,9 @@ export interface components {
             purchase: components["schemas"]["PurchasePreview"];
         };
         PurchasePreviewRequest: {
+            originalAmount?: components["schemas"]["OriginalAmountInput"];
+            fxRate?: components["schemas"]["FxRate"];
+            iofBps?: components["schemas"]["IofBps"];
             amount: components["schemas"]["AmountInput"];
             installments: number;
             /**
@@ -4389,6 +5213,9 @@ export interface components {
              * @description Data da compra.
              */
             date: string;
+            splitMode?: components["schemas"]["SplitMode"];
+            /** @description Mesmas regras de `CardPurchaseInput.shares`; sem `shares` a compra é 100% minha. */
+            shares?: components["schemas"]["ShareInput"][];
         };
         PurchasePreviewInstallment: {
             number: number;
@@ -4397,6 +5224,12 @@ export interface components {
             competence: components["schemas"]["Competence"];
             invoice: components["schemas"]["InvoiceRef"];
             lateEntry: boolean;
+            /** @description Minha parte da parcela (o que vira `EXPENSE`). */
+            myAmount: components["schemas"]["Money"];
+            /** @description Soma da parte dos terceiros na parcela (o que vira `RECEIVABLE`); `amount` = `myAmount` + `thirdPartyAmount`. */
+            thirdPartyAmount: components["schemas"]["Money"];
+            /** @description Parte de cada terceiro na parcela, idêntica ao que a criação grava. Vazio sem rateio. */
+            byPerson: components["schemas"]["PersonAmount"][];
         };
         PurchasePreview: {
             installments: components["schemas"]["PurchasePreviewInstallment"][];
@@ -4404,7 +5237,9 @@ export interface components {
             /** @description Limite disponível depois da compra (pode ser negativo); nulo/ausente sem limite definido. */
             availableLimitAfter?: components["schemas"]["Money"] | null;
             overLimit: boolean;
-            warnings: ("LATE_ENTRY" | "OVER_LIMIT" | "FUTURE_DATE")[];
+            splitMode?: components["schemas"]["SplitMode"];
+            shares?: components["schemas"]["PersonShareLine"][];
+            warnings: ("LATE_ENTRY" | "OVER_LIMIT" | "FUTURE_DATE" | "FINANCING_PENDING")[];
         };
         PaymentPreview: {
             /**
@@ -4436,6 +5271,18 @@ export interface components {
              */
             notice: "FROM_NEXT_INVOICE";
         };
+        InvoiceDocumentAmountInput: {
+            /**
+             * @description Valor do documento em BRL, string decimal com até 2 casas; `null` limpa. Negativo é lido e recusado com `422 INVOICE_DOCUMENT_AMOUNT_INVALID`.
+             * @example 1283.00
+             */
+            documentAmount: string | null;
+            /**
+             * Format: int64
+             * @description Opcional. `documentVersion` lido da fatura; diferente do atual → `409 VERSION_CONFLICT`.
+             */
+            version?: number;
+        };
         InvoicePaymentInput: {
             /**
              * Format: uuid
@@ -4455,8 +5302,32 @@ export interface components {
         /**
          * @description Compra no cartão (`CARD_PURCHASE`). `installments` de 1 a 36 (obrigatório; à vista = 1). O valor é dividido em
          *     centavos (`1000.00` em 3x = 333,34 + 333,33 + 333,33) e a parcela 1 cai na competência da compra.
+         * @example {
+         *       "type": "CARD_PURCHASE",
+         *       "amount": "300.00",
+         *       "date": "2026-10-05",
+         *       "description": "Compra de exemplo",
+         *       "cardId": "3f1d2c4b-7a8e-4f60-8b21-5c9d0e1a2b3c",
+         *       "installments": 3,
+         *       "splitMode": "BPS",
+         *       "shares": [
+         *         {
+         *           "personId": null,
+         *           "bps": 5000
+         *         },
+         *         {
+         *           "personId": "6b8f6d0a-3c5e-4b0a-9a55-0f0e1f2a3b4c",
+         *           "bps": 5000
+         *         }
+         *       ]
+         *     }
          */
         CardPurchaseInput: {
+            /** @description Final do cartão usado na compra (opcional). Precisa estar em `Card.lastDigits`, senão `422 PURCHASE_LAST_DIGITS_NOT_FROM_CARD`. */
+            lastDigits?: components["schemas"]["CardLastDigits"] | null;
+            originalAmount?: components["schemas"]["OriginalAmountInput"];
+            fxRate?: components["schemas"]["FxRate"];
+            iofBps?: components["schemas"]["IofBps"];
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -4479,6 +5350,98 @@ export interface components {
              */
             categoryId?: string;
             installments?: number;
+            splitMode?: components["schemas"]["SplitMode"];
+            /**
+             * @description Rateio entre pessoas (ADR-022). Ausente = 100% meu. Soma que não fecha, `personId` repetido ou `AMOUNT` que não soma a
+             *     parcela → `422 SHARES_INVALID`; pessoa arquivada → `422 SHARE_PERSON_ARCHIVED`. `splitMode` é obrigatório quando há `shares`.
+             */
+            shares?: components["schemas"]["ShareInput"][];
+        };
+        /**
+         * @description Final do cartão, exatamente 4 dígitos. Formato diferente responde `422` (`CARD_LAST_DIGITS_INVALID` no cartão).
+         * @example 1234
+         */
+        CardLastDigits: string;
+        /**
+         * @description Origem e confiança de um dado (2.32.0, ADR-028). Opcional; ausente vale `INFORMED`/`CONFIRMED`. Só origem e confiança: o status é derivado na leitura e
+         *     nunca é gravado. Valor fora dos enums: `422 PROVENANCE_INVALID`.
+         * @example {
+         *       "origin": "PAYSLIP",
+         *       "confidence": "ESTIMATED"
+         *     }
+         */
+        Provenance: {
+            /**
+             * @default INFORMED
+             * @enum {string}
+             */
+            origin: "PRINT" | "PAYSLIP" | "CONTRACT" | "INFORMED";
+            /**
+             * @default CONFIRMED
+             * @enum {string}
+             */
+            confidence: "CONFIRMED" | "ESTIMATED";
+        };
+        /**
+         * @description `MINE` = minha parte (padrão); `GROSS` = bruto (ADR-022).
+         * @enum {string}
+         */
+        ViewMode: "MINE" | "GROSS";
+        /**
+         * @description Como o valor de cada parcela é dividido entre as pessoas (ADR-022). `BPS`: `bps` por pessoa, soma 10000 (o dono entra com
+         *     `personId: null`). `EQUAL`: só `personId`s (inclua `null` para o dono), o backend divide por parcela. `AMOUNT`: `amount` por parcela,
+         *     exato, soma = a parcela. Em todos os modos a parte de cada terceiro é arredondada para baixo por parcela e o resto de centavo fica com o
+         *     dono; `personId` não se repete.
+         * @enum {string}
+         */
+        SplitMode: "BPS" | "EQUAL" | "AMOUNT";
+        /** @description Parte de uma pessoa no rateio. `personId: null` = eu. Em `BPS` só `bps`; em `AMOUNT` só `amount`; em `EQUAL` nenhum dos dois. */
+        ShareInput: {
+            provenance?: components["schemas"]["Provenance"];
+            /** Format: uuid */
+            personId: string | null;
+            /** @description Pontos-base (10000 = 100%). */
+            bps?: number;
+            /** @description Valor **por parcela** que cabe à pessoa (modo `AMOUNT`). */
+            amount?: components["schemas"]["AmountInput"];
+        };
+        /** @description Rateio gravado, como informado. `bps` ou `amount` conforme o `splitMode`; em `EQUAL`, os dois são `null`. */
+        PersonShareLine: {
+            provenance?: components["schemas"]["Provenance"];
+            /** Format: uuid */
+            personId: string | null;
+            bps: number | null;
+            amount: components["schemas"]["Money"] | null;
+        };
+        /** @description Quanto cabe a uma pessoa (`personId: null` = eu), calculado pelo backend. */
+        PersonAmount: {
+            /** Format: uuid */
+            personId: string | null;
+            amount: components["schemas"]["Money"];
+        };
+        /**
+         * @description Novo rateio de uma compra no cartão (ADR-022). Vale em fatura aberta **ou fechada**: reclassifica só `EXPENSE` x `RECEIVABLE`; a
+         *     fatura, o `CARD` e o caixa não mudam; o patrimônio varia pela variação da minha parte. A revisão fica em `transaction_revisions`. `shares` vazio ou só o dono volta a 100% meu.
+         * @example {
+         *       "splitMode": "BPS",
+         *       "shares": [
+         *         {
+         *           "personId": null,
+         *           "bps": 7000
+         *         },
+         *         {
+         *           "personId": "6b8f6d0a-3c5e-4b0a-9a55-0f0e1f2a3b4c",
+         *           "bps": 3000
+         *         }
+         *       ],
+         *       "version": 1
+         *     }
+         */
+        TransactionSharesUpdate: {
+            splitMode: components["schemas"]["SplitMode"];
+            shares: components["schemas"]["ShareInput"][];
+            /** Format: int64 */
+            version: number;
         };
         /**
          * @description Edição limitada da compra no cartão (S-121, T57): o corpo do `POST` (`CardPurchaseInput`) + `version`. Só
@@ -4642,6 +5605,11 @@ export interface components {
             active: boolean;
         };
         Debt: {
+            kind?: components["schemas"]["DebtKind"];
+            /** @description Canal pelo qual o empréstimo foi contratado (2.29.0), texto livre; `null` quando não informado. */
+            channel?: string | null;
+            /** @description Taxa efetiva (TIR) quando há valor recebido e cronograma de parcelas conhecido (Pix no crédito, consignado em folha); ausente/`null` caso contrário. */
+            effectiveRate?: components["schemas"]["EffectiveRate"] | null;
             /** Format: uuid */
             id: string;
             /** @description Nulo na dívida com credor livre (`creditorName`, "outras dívidas"). */
@@ -4816,6 +5784,13 @@ export interface components {
         /** @enum {string} */
         CommitmentItemType: "DOWN_PAYMENT" | "INSTALLMENT" | "EXTRAORDINARY" | "FINANCING";
         CommitmentItem: {
+            provenance?: components["schemas"]["Provenance"];
+            /** @description Cota gravada por pessoa; vazia quando `sharesDefined = false`. */
+            shares?: components["schemas"]["CommitmentShare"][];
+            /** @description `false` = cota não definida (conta 100% minha, estimada, P-19). */
+            sharesDefined?: boolean;
+            /** Format: uuid */
+            coBuyerPersonId?: string | null;
             position: number;
             label: string;
             type: components["schemas"]["CommitmentItemType"];
@@ -4835,6 +5810,10 @@ export interface components {
          *     terceiro são `null` (o saldo exato não é conhecido nem estimado). `directPending` e `financingPending` só no projeto.
          */
         Commitment: {
+            /** @description Cláusulas (2.31.0); `null` sem cláusulas ou fora de `LONG_TERM_PROJECT`. */
+            clauses?: components["schemas"]["CommitmentClauses"] | null;
+            /** @description Pago, pendente e total por pessoa (2.31.0); só no projeto, vazio nos demais. O que não tem cota definida soma em "eu". */
+            totalsByPerson?: components["schemas"]["CommitmentPersonTotals"][];
             /** Format: uuid */
             id: string;
             kind: components["schemas"]["CommitmentKind"];
@@ -4867,6 +5846,17 @@ export interface components {
             hasNext: boolean;
         };
         CommitmentItemInput: {
+            provenance?: components["schemas"]["Provenance"];
+            /**
+             * @description Cota por pessoa (`personId: null` = eu), em valor; Σ = `amount` do item (senão `422 COMMITMENT_SHARES_INVALID`). Ausente ou `null` = "cota
+             *     não definida" (conta 100% minha, estimada). Só em `LONG_TERM_PROJECT`.
+             */
+            shares?: components["schemas"]["CommitmentShareInput"][] | null;
+            /**
+             * Format: uuid
+             * @description Co-comprador do item; se informado, tem de estar nas `shares` (a cota dele sai de lá).
+             */
+            coBuyerPersonId?: string | null;
             label: string;
             type: components["schemas"]["CommitmentItemType"];
             /** Format: date */
@@ -4878,6 +5868,8 @@ export interface components {
             paidOn?: string | null;
         };
         CommitmentInput: {
+            /** @description Cláusulas do contrato; só em `LONG_TERM_PROJECT`. */
+            clauses?: components["schemas"]["CommitmentClausesInput"] | null;
             kind: components["schemas"]["CommitmentKind"];
             name: string;
             counterparty?: string | null;
@@ -4924,25 +5916,99 @@ export interface components {
             personId: string;
             /**
              * Format: uuid
-             * @description Despesa marcada como de terceiro (da mesma pessoa) à qual o recebimento se liga; ausente = sem vínculo ("origem a confirmar").
+             * @description Despesa marcada como de terceiro, ou compra de cartão rateada, da mesma pessoa, à qual o recebimento se liga; ausente = sem vínculo ("origem a confirmar").
              */
             transactionId?: string | null;
             amount: components["schemas"]["AmountInput"];
+            /**
+             * Format: uuid
+             * @description **Opcional.** Com ele (conta `CASH` que recebeu o dinheiro): `ACCOUNT +X / RECEIVABLE −X`, `settlement = ACCOUNT`. Sem ele, em
+             *     compra rateada: `RECEIVABLE −X / EQUITY +X`, `settlement = ALREADY_IN_BALANCE` ("já está no saldo", sem movimento de conta). Nunca
+             *     renda nem redução de consumo (ADR-022). Sem `accountId` e **com** `transactionId` de compra rateada, vale o modo "já no saldo" (exige
+             *     `Idempotency-Key`); sem `accountId` e sem vínculo, ou com despesa marcada (legado), é o registro informativo (`ledgerEffect = NONE`). `accountId`
+             *     com `transactionId` que não é de compra rateada nem despesa marcada → `422 THIRD_PARTY_EXPENSE_INVALID`.
+             */
+            accountId?: string | null;
             /** Format: date */
             receivedOn?: string | null;
             note?: string | null;
         };
+        /**
+         * @description Como o recebimento foi contabilizado (ADR-022). `ACCOUNT` = moveu uma conta (`ACCOUNT +X / RECEIVABLE −X`). `ALREADY_IN_BALANCE` = o dinheiro já
+         *     estava no saldo. O efeito no razão está em `ThirdPartyReceipt.ledgerEffect`: em compra rateada `RECEIVABLE −X / EQUITY +X` (`EQUITY_OFFSET`); no
+         *     recebimento legado (marca ou sem vínculo) nada é lançado (`NONE`).
+         * @enum {string}
+         */
+        ThirdPartyReceiptSettlement: "ACCOUNT" | "ALREADY_IN_BALANCE";
+        /**
+         * @description `ACCOUNT_MOVEMENT` = `ACCOUNT +X / RECEIVABLE −X`. `EQUITY_OFFSET` = `RECEIVABLE −X / EQUITY +X` (patrimônio cai X; fonte de posting
+         *     `THIRD_PARTY_RECEIPT_IN_BALANCE`). `NONE` = só registro informativo, nada no razão.
+         * @enum {string}
+         */
+        ThirdPartyReceiptLedgerEffect: "ACCOUNT_MOVEMENT" | "EQUITY_OFFSET" | "NONE";
         ThirdPartyReceipt: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
             personId: string;
+            settlement: components["schemas"]["ThirdPartyReceiptSettlement"];
+            ledgerEffect?: components["schemas"]["ThirdPartyReceiptLedgerEffect"];
             /** Format: uuid */
             transactionId: string | null;
             amount: components["schemas"]["Money"];
             /** Format: date */
             receivedOn: string | null;
             note: string | null;
+        };
+        ShareMigrationApplyInput: {
+            reportHash: string;
+            /** @description Precisa ser `true`; senão `422 SHARE_MIGRATION_BACKUP_REQUIRED`. */
+            backupConfirmed: boolean;
+        };
+        ShareMigrationApplyResult: {
+            reportHash: string;
+            /** @description `true` quando esse relatório já tinha sido aplicado (nada foi gravado agora). */
+            alreadyApplied: boolean;
+            migratedPurchases: number;
+            refundsNeutralized: number;
+            legacyReceiptsLedgered: number;
+        };
+        ShareMigrationMonth: {
+            competence: components["schemas"]["Competence"];
+            consumptionBefore: components["schemas"]["Money"];
+            consumptionMineAfter: components["schemas"]["Money"];
+            receivablePending: components["schemas"]["Money"];
+            reimbursed: components["schemas"]["Money"];
+        };
+        ShareMigrationPurchase: {
+            /** Format: uuid */
+            transactionId: string;
+            /** Format: uuid */
+            personId: string;
+            /** @enum {string} */
+            status: "MIGRATE" | "EXCEPTION";
+            /**
+             * @description Motivo da exceção; `null` quando `status = MIGRATE`.
+             * @enum {string|null}
+             */
+            reason: "NOT_CARD_PURCHASE" | "TRANSACTION_NOT_ACTIVE" | "NO_CATEGORY" | "ALREADY_SHARED" | "NO_ACTIVE_INSTALLMENTS" | "MARK_EXCEEDS_CHARGED" | "MARK_NOT_REPRESENTABLE" | "REFUND_EXCEEDS_THIRD_PART" | "RECEIVED_EXCEEDS_THIRD_PART" | "RECEIPT_OF_OTHER_PERSON" | "INVARIANT_BROKEN" | null;
+            /** @description Modo de rateio proposto; `null` em exceção sem modo. */
+            splitMode: components["schemas"]["SplitMode"] | null;
+            charged: components["schemas"]["Money"];
+            third: components["schemas"]["Money"];
+            refunded: components["schemas"]["Money"];
+            legacyReceived: components["schemas"]["Money"];
+            months: components["schemas"]["ShareMigrationMonth"][];
+        };
+        ShareMigrationReport: {
+            hash: string;
+            eligible: number;
+            exceptions: number;
+            receivableRecognized: components["schemas"]["Money"];
+            refundsNeutralized: components["schemas"]["Money"];
+            purchases: components["schemas"]["ShareMigrationPurchase"][];
+            /** @description Totais por competência, só das compras `MIGRATE`. */
+            months: components["schemas"]["ShareMigrationMonth"][];
         };
         ThirdPartyExpense: {
             /** Format: uuid */
@@ -4955,8 +6021,13 @@ export interface components {
             amount: components["schemas"]["Money"] | null;
         };
         ThirdPartyItem: {
-            /** @enum {string} */
-            source: "DEBT" | "EXPENSE" | "RECEIPT";
+            /** @description Parcelas do rateio (só `CARD_SHARE`; vazio nos demais). Cada uma é um recebível com mês previsto editável (2.36.0). */
+            installments: components["schemas"]["ThirdPartyInstallment"][];
+            /**
+             * @description Origem do item. `CARD_SHARE` = rateio de compra no cartão (2.24.0); o cliente deve ter ramo padrão para valores novos.
+             * @enum {string}
+             */
+            source: "DEBT" | "EXPENSE" | "RECEIPT" | "CARD_SHARE";
             /** Format: uuid */
             refId: string;
             description: string | null;
@@ -4969,6 +6040,45 @@ export interface components {
             pending: components["schemas"]["Money"];
             status: string;
         };
+        /** @description Recebível: a parte de uma pessoa em uma parcela de compra rateada (2.36.0). */
+        ThirdPartyInstallment: {
+            /** Format: uuid */
+            installmentId: string;
+            number: number;
+            total: number;
+            consumptionMonth: components["schemas"]["Competence"];
+            /** @description Mês do vencimento da fatura da parcela, o padrão do mês previsto. */
+            dueMonth: components["schemas"]["Competence"] | null;
+            /** @description Mês em que o recebimento está previsto (o definido pelo dono ou, sem ele, `dueMonth`). */
+            expectedMonth: components["schemas"]["Competence"];
+            overridden: boolean;
+            owed: components["schemas"]["Money"];
+            received: components["schemas"]["Money"];
+            pending: components["schemas"]["Money"];
+        };
+        ThirdPartyExpectedMonthInput: {
+            /** @description Mês previsto `YYYY-MM` (2000-01..2100-12). `null` remove a escolha e volta ao vencimento da fatura. */
+            expectedMonth: components["schemas"]["Competence"] | null;
+            /** @description Opcional. Versão devolvida na leitura anterior; diferente da atual → `409 VERSION_CONFLICT`. */
+            version?: number | null;
+        };
+        ThirdPartyExpectedMonth: {
+            /** Format: uuid */
+            transactionId: string;
+            /** Format: uuid */
+            personId: string;
+            installment: components["schemas"]["ThirdPartyInstallment"];
+            /** @description 0 quando o padrão está em vigor. */
+            version: number;
+        };
+        /** @description O que uma pessoa deve por competência de rateio de cartão (ADR-022). */
+        ThirdPartyPersonMonth: {
+            competence: components["schemas"]["Competence"];
+            owed: components["schemas"]["Money"];
+            received: components["schemas"]["Money"];
+            /** @description `owed - received` da competência, sem piso em zero: negativo no mês de um estorno parcial, para a soma dos meses fechar com o total da pessoa. */
+            pending: components["schemas"]["Money"];
+        };
         ThirdPartyPerson: {
             /** Format: uuid */
             personId: string;
@@ -4976,6 +6086,8 @@ export interface components {
             owed: components["schemas"]["Money"];
             received: components["schemas"]["Money"];
             pending: components["schemas"]["Money"];
+            /** @description Por competência, só o rateio de cartão (`CARD_SHARE`); vazio sem rateio. `owed` = Σ das partes das parcelas da competência. */
+            months: components["schemas"]["ThirdPartyPersonMonth"][];
             items: components["schemas"]["ThirdPartyItem"][];
         };
         ThirdPartyMonth: {
@@ -4985,6 +6097,7 @@ export interface components {
             personalNet: components["schemas"]["Money"];
             thirdPartyConsumption: components["schemas"]["Money"];
             thirdPartyReimbursed: components["schemas"]["Money"];
+            /** @description Na parte de rateio de cartão é `owed - received` do mês, sem piso em zero (pode ser negativo no mês de um estorno parcial). */
             thirdPartyPending: components["schemas"]["Money"];
         };
         ThirdPartyReceivables: {
@@ -5040,6 +6153,8 @@ export interface components {
             other: components["schemas"]["DebtOverviewGroup"];
             /** @description O que as pessoas devem ao usuário. Informativo, fora do total. */
             receivablesInfo: components["schemas"]["Money"];
+            /** @description Campo opcional (2.32.3). A pagar à pessoa vindo de `PAYABLE(pessoa)` e `SHARE_PAYABLE`. O backend ainda não o emite; ausente significa não calculado. */
+            payablesToPeople?: components["schemas"]["Money"];
             hasRecords: boolean;
             /** @description Custo fixo mensal estimado (recorrências de despesa ativas e não encerradas). Nunca soma no total. */
             fixedCosts: {
@@ -5186,6 +6301,27 @@ export interface components {
         /** @enum {string} */
         OccurrenceStatus: "PENDING" | "REALIZED" | "SKIPPED";
         Recurrence: {
+            provenance?: components["schemas"]["Provenance"];
+            originalAmount?: components["schemas"]["OriginalAmount"] | null;
+            referenceFxRate?: components["schemas"]["FxRate"] | null;
+            iofBps?: components["schemas"]["IofBps"] | null;
+            /**
+             * @description Marca explícita de assinatura (2.32.1). Só `GET /v1/subscriptions` e os alertas de assinatura olham as marcadas. `CARD_PURCHASE` existente migra para `true`.
+             * @default false
+             */
+            isSubscription: boolean;
+            scope?: components["schemas"]["RecurrenceScope"];
+            channel?: string | null;
+            overlapGroup?: string | null;
+            /** Format: date */
+            lastUsedOn?: string | null;
+            /**
+             * Format: date
+             * @description Espelho de `endDate` quando a recorrência foi cancelada com data (2.27.0); `null` sem encerramento.
+             */
+            activeUntil?: string | null;
+            /** @description Natureza da despesa (2.25.0). `null` fora de despesa. Registro antigo = `VARIABLE`; recorrência de despesa = `FIXED`. */
+            nature?: components["schemas"]["TransactionNature"] | null;
             /** Format: uuid */
             id: string;
             type: components["schemas"]["RecurrenceType"];
@@ -5212,8 +6348,12 @@ export interface components {
              *     vencidas e não realizadas dela continuam pendentes (S-20). Campo opcional (sempre presente na resposta); ausente = `false`.
              */
             ended?: boolean;
-            /** @description Só na recorrência de receita (ADR-017): 0 = a renda de cada ocorrência pertence ao mês da data; 1 = ao mês seguinte (salário dividido). 0 nas demais. Campo opcional (2.18.0). */
+            /** @description Só na recorrência de receita (ADR-017): -1 = ao mês anterior (saldo pago em M+1 é renda de M, ADR-017 emendada); 0 = a renda de cada ocorrência pertence ao mês da data; 1 = ao mês seguinte (salário dividido). 0 nas demais. Campo opcional (2.18.0). */
             incomeCompetenceOffsetMonths?: number;
+            /** @description Rateio das ocorrências (ADR-022); `null` sem rateio. Campo opcional (2.24.0). */
+            splitMode?: components["schemas"]["SplitMode"] | null;
+            /** @description Rateio gravado, como informado; vazio sem rateio. Campo opcional (2.24.0). */
+            shares?: components["schemas"]["PersonShareLine"][];
             /**
              * Format: date
              * @description Próxima ocorrência **pendente** (inclui as vencidas, S-20); `null` se desativada ou sem mais ocorrências.
@@ -5234,6 +6374,28 @@ export interface components {
          *     → `422 RECURRENCE_INVALID`, S-242); nas demais não existem.
          */
         RecurrenceInput: {
+            provenance?: components["schemas"]["Provenance"];
+            /**
+             * @description Valor previsto na moeda estrangeira. Com ele, `referenceFxRate` é obrigatório e o `amount` em BRL é **recalculado pelo backend**
+             *     (`original x referenceFxRate` + IOF, um arredondamento); o `amount` enviado é ignorado (o cliente não calcula).
+             */
+            originalAmount?: components["schemas"]["OriginalAmountInput"];
+            /** @description Câmbio-base da previsão. Cada cobrança usa o `fxRate` informado ao confirmar a ocorrência. */
+            referenceFxRate?: components["schemas"]["FxRate"];
+            iofBps?: components["schemas"]["IofBps"];
+            /** @description Marca de assinatura (2.32.1). Ausente = `false` na criação e inalterado na edição. */
+            isSubscription?: boolean | null;
+            scope?: components["schemas"]["RecurrenceScope"];
+            /** @description Onde a cobrança acontece, em texto livre (por exemplo a loja de aplicativos). */
+            channel?: string | null;
+            /** @description Grupo de sobreposição manual; 2 ou mais ativas no mesmo grupo geram aviso. */
+            overlapGroup?: string | null;
+            /**
+             * Format: date
+             * @description Último uso informado pelo usuário (manual).
+             */
+            lastUsedOn?: string | null;
+            nature?: components["schemas"]["TransactionNature"];
             type: components["schemas"]["RecurrenceType"];
             amount: components["schemas"]["AmountInput"];
             description?: string;
@@ -5252,8 +6414,14 @@ export interface components {
             /** Format: date */
             endDate?: string | null;
             maxOccurrences?: number | null;
+            splitMode?: components["schemas"]["SplitMode"];
             /**
-             * @description Só em recorrência de receita (ADR-017; em outro tipo → `422 RECURRENCE_INVALID`): `0` (padrão) = a ocorrência realizada
+             * @description Rateio de cada ocorrência lançada (ADR-022); só em recorrência de cartão (`type = CARD_PURCHASE`; outro tipo →
+             *     `422 SHARES_INVALID`). Mesmas regras de `CardPurchaseInput.shares`; em `AMOUNT`, o valor é por ocorrência.
+             */
+            shares?: components["schemas"]["ShareInput"][];
+            /**
+             * @description Só em recorrência de receita (ADR-017; em outro tipo → `422 RECURRENCE_INVALID`): `-1` = `incomeCompetence` = mês da data da ocorrência - 1; `0` (padrão) = a ocorrência realizada
              *     tem `incomeCompetence` ausente (mês da data); `1` = `incomeCompetence` = mês da data da ocorrência + 1. As ocorrências já
              *     realizadas não mudam.
              */
@@ -5261,6 +6429,28 @@ export interface components {
         };
         /** @description Só os dados do modelo (S-139). Frequência e início não existem aqui. */
         RecurrenceUpdate: {
+            provenance?: components["schemas"]["Provenance"];
+            /**
+             * @description Valor previsto na moeda estrangeira. Com ele, `referenceFxRate` é obrigatório e o `amount` em BRL é **recalculado pelo backend**
+             *     (`original x referenceFxRate` + IOF, um arredondamento); o `amount` enviado é ignorado (o cliente não calcula).
+             */
+            originalAmount?: components["schemas"]["OriginalAmountInput"];
+            /** @description Câmbio-base da previsão. Cada cobrança usa o `fxRate` informado ao confirmar a ocorrência. */
+            referenceFxRate?: components["schemas"]["FxRate"];
+            iofBps?: components["schemas"]["IofBps"];
+            /** @description Marca de assinatura (2.32.1). Ausente = `false` na criação e inalterado na edição. */
+            isSubscription?: boolean | null;
+            scope?: components["schemas"]["RecurrenceScope"];
+            /** @description Onde a cobrança acontece, em texto livre (por exemplo a loja de aplicativos). */
+            channel?: string | null;
+            /** @description Grupo de sobreposição manual; 2 ou mais ativas no mesmo grupo geram aviso. */
+            overlapGroup?: string | null;
+            /**
+             * Format: date
+             * @description Último uso informado pelo usuário (manual).
+             */
+            lastUsedOn?: string | null;
+            nature?: components["schemas"]["TransactionNature"];
             amount: components["schemas"]["AmountInput"];
             description?: string;
             /** Format: uuid */
@@ -5277,6 +6467,9 @@ export interface components {
              *     `endDate` de hoje em diante.
              */
             endDate?: string | null;
+            splitMode?: components["schemas"]["SplitMode"];
+            /** @description Ausente mantém o atual. Vale para as ocorrências **futuras**; as já lançadas não mudam. */
+            shares?: components["schemas"]["ShareInput"][];
             /** Format: int64 */
             version: number;
             /**
@@ -5289,6 +6482,12 @@ export interface components {
         RecurrenceEndInput: {
             /**
              * Format: date
+             * @description "Ativa até" (2.27.0): sinônimo de `endDate`. As ocorrências até a data seguem previstas, depois dela não, e a última lançada permanece. Se os
+             *     dois vierem e forem diferentes → `422 RECURRENCE_INVALID`.
+             */
+            activeUntil?: string | null;
+            /**
+             * Format: date
              * @description Padrão hoje.
              */
             endDate?: string | null;
@@ -5297,6 +6496,7 @@ export interface components {
             items: components["schemas"]["Recurrence"][];
         };
         RecurrenceSummary: {
+            view: components["schemas"]["ViewMode"];
             /** @description Custo fixo mensal (estimativa). */
             fixedCosts: components["schemas"]["Money"];
             /** @description Receita recorrente mensal (estimativa). */
@@ -5308,6 +6508,9 @@ export interface components {
             estimate: true;
         };
         RealizeOccurrenceInput: {
+            originalAmount?: components["schemas"]["OriginalAmountInput"];
+            fxRate?: components["schemas"]["FxRate"];
+            iofBps?: components["schemas"]["IofBps"];
             /** @description Valor real (ex.: a conta de luz veio diferente). Padrão = valor do modelo. */
             amount?: components["schemas"]["AmountInput"] | null;
             /**
@@ -5344,6 +6547,12 @@ export interface components {
              * @description Movimentação gerada (só `REALIZED`).
              */
             transactionId: string | null;
+            /** @description Valor de referência na moeda original da recorrência (2.32.3); `null` em BRL. A cobrança real usa o `fxRate` informado ao realizar. */
+            originalAmount?: components["schemas"]["OriginalAmount"] | null;
+            /** @description Câmbio-base da recorrência (2.32.3); `null` em BRL. Realizar exige `fxRate` (`FX_RATE_REQUIRED`). */
+            referenceFxRate?: components["schemas"]["FxRate"] | null;
+            /** @description IOF de referência da recorrência (2.32.3); `null` em BRL. */
+            iofBps?: components["schemas"]["IofBps"] | null;
         };
         OccurrenceSlice: components["schemas"]["SliceBase"] & {
             items: components["schemas"]["Occurrence"][];
@@ -5385,7 +6594,9 @@ export interface components {
         /**
          * @description Medida acompanhada por uma meta `METRIC` (ADR-016), sempre na mesma fonte da tela: `TOTAL_DEBT`, `CARD_DEBT`, `PEOPLE_DEBT`,
          *     `OTHER_DEBT` = `total` e `parts` de `GET /v1/debts/overview`; `ACCOUNTS_BALANCE`, `AVAILABLE_BALANCE` = `balances.inAccounts` e
-         *     `balances.available` do dashboard; `FIXED_COSTS_MONTHLY` = `fixedCosts` de `GET /v1/recurrences/summary`. Sem dado, a medida vale 0,00.
+         *     `balances.available` do dashboard; `FIXED_COSTS_MONTHLY` = `fixedCosts` de `GET /v1/recurrences/summary` com `view = MINE`
+         *     (2.24.0, ADR-022: o custo fixo de uma recorrência rateada vale só pela minha parte; o bruto é `GET /v1/recurrences/summary?view=GROSS`).
+         *     Sem dado, a medida vale 0,00.
          * @enum {string}
          */
         GoalMetric: "TOTAL_DEBT" | "CARD_DEBT" | "PEOPLE_DEBT" | "OTHER_DEBT" | "ACCOUNTS_BALANCE" | "AVAILABLE_BALANCE" | "FIXED_COSTS_MONTHLY";
@@ -5750,6 +6961,7 @@ export interface components {
         /**
          * @description Resumo do mês (PR 00 §32, S-151), calculado pelo backend pelo mesmo caminho do dashboard e da lista.
          * @example {
+         *       "view": "MINE",
          *       "competence": "2026-10",
          *       "partial": true,
          *       "isProjection": false,
@@ -5864,6 +7076,7 @@ export interface components {
          *     }
          */
         MonthlySummary: {
+            view: components["schemas"]["ViewMode"];
             competence: components["schemas"]["Competence"];
             /** @description Mês corrente ou futuro (ainda não terminou). */
             partial: boolean;
@@ -6051,6 +7264,8 @@ export interface components {
             kind: components["schemas"]["CategoryKind"];
             system: boolean;
             archived: boolean;
+            /** @description Chave da categoria de sistema (2.33.0); ausente no schemaVersion 1 (a restauração casa por tipo e nome). */
+            systemKey?: string | null;
         };
         BackupBillingRule: {
             effectiveFrom: components["schemas"]["Competence"];
@@ -6069,6 +7284,12 @@ export interface components {
             defaultPaymentAccountId: string | null;
             status: components["schemas"]["CardStatus"];
             billingRules: components["schemas"]["BackupBillingRule"][];
+            /** @description Campo opcional (2.33.0); ausente vale `true`. */
+            closingDayConfirmed?: boolean | null;
+            autoDebit?: boolean | null;
+            brand?: string | null;
+            bestPurchaseDay?: number | null;
+            lastDigits?: string[];
         };
         BackupInstallment: {
             /** Format: uuid */
@@ -6124,6 +7345,34 @@ export interface components {
             installments: components["schemas"]["BackupInstallment"][];
             /** @description Competência da receita quando difere do mês da data (ADR-017); restaurável. Campo opcional (2.18.0). */
             incomeCompetence?: string | null;
+            nature?: components["schemas"]["TransactionNature"] | null;
+            /** @description Rateio da compra no cartão (2.33.0). */
+            shares?: components["schemas"]["BackupShares"] | null;
+            /** @description Valor na moeda estrangeira (2.33.0); com `fxRate` e `iofBps`. */
+            originalAmount?: components["schemas"]["OriginalAmount"] | null;
+            fxRate?: string | null;
+            iofBps?: number | null;
+            lastDigits?: string | null;
+        };
+        BackupProvenance: {
+            /** @enum {string} */
+            origin?: "PRINT" | "PAYSLIP" | "CONTRACT" | "INFORMED";
+            /** @enum {string} */
+            confidence?: "CONFIRMED" | "ESTIMATED";
+        };
+        BackupShareLine: {
+            /**
+             * Format: uuid
+             * @description Nulo é a parte do dono.
+             */
+            personId?: string | null;
+            bps?: number | null;
+            amount?: components["schemas"]["Money"] | null;
+            provenance?: components["schemas"]["BackupProvenance"] | null;
+        };
+        BackupShares: {
+            mode: components["schemas"]["SplitMode"];
+            lines: components["schemas"]["BackupShareLine"][];
         };
         BackupSettlement: {
             /** Format: uuid */
@@ -6158,6 +7407,8 @@ export interface components {
             closureDate: string | null;
             closureReason: string | null;
             settlements: components["schemas"]["BackupSettlement"][];
+            kind?: components["schemas"]["DebtKind"] | null;
+            channel?: string | null;
         };
         BackupPerson: {
             /** Format: uuid */
@@ -6191,6 +7442,18 @@ export interface components {
             skippedDates: string[];
             /** @description Deslocamento da competência da renda das ocorrências (ADR-017). Campo opcional (2.18.0). */
             incomeCompetenceOffsetMonths?: number;
+            nature?: components["schemas"]["TransactionNature"] | null;
+            shares?: components["schemas"]["BackupShares"] | null;
+            originalAmount?: components["schemas"]["OriginalAmount"] | null;
+            referenceFxRate?: string | null;
+            iofBps?: number | null;
+            isSubscription?: boolean | null;
+            scope?: components["schemas"]["RecurrenceScope"] | null;
+            channel?: string | null;
+            overlapGroup?: string | null;
+            /** Format: date */
+            lastUsedOn?: string | null;
+            provenance?: components["schemas"]["BackupProvenance"] | null;
         };
         BackupGoalReservation: {
             /** Format: uuid */
@@ -6215,11 +7478,190 @@ export interface components {
             description: string | null;
             archived: boolean;
             reservations: components["schemas"]["BackupGoalReservation"][];
+            kind?: components["schemas"]["GoalKind"] | null;
+            metric?: components["schemas"]["GoalMetric"] | null;
+            direction?: components["schemas"]["GoalDirection"] | null;
+            baseline?: components["schemas"]["Money"] | null;
+            /** Format: date-time */
+            baselineAt?: string | null;
+            planNote?: string | null;
+            featured?: boolean | null;
+            actions?: components["schemas"]["BackupGoalAction"][];
+        };
+        BackupGoalAction: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            frequency: components["schemas"]["GoalActionFrequency"];
+            /** Format: date-time */
+            createdAt: string;
+            doneIn: string[];
+        };
+        BackupPurchaseGroup: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            interest: boolean;
+            declaredTotal?: components["schemas"]["Money"] | null;
+            members: string[];
+        };
+        BackupBalancePoint: {
+            balance: components["schemas"]["Money"];
+            /** Format: date */
+            date: string;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        BackupAsset: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["AssetKind"];
+            name: string;
+            employer?: string | null;
+            balance: components["schemas"]["Money"];
+            /** Format: date */
+            balanceDate: string;
+            monthlyDeposit?: components["schemas"]["Money"] | null;
+            availability: components["schemas"]["AssetAvailability"];
+            countsAsReserve: boolean;
+            archived: boolean;
+            provenance?: components["schemas"]["BackupProvenance"] | null;
+            history: components["schemas"]["BackupBalancePoint"][];
+        };
+        BackupDeduction: {
+            kind: components["schemas"]["DeductionKind"];
+            label: string;
+            amount?: components["schemas"]["Money"] | null;
+            percentBps?: number | null;
+            /** Format: date */
+            startsOn?: string | null;
+            /** Format: date */
+            endsOn?: string | null;
+            /** Format: uuid */
+            debtId?: string | null;
+            interestAmount?: components["schemas"]["Money"] | null;
+        };
+        BackupIncomeProfile: {
+            /** Format: uuid */
+            id: string;
+            source: string;
+            gross: components["schemas"]["Money"];
+            dependents: number;
+            advanceDay?: number | null;
+            advancePercentBps?: number | null;
+            balanceDayOfMonth: number;
+            thirteenthEnabled: boolean;
+            thirteenthFirstInstallmentMonth: number;
+            archived: boolean;
+            provenance?: components["schemas"]["BackupProvenance"] | null;
+            deductions: components["schemas"]["BackupDeduction"][];
+        };
+        BackupIncomeOccurrence: {
+            /** Format: uuid */
+            profileId: string;
+            competence: components["schemas"]["Competence"];
+            /** @enum {string} */
+            kind: "ADVANCE" | "BALANCE" | "THIRTEENTH_FIRST";
+            /** Format: uuid */
+            recurrenceId: string;
+        };
+        BackupPayrollLoanPlan: {
+            /** Format: uuid */
+            recurrenceId: string;
+            /** Format: uuid */
+            debtId: string;
+            applied: components["schemas"]["Money"];
+            interest?: components["schemas"]["Money"] | null;
+        };
+        BackupPayrollLoanApplication: {
+            /** Format: uuid */
+            transactionId: string;
+            /** Format: uuid */
+            debtId: string;
+            applied: components["schemas"]["Money"];
+            interest?: components["schemas"]["Money"] | null;
+            principal: components["schemas"]["Money"];
+        };
+        BackupItemShare: {
+            /** Format: uuid */
+            personId?: string | null;
+            amount: components["schemas"]["Money"];
+        };
+        BackupScheduleItem: {
+            position: number;
+            label: string;
+            type: components["schemas"]["CommitmentItemType"];
+            /** Format: date */
+            dueDate: string;
+            amount: components["schemas"]["Money"];
+            paid: boolean;
+            /** Format: date */
+            paidOn?: string | null;
+            shares?: components["schemas"]["BackupItemShare"][];
+            /** Format: uuid */
+            coBuyerPersonId?: string | null;
+            provenance?: components["schemas"]["BackupProvenance"] | null;
+        };
+        BackupClauses: {
+            lateFeeBps: number;
+            monthlyInterestBps: number;
+            terminationRetentionBps: number;
+            notes?: string | null;
+        };
+        BackupCommitment: {
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["CommitmentKind"];
+            name: string;
+            counterparty?: string | null;
+            notes?: string | null;
+            total?: components["schemas"]["Money"] | null;
+            informedPaid?: components["schemas"]["Money"] | null;
+            installmentsTotal?: number | null;
+            installmentsPaid?: number | null;
+            /** Format: date */
+            nextDueDate?: string | null;
+            clauses?: components["schemas"]["BackupClauses"] | null;
+            schedule: components["schemas"]["BackupScheduleItem"][];
+        };
+        /** @description Marca de terceiro em uma movimentação (legado do rateio). */
+        BackupThirdPartyExpense: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            transactionId: string;
+            /** Format: uuid */
+            personId: string;
+            note?: string | null;
+            amount?: components["schemas"]["Money"] | null;
+        };
+        BackupThirdPartyReceipt: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            personId: string;
+            /** Format: uuid */
+            transactionId?: string | null;
+            amount: components["schemas"]["Money"];
+            /** Format: date */
+            receivedOn?: string | null;
+            note?: string | null;
+            /** Format: uuid */
+            accountId?: string | null;
+            settlement: components["schemas"]["ThirdPartyReceiptSettlement"];
+            ledgered: boolean;
+        };
+        RestoreResult: {
+            schemaVersion: number;
+            /** @description Quantos registros de cada tipo foram restaurados. */
+            counts: {
+                [key: string]: number;
+            };
         };
         /** @description Lançamento do razão (partidas dobradas). A soma por livro e data reconstrói saldos e consumo. */
         BackupPosting: {
             /** @enum {string} */
-            sourceType: "TRANSACTION" | "ACCOUNT_OPENING" | "DEBT_RECOGNITION" | "DEBT_CANCELLATION";
+            sourceType: "TRANSACTION" | "ACCOUNT_OPENING" | "DEBT_RECOGNITION" | "DEBT_CANCELLATION" | "THIRD_PARTY_RECEIPT" | "THIRD_PARTY_RECEIPT_IN_BALANCE" | "THIRD_PARTY_REFUND_ADJUSTMENT" | "SHARE_PAYABLE";
             /** Format: uuid */
             sourceId: string;
             /** Format: uuid */
@@ -6237,7 +7679,8 @@ export interface components {
         };
         /**
          * @description Backup completo dos dados do usuário (S-153). `schemaVersion` sobe quando um campo muda de sentido (campos novos são
-         *     aditivos). Sem usuário, hash de senha, tokens nem segredos. As notas do vault entram na Etapa 6.
+         *     aditivos). Sem usuário, hash de senha, tokens nem segredos. As notas do vault entram na Etapa 6. A versão 2 (2.33.0) acrescenta os campos
+         *     opcionais e as listas de ativos, renda, compromissos, grupos e terceiros; a versão 1 (só os campos do início) continua aceita em `POST /v1/backups/restore`.
          */
         Backup: {
             schemaVersion: number;
@@ -6252,6 +7695,15 @@ export interface components {
             recurrences: components["schemas"]["BackupRecurrence"][];
             goals: components["schemas"]["BackupGoal"][];
             ledgerPostings: components["schemas"]["BackupPosting"][];
+            purchaseGroups?: components["schemas"]["BackupPurchaseGroup"][];
+            assets?: components["schemas"]["BackupAsset"][];
+            incomeProfiles?: components["schemas"]["BackupIncomeProfile"][];
+            incomeOccurrences?: components["schemas"]["BackupIncomeOccurrence"][];
+            payrollLoanPlans?: components["schemas"]["BackupPayrollLoanPlan"][];
+            payrollLoanApplications?: components["schemas"]["BackupPayrollLoanApplication"][];
+            commitments?: components["schemas"]["BackupCommitment"][];
+            thirdPartyExpenses?: components["schemas"]["BackupThirdPartyExpense"][];
+            thirdPartyReceipts?: components["schemas"]["BackupThirdPartyReceipt"][];
         };
         /**
          * @description Tipo do alvo de um vínculo (S-160). `MONTHLY_SUMMARY` usa `key` (`AAAA-MM`); os demais usam `id`. `NOTE` é o mesmo que um wikilink.
@@ -6466,6 +7918,7 @@ export interface components {
         /**
          * @description Série de entradas e saídas (resultado, não caixa). Regras em `GET /v1/reports/income-expenses`.
          * @example {
+         *       "view": "MINE",
          *       "period": "D7",
          *       "from": "2026-10-04",
          *       "to": "2026-10-10",
@@ -6609,6 +8062,7 @@ export interface components {
          *     }
          */
         IncomeExpenseSeries: {
+            view: components["schemas"]["ViewMode"];
             period: components["schemas"]["ReportPeriod"];
             /**
              * Format: date
@@ -6646,6 +8100,7 @@ export interface components {
         /**
          * @description Consumo do mês por categoria. Regras em `GET /v1/reports/spending-by-category`.
          * @example {
+         *       "view": "MINE",
          *       "basis": "COMPETENCE",
          *       "from": "2026-10-01",
          *       "to": "2026-10-31",
@@ -6681,6 +8136,7 @@ export interface components {
          *     }
          */
         SpendingByCategory: {
+            view: components["schemas"]["ViewMode"];
             /** @enum {string} */
             basis: "COMPETENCE";
             /**
@@ -6922,14 +8378,19 @@ export interface components {
             items: components["schemas"]["CategorizationRule"][];
         };
         /** @enum {string} */
-        NotificationKind: "INVOICE_DUE" | "DEBT_COLLECT" | "DEBT_PAYABLE_DUE" | "RECURRENCE_PENDING" | "COMMITTED_NEXT_MONTH" | "DAILY_SUMMARY" | "REMINDER" | "GOAL_DEADLINE" | "GROUPED";
+        NotificationKind: "INVOICE_DUE" | "DEBT_COLLECT" | "DEBT_PAYABLE_DUE" | "RECURRENCE_PENDING" | "COMMITTED_NEXT_MONTH" | "DAILY_SUMMARY" | "REMINDER" | "GOAL_DEADLINE" | "GROUPED" | "INVOICE_DUE_AUTODEBIT_OFF" | "NEGATIVE_MONTH_PROJECTED" | "NEW_DEBT_BEFORE_FINANCING" | "CARD_CASH_OUT_COST" | "SUBSCRIPTION_OVERLAP" | "SUBSCRIPTION_UNUSED" | "WEEKLY_CHARGE" | "THIRD_PARTY_OVERDUE" | "BALANCE_BELOW_REAL_ESTATE" | "DOCUMENT_DIVERGENCE";
         NotificationRef: {
             /** @enum {string} */
-            type: "CARD" | "DEBT" | "RECURRENCE" | "GOAL" | "REMINDER" | "USER";
+            type: "CARD" | "DEBT" | "RECURRENCE" | "GOAL" | "REMINDER" | "USER" | "COMMITMENT" | "ASSET" | "TRANSACTION" | "INVOICE";
             /** Format: uuid */
             id: string;
         };
-        /** @description Texto por chave de i18n + `params` (S-34); o backend não grava frase pronta. */
+        /**
+         * @description Texto por chave de i18n + `params` (S-34); o backend não grava frase pronta. `params` dos tipos de 2.32.0: `CARD_CASH_OUT_COST` (`monthlyRateBps`,
+         *     `installmentAmount`, `installments`), `NEGATIVE_MONTH_PROJECTED` (`competence`, `surplus`), `INVOICE_DUE_AUTODEBIT_OFF` (`cardName`, `dueDate`, `amount`),
+         *     `NEW_DEBT_BEFORE_FINANCING` (`amount`, `installments`), `SUBSCRIPTION_OVERLAP` (`group`), `SUBSCRIPTION_UNUSED` (`name`, `days`), `WEEKLY_CHARGE` (`name`),
+         *     `THIRD_PARTY_OVERDUE` (`personName`, `amount`), `BALANCE_BELOW_REAL_ESTATE` (`balance`, `due`), `DOCUMENT_DIVERGENCE` (`label`, `difference`).
+         */
         Notification: {
             /** Format: uuid */
             id: string;
@@ -7009,8 +8470,45 @@ export interface components {
                 enabled: boolean;
             };
             displayName?: string | null;
+            alerts?: components["schemas"]["NotificationAlertSettings"];
             /** Format: int64 */
             version: number;
+            /** @description Há foto de perfil (2.34.0). Somente leitura; ignorado no `PUT`. */
+            readonly hasPhoto?: boolean;
+            /**
+             * Format: int64
+             * @description Muda a cada troca de foto (0 sem foto). Use para invalidar o cache do `Blob` da foto. Somente leitura; ignorado no `PUT`.
+             */
+            readonly photoVersion?: number;
+        };
+        ProfilePhoto: {
+            hasPhoto: boolean;
+            /** Format: int64 */
+            photoVersion: number;
+        };
+        /**
+         * @description Parâmetros dos alertas de 2.32.0. No `PUT`, campo ausente mantém o valor salvo. Sem `subscriptionUnusedDays` definido, `SUBSCRIPTION_UNUSED` fica
+         *     inativo (não há valor padrão). `invoiceDueLeadDays` é a antecedência do aviso de fatura (padrão 3). `documentDivergenceTolerance` é a diferença absoluta
+         *     aceita entre o informado e o documento antes de `DOCUMENT_DIVERGENCE` (padrão 0,00). Fora do intervalo: `422 NOTIFICATION_THRESHOLD_INVALID`.
+         * @example {
+         *       "subscriptionUnusedDays": 60,
+         *       "invoiceDueLeadDays": 3,
+         *       "documentDivergenceTolerance": {
+         *         "amount": "0.00",
+         *         "currency": "BRL"
+         *       }
+         *     }
+         */
+        NotificationAlertSettings: {
+            /**
+             * @description Dias sem uso (`lastUsedOn`) a partir dos quais a assinatura é "sem uso". `null` = alerta inativo.
+             * @default null
+             */
+            subscriptionUnusedDays: number | null;
+            /** @default 3 */
+            invoiceDueLeadDays: number;
+            /** @description Padrão `{amount: "0.00", currency: BRL}`. */
+            documentDivergenceTolerance?: components["schemas"]["Money"];
         };
         PushSubscriptionKeys: {
             p256dh: string;
@@ -7238,10 +8736,12 @@ export interface components {
             missing?: number | null;
         };
         InsightList: components["schemas"]["SliceBase"] & {
+            view: components["schemas"]["ViewMode"];
             items: components["schemas"]["InsightItem"][];
             insufficient: components["schemas"]["InsightInsufficient"][];
         };
         InsightHistory: {
+            view: components["schemas"]["ViewMode"];
             items: {
                 month: string;
                 items: components["schemas"]["InsightItem"][];
@@ -7255,6 +8755,835 @@ export interface components {
         };
         AiSettings: {
             dailyMessageEnabled: boolean;
+        };
+        /**
+         * @description Natureza de uma despesa fora do cartão e de uma recorrência (2.25.0). `FIXED` = custo que se repete (aluguel, assinatura, boleto fixo);
+         *     `VARIABLE` = o resto. Registro antigo: `VARIABLE`; recorrência ativa de despesa conta como `FIXED` (P-29). A forma de pagamento é o `method`.
+         * @enum {string}
+         */
+        TransactionNature: "FIXED" | "VARIABLE";
+        /**
+         * @description Origem de um item de renda. `INCOME_PROFILE` (perfil de renda, bloco F), `RECURRENCE` (receita recorrente), `TRANSACTION` (receita lançada).
+         * @enum {string}
+         */
+        OwnerIncomeSource: "INCOME_PROFILE" | "RECURRENCE" | "TRANSACTION";
+        /**
+         * @description Derivado na leitura contra `asOf`: `RECEIVED` (data até `asOf` e lançada) ou `PLANNED` (prevista ou com data depois de `asOf`).
+         * @enum {string}
+         */
+        OwnerIncomeStatus: "PLANNED" | "RECEIVED";
+        /**
+         * @description Pior confiança dos itens do ponto (`Provenance.confidence`; `CONFIRMED` quando não há proveniência). `ESTIMATED` quando o valor é estimativa (ex.: cota do imóvel não definida).
+         * @enum {string}
+         */
+        OwnerConfidence: "CONFIRMED" | "ESTIMATED";
+        OwnerIncomeItem: {
+            source: components["schemas"]["OwnerIncomeSource"];
+            /**
+             * Format: uuid
+             * @description Id da recorrência, da movimentação ou do perfil de origem.
+             */
+            refId: string | null;
+            /**
+             * Format: date
+             * @description Data real do recebimento (ou prevista) dessa parcela.
+             */
+            date: string;
+            amount: components["schemas"]["Money"];
+            status: components["schemas"]["OwnerIncomeStatus"];
+            confidence: components["schemas"]["OwnerConfidence"];
+        };
+        /**
+         * @description Renda da coluna: as parcelas do pagamento da competência M-1. `total` = Σ `items` = `receivedInAccount` (o que cai na conta). No razão a renda do
+         *     consignado é `N + p` (2.32.1): `receivedInAccount = N` (caixa) e `appliedToDebt = p` (parcela baixada pela folha); `receivedInAccount + appliedToDebt`
+         *     é igual à renda do razão, e a sobra do mês usa só `N`.
+         */
+        OwnerIncome: {
+            total: components["schemas"]["Money"];
+            /** @description Soma do que cai na conta (`N`); igual a `total`. Campo opcional (2.32.1). */
+            receivedInAccount?: components["schemas"]["Money"];
+            /** @description Soma das parcelas de consignado baixadas pela folha (`p`); `0,00` sem consignado. Fora de `total`, `surplus` e `endBalance`. Campo opcional (2.32.1). */
+            appliedToDebt?: components["schemas"]["Money"];
+            items: components["schemas"]["OwnerIncomeItem"][];
+        };
+        OwnerMethodAmount: {
+            method: components["schemas"]["PaymentMethod"];
+            amount: components["schemas"]["Money"];
+        };
+        /** @description Saídas fora do cartão, por natureza. `fixed + variable` = Σ `byMethod`. */
+        OwnerOffCard: {
+            fixed: components["schemas"]["Money"];
+            variable: components["schemas"]["Money"];
+            byMethod: components["schemas"]["OwnerMethodAmount"][];
+        };
+        /**
+         * @description Composição das saídas do mês (ADR-023). `total = cardsMine + offCard.fixed + offCard.variable + realEstateMine`. `cardsGross`
+         *     (fatura cheia) e `subscriptionsMine` (recorte de `cardsMine`) são informativos e **nunca** somam em `total`.
+         */
+        OwnerOutflow: {
+            cardsMine: components["schemas"]["Money"];
+            cardsGross: components["schemas"]["Money"];
+            subscriptionsMine: components["schemas"]["Money"];
+            offCard: components["schemas"]["OwnerOffCard"];
+            realEstateMine: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
+        };
+        OwnerStatementMonth: {
+            competence: components["schemas"]["Competence"];
+            income: components["schemas"]["OwnerIncome"];
+            outflow: components["schemas"]["OwnerOutflow"];
+            /** @description Assinaturas `COMPANY` pagas no meu cartão, a ressarcir pela empresa (P-10). Informativo, fora de `outflow.total`. */
+            companyReimbursable: components["schemas"]["Money"];
+            /** @description `income.total − outflow.total`. Pode ser negativo. */
+            surplus: components["schemas"]["Money"];
+            /** @description `openingBalance` (1º mês) ou `endBalance` do mês anterior, mais `surplus`. */
+            endBalance: components["schemas"]["Money"];
+            /** @description `true` quando `surplus < 0`. */
+            negative: boolean;
+            /** @description O que me devem **previsto para este mês** (mês do vencimento da fatura da parcela ou o definido pelo dono, 2.36.0) e ainda não recebi. Nunca entra em `income` nem em `endBalance`. */
+            receivablesPending: components["schemas"]["Money"];
+        };
+        /** @description Aviso do cálculo. `code` é aberto; os conhecidos: `OPENING_BALANCE_NOT_PROJECTED`, `INCOME_MISSING`, `REAL_ESTATE_SHARE_UNDEFINED`. */
+        OwnerStatementWarning: {
+            code: string;
+            competence: components["schemas"]["Competence"] | null;
+        };
+        OwnerStatement: {
+            /** Format: date */
+            asOf: string;
+            /** @constant */
+            view: "MINE";
+            /** @description Defasagem da renda (padrão 1, a competência M-1 paga a coluna de M). */
+            incomeLagMonths: number;
+            /** @description Saldo atual das contas `CASH` (âncora, P-2). */
+            openingBalance: components["schemas"]["Money"];
+            months: components["schemas"]["OwnerStatementMonth"][];
+            negativeMonths: components["schemas"]["Competence"][];
+            warnings: components["schemas"]["OwnerStatementWarning"][];
+        };
+        /**
+         * @description `ACTIVE` = há parcela de algum membro ainda a vencer; `DONE` = nenhuma.
+         * @enum {string}
+         */
+        PurchaseGroupStatus: "ACTIVE" | "DONE";
+        /**
+         * @description Compra de um membro, criada pelos caminhos existentes. `remainingInstallments` ausente = compra comum de `installmentAmount x totalInstallments`;
+         *     menor que `totalInstallments` = compra em andamento (só as parcelas que faltam). Acima de `totalInstallments` → `422 PURCHASE_GROUP_INVALID`.
+         */
+        PurchaseGroupMemberCreate: {
+            /** Format: uuid */
+            cardId: string;
+            totalInstallments: number;
+            /** @description Valor de **cada** parcela. */
+            installmentAmount: components["schemas"]["AmountInput"];
+            remainingInstallments?: number;
+            /**
+             * Format: date
+             * @description Data dentro do ciclo da fatura da primeira parcela a lançar.
+             */
+            firstInvoiceDate: string;
+            /** Format: uuid */
+            categoryId?: string | null;
+            splitMode?: components["schemas"]["SplitMode"];
+            shares?: components["schemas"]["ShareInput"][];
+        };
+        PurchaseGroupInput: {
+            name: string;
+            /** @description Indica se a compra tem juros (informativo; o valor das parcelas já os traz). */
+            interest: boolean;
+            /** @description Total que o usuário acredita ser o do item. Só gera `divergence` se diferente do derivado (P-26); nunca bloqueia. */
+            declaredTotal?: components["schemas"]["AmountInput"] | null;
+            members: components["schemas"]["PurchaseGroupMemberCreate"][];
+        };
+        PurchaseGroupUpdate: {
+            name: string;
+            interest: boolean;
+            /** Format: int64 */
+            version: number;
+        };
+        PurchaseGroupMemberInput: {
+            /** Format: uuid */
+            transactionId: string;
+        };
+        /** @description Uma compra do grupo, com os valores derivados das parcelas dela. */
+        PurchaseGroupMember: {
+            /** Format: uuid */
+            transactionId: string;
+            card: components["schemas"]["CardRef"];
+            description: string | null;
+            totalInstallments: number;
+            /** @description Parcelas ainda não vencidas e não canceladas. */
+            remainingInstallments: number;
+            /** @description Valor da parcela cheia da próxima fatura (a primeira pode diferir em centavos). */
+            installmentAmount: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
+            remaining: components["schemas"]["Money"];
+            /** @description Parte do que falta que é minha (rateio, ADR-022). */
+            myRemaining: components["schemas"]["Money"];
+            /**
+             * Format: date
+             * @description Vencimento da última parcela não cancelada.
+             */
+            lastDueDate: string | null;
+        };
+        /** @description Diferença entre o total informado e o derivado dos membros (P-26). */
+        PurchaseGroupDivergence: {
+            declared: components["schemas"]["Money"];
+            computed: components["schemas"]["Money"];
+            difference: components["schemas"]["Money"];
+        };
+        /**
+         * @description `total` = Σ `total` dos membros; `remaining` = Σ parcelas restantes; `lastDueDate` = a maior última parcela entre os membros;
+         *     `installmentAmountPerMonth` = soma, entre os membros, das parcelas que caem na competência corrente. Tudo derivado; o grupo não tem lançamento.
+         * @example {
+         *       "id": "5d0b7c42-1e6a-4f93-8a2c-7b3e9f1d4a60",
+         *       "name": "Notebook",
+         *       "interest": false,
+         *       "status": "ACTIVE",
+         *       "total": {
+         *         "amount": "1150.00",
+         *         "currency": "BRL"
+         *       },
+         *       "remaining": {
+         *         "amount": "750.00",
+         *         "currency": "BRL"
+         *       },
+         *       "myRemaining": {
+         *         "amount": "750.00",
+         *         "currency": "BRL"
+         *       },
+         *       "installmentAmountPerMonth": {
+         *         "amount": "150.00",
+         *         "currency": "BRL"
+         *       },
+         *       "lastDueDate": "2027-04-05",
+         *       "divergence": null,
+         *       "members": [],
+         *       "version": 1,
+         *       "createdAt": "2026-10-15T12:00:00Z",
+         *       "updatedAt": "2026-10-15T12:00:00Z"
+         *     }
+         */
+        PurchaseGroup: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            interest: boolean;
+            status: components["schemas"]["PurchaseGroupStatus"];
+            total: components["schemas"]["Money"];
+            remaining: components["schemas"]["Money"];
+            myRemaining: components["schemas"]["Money"];
+            installmentAmountPerMonth: components["schemas"]["Money"];
+            /** Format: date */
+            lastDueDate: string | null;
+            divergence: components["schemas"]["PurchaseGroupDivergence"] | null;
+            members: components["schemas"]["PurchaseGroupMember"][];
+            /** Format: int64 */
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        PurchaseGroupSlice: components["schemas"]["SliceBase"] & {
+            items: components["schemas"]["PurchaseGroup"][];
+        };
+        PurchaseGroupCommitmentMonth: {
+            competence: components["schemas"]["Competence"];
+            amount: components["schemas"]["Money"];
+            mine: components["schemas"]["Money"];
+        };
+        PurchaseGroupCommitments: {
+            until: components["schemas"]["Competence"];
+            committed: components["schemas"]["Money"];
+            committedMine: components["schemas"]["Money"];
+            byMonth: components["schemas"]["PurchaseGroupCommitmentMonth"][];
+        };
+        /**
+         * @description Moeda original de uma cobrança (2.27.0). O razão é só em BRL; as demais são metadado.
+         * @enum {string}
+         */
+        CurrencyCode: "BRL" | "USD" | "EUR";
+        /**
+         * @example {
+         *       "amount": "5.00",
+         *       "currency": "USD"
+         *     }
+         */
+        OriginalAmountInput: {
+            amount: components["schemas"]["AmountInput"];
+            currency: components["schemas"]["CurrencyCode"];
+        };
+        OriginalAmount: {
+            amount: string;
+            currency: components["schemas"]["CurrencyCode"];
+        };
+        /**
+         * @description Câmbio BRL por 1 unidade da moeda original, string decimal de até 6 casas (`^\d{1,6}(\.\d{1,6})?$`), informado a cada cobrança.
+         *     Exemplo: USD 5,00 a `5.000000` com IOF de 350 bps = 25,00 + 0,875 = `25.88` (um arredondamento `HALF_UP`).
+         * @example 5.000000
+         */
+        FxRate: string;
+        /** @description IOF em pontos-base (10000 = 100%). Padrão 350 com moeda estrangeira; editável; só com moeda diferente de `BRL`. */
+        IofBps: number;
+        /**
+         * @description `PERSONAL` (padrão) ou `COMPANY` (pago no meu cartão, a ressarcir pela empresa; fora de `totalMonthlyMine`).
+         * @enum {string}
+         */
+        RecurrenceScope: "PERSONAL" | "COMPANY";
+        /** @description Uma recorrência de despesa com os derivados de assinatura. */
+        Subscription: {
+            recurrence: components["schemas"]["Recurrence"];
+            /** @description Custo mensal equivalente cheio (não zera quando encerrada). */
+            monthlyEquivalent: components["schemas"]["Money"];
+            /** @description Minha parte do custo mensal equivalente; `0,00` em `COMPANY`. */
+            monthlyEquivalentMine: components["schemas"]["Money"];
+            /** @description Valor em BRL da última cobrança lançada; `null` sem cobrança. */
+            lastChargedAmount: components["schemas"]["Money"] | null;
+            ended: boolean;
+        };
+        SubscriptionScopeTotal: {
+            scope: components["schemas"]["RecurrenceScope"];
+            monthly: components["schemas"]["Money"];
+        };
+        SubscriptionOverlapItem: {
+            /** Format: uuid */
+            id: string;
+            description: string | null;
+            monthlyEquivalent: components["schemas"]["Money"];
+        };
+        SubscriptionOverlap: {
+            group: string;
+            items: components["schemas"]["SubscriptionOverlapItem"][];
+            monthly: components["schemas"]["Money"];
+        };
+        SubscriptionList: components["schemas"]["SliceBase"] & {
+            items: components["schemas"]["Subscription"][];
+            totalMonthly: components["schemas"]["Money"];
+            totalMonthlyMine: components["schemas"]["Money"];
+            byScope: components["schemas"]["SubscriptionScopeTotal"][];
+            overlaps: components["schemas"]["SubscriptionOverlap"][];
+        };
+        /**
+         * @description Natureza do empréstimo (2.29.0). `PERSONAL` (padrão), `PAYROLL` (consignado descontado em folha, ADR-026) ou `CARD_CASH_OUT` (Pix no crédito,
+         *     ADR-031, só criado por `POST /v1/card-cash-outs`).
+         *     Enum que cresce: o cliente deve ter ramo padrão para valores desconhecidos.
+         * @enum {string}
+         */
+        DebtKind: "PERSONAL" | "PAYROLL" | "CARD_CASH_OUT";
+        /**
+         * @description Taxa efetiva do empréstimo (TIR sobre parcelas mensais regulares, P-17). `annualBps = (1 + i)^12 - 1` em pontos-base (pode passar de 10000).
+         *     Parcelas que somam o principal → 0.
+         */
+        EffectiveRate: {
+            /** Format: int64 */
+            monthlyBps: number;
+            /** Format: int64 */
+            annualBps: number;
+            /** @constant */
+            method: "IRR";
+        };
+        /** @enum {string} */
+        IncomeProfileStatus: "ACTIVE" | "ARCHIVED";
+        /**
+         * @description Tipo da rubrica (P-14): `TAX` (imposto além de INSS/IRRF), `BENEFIT`, `UNION` (sindicato), `LOAN` (consignado, aponta para a dívida) ou `OTHER`.
+         * @enum {string}
+         */
+        DeductionKind: "TAX" | "BENEFIT" | "UNION" | "LOAN" | "OTHER";
+        PayrollAdvance: {
+            dayOfMonth: number;
+            /** @description Fatia do líquido paga como adiantamento (4000 = 40%). */
+            percentBps: number;
+        };
+        /** @description 13º salário (P-16). A 1ª parcela é paga sem descontos e pertence à competência do mês em que é paga; a 2ª parcela fica fora desta versão. */
+        ThirteenthSettings: {
+            enabled: boolean;
+            /** @description Mês de pagamento da 1ª parcela (padrão 11). */
+            firstInstallmentMonth: number;
+        };
+        /**
+         * @description Rubrica de desconto em folha. `amount` ou `percentBps` (percentual do bruto), nunca os dois. `debtId` só em `LOAN`. `interestAmount` (2.32.1) só em `LOAN`:
+         *     juros embutidos na parcela de cada ocorrência; sem ele a parcela baixa só principal (`confidence = ESTIMATED`, aviso `PAYROLL_INTEREST_NOT_SPLIT`).
+         */
+        PayrollDeductionInput: {
+            /** @description Juros da parcela (zero ou mais, no máximo o valor da rubrica). Fora de `LOAN` → `422 INCOME_PROFILE_INVALID`. */
+            interestAmount?: components["schemas"]["AmountInput"] | null;
+            kind: components["schemas"]["DeductionKind"];
+            label: string;
+            amount?: components["schemas"]["AmountInput"];
+            percentBps?: number;
+            /** Format: date */
+            startsOn?: string | null;
+            /** Format: date */
+            endsOn?: string | null;
+            /** Format: uuid */
+            debtId?: string | null;
+        };
+        PayrollDeduction: {
+            /** @description Juros da parcela informados (2.32.1); `null` = não informado (`PAYROLL_INTEREST_NOT_SPLIT`). */
+            interestAmount?: components["schemas"]["Money"] | null;
+            kind: components["schemas"]["DeductionKind"];
+            label: string;
+            amount: components["schemas"]["Money"] | null;
+            percentBps: number | null;
+            /** Format: date */
+            startsOn: string | null;
+            /** Format: date */
+            endsOn: string | null;
+            /** Format: uuid */
+            debtId: string | null;
+        };
+        /** @description Campos do perfil de renda, sem fechar o objeto (a entrada e a atualização fecham com `unevaluatedProperties`). */
+        IncomeProfileFields: {
+            provenance?: components["schemas"]["Provenance"];
+            /** @description Nome da fonte pagadora (texto livre). */
+            source: string;
+            /** @description Salário bruto mensal. */
+            gross: components["schemas"]["AmountInput"];
+            dependents: number;
+            /** @description Adiantamento; `null` = sem adiantamento (o líquido cai inteiro no dia do saldo). */
+            advance?: components["schemas"]["PayrollAdvance"] | null;
+            /** @description Dia do saldo, no mês seguinte à competência (P-1). */
+            balanceDayOfMonth: number;
+            deductions: components["schemas"]["PayrollDeductionInput"][];
+            thirteenth: components["schemas"]["ThirteenthSettings"];
+        };
+        IncomeProfileInput: components["schemas"]["IncomeProfileFields"];
+        IncomeProfileUpdate: components["schemas"]["IncomeProfileFields"] & {
+            /** Format: int64 */
+            version: number;
+        };
+        IncomeProfile: {
+            provenance?: components["schemas"]["Provenance"];
+            /** Format: uuid */
+            id: string;
+            source: string;
+            gross: components["schemas"]["Money"];
+            dependents: number;
+            advance: components["schemas"]["PayrollAdvance"] | null;
+            balanceDayOfMonth: number;
+            deductions: components["schemas"]["PayrollDeduction"][];
+            thirteenth: components["schemas"]["ThirteenthSettings"];
+            status: components["schemas"]["IncomeProfileStatus"];
+            /** Format: int64 */
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        IncomeProfileSlice: components["schemas"]["SliceBase"] & {
+            items: components["schemas"]["IncomeProfile"][];
+        };
+        PreviewDeduction: {
+            /** @description Juros da parcela `LOAN` (2.32.1); `null` quando não informado. */
+            interestAmount?: components["schemas"]["Money"] | null;
+            /** @description Principal baixado da dívida: `amount − interestAmount`; sem `interestAmount`, o valor inteiro (só em `LOAN`). */
+            principalAmount?: components["schemas"]["Money"] | null;
+            /** @description `ESTIMATED` em `LOAN` sem `interestAmount` (aviso `PAYROLL_INTEREST_NOT_SPLIT`). */
+            confidence?: components["schemas"]["OwnerConfidence"];
+            /** @description Códigos abertos; conhecido: `PAYROLL_INTEREST_NOT_SPLIT`. */
+            warnings?: string[];
+            kind: components["schemas"]["DeductionKind"];
+            label: string;
+            amount: components["schemas"]["Money"];
+            /** Format: uuid */
+            debtId: string | null;
+        };
+        /** @description Um pagamento da competência, com a data real. */
+        PayrollPayment: {
+            /** Format: date */
+            date: string;
+            amount: components["schemas"]["Money"];
+        };
+        /**
+         * @description Líquido da competência `month`. `net = gross - inss - irrf - Σ fixedDeductions - Σ loanDeductions`; `advance.amount + balance.amount = net`.
+         *     `taxTables` lista as versões usadas (INSS pela competência, IRRF pela data de pagamento).
+         */
+        IncomePreview: {
+            month: components["schemas"]["Competence"];
+            gross: components["schemas"]["Money"];
+            inss: components["schemas"]["Money"];
+            irrf: components["schemas"]["Money"];
+            fixedDeductions: components["schemas"]["PreviewDeduction"][];
+            loanDeductions: components["schemas"]["PreviewDeduction"][];
+            net: components["schemas"]["Money"];
+            advance: components["schemas"]["PayrollPayment"] | null;
+            balance: components["schemas"]["PayrollPayment"];
+            /** @description 1ª parcela do 13º, sem descontos, quando `month` é o mês de pagamento dela; senão `null`. */
+            thirteenth: components["schemas"]["PayrollPayment"] | null;
+            taxTables: components["schemas"]["TaxTableRef"][];
+        };
+        /**
+         * @description `ADVANCE`, `BALANCE` ou `THIRTEENTH_FIRST`.
+         * @enum {string}
+         */
+        GeneratedIncomeKind: "ADVANCE" | "BALANCE" | "THIRTEENTH_FIRST";
+        GeneratedIncomeOccurrence: {
+            kind: components["schemas"]["GeneratedIncomeKind"];
+            /** @description Competência que o pagamento paga (`incomeCompetence`). */
+            competence: components["schemas"]["Competence"];
+            /** Format: date */
+            date: string;
+            amount: components["schemas"]["Money"];
+            /** Format: uuid */
+            recurrenceId: string;
+            /** @description `false` quando o pagamento já existia (idempotência). */
+            created: boolean;
+        };
+        GeneratedIncomeOccurrences: {
+            items: components["schemas"]["GeneratedIncomeOccurrence"][];
+        };
+        /** @enum {string} */
+        TaxTableKind: "INSS" | "IRRF";
+        /**
+         * @description `COMPETENCE` (INSS: vigência pela competência) ou `PAYMENT_DATE` (IRRF: vigência pela data de pagamento).
+         * @enum {string}
+         */
+        TaxTableBasis: "COMPETENCE" | "PAYMENT_DATE";
+        /**
+         * @description `PROGRESSIVE_BY_BAND` (INSS: soma por faixa) ou `RATE_MINUS_DEDUCTION` (IRRF: base x alíquota - parcela a deduzir).
+         * @enum {string}
+         */
+        TaxMethod: "PROGRESSIVE_BY_BAND" | "RATE_MINUS_DEDUCTION";
+        TaxBracket: {
+            from: components["schemas"]["Money"];
+            /** @description Limite superior da faixa; `null` na última (sem teto, ou o teto está em `contributionCeiling`). */
+            upTo: components["schemas"]["Money"] | null;
+            /** @description Alíquota em pontos-base (750 = 7,5%). */
+            rateBps: number;
+            /** @description Parcela a deduzir (IRRF); 0,00 no INSS. */
+            deduction: components["schemas"]["Money"];
+        };
+        /**
+         * @description Redutor mensal do IRRF (Lei 15.270/2025, art. 3º-A da Lei 9.250/1995). Rendimento até `fullReductionUpTo`: redução de até `fullReductionAmount`
+         *     (o imposto zera); entre `fullReductionUpTo` e `phaseOutUpTo`: `constant - coefficient x rendimentos`; acima de `phaseOutUpTo`: nenhuma. Limitado ao
+         *     imposto apurado. O rendimento da fórmula é o rendimento tributável do mês, **não** a base de cálculo.
+         */
+        TaxReduction: {
+            fullReductionUpTo: components["schemas"]["Money"];
+            fullReductionAmount: components["schemas"]["Money"];
+            phaseOutUpTo: components["schemas"]["Money"];
+            constant: components["schemas"]["Money"];
+            /** @description Coeficiente com 6 casas (`0.133145`). */
+            coefficient: string;
+        };
+        /** @description Fonte oficial da tabela. */
+        TaxSource: {
+            agency: string;
+            norm: string;
+            url: string;
+            /** Format: date */
+            consultedOn: string;
+        };
+        TaxTableRef: {
+            kind: components["schemas"]["TaxTableKind"];
+            version: number;
+            /** Format: date */
+            effectiveFrom: string;
+        };
+        TaxTable: {
+            kind: components["schemas"]["TaxTableKind"];
+            /** @description Versão da tabela na mesma vigência; correção = versão nova. */
+            version: number;
+            /** Format: date */
+            effectiveFrom: string;
+            /** Format: date */
+            effectiveTo: string | null;
+            basis: components["schemas"]["TaxTableBasis"];
+            method: components["schemas"]["TaxMethod"];
+            brackets: components["schemas"]["TaxBracket"][];
+            /** @description Teto do salário de contribuição (INSS); `null` no IRRF. */
+            contributionCeiling: components["schemas"]["Money"] | null;
+            /** @description Dedução mensal por dependente (IRRF). */
+            dependentDeduction: components["schemas"]["Money"] | null;
+            /** @description Limite mensal do desconto simplificado (IRRF). */
+            simplifiedDiscountLimit: components["schemas"]["Money"] | null;
+            reduction: components["schemas"]["TaxReduction"] | null;
+            sources: components["schemas"]["TaxSource"][];
+        };
+        TaxTableList: {
+            year: number;
+            items: components["schemas"]["TaxTable"][];
+        };
+        CardCashOutInput: {
+            /** Format: uuid */
+            cardId: string;
+            /**
+             * Format: uuid
+             * @description Conta `CASH` que recebe o principal. Obrigatória sem `beneficiaryPersonId`; com beneficiário não existe.
+             */
+            accountId?: string | null;
+            principal: components["schemas"]["AmountInput"];
+            installments: number;
+            /** @description Total das parcelas, juros incluídos. Informe este ou `rateBps`. */
+            totalWithInterest?: components["schemas"]["AmountInput"];
+            /** @description Taxa mensal em pontos-base. O backend calcula as parcelas (arredondamento único; o resto do centavo vai para a primeira parcela). */
+            rateBps?: number;
+            /** Format: date */
+            firstInvoiceDate: string;
+            /**
+             * Format: uuid
+             * @description Pessoa que recebeu o Pix; o principal vira `RECEIVABLE` dela. Nulo = eu.
+             */
+            beneficiaryPersonId?: string | null;
+            /**
+             * Format: uuid
+             * @description Categoria `EXPENSE` do juro; ausente = a categoria padrão.
+             */
+            interestCategoryId?: string | null;
+            channel?: string | null;
+        };
+        /**
+         * @description `FGTS` (sempre `RESERVED`) ou `OTHER`.
+         * @enum {string}
+         */
+        AssetKind: "FGTS" | "OTHER";
+        /**
+         * @description `RESERVED` = não disponível (não conta na reserva nem no disponível); `AVAILABLE` = pode ser usado.
+         * @enum {string}
+         */
+        AssetAvailability: "RESERVED" | "AVAILABLE";
+        /** @enum {string} */
+        AssetStatus: "ACTIVE" | "ARCHIVED";
+        AssetInput: {
+            provenance?: components["schemas"]["Provenance"];
+            kind: components["schemas"]["AssetKind"];
+            name: string;
+            employer?: string | null;
+            /** @description Saldo informado (zero ou mais). */
+            balance: components["schemas"]["AmountInput"];
+            /** Format: date */
+            balanceDate: string;
+            /** @description Depósito mensal esperado (informativo; não gera lançamento). */
+            monthlyDeposit?: components["schemas"]["AmountInput"] | null;
+            availability: components["schemas"]["AssetAvailability"];
+            /**
+             * @description Conta na reserva de emergência. Só com `availability = AVAILABLE`.
+             * @default false
+             */
+            countsAsReserve: boolean;
+        };
+        AssetUpdate: {
+            provenance?: components["schemas"]["Provenance"];
+            kind: components["schemas"]["AssetKind"];
+            name: string;
+            employer?: string | null;
+            monthlyDeposit?: components["schemas"]["AmountInput"] | null;
+            availability: components["schemas"]["AssetAvailability"];
+            countsAsReserve?: boolean;
+            /** Format: int64 */
+            version: number;
+        };
+        AssetBalanceInput: {
+            balance: components["schemas"]["AmountInput"];
+            /** Format: date */
+            date: string;
+        };
+        AssetBalancePoint: {
+            balance: components["schemas"]["Money"];
+            /** Format: date */
+            date: string;
+            /** Format: date-time */
+            recordedAt: string;
+        };
+        Asset: {
+            provenance?: components["schemas"]["Provenance"];
+            /** Format: uuid */
+            id: string;
+            kind: components["schemas"]["AssetKind"];
+            name: string;
+            employer: string | null;
+            balance: components["schemas"]["Money"];
+            /** Format: date */
+            balanceDate: string;
+            monthlyDeposit: components["schemas"]["Money"] | null;
+            availability: components["schemas"]["AssetAvailability"];
+            countsAsReserve: boolean;
+            status: components["schemas"]["AssetStatus"];
+            /** @description Atualizações de saldo, da mais recente para a mais antiga (só no detalhe; vazio na lista). */
+            history: components["schemas"]["AssetBalancePoint"][];
+            /** Format: int64 */
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AssetSlice: components["schemas"]["SliceBase"] & {
+            items: components["schemas"]["Asset"][];
+        };
+        EmergencyReserve: {
+            amount: components["schemas"]["Money"];
+            /** @description Saídas fixas da minha parte do mês pedido. */
+            monthlyBase: components["schemas"]["Money"];
+            /** @description `amount / monthlyBase` com uma casa (`3.0`); `null` quando a base é zero. */
+            coverageMonths: string | null;
+            targetMonths: number | null;
+            targetAmount: components["schemas"]["Money"] | null;
+            missingToTarget: components["schemas"]["Money"] | null;
+        };
+        NetWorthOverview: {
+            availableCash: components["schemas"]["Money"];
+            availableAssets: components["schemas"]["Money"];
+            reservedAssets: components["schemas"]["Money"];
+            receivablesPending: components["schemas"]["Money"];
+            debts: components["schemas"]["Money"];
+            emergencyReserve: components["schemas"]["EmergencyReserve"];
+        };
+        CommitmentShareInput: {
+            /**
+             * Format: uuid
+             * @description Pessoa; `null` = eu.
+             */
+            personId: string | null;
+            /** @description Quanto da parcela cabe à pessoa. */
+            amount: components["schemas"]["AmountInput"];
+        };
+        CommitmentShare: {
+            /** Format: uuid */
+            personId: string | null;
+            amount: components["schemas"]["Money"];
+        };
+        CommitmentSharesUpdate: {
+            shares: components["schemas"]["CommitmentShareInput"][];
+            /** Format: uuid */
+            coBuyerPersonId?: string | null;
+            /** Format: int64 */
+            version: number;
+        };
+        /** @description Cláusulas do contrato, em pontos-base (10000 = 100%). */
+        CommitmentClausesInput: {
+            /** @description Multa por atraso (200 = 2%). */
+            lateFeeBps: number;
+            /** @description Juros de mora ao mês (100 = 1% a.m.). */
+            monthlyInterestBps: number;
+            /** @description Retenção sobre o preço em caso de rescisão (700 = 7%). */
+            terminationRetentionBps: number;
+            notes?: string | null;
+        };
+        CommitmentClausesUpdate: {
+            clauses: components["schemas"]["CommitmentClausesInput"];
+            /** Format: int64 */
+            version: number;
+        };
+        CommitmentClauses: {
+            lateFeeBps: number;
+            monthlyInterestBps: number;
+            terminationRetentionBps: number;
+            /** @description Retenção sobre o preço (`total x terminationRetentionBps / 10000`, arredondado para baixo), calculada pelo backend; `null` sem total. */
+            terminationRetentionAmount: components["schemas"]["Money"] | null;
+            notes: string | null;
+        };
+        CommitmentPersonTotals: {
+            /**
+             * Format: uuid
+             * @description Pessoa; `null` = eu.
+             */
+            personId: string | null;
+            paid: components["schemas"]["Money"];
+            pending: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
+        };
+        CommitmentPersonItem: {
+            position: number;
+            label: string;
+            type: components["schemas"]["CommitmentItemType"];
+            /** Format: date */
+            dueDate: string | null;
+            /** @description Cota da pessoa neste item. */
+            amount: components["schemas"]["Money"];
+            paid: boolean;
+            /** @description `true` quando a cota não foi definida (conta 100% minha). */
+            estimated: boolean;
+        };
+        CommitmentPersonBlock: {
+            /** Format: uuid */
+            personId: string | null;
+            items: components["schemas"]["CommitmentPersonItem"][];
+            paid: components["schemas"]["Money"];
+            pending: components["schemas"]["Money"];
+            total: components["schemas"]["Money"];
+        };
+        CommitmentByPerson: {
+            /** Format: uuid */
+            commitmentId: string;
+            name: string;
+            people: components["schemas"]["CommitmentPersonBlock"][];
+            /** @description Posições dos itens sem cota definida. */
+            undefinedItems: number[];
+        };
+        PurchaseSimulationInput: {
+            /** @description Valor total da compra, sem juros. */
+            amount: components["schemas"]["AmountInput"];
+            /** @description Número de parcelas, de 1 a 36. Fora da faixa responde `422 SIMULATION_INVALID`. */
+            installments: number;
+            /**
+             * @description Juros ao mês em pontos-base, de 0 a 10000 (fora da faixa responde `422 SIMULATION_INVALID`). A parcela vem do mesmo cálculo da criação da compra.
+             * @default 0
+             */
+            interestRatePerMonthBps: number;
+            firstInstallmentMonth: components["schemas"]["Competence"];
+            /** @description Assinaturas ativas que o usuário cancelaria; só elas compensam o impacto (P-8). */
+            cancelSubscriptionIds?: string[];
+        };
+        /**
+         * @description Regra estrutural da ADR-030, sem limiar numérico. Com `horizon.limited` nunca é `SUSTAINABLE`.
+         * @enum {string}
+         */
+        SimulationClassification: "SUSTAINABLE" | "VIABLE_WITH_PLANNING" | "RISKY" | "INCOMPATIBLE";
+        /**
+         * @description Código aberto, chave de i18n no front. Conhecidos: `NEGATIVE_EVEN_WITH_CUTS` (INCOMPATIBLE), `NEGATIVE_WITHOUT_CUTS` (INCOMPATIBLE sem cortes
+         *     informados), `NEGATIVE_FIXED_WITH_CUTS` (VIABLE_WITH_PLANNING), `FINANCING_PENDING`, `ESTIMATED_INCOME_NEEDED`, `HORIZON_LIMITED`, `NO_NEGATIVE_MONTH`.
+         */
+        SimulationReasonCode: string;
+        SimulationReason: {
+            code: components["schemas"]["SimulationReasonCode"];
+            competence: components["schemas"]["Competence"] | null;
+            params: {
+                [key: string]: string;
+            };
+        };
+        /** @description Janela que o motor calculou. `requiredMonths` = meses da primeira parcela à última. `limited = requiredMonths > calculatedMonths`. */
+        SimulationHorizon: {
+            from: components["schemas"]["Competence"];
+            to: components["schemas"]["Competence"];
+            calculatedMonths: number;
+            requiredMonths: number;
+            limited: boolean;
+        };
+        SimulationMonth: {
+            competence: components["schemas"]["Competence"];
+            /** @description Sobra do mês sem a compra (a do `owner-statement`). */
+            surplusBefore: components["schemas"]["Money"];
+            /** @description `surplusBefore - parcela` do mês, sem cortes. */
+            surplusAfter: components["schemas"]["Money"];
+            /** @description `surplusAfter - surplusBefore` (negativo: o peso da parcela). */
+            delta: components["schemas"]["Money"];
+            /** @description `surplusAfter < 0`. */
+            negativeAfter: boolean;
+            /** @description Σ do equivalente mensal das assinaturas escolhidas, a partir da data atual. `null` sem cortes. */
+            cutsMonthly: components["schemas"]["Money"] | null;
+            /** @description `surplusAfter + cutsMonthly`. `null` sem cortes. */
+            surplusAfterWithCuts: components["schemas"]["Money"] | null;
+            negativeAfterWithCuts: boolean | null;
+            /** @description `ESTIMATED` quando a renda do mês tem item estimado (proveniência). */
+            confidence: components["schemas"]["OwnerConfidence"];
+        };
+        PurchaseSimulation: {
+            /** @description Primeira parcela (leva o resto de centavo), a mesma da criação da compra. */
+            installmentAmount: components["schemas"]["Money"];
+            /** @description Total da compra com juros. */
+            total: components["schemas"]["Money"];
+            months: components["schemas"]["SimulationMonth"][];
+            horizon: components["schemas"]["SimulationHorizon"];
+            classification: components["schemas"]["SimulationClassification"];
+            reasons: components["schemas"]["SimulationReason"][];
+            /** @description Menor `endBalance` dos meses calculados, com a compra e sem cortes. */
+            endBalanceMin: components["schemas"]["Money"];
+            endBalanceMinWithCuts: components["schemas"]["Money"] | null;
+            /** @description Há financiamento pendente (P-20). */
+            financingWarning: boolean;
         };
     };
     responses: {
@@ -7373,6 +9702,11 @@ export interface components {
         InsightLimit: number;
         /** @description Inclui os dispensados, marcados com `dismissed = true`. */
         IncludeDismissed: boolean;
+        /**
+         * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+         *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+         */
+        View: components["schemas"]["ViewMode"];
         /** @description UUID gerado por tentativa de envio (S-72, S-87). */
         IdempotencyKey: string;
         /**
@@ -8030,6 +10364,38 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    updateTransactionShares: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionSharesUpdate"];
+            };
+        };
+        responses: {
+            /** @description A compra com o rateio atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Transaction"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     listCards: {
         parameters: {
             query?: {
@@ -8476,6 +10842,38 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    changeInvoiceDocumentAmount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceDocumentAmountInput"];
+            };
+        };
+        responses: {
+            /** @description A fatura atualizada. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invoice"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     previewInvoicePayment: {
         parameters: {
             query: {
@@ -8553,6 +10951,11 @@ export interface operations {
                 page?: components["parameters"]["Page"];
                 /** @description Itens por página. */
                 pageSize?: components["parameters"]["PageSize"];
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -8579,6 +10982,11 @@ export interface operations {
             query?: {
                 /** @description Data do resumo (padrão: hoje no fuso `America/Sao_Paulo`), de 2000-01-01 a 2100-12-31 (fora disso, `400`, S-239). Depois de hoje, `isProjection = true`. */
                 asOf?: string;
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -8995,10 +11403,62 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    previewShareMigration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Relatório da migração. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareMigrationReport"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    applyShareMigration: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareMigrationApplyInput"];
+            };
+        };
+        responses: {
+            /** @description Resultado da aplicação. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareMigrationApplyResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     recordThirdPartyReceipt: {
         parameters: {
             query?: never;
             header?: {
+                /** @description Opcional com `accountId` e no legado; **obrigatório** sem `accountId` em compra rateada (2.32.1). */
                 "Idempotency-Key"?: string;
             };
             path?: never;
@@ -9018,6 +11478,40 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ThirdPartyReceipt"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    setReceivableExpectedMonth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transactionId: string;
+                installmentId: string;
+                personId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThirdPartyExpectedMonthInput"];
+            };
+        };
+        responses: {
+            /** @description Parcela com o mês previsto efetivo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThirdPartyExpectedMonth"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -9390,7 +11884,13 @@ export interface operations {
     };
     getRecurrenceSummary: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -10193,7 +12693,13 @@ export interface operations {
     };
     getMonthlySummary: {
         parameters: {
-            query?: never;
+            query?: {
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
+            };
             header?: never;
             path: {
                 /** @description Competência `AAAA-MM`. */
@@ -10312,10 +12818,56 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    restoreBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Backup"];
+            };
+        };
+        responses: {
+            /** @description O que foi restaurado. */
+            200: {
+                headers: {
+                    /** @description `no-store`. */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreResult"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            /** @description Corpo acima do limite de JSON do servidor (`PAYLOAD_TOO_LARGE`). */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     getIncomeExpenseSeries: {
         parameters: {
             query: {
                 period: components["schemas"]["ReportPeriod"];
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -10345,6 +12897,11 @@ export interface operations {
                 month?: string;
                 /** @description Quantas categorias antes de `other` (1 a 10). */
                 limit?: number;
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -11543,6 +14100,90 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    replaceProfilePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /**
+                     * Format: binary
+                     * @description A imagem (JPEG ou PNG, até 8 MB).
+                     */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Foto substituída. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfilePhoto"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    deleteProfilePhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Foto removida. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getProfilePhotoContent: {
+        parameters: {
+            query?: {
+                /** @description `display` (até 1280 px, padrão) ou `thumb` (até 320 px). Outro valor → `400`. */
+                variant?: "thumb" | "display";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A imagem. */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    "X-Content-Type-Options"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     getPushConfig: {
         parameters: {
             query?: never;
@@ -11821,6 +14462,11 @@ export interface operations {
                 page?: components["parameters"]["Page"];
                 /** @description Itens por página. */
                 pageSize?: components["parameters"]["PageSize"];
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -11852,6 +14498,11 @@ export interface operations {
                 limit?: components["parameters"]["InsightLimit"];
                 /** @description Inclui os dispensados, marcados com `dismissed = true`. */
                 includeDismissed?: components["parameters"]["IncludeDismissed"];
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -11883,6 +14534,11 @@ export interface operations {
                 limit?: components["parameters"]["InsightLimit"];
                 /** @description Inclui os dispensados, marcados com `dismissed = true`. */
                 includeDismissed?: components["parameters"]["IncludeDismissed"];
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -11910,6 +14566,11 @@ export interface operations {
             query: {
                 from: string;
                 to: string;
+                /**
+                 * @description Visão do consumo (ADR-022). `MINE` (padrão) = só a minha parte; `GROSS` = o consumo bruto (minha parte + a parte de terceiros ainda a
+                 *     receber ou já recebida). Não muda caixa, patrimônio, fatura nem dívida, que são sempre cheios.
+                 */
+                view?: components["parameters"]["View"];
             };
             header?: never;
             path?: never;
@@ -12040,6 +14701,892 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getOwnerStatement: {
+        parameters: {
+            query?: {
+                /** @description Primeiro mês (`AAAA-MM`), de 2000-01 a 2100-12. Padrão: o mês corrente em `America/Sao_Paulo`. */
+                from?: components["schemas"]["Competence"];
+                /** @description Quantidade de meses a partir de `from`, de 1 a 12 (padrão 3). Resumo (3) e projeção (12) usam o mesmo cálculo. */
+                months?: number;
+                /** @description Data do cálculo (padrão: hoje em `America/Sao_Paulo`), de 2000-01-01 a 2100-12-31. Define o que é `RECEIVED` e o que é `PLANNED`. */
+                asOf?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Resumo por mês. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OwnerStatement"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listPurchaseGroups: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["PurchaseGroupStatus"];
+                /** @description Página (1-indexada). */
+                page?: components["parameters"]["Page"];
+                /** @description Itens por página. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de grupos. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroupSlice"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createPurchaseGroup: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID gerado por tentativa de envio (S-72, S-87, S-237, S-244). **Opcional**: com a chave, repetir o mesmo corpo devolve o mesmo
+                 *     recurso (`201`, sem criar outro nem novo lançamento; vale 24 h, escopo por rota) e a mesma chave com outro corpo é
+                 *     `409 IDEMPOTENCY_KEY_REUSED`. Sem a chave, cada chamada cria um recurso novo. Em `POST /v1/debts`, `POST /v1/people` e
+                 *     `POST /v1/recurrences`. Envie sempre que o cliente puder repetir a chamada (duplo clique, retry de rede, resposta perdida).
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseGroupInput"];
+            };
+        };
+        responses: {
+            /** @description Grupo criado. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getPurchaseGroupCommitments: {
+        parameters: {
+            query: {
+                /** @description Competência final (`AAAA-MM`), de 2000-01 a 2100-12. */
+                until: components["schemas"]["Competence"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Comprometido. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroupCommitments"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getPurchaseGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Grupo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroup"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updatePurchaseGroup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseGroupUpdate"];
+            };
+        };
+        responses: {
+            /** @description Grupo atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    addPurchaseGroupMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseGroupMemberInput"];
+            };
+        };
+        responses: {
+            /** @description Grupo atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroup"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    removePurchaseGroupMember: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+                transactionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Grupo atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseGroup"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listSubscriptions: {
+        parameters: {
+            query?: {
+                status?: "ACTIVE" | "ENDED" | "ALL";
+                scope?: components["schemas"]["RecurrenceScope"];
+                /** @description Página (1-indexada). */
+                page?: components["parameters"]["Page"];
+                /** @description Itens por página. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Assinaturas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubscriptionList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listIncomeProfiles: {
+        parameters: {
+            query?: {
+                /** @description Padrão `ACTIVE`. */
+                status?: components["schemas"]["IncomeProfileStatus"];
+                /** @description Página (1-indexada). */
+                page?: components["parameters"]["Page"];
+                /** @description Itens por página. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de perfis. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeProfileSlice"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createIncomeProfile: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID gerado por tentativa de envio (S-72, S-87, S-237, S-244). **Opcional**: com a chave, repetir o mesmo corpo devolve o mesmo
+                 *     recurso (`201`, sem criar outro nem novo lançamento; vale 24 h, escopo por rota) e a mesma chave com outro corpo é
+                 *     `409 IDEMPOTENCY_KEY_REUSED`. Sem a chave, cada chamada cria um recurso novo. Em `POST /v1/debts`, `POST /v1/people` e
+                 *     `POST /v1/recurrences`. Envie sempre que o cliente puder repetir a chamada (duplo clique, retry de rede, resposta perdida).
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeProfileInput"];
+            };
+        };
+        responses: {
+            /** @description Perfil criado. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeProfile"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getIncomeProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description O perfil. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeProfile"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updateIncomeProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IncomeProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Perfil atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeProfile"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    archiveIncomeProfile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Perfil arquivado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomeProfile"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    previewIncomeProfile: {
+        parameters: {
+            query: {
+                /** @description Competência (`AAAA-MM`), de 2000-01 a 2100-12. */
+                month: components["schemas"]["Competence"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Prévia. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IncomePreview"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    generateIncomeOccurrences: {
+        parameters: {
+            query: {
+                from: components["schemas"]["Competence"];
+                to: components["schemas"]["Competence"];
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pagamentos gerados (ou já existentes). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GeneratedIncomeOccurrences"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listTaxTables: {
+        parameters: {
+            query: {
+                year: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tabelas. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxTableList"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createCardCashOut: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID gerado por tentativa de envio (S-72, S-87, S-237, S-244). **Opcional**: com a chave, repetir o mesmo corpo devolve o mesmo
+                 *     recurso (`201`, sem criar outro nem novo lançamento; vale 24 h, escopo por rota) e a mesma chave com outro corpo é
+                 *     `409 IDEMPOTENCY_KEY_REUSED`. Sem a chave, cada chamada cria um recurso novo. Em `POST /v1/debts`, `POST /v1/people` e
+                 *     `POST /v1/recurrences`. Envie sempre que o cliente puder repetir a chamada (duplo clique, retry de rede, resposta perdida).
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CardCashOutInput"];
+            };
+        };
+        responses: {
+            /** @description Empréstimo registrado. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Debt"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listAssets: {
+        parameters: {
+            query?: {
+                /** @description Padrão `ACTIVE`. */
+                status?: components["schemas"]["AssetStatus"];
+                /** @description Página (1-indexada). */
+                page?: components["parameters"]["Page"];
+                /** @description Itens por página. */
+                pageSize?: components["parameters"]["PageSize"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Página de ativos. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetSlice"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createAsset: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description UUID gerado por tentativa de envio (S-72, S-87, S-237, S-244). **Opcional**: com a chave, repetir o mesmo corpo devolve o mesmo
+                 *     recurso (`201`, sem criar outro nem novo lançamento; vale 24 h, escopo por rota) e a mesma chave com outro corpo é
+                 *     `409 IDEMPOTENCY_KEY_REUSED`. Sem a chave, cada chamada cria um recurso novo. Em `POST /v1/debts`, `POST /v1/people` e
+                 *     `POST /v1/recurrences`. Envie sempre que o cliente puder repetir a chamada (duplo clique, retry de rede, resposta perdida).
+                 */
+                "Idempotency-Key"?: components["parameters"]["IdempotencyKeyOptional"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetInput"];
+            };
+        };
+        responses: {
+            /** @description Ativo criado. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description O ativo. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updateAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetUpdate"];
+            };
+        };
+        responses: {
+            /** @description Ativo atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    archiveAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ativo arquivado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updateAssetBalance: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetBalanceInput"];
+            };
+        };
+        responses: {
+            /** @description Ativo atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Asset"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    simulatePurchase: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseSimulationInput"];
+            };
+        };
+        responses: {
+            /** @description Simulação (nada foi gravado). */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseSimulation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getNetWorthOverview: {
+        parameters: {
+            query?: {
+                /** @description Mês da base da reserva (`AAAA-MM`). Padrão: o mês corrente em `America/Sao_Paulo`. */
+                month?: components["schemas"]["Competence"];
+                /** @description Meta de cobertura em meses (1 a 60), só para o cálculo; não é gravada. */
+                targetMonths?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Visão do patrimônio. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NetWorthOverview"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updateCommitmentItemShares: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+                /** @description Posição do item no cronograma (1..n). */
+                position: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitmentSharesUpdate"];
+            };
+        };
+        responses: {
+            /** @description O compromisso atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Commitment"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    updateCommitmentClauses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommitmentClausesUpdate"];
+            };
+        };
+        responses: {
+            /** @description O compromisso atualizado. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Commitment"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    getCommitmentByPerson: {
+        parameters: {
+            query?: {
+                format?: "json" | "csv";
+            };
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description O recorte por pessoa. */
+            200: {
+                headers: {
+                    /** @description Só em `csv`: `attachment; filename="moneylog-imovel-por-pessoa.csv"`. */
+                    "Content-Disposition"?: string;
+                    /** @description `no-store` em `csv`. */
+                    "Cache-Control"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitmentByPerson"];
+                    "text/csv": string;
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
             500: components["responses"]["InternalServerError"];
         };

@@ -30,6 +30,7 @@ describe('list-filters', () => {
       to: '2026-10-31',
       competence: '2026-10',
       lens: 'CONSUMPTION',
+      amounts: 'MINE',
       type: null,
       accountId: null,
       categoryId: null,

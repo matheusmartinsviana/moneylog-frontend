@@ -5,15 +5,20 @@
 .narrow {
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  border: var(--border-width) solid var(--glass-panel-border);
+  border-radius: var(--radius-card);
+  background-color: var(--card-flat-bg);
+  list-style: none;
 }
 
 .wide {
   display: none;
   overflow-x: auto;
   padding: var(--space-2) var(--space-4);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-panel);
-  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--glass-panel-border);
+  border-radius: var(--radius-card);
+  background-color: var(--card-flat-bg);
 }
 
 .table {

@@ -22,6 +22,7 @@ import type {
 } from '~/modules/transactions/infra/responses/transaction.response';
 import { toDebtSummary } from '~/util/debt';
 import type { Money } from '~/util/money';
+import type { PersonShareLine, ShareInput } from '~/util/split';
 
 const money = (value: { amount: string; currency: string }): Money => ({
   amount: value.amount,
@@ -50,6 +51,7 @@ export function toFormValue(response: TransactionResponse): TransactionInput | n
         accountId,
         categoryId: categoryId ?? '',
         method: response.method ?? 'OTHER',
+        ...(response.type === 'EXPENSE' && response.nature ? { nature: response.nature } : {}),
         ...(response.type === 'INCOME'
           ? { incomeCompetence: response.incomeCompetence ?? null }
           : {}),
@@ -142,6 +144,14 @@ export function toTransaction(response: TransactionResponse): Transaction {
       : null,
     debt: response.debt ? toDebtSummary(response.debt) : null,
     shares: (response.shares ?? []).map(toDebtSummary),
+    splitMode: response.splitMode ?? null,
+    personShares: (response.personShares ?? []).map((line): PersonShareLine => ({
+      personId: line.personId,
+      bps: line.bps,
+      amount: line.amount ? money(line.amount) : null,
+    })),
+    myAmount: response.myAmount ? money(response.myAmount) : null,
+    thirdPartyAmount: response.thirdPartyAmount ? money(response.thirdPartyAmount) : null,
     incomeCompetence: response.incomeCompetence ?? null,
     recurrenceId: response.recurrenceId ?? null,
     occurrenceDate: response.occurrenceDate ?? null,
@@ -244,6 +254,7 @@ export function toRequestBody(input: TransactionInput): TransactionCreateRequest
         accountId: input.accountId,
         ...category(input.categoryId),
         ...(input.method ? { method: input.method } : {}),
+        ...(input.type === 'EXPENSE' && input.nature ? { nature: input.nature } : {}),
         ...(input.type === 'INCOME' && input.incomeCompetence
           ? { incomeCompetence: input.incomeCompetence }
           : {}),
@@ -295,6 +306,10 @@ export function toRequestBody(input: TransactionInput): TransactionCreateRequest
         cardId: input.cardId,
         ...category(input.categoryId),
         ...(input.installments !== 1 ? { installments: input.installments } : {}),
+        ...(input.lastDigits ? { lastDigits: input.lastDigits } : {}),
+        ...(input.split
+          ? { splitMode: input.split.mode, shares: [...toShareBody(input.split.shares)] }
+          : {}),
       };
     case 'LOAN_GIVEN':
       return {
@@ -322,6 +337,14 @@ export function toRequestBody(input: TransactionInput): TransactionCreateRequest
         debtId: input.debtId,
       };
   }
+}
+
+export function toShareBody(shares: readonly ShareInput[]): ShareInput[] {
+  return shares.map((share) => ({
+    personId: share.personId,
+    ...(share.bps === undefined ? {} : { bps: share.bps }),
+    ...(share.amount === undefined ? {} : { amount: share.amount }),
+  }));
 }
 
 function toNewDebt(debt: NewDebtInput) {

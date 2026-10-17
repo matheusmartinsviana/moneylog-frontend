@@ -1,0 +1,89 @@
+:host {
+  display: block;
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.fact--focus {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.fact--focus dd {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-medium);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.fact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}
+
+.fact dt {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.fact dd {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+}
+
+.fact--sub dt,
+.fact--sub dd {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+}
+
+.overlaps,
+.overlap__items,
+.list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.list-wrap {
+  overflow: hidden;
+}
+
+.overlap {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.overlap__title {
+  margin: 0;
+}
+
+.overlap__items {
+  gap: var(--space-1);
+}
+
+.overlap__item {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-1) var(--space-4);
+}

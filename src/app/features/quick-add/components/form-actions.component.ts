@@ -26,7 +26,7 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
         type="submit"
         class="button button--primary"
         data-cy="form-save"
-        [disabled]="saving()"
+        [disabled]="saving() || disabled()"
         [attr.aria-busy]="saving()"
       >
         {{ saving() ? t().entryForm.saving : (submitLabel() ?? t().entryForm.save) }}
@@ -53,6 +53,7 @@ export class FormActionsComponent {
   readonly banner = input<string | null>(null);
   readonly canRetry = input(false);
   readonly saving = input(false);
+  readonly disabled = input(false);
   readonly submitLabel = input<string>();
   readonly cancelLink = input<string | null>(null);
   readonly retry = output<void>();

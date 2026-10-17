@@ -1,4 +1,5 @@
 import type { Money } from '~/util/money';
+import type { ViewMode } from '~/util/view-mode';
 
 export interface Ref {
   readonly id: string;
@@ -45,6 +46,7 @@ export interface LargestExpense {
 }
 
 export interface MonthlySummary {
+  readonly view: ViewMode;
   readonly competence: string;
   readonly partial: boolean;
   readonly isProjection: boolean;

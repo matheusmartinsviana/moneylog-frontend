@@ -12,6 +12,7 @@ import type {
   DailyMessage,
   NotificationSettings,
   NotificationsQuery,
+  ProfilePhoto,
   PushConfig,
   PushSubscriptionInput,
   Reminder,
@@ -58,7 +59,14 @@ export function someSettings(overrides: Partial<NotificationSettings> = {}): Not
     quietHours: { from: '22:00', to: '07:00' },
     push: { enabled: false },
     displayName: null,
+    alerts: {
+      subscriptionUnusedDays: null,
+      invoiceDueLeadDays: 3,
+      documentDivergenceTolerance: '0.00',
+    },
     version: 3,
+    hasPhoto: false,
+    photoVersion: 0,
     ...overrides,
   };
 }
@@ -154,6 +162,31 @@ export class NotificationsGatewayStub extends NotificationsGateway {
     if (this.saveError) return throwError(() => new ProblemError(this.saveError as Problem));
     this.settingsValue = { ...settings, version: settings.version + 1 };
     return of(this.settingsValue);
+  }
+
+  uploaded: string[] = [];
+  removedPhoto = 0;
+  photoBlob = new Blob(['x'], { type: 'image/jpeg' });
+  photoContentCalls = 0;
+  uploadError: Problem | null = null;
+
+  uploadProfilePhoto(_file: Blob, fileName: string): Observable<ProfilePhoto> {
+    this.uploaded.push(fileName);
+    if (this.uploadError) return throwError(() => new ProblemError(this.uploadError as Problem));
+    const next = { hasPhoto: true, photoVersion: this.settingsValue.photoVersion + 1 };
+    this.settingsValue = { ...this.settingsValue, ...next };
+    return of(next);
+  }
+
+  profilePhotoContent(): Observable<Blob> {
+    this.photoContentCalls += 1;
+    return of(this.photoBlob);
+  }
+
+  removeProfilePhoto(): Observable<void> {
+    this.removedPhoto += 1;
+    this.settingsValue = { ...this.settingsValue, hasPhoto: false, photoVersion: 0 };
+    return of(undefined);
   }
 
   pushConfig(): Observable<PushConfig> {

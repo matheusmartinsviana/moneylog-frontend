@@ -28,6 +28,8 @@ const ITEMS = {
   cards: { key: 'cards', path: '/cards', icon: 'cards', activeOptions: PREFIX },
   accounts: { key: 'accounts', path: '/accounts', icon: 'accounts', activeOptions: PREFIX },
   planning: { key: 'planning', path: '/planning', icon: 'planning', activeOptions: PREFIX },
+  statement: { key: 'statement', path: '/statement', icon: 'chart', activeOptions: PREFIX },
+  simulator: { key: 'simulator', path: '/simulator', icon: 'adjust', activeOptions: PREFIX },
   people: { key: 'people', path: '/people', icon: 'people', activeOptions: PREFIX },
   notes: { key: 'notes', path: '/notes', icon: 'notes', activeOptions: PREFIX },
   import: { key: 'import', path: '/import', icon: 'import', activeOptions: PREFIX },
@@ -48,10 +50,12 @@ const ITEMS = {
 export const BOTTOM_NAV_ITEMS: readonly NavItem[] = [
   ITEMS.home,
   ITEMS.transactions,
-  ITEMS.quickAdd,
+  ITEMS.budgets,
   ITEMS.goals,
-  ITEMS.more,
+  ITEMS.settings,
 ];
+
+export type BottomNavKey = keyof AppI18n['shell']['bottomNavLabels'];
 
 export type NavGroupKey = keyof AppI18n['nav']['groups'];
 
@@ -71,6 +75,8 @@ export const SIDEBAR_GROUPS: readonly NavGroup[] = [
       ITEMS.goals,
       ITEMS.budgets,
       ITEMS.planning,
+      ITEMS.statement,
+      ITEMS.simulator,
     ],
   },
   {
@@ -99,9 +105,10 @@ export const SIDEBAR_MAIN_ITEMS: readonly NavItem[] = [
   ITEMS.accounts,
   ITEMS.cards,
   ITEMS.goals,
+  ITEMS.budgets,
   ITEMS.planning,
-  ITEMS.people,
-  ITEMS.notes,
+  ITEMS.statement,
+  ITEMS.simulator,
 ];
 export const SIDEBAR_MORE_ITEM: NavItem = ITEMS.more;
 export const SIDEBAR_SETTINGS_ITEM: NavItem = ITEMS.settings;

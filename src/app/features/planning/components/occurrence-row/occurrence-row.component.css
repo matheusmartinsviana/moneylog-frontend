@@ -6,11 +6,13 @@
 :host(.row) {
   display: grid;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-card);
-  background-color: var(--color-surface);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: var(--border-width) solid var(--color-border);
   list-style: none;
+}
+
+:host(.row:last-child) {
+  border-bottom: 0;
 }
 
 .row__main {
@@ -38,7 +40,10 @@
 }
 
 .row__amount {
-  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 .row__actions {
@@ -51,7 +56,7 @@
   :host(.row) {
     grid-template-columns: minmax(0, 3fr) minmax(0, 1.5fr) minmax(0, 2fr);
     align-items: center;
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-3) var(--space-5);
   }
 
   .row__actions {

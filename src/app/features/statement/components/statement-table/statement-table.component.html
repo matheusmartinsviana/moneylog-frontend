@@ -1,0 +1,142 @@
+<div
+  class="scroll"
+  data-cy="statement-scroll"
+  tabindex="0"
+  [attr.aria-label]="t().statement.tableCaption"
+>
+  <table class="table" data-cy="statement-table">
+    <caption class="visually-hidden">
+      {{
+        t().statement.tableCaption
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col" class="table__head table__rowhead">
+          <span class="visually-hidden">{{ t().statement.rowsLabel }}</span>
+        </th>
+        @for (column of columns(); track column.month.competence) {
+          <th
+            scope="col"
+            class="table__head table__num"
+            [class.is-negative]="column.month.negative"
+            [attr.data-cy]="'statement-month-' + column.month.competence"
+          >
+            {{ column.label }}
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="group" data-cy="statement-row-income">
+        <th scope="row" class="table__rowhead">{{ t().statement.income }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num">
+            <strong><app-money [value]="column.month.income.total" [animate]="true" /></strong>
+          </td>
+        }
+      </tr>
+      <tr class="detail" data-cy="statement-row-income-items">
+        <th scope="row" class="table__rowhead">{{ t().statement.incomeItems }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num">
+            <ul class="items">
+              @for (item of column.month.income.items; track $index) {
+                <li class="items__row" [attr.data-cy]="'statement-income-item-' + $index">
+                  <span class="items__meta">
+                    {{ dateLabel(item.date) }} ·
+                    {{
+                      item.status === 'RECEIVED'
+                        ? t().statement.incomeReceived
+                        : t().statement.incomePlanned
+                    }}
+                    @if (item.estimated) {
+                      · {{ t().statement.incomeEstimated }}
+                    }
+                  </span>
+                  <app-money [value]="item.amount" />
+                </li>
+              }
+            </ul>
+            @if (column.month.income.appliedToDebt; as applied) {
+              @if (hasAmount(applied.amount)) {
+                <p class="note">
+                  {{ t().statement.appliedToDebt }}: <app-money [value]="applied" />
+                </p>
+              }
+            }
+          </td>
+        }
+      </tr>
+
+      <tr class="group" data-cy="statement-row-outflow">
+        <th scope="row" class="table__rowhead">{{ t().statement.outflow }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num">
+            <strong><app-money [value]="column.month.outflow.total" [animate]="true" /></strong>
+          </td>
+        }
+      </tr>
+      <tr class="detail" data-cy="statement-row-cards">
+        <th scope="row" class="table__rowhead">
+          {{ showGross() ? t().statement.cardsGross : t().statement.cardsMine }}
+        </th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num">
+            <app-money
+              [value]="
+                showGross() ? column.month.outflow.cardsGross : column.month.outflow.cardsMine
+              "
+            />
+          </td>
+        }
+      </tr>
+      <tr class="detail" data-cy="statement-row-real-estate">
+        <th scope="row" class="table__rowhead">{{ t().statement.realEstate }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num"><app-money [value]="column.month.outflow.realEstateMine" /></td>
+        }
+      </tr>
+      <tr class="detail" data-cy="statement-row-fixed">
+        <th scope="row" class="table__rowhead">{{ t().statement.fixed }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num"><app-money [value]="column.month.outflow.fixed" /></td>
+        }
+      </tr>
+      <tr class="detail" data-cy="statement-row-variable">
+        <th scope="row" class="table__rowhead">{{ t().statement.variable }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num"><app-money [value]="column.month.outflow.variable" /></td>
+        }
+      </tr>
+
+      <tr class="result" data-cy="statement-row-surplus">
+        <th scope="row" class="table__rowhead">{{ t().statement.surplus }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td
+            class="table__num"
+            [class.is-negative]="column.month.negative"
+            [attr.data-cy]="'statement-surplus-' + column.month.competence"
+            [attr.data-negative]="column.month.negative"
+          >
+            <strong><app-money [value]="column.month.surplus" [animate]="true" /></strong>
+            @if (column.month.negative) {
+              <span class="flag">
+                <app-icon name="minus" [size]="14" />
+                {{ t().statement.negativeTag }}
+              </span>
+            }
+          </td>
+        }
+      </tr>
+      <tr class="result" data-cy="statement-row-end-balance">
+        <th scope="row" class="table__rowhead">{{ t().statement.endBalance }}</th>
+        @for (column of columns(); track column.month.competence) {
+          <td class="table__num">
+            <strong><app-money [value]="column.month.endBalance" [animate]="true" /></strong>
+          </td>
+        }
+      </tr>
+    </tbody>
+  </table>
+</div>

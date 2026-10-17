@@ -1,5 +1,4 @@
 <app-page-layout
-  fit
   [heading]="goal() ? name() : t().nav.goals"
   [description]="goal()?.description ?? undefined"
 >
@@ -41,9 +40,12 @@
     }
     @case ('ready') {
       @if (goal(); as g) {
-        <div class="fit-stack">
-          <div class="fit-scroll">
-            <section class="summary surface" data-cy="goal-summary">
+        <div class="page-grid">
+          <div class="stack span-7">
+            <section
+              class="summary glass-panel glass-panel--strong glass-panel--card"
+              data-cy="goal-summary"
+            >
               <p class="summary__tags">
                 <app-goal-stage-badge [stage]="g.stage" cy="goal-stage-badge" />
                 @if (g.kind === 'METRIC' && g.metric) {
@@ -54,7 +56,6 @@
                     </span>
                   }
                 }
-                <span class="tag" data-cy="goal-priority">{{ priority() }}</span>
                 <span class="tag" [class.tag--done]="g.status === 'ACHIEVED'" data-cy="goal-status">
                   {{ t().goals.status[g.status] }}
                 </span>
@@ -100,9 +101,9 @@
                 />
 
                 <dl class="facts">
-                  <div class="fact">
+                  <div class="fact fact--focus">
                     <dt class="fact__label">{{ t().goals.card.percentLabel }}</dt>
-                    <dd class="fact__value num" data-cy="goal-percent">{{ percent() }}</dd>
+                    <dd class="figure num" data-cy="goal-percent">{{ percent() }}</dd>
                   </div>
                   <div class="fact">
                     <dt class="fact__label">
@@ -171,40 +172,6 @@
                 </p>
               }
             </section>
-
-            @if (g.kind === 'SAVINGS') {
-              <app-section-container
-                [heading]="t().goals.photos.title"
-                data-cy="goal-photos-section"
-              >
-                @if (g.photos.length > 0) {
-                  <app-goal-gallery [goalId]="g.id" [goalName]="name()" [photos]="g.photos" />
-                } @else {
-                  <p class="empty-note" data-cy="goal-gallery-empty">
-                    {{ t().goals.photos.gallery.empty }}
-                  </p>
-                }
-                @if (g.status !== 'ARCHIVED') {
-                  <div class="photos-actions">
-                    <a
-                      class="button"
-                      [routerLink]="['/goals', g.id, 'edit']"
-                      data-cy="goal-photos-edit"
-                    >
-                      {{ t().goals.photos.gallery.add }}
-                    </a>
-                  </div>
-                  <app-goal-featured-switch
-                    cy="goal-featured"
-                    [featured]="g.featured"
-                    (changed)="detail.setFeatured(g.id, $event)"
-                  />
-                  @if (featuredError(); as message) {
-                    <p class="banner" role="alert" data-cy="goal-featured-error">{{ message }}</p>
-                  }
-                }
-              </app-section-container>
-            }
 
             @if (g.uncovered) {
               <div class="alert" role="status" data-cy="goal-uncovered">
@@ -277,11 +244,19 @@
                       {{ detail.busy() ? t().goals.payoff.confirming : t().goals.payoff.confirm }}
                     </button>
                   }
-                  <a class="button" routerLink="/planning/debts" data-cy="goal-view-debts">
+                  <a
+                    class="button button--soft"
+                    routerLink="/planning/debts"
+                    data-cy="goal-view-debts"
+                  >
                     {{ t().goals.payoff.viewDebts }}
                   </a>
                 } @else if (g.kind === 'METRIC') {
-                  <a class="button" [routerLink]="['/goals', g.id, 'edit']" data-cy="goal-edit">
+                  <a
+                    class="button button--soft"
+                    [routerLink]="['/goals', g.id, 'edit']"
+                    data-cy="goal-edit"
+                  >
                     {{ t().goals.detail.edit }}
                   </a>
                 } @else {
@@ -295,20 +270,24 @@
                   </button>
                   <button
                     type="button"
-                    class="button"
+                    class="button button--soft"
                     data-cy="goal-release"
                     [disabled]="!canRelease()"
                     (click)="openReserve(true)"
                   >
                     {{ t().goals.detail.release }}
                   </button>
-                  <a class="button" [routerLink]="['/goals', g.id, 'edit']" data-cy="goal-edit">
+                  <a
+                    class="button button--soft"
+                    [routerLink]="['/goals', g.id, 'edit']"
+                    data-cy="goal-edit"
+                  >
                     {{ t().goals.detail.edit }}
                   </a>
                 }
                 <button
                   type="button"
-                  class="button"
+                  class="button button--soft"
                   data-cy="goal-archive"
                   [disabled]="detail.busy()"
                   (click)="askArchive()"
@@ -327,11 +306,46 @@
                 </button>
               }
             </div>
+          </div>
+          <div class="stack span-5">
+            @if (g.kind === 'SAVINGS') {
+              <app-section-container
+                [heading]="t().goals.photos.title"
+                data-cy="goal-photos-section"
+              >
+                @if (g.photos.length > 0) {
+                  <app-goal-gallery [goalId]="g.id" [goalName]="name()" [photos]="g.photos" />
+                } @else {
+                  <p class="state-note" data-cy="goal-gallery-empty">
+                    {{ t().goals.photos.gallery.empty }}
+                  </p>
+                }
+                @if (g.status !== 'ARCHIVED') {
+                  <div class="photos-actions">
+                    <a
+                      class="button"
+                      [routerLink]="['/goals', g.id, 'edit']"
+                      data-cy="goal-photos-edit"
+                    >
+                      {{ t().goals.photos.gallery.add }}
+                    </a>
+                  </div>
+                  <app-goal-featured-switch
+                    cy="goal-featured"
+                    [featured]="g.featured"
+                    (changed)="detail.setFeatured(g.id, $event)"
+                  />
+                  @if (featuredError(); as message) {
+                    <p class="banner" role="alert" data-cy="goal-featured-error">{{ message }}</p>
+                  }
+                }
+              </app-section-container>
+            }
 
             @if (g.kind === 'SAVINGS') {
               <app-section-container [heading]="t().goals.detail.reservations">
                 @if (g.reservations.length === 0) {
-                  <p class="empty-note" data-cy="goal-no-reservations">
+                  <p class="state-note" data-cy="goal-no-reservations">
                     {{ t().goals.detail.noReservations }}
                   </p>
                 } @else {
@@ -343,7 +357,8 @@
                 }
               </app-section-container>
             }
-
+          </div>
+          <div class="span-12">
             <app-disclosure fieldId="goal-more" [heading]="t().brief.more" [headingLevel]="2">
               <div class="more">
                 <app-section-container

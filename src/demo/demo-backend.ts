@@ -10,21 +10,41 @@ import { Injectable } from '@angular/core';
 import { delay, Observable, of, throwError } from 'rxjs';
 
 import { aiStatus, insightsView } from '~/demo/demo-ai';
-import { addDays, localToday } from '~/demo/demo-dates';
+import { addDays, addMonthsKey, localToday } from '~/demo/demo-dates';
 import { debtOverviewView, ongoingPreviewView } from '~/demo/demo-debts';
 import {
   dailyMessage,
   importBatches,
   notificationList,
+  type DemoProfile,
   notificationSettings,
   reminderList,
 } from '~/demo/demo-etapa7';
 import { goalView } from '~/demo/demo-goals';
-import { demoPhotoBlob } from '~/demo/demo-photos';
-import { commitmentViews, thirdPartyReceivablesView } from '~/demo/demo-third-parties';
+import {
+  ownerStatementView,
+  purchaseSimulationView,
+  subscriptionListView,
+} from '~/demo/demo-owner';
+import { demoPhotoBlob, demoProfilePhotoBlob } from '~/demo/demo-photos';
+import {
+  assetViews,
+  incomePreviewView,
+  incomeProfileViews,
+  netWorthView,
+  purchaseGroupCommitmentsView,
+  purchaseGroupViews,
+  taxTablesView,
+} from '~/demo/demo-planning';
+import {
+  commitmentViews,
+  demoInstallments,
+  thirdPartyReceivablesView,
+} from '~/demo/demo-third-parties';
 import {
   accountView,
   cardView,
+  issuerExampleCardViews,
   noLimitCardView,
   categoryView,
   currentInvoice,
@@ -33,6 +53,7 @@ import {
   futureInstallments,
   incomeExpenses,
   invoiceSummary,
+  type DemoInvoiceDocument,
   invoiceView,
   listEntries,
   listOccurrences,
@@ -52,9 +73,18 @@ import {
   txView,
   upcomingView,
 } from '~/demo/demo-views';
-import { buildWorld, money, type S, type World } from '~/demo/demo-world';
+import { buildWorld, money, type InvoiceDef, type S, type World } from '~/demo/demo-world';
 
 class NotFound extends Error {}
+
+class DemoProblem extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+  ) {
+    super(code);
+  }
+}
 
 const DEMO_ERROR = { status: 409, code: 'DEMO_MODE' } as const;
 
@@ -62,6 +92,14 @@ const DEMO_ERROR = { status: 409, code: 'DEMO_MODE' } as const;
 export class DemoHttpBackend extends HttpBackend {
   private world: World | null = null;
   private dailyAi = false;
+  private readonly documents = new Map<string, DemoInvoiceDocument>();
+  private readonly expectedMonths = new Map<string, string | null>();
+  private readonly profile: DemoProfile = {
+    displayName: null,
+    hasPhoto: false,
+    photoVersion: 0,
+    version: 1,
+  };
 
   private get w(): World {
     this.world ??= buildWorld(localToday());
@@ -77,6 +115,7 @@ export class DemoHttpBackend extends HttpBackend {
       );
     } catch (error) {
       if (error instanceof NotFound) return this.problem(req, 404, 'NOT_FOUND');
+      if (error instanceof DemoProblem) return this.problem(req, error.status, error.code);
       return this.problem(req, DEMO_ERROR.status, DEMO_ERROR.code);
     }
   }
@@ -132,6 +171,9 @@ export class DemoHttpBackend extends HttpBackend {
         req.body as { installmentAmount: string; remainingInstallments: number },
       );
 
+    if (req.method === 'POST' && path === '/v1/simulations/purchase')
+      return purchaseSimulationView(w, req.body as Parameters<typeof purchaseSimulationView>[1]);
+
     if (req.method === 'POST' && path === '/v1/imports') return importBatches(w)[0]!.batch;
 
     if (req.method === 'PUT' && path === '/v1/settings/ai') {
@@ -139,7 +181,71 @@ export class DemoHttpBackend extends HttpBackend {
       return { dailyMessageEnabled: this.dailyAi };
     }
 
+    if (req.method === 'PUT' && path === '/v1/settings/notifications') {
+      const next = (req.body as { displayName?: string | null }).displayName;
+      this.profile.displayName = next?.trim() ? next.trim() : null;
+      this.profile.version += 1;
+      return notificationSettings(this.profile);
+    }
+    if (req.method === 'PUT' && path === '/v1/profile/photo') {
+      this.profile.hasPhoto = true;
+      this.profile.photoVersion += 1;
+      return { hasPhoto: true, photoVersion: this.profile.photoVersion };
+    }
+    if (req.method === 'DELETE' && path === '/v1/profile/photo') {
+      this.profile.hasPhoto = false;
+      this.profile.photoVersion = 0;
+      return null;
+    }
+
+    const documentAmount = /^\/v1\/invoices\/([^/]+)\/document-amount$/.exec(path);
+    if (req.method === 'PUT' && documentAmount) {
+      const inv = this.find(w.invoices, documentAmount[1]!);
+      const { documentAmount: amount } = req.body as { documentAmount: string | null };
+      if (amount !== null && (Number(amount) < 0 || !Number.isFinite(Number(amount)))) {
+        throw new DemoProblem(422, 'INVOICE_DOCUMENT_AMOUNT_INVALID');
+      }
+      const current = this.documentOf(inv);
+      const next = {
+        cents: amount === null ? null : Math.round(Number(amount) * 100),
+        version: current.version + 1,
+      };
+      this.documents.set(inv.id, next);
+      return invoiceView(w, inv, next);
+    }
+
+    const expectedMonth =
+      /^\/v1\/third-party-receivables\/([^/]+)\/installments\/([^/]+)\/people\/([^/]+)\/expected-month$/.exec(
+        path,
+      );
+    if (req.method === 'PUT' && expectedMonth) {
+      const [, transactionId, installmentId, personId] = expectedMonth;
+      const month = (req.body as { expectedMonth: string | null }).expectedMonth;
+      if (month !== null && !/^(20\d\d|2100)-(0[1-9]|1[0-2])$/.test(month)) {
+        throw new DemoProblem(422, 'RECEIVABLE_EXPECTED_MONTH_INVALID');
+      }
+      this.expectedMonths.set(installmentId!, month);
+      const installment = demoInstallments(w, this.expectedMonths).find(
+        (candidate) => candidate.installmentId === installmentId,
+      );
+      if (!installment) throw new NotFound();
+      if (Number(installment.pending.amount) <= 0) {
+        throw new DemoProblem(422, 'RECEIVABLE_ALREADY_RECEIVED');
+      }
+      return {
+        transactionId: transactionId!,
+        personId: personId!,
+        version: month === null ? 0 : 1,
+        installment,
+      } satisfies S['ThirdPartyExpectedMonth'];
+    }
+
     if (req.method !== 'GET') throw new Error('demo-read-only');
+
+    if (path === '/v1/profile/photo/content') {
+      if (!this.profile.hasPhoto) throw new NotFound();
+      return demoProfilePhotoBlob(this.profile.photoVersion);
+    }
 
     if (path === '/v1/dashboard/summary') return dashboardView(w);
     if (path === '/v1/dashboard/upcoming') return upcomingView(w);
@@ -155,7 +261,22 @@ export class DemoHttpBackend extends HttpBackend {
       );
     const summary = /^\/v1\/summaries\/(\d{4}-\d{2})$/.exec(path);
     if (summary) return summaryView(w, summary[1]!);
+    if (path === '/v1/owner-statement')
+      return ownerStatementView(w, q.get('from') ?? w.month, Math.min(num('months', 3), 12));
+    if (path === '/v1/subscriptions') return subscriptionListView(w);
     if (path === '/v1/search') return searchView(w, q.get('q') ?? '');
+    if (path === '/v1/income-profiles')
+      return paged(q.get('status') === 'ARCHIVED' ? [] : incomeProfileViews(w), page, pageSize);
+    const incomePreview = /^\/v1\/income-profiles\/([^/]+)\/preview$/.exec(path);
+    if (incomePreview) return incomePreviewView(w, q.get('month') ?? w.month);
+    if (path === '/v1/tax-tables') return taxTablesView(num('year', Number(w.month.slice(0, 4))));
+    if (path === '/v1/assets')
+      return paged(q.get('status') === 'ARCHIVED' ? [] : assetViews(w), page, pageSize);
+    if (path === '/v1/net-worth/overview') return netWorthView();
+    if (path === '/v1/purchase-groups')
+      return paged(q.get('status') === 'DONE' ? [] : purchaseGroupViews(w), page, pageSize);
+    if (path === '/v1/purchase-groups/commitments')
+      return purchaseGroupCommitmentsView(w, q.get('until') ?? addMonthsKey(w.month, 12));
 
     if (path === '/v1/accounts') {
       const list = w.accounts.map((a) => accountView(w, a));
@@ -201,15 +322,19 @@ export class DemoHttpBackend extends HttpBackend {
 
     if (path === '/v1/cards')
       return paged(
-        q.get('status') === 'ARCHIVED' ? [] : [cardView(w), noLimitCardView(w)],
+        q.get('status') === 'ARCHIVED'
+          ? []
+          : [cardView(w), noLimitCardView(w), ...issuerExampleCardViews(w)],
         page,
         pageSize,
       );
     const card = /^\/v1\/cards\/([^/]+)(?:\/([a-z-]+))?$/.exec(path);
     if (card) {
-      const noLimit = noLimitCardView(w);
-      if (card[1] === noLimit.id) {
-        if (card[2] === undefined) return noLimit;
+      const sample = [noLimitCardView(w), ...issuerExampleCardViews(w)].find(
+        (view) => view.id === card[1],
+      );
+      if (sample) {
+        if (card[2] === undefined) return sample;
         if (card[2] === 'invoices') return paged([], page, pageSize);
         if (card[2] === 'future-installments') return { total: money(0), byInvoice: [] };
         throw new NotFound();
@@ -238,7 +363,7 @@ export class DemoHttpBackend extends HttpBackend {
     const invoice = /^\/v1\/invoices\/([^/]+)(?:\/(payment-preview))?$/.exec(path);
     if (invoice) {
       const inv = this.find(w.invoices, invoice[1]!);
-      if (!invoice[2]) return invoiceView(w, inv);
+      if (!invoice[2]) return invoiceView(w, inv, this.documentOf(inv));
       const cents = Math.round(Number(q.get('amount')) * 100);
       const outstanding = inv.total - inv.paid;
       return {
@@ -271,7 +396,7 @@ export class DemoHttpBackend extends HttpBackend {
     }
     if (path === '/v1/debts/overview') return debtOverviewView(w, num('months', 12));
     if (path === '/v1/debts/third-party-receivables')
-      return thirdPartyReceivablesView(w, q.get('month'));
+      return thirdPartyReceivablesView(w, q.get('month'), this.expectedMonths);
     if (path === '/v1/commitments') {
       const list = commitmentViews(w);
       return paged(list, page, pageSize);
@@ -392,7 +517,7 @@ export class DemoHttpBackend extends HttpBackend {
     if (path === '/v1/reminders') {
       return paged(reminderList(w, q.get('includeDone') === 'true'), page, pageSize);
     }
-    if (path === '/v1/settings/notifications') return notificationSettings();
+    if (path === '/v1/settings/notifications') return notificationSettings(this.profile);
     if (path === '/v1/push/config') return { enabled: false, publicKey: null };
     if (path === '/v1/daily-message') return dailyMessage(w);
 
@@ -402,6 +527,17 @@ export class DemoHttpBackend extends HttpBackend {
     if (path === '/v1/settings/ai') return { dailyMessageEnabled: this.dailyAi };
 
     throw new NotFound();
+  }
+
+  private documentOf(inv: InvoiceDef): DemoInvoiceDocument {
+    const stored = this.documents.get(inv.id);
+    if (stored) return stored;
+    const seeded =
+      inv.id === currentInvoice(this.w)?.id
+        ? { cents: inv.total - 1250, version: 1 }
+        : { cents: null, version: 0 };
+    this.documents.set(inv.id, seeded);
+    return seeded;
   }
 
   private find<T extends { id: string }>(list: T[], id: string): T {
@@ -440,6 +576,9 @@ export class DemoHttpBackend extends HttpBackend {
           status: cur.status,
         },
         lateEntry: false,
+        myAmount: money(i === 0 ? total - base * (n - 1) : base),
+        thirdPartyAmount: money(0),
+        byPerson: [],
       })),
       total: money(total),
       availableLimitAfter: money(available),

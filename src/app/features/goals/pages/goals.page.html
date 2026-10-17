@@ -1,27 +1,29 @@
-<app-page-layout fit [heading]="t().nav.goals">
+<app-page-layout [heading]="t().nav.goals">
   <a pageActions class="button button--primary" routerLink="/goals/new" data-cy="goals-add">
     {{ t().goals.add }}
   </a>
-  <a pageActions class="button" routerLink="/goals/new-smart" data-cy="goals-add-smart">
-    {{ t().goals.addSmart }}
-  </a>
-  @if (!hasPayoff()) {
-    <button
-      pageActions
-      type="button"
-      class="button"
-      data-cy="goals-add-payoff"
-      [disabled]="creating.saving()"
-      [attr.aria-busy]="creating.saving()"
-      (click)="createPayoff()"
-    >
-      {{ creating.saving() ? t().goals.payoff.creating : t().goals.payoff.add }}
-    </button>
-  }
-  <div class="fit-stack">
+  <div class="stack">
     @if (createError(); as message) {
       <p class="banner" role="alert" data-cy="goals-payoff-error">{{ message }}</p>
     }
+
+    <div class="quiet-actions" data-cy="goals-secondary-actions">
+      <a class="button" routerLink="/goals/new-smart" data-cy="goals-add-smart">
+        {{ t().goals.addSmart }}
+      </a>
+      @if (!hasPayoff()) {
+        <button
+          type="button"
+          class="button"
+          data-cy="goals-add-payoff"
+          [disabled]="creating.saving()"
+          [attr.aria-busy]="creating.saving()"
+          (click)="createPayoff()"
+        >
+          {{ creating.saving() ? t().goals.payoff.creating : t().goals.payoff.add }}
+        </button>
+      }
+    </div>
 
     <nav
       class="tabs"
@@ -57,7 +59,7 @@
       </a>
     </nav>
 
-    <div class="fit-scroll">
+    <div class="stack">
       @switch (goals.state().status) {
         @case ('loading') {
           <div data-cy="goals-loading">
@@ -80,10 +82,10 @@
               />
             }
             @case ('ACHIEVED') {
-              <p class="empty-note" data-cy="goals-empty-achieved">{{ t().goals.emptyAchieved }}</p>
+              <p class="state-note" data-cy="goals-empty-achieved">{{ t().goals.emptyAchieved }}</p>
             }
             @default {
-              <p class="empty-note" data-cy="goals-empty-archived">{{ t().goals.emptyArchived }}</p>
+              <p class="state-note" data-cy="goals-empty-archived">{{ t().goals.emptyArchived }}</p>
             }
           }
         }

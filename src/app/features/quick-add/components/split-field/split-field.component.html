@@ -1,0 +1,139 @@
+@let g = group();
+<div
+  class="split"
+  role="group"
+  [formGroup]="g"
+  [attr.aria-label]="t().split.legend"
+  [attr.data-cy]="idPrefix() + '-field'"
+>
+  @switch (peopleStatus()) {
+    @case ('loading') {
+      <p class="split__note" role="status" [attr.data-cy]="idPrefix() + '-people-loading'">
+        {{ t().split.peopleLoading }}
+      </p>
+    }
+    @case ('error') {
+      <div class="split__error" role="alert" [attr.data-cy]="idPrefix() + '-people-error'">
+        <p>{{ t().split.peopleError }}</p>
+        <button
+          type="button"
+          class="button"
+          [attr.data-cy]="idPrefix() + '-people-retry'"
+          (click)="peopleRetry.emit()"
+        >
+          {{ t().split.peopleRetry }}
+        </button>
+      </div>
+    }
+  }
+
+  <app-segmented-control
+    formControlName="mode"
+    [fieldId]="idPrefix() + '-mode'"
+    [options]="modeOptions()"
+    [label]="t().split.modeLabel"
+  />
+
+  @if (includeOwnerVisible()) {
+    <app-switch
+      formControlName="includeOwner"
+      [fieldId]="idPrefix() + '-include-owner'"
+      [label]="t().split.includeOwner"
+    />
+  }
+
+  @if (ownerVisible()) {
+    <div
+      class="split__row"
+      role="group"
+      [attr.aria-label]="t().split.owner"
+      [attr.data-cy]="idPrefix() + '-owner'"
+      [formGroup]="g.controls.owner"
+    >
+      <p class="split__who">{{ t().split.owner }}</p>
+      @if (mode() === 'BPS') {
+        <app-text-field
+          formControlName="percent"
+          inputmode="decimal"
+          autocomplete="off"
+          [maxlength]="6"
+          [fieldId]="idPrefix() + '-owner-percent'"
+          [label]="t().split.percent"
+        />
+      } @else if (mode() === 'AMOUNT') {
+        <app-money-input
+          formControlName="amount"
+          [fieldId]="idPrefix() + '-owner-amount'"
+          [currency]="currency()"
+          [label]="t().split.amount"
+        />
+      }
+    </div>
+  }
+
+  @for (row of rows(); track row; let i = $index) {
+    <div
+      class="split__row"
+      role="group"
+      [attr.aria-label]="rowLabel(i)"
+      [attr.data-cy]="idPrefix() + '-row-' + i"
+      [formGroup]="row"
+    >
+      <app-person-field
+        [control]="row.controls.personId"
+        [fieldId]="idPrefix() + '-person-' + i"
+        [label]="t().split.person"
+        [people]="people()"
+        [createPerson]="createPerson()"
+      />
+      @if (mode() === 'BPS') {
+        <app-text-field
+          formControlName="percent"
+          inputmode="decimal"
+          autocomplete="off"
+          [maxlength]="6"
+          [fieldId]="idPrefix() + '-percent-' + i"
+          [label]="t().split.percent"
+        />
+      } @else if (mode() === 'AMOUNT') {
+        <app-money-input
+          formControlName="amount"
+          [fieldId]="idPrefix() + '-amount-' + i"
+          [currency]="currency()"
+          [label]="t().split.amount"
+        />
+      }
+      <button
+        type="button"
+        class="button split__remove"
+        [attr.data-cy]="idPrefix() + '-remove-' + i"
+        [attr.aria-label]="removeLabel(row, i)"
+        (click)="remove(i)"
+      >
+        {{ t().split.removeShort }}
+      </button>
+    </div>
+  }
+
+  @if (mode() === 'BPS') {
+    <p class="split__note">{{ t().split.percentHint }}</p>
+  } @else if (mode() === 'AMOUNT') {
+    <p class="split__note">{{ t().split.amountHint }}</p>
+  }
+
+  @if (problemText(); as message) {
+    <p class="split__problem" role="status" [attr.data-cy]="idPrefix() + '-problem'">
+      {{ message }}
+    </p>
+  }
+
+  <button
+    type="button"
+    class="button"
+    [attr.data-cy]="idPrefix() + '-add'"
+    [attr.aria-disabled]="rows().length >= MAX ? true : null"
+    (click)="add()"
+  >
+    {{ t().split.add }}
+  </button>
+</div>

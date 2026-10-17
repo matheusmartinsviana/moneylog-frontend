@@ -2,13 +2,21 @@ import { Provider } from '@angular/core';
 import { Observable, of } from 'rxjs';
 
 import { DebtsGateway, DebtsQuery } from '~/modules/debts/core/interfaces/debts.gateway';
-import type { Debt, DebtInput, DebtUpdate } from '~/modules/debts/core/types/debt';
+import type {
+  CardCashOutInput,
+  Debt,
+  DebtInput,
+  DebtUpdate,
+} from '~/modules/debts/core/types/debt';
 import { brl } from '~/testing/accounts-testing';
 import type { Slice } from '~/util/api/slice';
 
 export function aDebt(overrides: Partial<Debt> = {}): Debt {
   return {
     id: 'debt-1',
+    kind: 'PERSONAL',
+    channel: null,
+    effectiveRate: null,
     person: { id: 'person-1', name: 'João' },
     creditorName: null,
     direction: 'RECEIVABLE',
@@ -42,6 +50,7 @@ export class DebtsGatewayStub extends DebtsGateway {
   readonly calls: string[] = [];
   readonly creates: DebtInput[] = [];
   readonly createKeys: string[] = [];
+  readonly cashOuts: CardCashOutInput[] = [];
   readonly updates: DebtUpdate[] = [];
   readonly reasons: string[] = [];
   next: Observable<Debt> | null = null;
@@ -84,6 +93,29 @@ export class DebtsGatewayStub extends DebtsGateway {
           outstanding: brl(input.principal),
           status: 'OPEN',
           settlements: [],
+        }),
+      )
+    );
+  }
+
+  createCardCashOut(input: CardCashOutInput, idempotencyKey: string): Observable<Debt> {
+    this.createKeys.push(idempotencyKey);
+    this.calls.push(`cash-out:${input.cardId}`);
+    this.cashOuts.push(input);
+    return (
+      this.next ??
+      of(
+        aDebt({
+          id: 'debt-cash-out',
+          kind: 'CARD_CASH_OUT',
+          direction: 'PAYABLE',
+          person: null,
+          principal: brl(input.principal),
+          settled: brl('0.00'),
+          outstanding: brl(input.totalWithInterest ?? input.principal),
+          status: 'OPEN',
+          settlements: [],
+          effectiveRate: { monthlyBps: 372, annualBps: 5430 },
         }),
       )
     );

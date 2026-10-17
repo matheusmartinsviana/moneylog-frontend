@@ -21,6 +21,7 @@ import { MonthPickerComponent } from '~/app/common/components/forms/month-picker
 import { MoneyComponent } from '~/app/common/components/money/money.component';
 import { PageLayoutComponent } from '~/app/common/components/page-layout/page-layout.component';
 import { SectionContainerComponent } from '~/app/common/components/section-container/section-container.component';
+import { ViewToggleComponent } from '~/app/common/components/view-toggle/view-toggle.component';
 import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
@@ -33,6 +34,7 @@ import { MonthlySummaryFacade } from '~/modules/monthly-summary/core/facades/mon
 import { CategorySpendingFacade } from '~/modules/reports/core/facades/category-spending.facade';
 import { formatCompetence, todayIso } from '~/util/date';
 import { formatRatio } from '~/util/ratio';
+import { parseView, type ViewMode } from '~/util/view-mode';
 
 const MIN_MONTH = '2000-01';
 const MAX_MONTH = '2100-12';
@@ -54,6 +56,7 @@ const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
     MoneyComponent,
     PlanningNavComponent,
     SummaryBlockComponent,
+    ViewToggleComponent,
     ComparisonRowComponent,
   ],
   providers: [MonthlySummaryFacade, CategorySpendingFacade],
@@ -71,6 +74,9 @@ export class SummaryPage {
   protected readonly maxMonth = MAX_MONTH;
 
   readonly month = input<string>();
+  readonly view = input<string>();
+
+  protected readonly currentView = computed<ViewMode>(() => parseView(this.view()));
 
   protected readonly current = computed(() => {
     const month = this.month();
@@ -140,23 +146,35 @@ export class SummaryPage {
     effect(() => {
       const month = this.current();
       const valid = this.validMonth();
+      const view = this.currentView();
       untracked(() => {
         this.picker.setValue(valid ? month : null, { emitEvent: false });
         if (valid) {
-          this.summary.load(month);
-          this.categories.load(month);
+          this.summary.load(month, view);
+          this.categories.load(month, view);
         }
       });
     });
     this.picker.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       if (value !== null && MONTH.test(value) && value !== this.current()) {
-        void this.router.navigate(['/planning/summary', value]);
+        void this.router.navigate(['/planning/summary', value], {
+          queryParams: this.viewParams(this.currentView()),
+        });
       }
     });
   }
 
   protected retry(): void {
-    if (this.validMonth()) this.summary.load(this.current());
+    if (this.validMonth()) this.summary.load(this.current(), this.currentView());
+  }
+
+  protected changeView(view: ViewMode): void {
+    if (view === this.currentView()) return;
+    void this.router.navigate([], { queryParams: this.viewParams(view), replaceUrl: true });
+  }
+
+  private viewParams(view: ViewMode): { view: ViewMode | null } {
+    return { view: view === 'MINE' ? null : view };
   }
 
   protected goToCurrentMonth(): void {

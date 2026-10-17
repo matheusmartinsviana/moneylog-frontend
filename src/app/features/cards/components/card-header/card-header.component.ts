@@ -14,12 +14,18 @@ import { formatMoney, isPositive } from '~/util/money';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @let c = card();
-    <section class="header surface" data-cy="card-header">
+    <section class="header glass-panel glass-panel--strong glass-panel--card" data-cy="card-header">
+      <div class="header__focus">
+        <p class="caption">{{ t().cards.detail.totalCommittedLabel }}</p>
+        <p class="figure header__total" data-cy="card-total-committed">
+          <app-money [value]="c.totalCommitted" />
+        </p>
+      </div>
       <app-limit-meter [card]="c" />
-      <dl class="ledger">
-        <div class="ledger__row">
-          <dt class="ledger__label">{{ t().cards.detail.limitLabel }}</dt>
-          <dd class="ledger__value" data-cy="card-limit-value">
+      <dl class="header__facts">
+        <div class="header__fact">
+          <dt class="caption">{{ t().cards.detail.limitLabel }}</dt>
+          <dd class="header__value" data-cy="card-limit-value">
             @if (c.limit; as limit) {
               <app-money [value]="limit" />
             } @else {
@@ -28,35 +34,28 @@ import { formatMoney, isPositive } from '~/util/money';
           </dd>
         </div>
         @if (c.availableLimit; as available) {
-          <div class="ledger__row">
-            <dt class="ledger__label">{{ t().cards.detail.availableLabel }}</dt>
-            <dd class="ledger__value" [class.is-negative]="c.overLimit" data-cy="card-available">
+          <div class="header__fact">
+            <dt class="caption">{{ t().cards.detail.availableLabel }}</dt>
+            <dd class="header__value" [class.is-negative]="c.overLimit" data-cy="card-available">
               <app-money [value]="available" />
             </dd>
           </div>
         }
         @if (hasCredit()) {
-          <div class="ledger__row">
-            <dt class="ledger__label">{{ t().cards.detail.creditBalanceLabel }}</dt>
-            <dd class="ledger__value" data-cy="card-credit-balance">
+          <div class="header__fact">
+            <dt class="caption">{{ t().cards.detail.creditBalanceLabel }}</dt>
+            <dd class="header__value" data-cy="card-credit-balance">
               <app-money [value]="c.creditBalance" />
             </dd>
           </div>
         }
-        <div class="ledger__row ledger__row--total">
-          <dt class="ledger__label">{{ t().cards.detail.totalCommittedLabel }}</dt>
-          <dd class="ledger__value" data-cy="card-total-committed">
-            <app-money [value]="c.totalCommitted" />
-          </dd>
-        </div>
       </dl>
-      <p class="header__future num" data-cy="card-committed-future">{{ committedFuture() }}</p>
-      <p class="header__note">{{ t().cards.detail.committedFutureNote }}</p>
-      <p class="header__note" data-cy="card-days">{{ days() }}</p>
+      <p class="caption" data-cy="card-days">{{ days() }}</p>
+      <p class="caption header__future" data-cy="card-committed-future">{{ committedFuture() }}</p>
       @if (!c.closingConfirmed) {
         <div class="header__closing">
           <app-closing-badge [cardId]="c.id" />
-          <p class="header__note" data-cy="card-closing-hint">{{ t().cards.closing.hint }}</p>
+          <p class="caption" data-cy="card-closing-hint">{{ t().cards.closing.hint }}</p>
           <button
             type="button"
             class="button"
@@ -76,23 +75,47 @@ import { formatMoney, isPositive } from '~/util/money';
 
     .header {
       display: grid;
-      gap: var(--space-3);
+      gap: var(--space-4);
       padding: var(--space-5);
+    }
+
+    .header__focus {
+      display: grid;
+      gap: var(--space-1);
+    }
+
+    .header__total {
+      margin: 0;
+    }
+
+    .header__facts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+      gap: var(--space-3);
+      margin: 0;
+    }
+
+    .header__fact {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .header__value {
+      margin: 0;
+      font-size: var(--text-md);
+      font-weight: var(--weight-medium);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .header__value.is-negative {
+      color: var(--color-risk);
     }
 
     .header__closing {
       display: grid;
       justify-items: start;
       gap: var(--space-2);
-    }
-
-    .header__future {
-      font-weight: var(--weight-medium);
-    }
-
-    .header__note {
-      color: var(--color-text-muted);
-      font-size: var(--text-xs);
     }
   `,
 })

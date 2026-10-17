@@ -29,13 +29,19 @@ import { interpolate } from '~/app/common/i18n/interpolate';
 import { problemMessage } from '~/app/common/i18n/problem-message';
 import { ToastService } from '~/app/common/services/toast.service';
 import { PlanningNavComponent } from '~/app/features/planning/components/planning-nav/planning-nav.component';
+import { ThirdPartyInstallmentsComponent } from '~/app/features/planning/components/third-party-installments/third-party-installments.component';
 import {
   ReceiptPersonOption,
+  receiptMessage,
   ThirdPartyReceiptModalComponent,
 } from '~/app/features/planning/components/third-party-receipt-modal/third-party-receipt-modal.component';
 import { ThirdPartyReceiptFacade } from '~/modules/third-parties/core/facades/third-party-receipt.facade';
 import { ThirdPartyReceivablesFacade } from '~/modules/third-parties/core/facades/third-party-receivables.facade';
-import type { ThirdPartyItem } from '~/modules/third-parties/core/types/third-party';
+import {
+  KNOWN_ITEM_SOURCES,
+  type ThirdPartyItem,
+  type ThirdPartyReceipt,
+} from '~/modules/third-parties/core/types/third-party';
 import { formatCompetence, formatIsoDate } from '~/util/date';
 
 const MONTH = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -57,6 +63,7 @@ const MAX_MONTH = '2100-12';
     PlanningNavComponent,
     ConfirmDialogComponent,
     ThirdPartyReceiptModalComponent,
+    ThirdPartyInstallmentsComponent,
   ],
   providers: [ThirdPartyReceivablesFacade, ThirdPartyReceiptFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -80,7 +87,7 @@ export class ThirdPartiesPage implements OnInit {
       id: person.personId,
       name: person.name,
       expenses: person.items
-        .filter((item) => item.source === 'EXPENSE')
+        .filter((item) => item.source === 'EXPENSE' || item.source === 'CARD_SHARE')
         .map((item) => ({
           id: item.refId,
           label: item.description ?? this.t().thirdParties.people.noDescription,
@@ -138,10 +145,19 @@ export class ThirdPartiesPage implements OnInit {
     this.receivables.load(null);
   }
 
-  protected afterRecorded(): void {
+  protected afterRecorded(receipt: ThirdPartyReceipt): void {
     this.receiptOpen.set(false);
-    this.toast.show(this.t().thirdParties.receipts.toast.recorded);
+    this.toast.show(receiptMessage(receipt, this.t().thirdParties.receipts.toast));
     this.receivables.load();
+  }
+
+  protected sourceLabel(item: ThirdPartyItem): string {
+    const copy = this.t().thirdParties.people;
+    return KNOWN_ITEM_SOURCES.includes(item.source) ? copy.source[item.source] : copy.sourceOther;
+  }
+
+  protected competenceLabel(competence: string): string {
+    return formatCompetence(competence, this.locale());
   }
 
   protected askRemove(id: string): void {
@@ -183,6 +199,8 @@ export class ThirdPartiesPage implements OnInit {
 
   protected link(item: ThirdPartyItem): readonly string[] | null {
     if (item.source === 'DEBT') return ['/debts', item.refId];
-    return item.source === 'EXPENSE' ? ['/transactions', item.refId] : null;
+    return item.source === 'EXPENSE' || item.source === 'CARD_SHARE'
+      ? ['/transactions', item.refId]
+      : null;
   }
 }

@@ -1,4 +1,5 @@
 import type { Money } from '~/util/money';
+import type { PersonShareLine, SplitInput, SplitMode } from '~/util/split';
 
 export const RECURRENCE_CURRENCY = 'BRL';
 
@@ -54,6 +55,8 @@ export interface Recurrence {
   readonly ended: boolean;
   readonly nextOccurrence: string | null;
   readonly monthlyEstimate: Money;
+  readonly splitMode: SplitMode | null;
+  readonly shares: readonly PersonShareLine[];
   readonly version: number;
 }
 
@@ -72,6 +75,7 @@ export interface RecurrenceInput {
   readonly endDate: string | null;
   readonly maxOccurrences: number | null;
   readonly incomeCompetenceOffsetMonths?: 0 | 1;
+  readonly split?: SplitInput | null;
 }
 
 export interface RecurrenceUpdate {
@@ -83,6 +87,7 @@ export interface RecurrenceUpdate {
   readonly cardId: string | null;
   readonly endDate: string | null;
   readonly incomeCompetenceOffsetMonths?: 0 | 1;
+  readonly split?: SplitInput | null;
   readonly version: number;
 }
 

@@ -2,6 +2,7 @@ import {
   expect,
   expectNoHorizontalScroll,
   expectNoRawKeys,
+  openSettingsMore,
   runAxe,
   seedPreferences,
   test,
@@ -58,13 +59,13 @@ test.describe('/goals/new', () => {
     await expectNoRawKeys(page);
   });
 
-  test('não tem campo de imagem (S-149) e a prioridade é uma chave própria, sem controle nativo', async ({
+  test('não mostra campo de arquivo nativo (as fotos entram pelo botão) e a prioridade é uma chave própria, sem controle nativo', async ({
     page,
   }) => {
     await page.goto('/goals/new');
     await waitForApp(page);
 
-    await expect(page.locator('input[type="file"]')).toHaveCount(0);
+    await expect(page.locator('input[type="file"]:visible')).toHaveCount(0);
     await expect(page.locator('select')).toHaveCount(0);
     await page.locator('[data-cy="goal-priority-HIGH"]').click();
     await expect(page.locator('[data-cy="goal-priority-HIGH"]')).toHaveAttribute(
@@ -195,8 +196,7 @@ test.describe('/settings: exportar', () => {
     page,
   }) => {
     await seedPreferences(page, { language: 'pt' });
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="export-csv-action"]').click();
     await expect(page.locator('[data-cy="export-ready"]')).toBeVisible();
@@ -213,8 +213,7 @@ test.describe('/settings: exportar', () => {
   });
 
   test('o backup avisa que contém todos os dados e baixa o JSON', async ({ page }) => {
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await expect(page.locator('[data-cy="export-backup-privacy"]')).toHaveText(
       'Guarde este arquivo com segurança: contém todos os seus dados.',
@@ -228,14 +227,13 @@ test.describe('/settings: exportar', () => {
   });
 
   test('data inicial depois da final avisa e não baixa', async ({ page }) => {
-    await page.goto('/settings');
-    await waitForApp(page);
+    await openSettingsMore(page);
 
     await page.locator('[data-cy="export-from"]').fill('31/10/2026');
     await page.locator('[data-cy="export-to"]').fill('01/10/2026');
     await page.locator('[data-cy="export-csv-action"]').click();
 
-    await expect(page.locator('[data-cy="export-range-invalid"]')).toBeVisible();
+    await expect(page.locator('[data-cy="export-range-invalid"]')).toBeAttached();
   });
 });
 

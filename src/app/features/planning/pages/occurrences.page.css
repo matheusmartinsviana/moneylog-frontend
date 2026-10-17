@@ -3,7 +3,7 @@
 }
 
 .section-title {
-  margin: var(--space-5) 0 var(--space-2);
+  margin: var(--space-2) 0;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -15,7 +15,21 @@
 
 .list {
   display: grid;
-  gap: var(--space-3);
   margin: 0;
   padding: 0;
+}
+
+.list-wrap {
+  overflow: hidden;
+}
+
+.more {
+  min-height: var(--touch-min);
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+section + section {
+  margin-top: var(--space-5);
 }

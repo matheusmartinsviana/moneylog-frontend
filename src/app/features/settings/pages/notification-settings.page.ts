@@ -7,11 +7,20 @@ import {
   OnInit,
   untracked,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
+} from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { ErrorStateComponent } from '~/app/common/components/error-state/error-state.component';
 import type { ChoiceOption } from '~/app/common/components/forms/choice-option';
+import { MoneyInputComponent } from '~/app/common/components/forms/money-input/money-input.component';
+import { NumberStepperComponent } from '~/app/common/components/forms/number-stepper/number-stepper.component';
 import { SelectComponent } from '~/app/common/components/forms/select/select.component';
 import { SwitchComponent } from '~/app/common/components/forms/switch/switch.component';
 import { TextFieldComponent } from '~/app/common/components/forms/text-field/text-field.component';
@@ -23,6 +32,8 @@ import { problemMessage } from '~/app/common/i18n/problem-message';
 import { NotificationSettingsFacade } from '~/modules/notifications/core/facades/notification-settings.facade';
 import { PushFacade } from '~/modules/notifications/core/facades/push.facade';
 import {
+  ALERT_KINDS,
+  BASE_KINDS,
   CONFIGURABLE_KINDS,
   type ConfigurableKind,
   type NotificationSettings,
@@ -31,6 +42,18 @@ import {
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const FREQUENCIES: readonly SummaryFrequency[] = ['DAILY', 'ONLY_DUE', 'OFF'];
+const UNUSED_DAYS = /^\d{1,4}$/;
+const UNUSED_DAYS_MAX = 3650;
+const LEAD_DAYS_MIN = 1;
+const LEAD_DAYS_MAX = 30;
+
+function unusedDaysValidator(control: AbstractControl): ValidationErrors | null {
+  const value = String(control.value ?? '').trim();
+  if (value === '') return null;
+  if (!UNUSED_DAYS.test(value)) return { pattern: true };
+  const days = Number(value);
+  return days >= 1 && days <= UNUSED_DAYS_MAX ? null : { pattern: true };
+}
 
 @Component({
   selector: 'app-notification-settings-page',
@@ -40,6 +63,8 @@ const FREQUENCIES: readonly SummaryFrequency[] = ['DAILY', 'ONLY_DUE', 'OFF'];
     PageLayoutComponent,
     SectionContainerComponent,
     ErrorStateComponent,
+    MoneyInputComponent,
+    NumberStepperComponent,
     SelectComponent,
     SwitchComponent,
     TextFieldComponent,
@@ -54,7 +79,11 @@ export class NotificationSettingsPage implements OnInit {
   protected readonly t = inject(I18nService).t;
   protected readonly facade = inject(NotificationSettingsFacade);
   protected readonly push = inject(PushFacade);
-  protected readonly kinds = CONFIGURABLE_KINDS;
+  protected readonly baseKinds = BASE_KINDS;
+  protected readonly alertKinds = ALERT_KINDS;
+  protected readonly leadMin = LEAD_DAYS_MIN;
+  protected readonly leadMax = LEAD_DAYS_MAX;
+  protected readonly currency = 'BRL';
 
   protected readonly form = new FormGroup({
     dailyEnabled: new FormControl(true, { nonNullable: true }),
@@ -72,6 +101,13 @@ export class NotificationSettingsPage implements OnInit {
       validators: [Validators.required, Validators.pattern(TIME)],
     }),
     displayName: new FormControl('', { nonNullable: true, validators: [Validators.maxLength(60)] }),
+    unusedDays: new FormControl('', { nonNullable: true, validators: [unusedDaysValidator] }),
+    leadDays: new FormControl<number | null>(3, [
+      Validators.required,
+      Validators.min(LEAD_DAYS_MIN),
+      Validators.max(LEAD_DAYS_MAX),
+    ]),
+    tolerance: new FormControl<string | null>('0.00', [Validators.required]),
     kinds: new FormGroup(
       Object.fromEntries(
         CONFIGURABLE_KINDS.map((kind) => [kind, new FormControl(true, { nonNullable: true })]),
@@ -148,7 +184,15 @@ export class NotificationSettingsPage implements OnInit {
       quietHours: { from: value.quietFrom, to: value.quietTo },
       push: current.push,
       displayName: value.displayName.trim() === '' ? null : value.displayName.trim(),
+      alerts: {
+        subscriptionUnusedDays:
+          value.unusedDays.trim() === '' ? null : Number(value.unusedDays.trim()),
+        invoiceDueLeadDays: value.leadDays ?? current.alerts.invoiceDueLeadDays,
+        documentDivergenceTolerance: value.tolerance ?? current.alerts.documentDivergenceTolerance,
+      },
       version: current.version,
+      hasPhoto: current.hasPhoto,
+      photoVersion: current.photoVersion,
     };
     this.facade.save(next);
   }
@@ -162,6 +206,12 @@ export class NotificationSettingsPage implements OnInit {
         quietFrom: settings.quietHours.from,
         quietTo: settings.quietHours.to,
         displayName: settings.displayName ?? '',
+        unusedDays:
+          settings.alerts.subscriptionUnusedDays === null
+            ? ''
+            : String(settings.alerts.subscriptionUnusedDays),
+        leadDays: settings.alerts.invoiceDueLeadDays,
+        tolerance: settings.alerts.documentDivergenceTolerance,
         kinds: Object.fromEntries(
           CONFIGURABLE_KINDS.map((kind) => [kind, settings.kinds[kind] !== false]),
         ),

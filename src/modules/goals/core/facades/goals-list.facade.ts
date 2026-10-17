@@ -45,6 +45,10 @@ export class GoalsListFacade {
     const state = this.current();
     return state.status === 'error' ? state.problem : null;
   });
+  readonly featured = computed(() => {
+    const goals = (this.data() ?? []).filter((goal) => goal.status === 'ACTIVE');
+    return goals.find((goal) => goal.featured) ?? goals[0] ?? null;
+  });
 
   constructor() {
     this.loads

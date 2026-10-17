@@ -2,11 +2,6 @@
   display: block;
 }
 
-.form {
-  display: grid;
-  gap: var(--space-4);
-}
-
 .grid {
   display: grid;
   gap: var(--space-3);
@@ -19,4 +14,10 @@
 .grid--kinds {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
   column-gap: var(--space-4);
+}
+
+.grid--alerts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  column-gap: var(--space-4);
+  margin-top: var(--space-4);
 }

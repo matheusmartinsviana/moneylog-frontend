@@ -7,11 +7,31 @@ export type NotificationKind =
   | 'DAILY_SUMMARY'
   | 'REMINDER'
   | 'GOAL_DEADLINE'
-  | 'GROUPED';
+  | 'GROUPED'
+  | 'INVOICE_DUE_AUTODEBIT_OFF'
+  | 'NEGATIVE_MONTH_PROJECTED'
+  | 'NEW_DEBT_BEFORE_FINANCING'
+  | 'CARD_CASH_OUT_COST'
+  | 'SUBSCRIPTION_OVERLAP'
+  | 'SUBSCRIPTION_UNUSED'
+  | 'WEEKLY_CHARGE'
+  | 'THIRD_PARTY_OVERDUE'
+  | 'BALANCE_BELOW_REAL_ESTATE'
+  | 'DOCUMENT_DIVERGENCE';
 
-export type NotificationRefType = 'CARD' | 'DEBT' | 'RECURRENCE' | 'GOAL' | 'REMINDER' | 'USER';
+export type NotificationRefType =
+  | 'CARD'
+  | 'DEBT'
+  | 'RECURRENCE'
+  | 'GOAL'
+  | 'REMINDER'
+  | 'USER'
+  | 'COMMITMENT'
+  | 'ASSET'
+  | 'TRANSACTION'
+  | 'INVOICE';
 
-export const CONFIGURABLE_KINDS = [
+export const BASE_KINDS = [
   'INVOICE_DUE',
   'DEBT_COLLECT',
   'DEBT_PAYABLE_DUE',
@@ -19,6 +39,21 @@ export const CONFIGURABLE_KINDS = [
   'COMMITTED_NEXT_MONTH',
   'GOAL_DEADLINE',
 ] as const;
+
+export const ALERT_KINDS = [
+  'INVOICE_DUE_AUTODEBIT_OFF',
+  'NEGATIVE_MONTH_PROJECTED',
+  'NEW_DEBT_BEFORE_FINANCING',
+  'CARD_CASH_OUT_COST',
+  'SUBSCRIPTION_OVERLAP',
+  'SUBSCRIPTION_UNUSED',
+  'WEEKLY_CHARGE',
+  'THIRD_PARTY_OVERDUE',
+  'BALANCE_BELOW_REAL_ESTATE',
+  'DOCUMENT_DIVERGENCE',
+] as const;
+
+export const CONFIGURABLE_KINDS = [...BASE_KINDS, ...ALERT_KINDS] as const;
 export type ConfigurableKind = (typeof CONFIGURABLE_KINDS)[number];
 
 export interface AppNotification {
@@ -68,6 +103,18 @@ export interface ReminderInput {
 
 export type SummaryFrequency = 'DAILY' | 'ONLY_DUE' | 'OFF';
 
+export interface AlertSettings {
+  readonly subscriptionUnusedDays: number | null;
+  readonly invoiceDueLeadDays: number;
+  readonly documentDivergenceTolerance: string;
+}
+
+export const DEFAULT_ALERT_SETTINGS: AlertSettings = {
+  subscriptionUnusedDays: null,
+  invoiceDueLeadDays: 3,
+  documentDivergenceTolerance: '0.00',
+};
+
 export interface NotificationSettings {
   readonly dailySummary: {
     readonly enabled: boolean;
@@ -78,8 +125,18 @@ export interface NotificationSettings {
   readonly quietHours: { readonly from: string; readonly to: string };
   readonly push: { readonly enabled: boolean };
   readonly displayName: string | null;
+  readonly alerts: AlertSettings;
   readonly version: number;
+  readonly hasPhoto: boolean;
+  readonly photoVersion: number;
 }
+
+export interface ProfilePhoto {
+  readonly hasPhoto: boolean;
+  readonly photoVersion: number;
+}
+
+export const PROFILE_PHOTO_ACCEPT = '.jpg,.jpeg,.png';
 
 export interface PushConfig {
   readonly enabled: boolean;

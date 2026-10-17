@@ -1,3 +1,5 @@
+import type { Page } from '@playwright/test';
+
 import {
   expect,
   expectNoHorizontalScroll,
@@ -14,7 +16,13 @@ const NATIVE =
   'select, datalist, details, summary, dialog, progress, meter, [popover], [title]:not(svg *), ' +
   'input[type=date], input[type=month], input[type=week], input[type=time], input[type=datetime-local], ' +
   'input[type=checkbox], input[type=radio], input[type=range], input[type=color], ' +
-  'input[type=search], input[type=number]';
+  'input[type=number]';
+
+async function openFilters(page: Page): Promise<void> {
+  const toggle = page.locator('[data-cy="filters-toggle"]');
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+}
 
 test.describe('guarda de runtime: nenhum controle nativo', () => {
   for (const [name, viewport] of Object.entries(VIEWPORTS)) {
@@ -35,8 +43,11 @@ test.describe('guarda de runtime: nenhum controle nativo', () => {
             .locator('input[type=file]')
             .evaluateAll(
               (els) =>
-                els.filter((el) => !el.closest('app-file-picker') || !el.hasAttribute('hidden'))
-                  .length,
+                els.filter(
+                  (el) =>
+                    !(el.closest('app-file-picker') ?? el.closest('app-files-button')) ||
+                    !el.hasAttribute('hidden'),
+                ).length,
             );
           expect(strayFiles, `${route.path} tem input file fora do FilePicker`).toBe(0);
         }
@@ -102,6 +113,7 @@ test.describe('Movimentações: filtros próprios', () => {
     await page.goto('/transactions');
     await waitForApp(page);
 
+    await openFilters(page);
     const from = page.locator('[data-cy="filter-from"]');
     await from.fill('');
     await from.pressSequentially('01092026');
@@ -155,6 +167,7 @@ test.describe('Movimentações: filtros próprios', () => {
     await page.goto('/transactions?view=entries');
     await waitForApp(page);
 
+    await openFilters(page);
     await page.locator('[data-cy="filter-competence"]').click();
     await expect(page.getByRole('dialog', { name: 'Escolher mês' })).toBeVisible();
     await page.locator('[data-cy="filter-competence-grid-prev-year"]').click();

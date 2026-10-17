@@ -46,7 +46,6 @@ import { InsightsFacade } from '~/modules/ai/core/facades/insights.facade';
     .ins {
       display: grid;
       gap: var(--space-5);
-      max-width: 44rem;
     }
   `,
 })

@@ -4,9 +4,13 @@ import { expect, seedMockResponses, seedPreferences, test, waitForApp } from './
 import { homeResponses, upcoming } from './support/home-fixtures';
 
 const SCREENS = [
-  { name: '1280x720', width: 1280, height: 720 },
-  { name: '1440x800', width: 1440, height: 800 },
-  { name: '390x844', width: 390, height: 844 },
+  { name: '1200x800', width: 1200, height: 800, rolaPagina: false },
+  { name: '1280x720', width: 1280, height: 720, rolaPagina: false },
+  { name: '1440x900', width: 1440, height: 900, rolaPagina: false },
+  { name: '768x1024', width: 768, height: 1024, rolaPagina: true },
+  { name: '1024x768', width: 1024, height: 768, rolaPagina: true },
+  { name: '1199x800', width: 1199, height: 800, rolaPagina: true },
+  { name: '390x844', width: 390, height: 844, rolaPagina: true },
 ] as const;
 const THEMES = ['light', 'dark'] as const;
 
@@ -36,9 +40,9 @@ async function measure(page: Page) {
     const scrollsX = (el: Element): boolean => {
       const overflow = getComputedStyle(el).overflowX;
       if (el.clientWidth <= 1) return false;
+      if (el.matches('.np__count, .lc__tick') || el.querySelector('.np__count')) return false;
       return el.scrollWidth > el.clientWidth + 4 && overflow !== 'auto' && overflow !== 'scroll';
     };
-    const dash = document.querySelector('[data-cy="home-dashboard"]');
     return {
       pageHeight: doc.scrollHeight,
       innerHeight: window.innerHeight,
@@ -47,14 +51,13 @@ async function measure(page: Page) {
       horizontal: [content, ...content.querySelectorAll('*')]
         .filter(scrollsX)
         .map((el) => `${el.tagName.toLowerCase()}.${String(el.className)}`.slice(0, 80)),
-      panelScroll: dash ? dash.scrollHeight - dash.clientHeight : 0,
     };
   });
 }
 
 for (const screen of SCREENS) {
   for (const theme of THEMES) {
-    test(`Dado ${screen.name} no tema ${theme} em português, quando abro o Início, então ele cabe na tela sem rolar`, async ({
+    test(`Dado ${screen.name} no tema ${theme} em português, quando abro o Início, então ${screen.rolaPagina ? 'não rola na horizontal' : 'a página não rola e o conteúdo rola dentro dos painéis, sem cortes'}`, async ({
       page,
     }, testInfo) => {
       await page.setViewportSize({ width: screen.width, height: screen.height });
@@ -68,17 +71,26 @@ for (const screen of SCREENS) {
       await page.goto('/');
       await waitForApp(page);
       await expect(page.locator('[data-cy="home-dashboard"]')).toBeVisible();
-      await expect(page.locator('[data-cy="home-overview-chart"]')).toBeVisible();
+      await expect(page.locator('[data-cy="home-chart-panel"]')).toBeVisible();
       await page.waitForTimeout(600);
 
       const m = await measure(page);
-      expect(m.pageHeight, 'a página não rola na vertical').toBeLessThanOrEqual(m.innerHeight);
+      if (!screen.rolaPagina) {
+        expect(m.pageHeight, 'a página não rola na vertical').toBeLessThanOrEqual(m.innerHeight);
+      }
       expect(m.pageWidth, 'a página não rola na horizontal').toBeLessThanOrEqual(m.innerWidth);
       expect(m.horizontal, 'nenhum elemento com corte ou rolagem horizontal').toEqual([]);
-      expect(
-        m.panelScroll,
-        'o painel do Início não precisa de rolagem própria',
-      ).toBeLessThanOrEqual(1);
+      if (!screen.rolaPagina) {
+        const hidden = await page.evaluate(() => {
+          const grid = document
+            .querySelector('[data-cy="home-dashboard"]')!
+            .getBoundingClientRect();
+          return [...document.querySelectorAll('[data-cy^="home-col-"]')]
+            .map((col) => col.getBoundingClientRect())
+            .filter((rect) => rect.bottom > grid.bottom + 8 || rect.top < grid.top - 8).length;
+        });
+        expect(hidden, 'as colunas ficam dentro do painel e rolam por dentro').toBe(0);
+      }
     });
   }
 }

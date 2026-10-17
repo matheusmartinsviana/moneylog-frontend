@@ -46,6 +46,8 @@ export function aCardResponse(overrides: Partial<CardResponse> = {}): CardRespon
     committedFuture: brl('1000.00'),
     closingConfirmed: true,
     archivable: false,
+    autoDebit: null,
+    lastDigits: [],
     version: 2,
     createdAt: '2026-10-01T12:00:00Z',
     updatedAt: '2026-10-01T12:00:00Z',
@@ -56,6 +58,9 @@ export function aCardResponse(overrides: Partial<CardResponse> = {}): CardRespon
 export function anInvoiceResponse(overrides: Partial<InvoiceResponse> = {}): InvoiceResponse {
   return {
     ...anInvoiceSummaryResponse(),
+    myShare: brl('1283.00'),
+    thirdPartyShare: brl('0.00'),
+    shareByPerson: [],
     items: [
       {
         kind: 'INSTALLMENT',

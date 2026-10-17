@@ -3,13 +3,34 @@ import { Observable, of } from 'rxjs';
 
 import { ThirdPartiesGateway } from '~/modules/third-parties/core/interfaces/third-parties.gateway';
 import type {
+  ThirdPartyExpectedMonth,
+  ThirdPartyExpectedMonthInput,
   ThirdPartyExpense,
   ThirdPartyExpenseInput,
+  ThirdPartyInstallment,
   ThirdPartyReceipt,
   ThirdPartyReceiptInput,
   ThirdPartyReceivables,
 } from '~/modules/third-parties/core/types/third-party';
 import { brl } from '~/testing/accounts-testing';
+
+export function anInstallment(
+  overrides: Partial<ThirdPartyInstallment> = {},
+): ThirdPartyInstallment {
+  return {
+    installmentId: 'inst-1',
+    number: 1,
+    total: 3,
+    consumptionMonth: '2026-10',
+    dueMonth: '2026-11',
+    expectedMonth: '2026-11',
+    overridden: false,
+    owed: brl('100.00'),
+    received: brl('0.00'),
+    pending: brl('100.00'),
+    ...overrides,
+  };
+}
 
 export function aReceivables(
   overrides: Partial<ThirdPartyReceivables> = {},
@@ -26,6 +47,7 @@ export function aReceivables(
         owed: brl('800.00'),
         received: brl('100.00'),
         pending: brl('700.00'),
+        months: [],
         items: [
           {
             source: 'EXPENSE',
@@ -37,6 +59,7 @@ export function aReceivables(
             received: brl('100.00'),
             pending: brl('200.00'),
             status: 'PARTIAL',
+            installments: [],
           },
           {
             source: 'DEBT',
@@ -48,6 +71,7 @@ export function aReceivables(
             received: brl('0.00'),
             pending: brl('500.00'),
             status: 'OPEN',
+            installments: [],
           },
         ],
       },
@@ -89,6 +113,8 @@ export class ThirdPartiesGatewayStub extends ThirdPartiesGateway {
   mark$: Observable<ThirdPartyExpense> | null = null;
   recordReceipt$: Observable<ThirdPartyReceipt> | null = null;
   deleteReceipt$: Observable<void> | null = null;
+  expectedMonth$: Observable<ThirdPartyExpectedMonth> | null = null;
+  readonly expectedMonthCalls: ThirdPartyExpectedMonthInput[] = [];
   readonly receipts: { input: ThirdPartyReceiptInput; key: string }[] = [];
   readonly deletes: string[] = [];
   readonly gets: (string | null)[] = [];
@@ -123,6 +149,25 @@ export class ThirdPartiesGatewayStub extends ThirdPartiesGateway {
         amount: brl(input.amount),
         receivedOn: input.receivedOn,
         note: input.note,
+        settlement: input.accountId ? 'ACCOUNT' : 'ALREADY_IN_BALANCE',
+        ledgerEffect: input.accountId ? 'ACCOUNT_MOVEMENT' : 'NONE',
+      })
+    );
+  }
+
+  changeExpectedMonth(input: ThirdPartyExpectedMonthInput): Observable<ThirdPartyExpectedMonth> {
+    this.expectedMonthCalls.push(input);
+    return (
+      this.expectedMonth$ ??
+      of({
+        transactionId: input.transactionId,
+        personId: input.personId,
+        version: input.expectedMonth === null ? 0 : 1,
+        installment: anInstallment({
+          installmentId: input.installmentId,
+          expectedMonth: input.expectedMonth ?? '2026-11',
+          overridden: input.expectedMonth !== null,
+        }),
       })
     );
   }

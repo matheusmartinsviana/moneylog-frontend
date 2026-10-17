@@ -109,7 +109,7 @@ export const DIFF_PAGE = 300;
       padding: var(--space-4);
       border: var(--border-width) solid var(--color-warning);
       border-radius: var(--radius-card);
-      background-color: var(--color-surface);
+      background-color: var(--card-flat-bg);
     }
 
     .conflict p,

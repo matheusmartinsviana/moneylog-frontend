@@ -57,7 +57,7 @@
     }
     @case ('empty') {
       @if (people.query() !== '') {
-        <p class="empty-note" role="status" data-cy="people-empty-search">
+        <p class="state-note" role="status" data-cy="people-empty-search">
           {{ t().people.emptySearch }}
         </p>
       } @else if (filter() === 'ACTIVE') {
@@ -68,7 +68,7 @@
           illustration="grid"
         />
       } @else {
-        <p class="empty-note" data-cy="people-empty-archived">{{ t().people.emptyArchived }}</p>
+        <p class="state-note" data-cy="people-empty-archived">{{ t().people.emptyArchived }}</p>
       }
     }
     @case ('error') {
@@ -82,7 +82,7 @@
           <span>{{ t().people.columns.nextDue }}</span>
           <span class="table-head__actions">{{ t().people.columns.actions }}</span>
         </div>
-        <ul class="list" data-cy="people-list">
+        <ul class="list card-flat" data-cy="people-list">
           @for (person of data; track person.id) {
             <li
               app-person-row

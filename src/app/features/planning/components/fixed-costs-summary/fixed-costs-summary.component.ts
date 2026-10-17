@@ -10,7 +10,7 @@ import type { SummaryState } from '~/modules/recurrences/core/facades/recurrence
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section
-      class="summary surface"
+      class="summary glass-panel glass-panel--strong glass-panel--card"
       aria-labelledby="fixed-costs-title"
       data-cy="recurrence-summary"
     >
@@ -40,9 +40,11 @@ import type { SummaryState } from '~/modules/recurrences/core/facades/recurrence
         @default {
           @if (data(); as summary) {
             <dl class="summary__figures">
-              <div>
+              <div class="summary__focus">
                 <dt>{{ t().recurrences.summary.fixedCosts }}</dt>
-                <dd data-cy="recurrence-fixed-costs"><app-money [value]="summary.fixedCosts" /></dd>
+                <dd class="figure" data-cy="recurrence-fixed-costs">
+                  <app-money [value]="summary.fixedCosts" />
+                </dd>
               </div>
               <div>
                 <dt>{{ t().recurrences.summary.recurringIncome }}</dt>
@@ -90,21 +92,26 @@ import type { SummaryState } from '~/modules/recurrences/core/facades/recurrence
     }
 
     .summary__figures {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-5);
+      display: grid;
+      gap: var(--space-4);
       margin: 0;
+    }
+
+    .summary__focus dd {
+      font-size: var(--text-3xl);
     }
 
     .summary__figures dt {
       color: var(--color-text-muted);
-      font-size: var(--text-xs);
+      font-size: var(--text-sm);
     }
 
     .summary__figures dd {
       margin: 0;
       font-size: var(--text-xl);
-      font-weight: var(--weight-semibold);
+      font-weight: var(--weight-medium);
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
     }
 
     .summary__note {

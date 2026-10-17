@@ -4,6 +4,8 @@ import { catchError, map, Observable, of, throwError } from 'rxjs';
 
 import { ThirdPartiesGateway } from '~/modules/third-parties/core/interfaces/third-parties.gateway';
 import type {
+  ThirdPartyExpectedMonth,
+  ThirdPartyExpectedMonthInput,
   ThirdPartyExpense,
   ThirdPartyExpenseInput,
   ThirdPartyReceipt,
@@ -12,6 +14,7 @@ import type {
 } from '~/modules/third-parties/core/types/third-party';
 import { THIRD_PARTY_ENDPOINTS } from '~/modules/third-parties/infra/endpoints';
 import {
+  toExpectedMonth,
   toExpense,
   toExpenseRequest,
   toReceipt,
@@ -19,6 +22,7 @@ import {
   toReceivables,
 } from '~/modules/third-parties/infra/facades/third-parties-response.mapper';
 import type {
+  ThirdPartyExpectedMonthResponse,
   ThirdPartyExpenseResponse,
   ThirdPartyReceiptResponse,
   ThirdPartyReceivablesResponse,
@@ -76,6 +80,22 @@ export class ThirdPartiesRequestsFacade extends ThirdPartiesGateway {
         headers: new HttpHeaders().set(IDEMPOTENCY_HEADER, idempotencyKey),
       })
       .pipe(map(toReceipt), catchError(fail));
+  }
+
+  changeExpectedMonth(input: ThirdPartyExpectedMonthInput): Observable<ThirdPartyExpectedMonth> {
+    if (this.useMocks) {
+      return throwError(() => new ProblemError(mockNotFound('RECEIVABLE_NOT_FOUND')));
+    }
+    return this.http
+      .put<ThirdPartyExpectedMonthResponse>(
+        THIRD_PARTY_ENDPOINTS.expectedMonth(
+          input.transactionId,
+          input.installmentId,
+          input.personId,
+        ),
+        { expectedMonth: input.expectedMonth },
+      )
+      .pipe(map(toExpectedMonth), catchError(fail));
   }
 
   deleteReceipt(id: string): Observable<void> {

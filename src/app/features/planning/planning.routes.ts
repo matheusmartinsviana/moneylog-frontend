@@ -6,11 +6,16 @@ import { CommitmentFormPage } from '~/app/features/planning/pages/commitment-for
 import { CommitmentPage } from '~/app/features/planning/pages/commitment.page';
 import { CommitmentsPage } from '~/app/features/planning/pages/commitments.page';
 import { DebtsOverviewPage } from '~/app/features/planning/pages/debts-overview.page';
+import { IncomePage } from '~/app/features/planning/pages/income.page';
+import { NetWorthPage } from '~/app/features/planning/pages/net-worth.page';
 import { OccurrencesPage } from '~/app/features/planning/pages/occurrences.page';
 import { OverviewPage } from '~/app/features/planning/pages/overview.page';
 import { ProjectionsPage } from '~/app/features/planning/pages/projections.page';
+import { PropertyPage } from '~/app/features/planning/pages/property.page';
+import { PurchasesPage } from '~/app/features/planning/pages/purchases.page';
 import { RecurrenceFormPage } from '~/app/features/planning/pages/recurrence-form.page';
 import { RecurrencesPage } from '~/app/features/planning/pages/recurrences.page';
+import { SubscriptionsPage } from '~/app/features/planning/pages/subscriptions.page';
 import { SummaryPage } from '~/app/features/planning/pages/summary.page';
 import { ThirdPartiesPage } from '~/app/features/planning/pages/third-parties.page';
 import { PLANNING_PROVIDERS } from '~/app/lazy-providers';
@@ -30,6 +35,7 @@ const routes: Routes = [
           { path: ':id/edit', component: RecurrenceFormPage, data: MODAL_ROUTE },
         ],
       },
+      { path: 'subscriptions', component: SubscriptionsPage, title: pageTitle('planning') },
       { path: 'occurrences', component: OccurrencesPage, title: pageTitle('planning') },
       { path: 'overview', component: OverviewPage, title: pageTitle('planning') },
       { path: 'summary', component: SummaryPage, title: pageTitle('planning') },
@@ -43,7 +49,11 @@ const routes: Routes = [
         title: pageTitle('planning'),
         children: [{ path: 'new', component: CommitmentFormPage, data: MODAL_ROUTE }],
       },
+      { path: 'purchases', component: PurchasesPage, title: pageTitle('planning') },
+      { path: 'income', component: IncomePage, title: pageTitle('planning') },
+      { path: 'net-worth', component: NetWorthPage, title: pageTitle('planning') },
       { path: 'commitments/:id', component: CommitmentPage, title: pageTitle('planning') },
+      { path: 'commitments/:id/property', component: PropertyPage, title: pageTitle('planning') },
     ],
   },
 ];

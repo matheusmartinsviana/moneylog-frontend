@@ -13,6 +13,7 @@ export const EMPTY_TRANSACTION_SLICE: TransactionSliceResponse = {
 };
 
 export const EMPTY_ENTRY_SLICE: EntrySliceResponse = {
+  view: 'MINE',
   items: [],
   hasNext: false,
   totals: { total: zero(), byCategory: [] },

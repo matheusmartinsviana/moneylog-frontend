@@ -19,9 +19,10 @@ const MAIN_ITEMS = [
   'accounts',
   'cards',
   'goals',
+  'budgets',
   'planning',
-  'people',
-  'notes',
+  'statement',
+  'simulator',
 ];
 
 test.describe('shell em telas largas (trilho sempre recolhido)', () => {
@@ -39,24 +40,27 @@ test.describe('shell em telas largas (trilho sempre recolhido)', () => {
     await expectNoHorizontalScroll(page);
   });
 
-  test('a página rola (não há rolagem interna) e a sidebar acompanha por sticky', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 1280, height: 500 });
+  test('só a área de conteúdo rola e a sidebar e o cabeçalho ficam fixos', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 600 });
     await page.goto('/settings');
     await waitForApp(page);
 
-    const scrollable = await page.evaluate(
+    const scroll = page.locator('[data-cy="shell-scroll"]');
+    const windowScrolls = await page.evaluate(
       () => document.documentElement.scrollHeight > document.documentElement.clientHeight,
     );
-    expect(scrollable, 'a página, não a janela, rola').toBe(true);
+    expect(windowScrolls, 'a janela não rola').toBe(false);
+    expect(
+      await scroll.evaluate((el) => el.scrollHeight > el.clientHeight),
+      'a área de conteúdo rola',
+    ).toBe(true);
     const before = (await page.locator('[data-cy="sidebar"]').boundingBox())!.y;
-    await page.evaluate(() => window.scrollTo(0, 300));
+    await scroll.evaluate((el) => el.scrollTo(0, 300));
     const after = (await page.locator('[data-cy="sidebar"]').boundingBox())!.y;
     expect(Math.abs(after - before), 'a sidebar continua no mesmo lugar').toBeLessThanOrEqual(1);
     await page.locator('[data-cy="sidebar-cards"]').click();
     await expect(page.locator('[data-cy="page-title"]')).toHaveText('Cartões');
-    expect(await page.evaluate(() => window.scrollY)).toBe(0);
+    expect(await scroll.evaluate((el) => el.scrollTop)).toBe(0);
   });
 
   test('o menu do perfil abre por cima do conteúdo (portal no body), por teclado, e devolve o foco', async ({
@@ -129,7 +133,7 @@ test.describe('sidebar em trilho', () => {
     await page.locator('[data-cy="sidebar-more"]').click();
     const menu = page.locator('[data-cy="sidebar-more-menu"]');
     await expect(menu).toBeVisible();
-    await expect(menu.getByRole('menuitem')).toHaveCount(7);
+    await expect(menu.getByRole('menuitem')).toHaveCount(8);
     await page.locator('[data-cy="sidebar-more-item-vault"]').click();
     await expect(page).toHaveURL(/\/vault$/);
     await expect(page.locator('[data-cy="sidebar-more"]')).toHaveClass(/is-active/);
@@ -149,44 +153,44 @@ test.describe('sidebar em trilho', () => {
 test.describe('cabeçalho do workspace', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
-  test('o Início saúda sem nome; outras telas não saúdam e mantêm o h1 próprio', async ({
+  test('o Início saúda na carteira, sem duplicar no cabeçalho; outras telas não saúdam e mantêm o h1 próprio', async ({
     page,
   }) => {
+    await seedMockResponses(page, homeResponses());
     await page.goto('/');
     await waitForApp(page);
-    const greeting = page.locator('[data-cy="workspace-greeting"]');
-    await expect(greeting).toHaveText(/^(Bom dia|Boa tarde|Boa noite)$/);
-    await expect(page.locator('[data-cy="workspace-subtitle"]')).toHaveText(
-      'Veja o que está acontecendo com o seu dinheiro.',
+    await expect(page.locator('[data-cy="home-wallet-header"]')).toBeVisible();
+    const greeting = page.locator('[data-cy="home-wallet-greeting"]');
+    await expect(greeting).toHaveText(/^(Bom dia|Boa tarde|Boa noite)/);
+    await expect(page.locator('[data-cy="workspace-greeting"]')).toHaveCount(0);
+    await expect(page.locator('[data-cy="workspace-header"] [data-cy="header-bell"]')).toHaveCount(
+      1,
     );
     await expect(page.locator('h1')).toHaveCount(1);
 
     await page.locator('[data-cy="sidebar-cards"]').click();
     await expect(page.locator('[data-cy="page-title"]')).toHaveText('Cartões');
     await expect(greeting).toHaveCount(0);
+    await expect(page.locator('[data-cy="header-bell"]')).toHaveCount(1);
     await expectNoRawKeys(page);
   });
 
-  test('os atalhos do Quick Capture levam a /quick-add?mode=transfer ou trocam o tipo; sem IA não há atalho de IA', async ({
+  test('o botão Registrar do Início leva a /quick-add e o menu dele abre o modo escolhido; sem IA não há atalho de IA', async ({
     page,
   }) => {
     await seedMockResponses(page, homeResponses());
     await page.goto('/');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="capture-type-expense"]')).toHaveAttribute(
-      'aria-pressed',
-      'true',
+    await expect(page.locator('[data-cy="home-register-open"]')).toHaveAttribute(
+      'href',
+      '/quick-add',
     );
-    await page.locator('[data-cy="capture-type-income"]').click();
-    await expect(page.locator('[data-cy="capture-type-income"]')).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await page.locator('[data-cy="capture-transfer"]').click();
-    await expect(page).toHaveURL(/\(modal:quick-add\)\?mode=transfer$/);
+    await page.locator('[data-cy="home-register-menu"]').click();
+    await page.locator('[data-cy="home-register-menu-item-income"]').click();
+    await expect(page).toHaveURL(/\(modal:quick-add\)\?mode=income$/);
     await expect(page.locator('[data-cy="capture-ask-ai"]')).toHaveCount(0);
-    await expect(page.locator('[data-cy="header-ai-status"]')).toHaveText('IA desligada');
+    await expect(page.locator('[data-cy="header-ai-status"]')).toHaveCount(0);
   });
 
   test('mobile: cabeçalho compacto sem rolagem horizontal; o perfil fica no cabeçalho', async ({
@@ -226,7 +230,7 @@ test.describe('cabeçalho do workspace', () => {
 test.describe('microinterações e movimento reduzido', () => {
   test.use({ viewport: VIEWPORTS.desktop });
 
-  test('o botão pressionado de verdade encolhe para 0,98 (com movimento permitido)', async ({
+  test('o botão pressionado de verdade encolhe para 0,97 (com movimento permitido)', async ({
     page,
   }) => {
     await page.emulateMedia({ reducedMotion: 'no-preference' });
@@ -237,7 +241,8 @@ test.describe('microinterações e movimento reduzido', () => {
     await page.mouse.down();
     await expect
       .poll(() => button.evaluate((el) => getComputedStyle(el).transform))
-      .toBe('matrix(0.98, 0, 0, 0.98, 0, 0)');
+      .toBe('matrix(0.97, 0, 0, 0.97, 0, 0)');
+    await page.mouse.move(0, 0);
     await page.mouse.up();
   });
 

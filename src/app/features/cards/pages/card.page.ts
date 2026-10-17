@@ -40,7 +40,7 @@ import type { InvoiceSummary } from '~/modules/cards/core/types/invoice';
 import { isPositive } from '~/util/money';
 
 type TabId = 'invoices' | 'future';
-type ActionId = 'pay' | 'purchase' | 'ongoing' | 'edit';
+type ActionId = 'pay' | 'purchase' | 'ongoing' | 'cashOut' | 'edit';
 
 @Component({
   selector: 'app-card-page',
@@ -85,6 +85,7 @@ export class CardPage {
   protected readonly invoices = this.facade.invoices;
   protected readonly future = this.facade.future;
   protected readonly paying = signal(false);
+  protected readonly showAllInvoices = signal(false);
   private readonly accounts = signal<readonly Account[]>([]);
 
   protected readonly activeTab = computed<TabId>(() =>
@@ -97,6 +98,18 @@ export class CardPage {
       { id: 'future', label: copy.future },
     ];
   });
+
+  protected visibleInvoices(all: readonly InvoiceSummary[]): readonly InvoiceSummary[] {
+    if (this.showAllInvoices()) return all;
+    const futures = all.filter((i) => i.status === 'FUTURE');
+    const paid = all.filter((i) => i.status === 'PAID');
+    const nearFuture = new Set(futures.slice(-2));
+    const recentPaid = new Set(paid.slice(0, 2));
+    return all.filter(
+      (i) =>
+        (i.status !== 'FUTURE' && i.status !== 'PAID') || nearFuture.has(i) || recentPaid.has(i),
+    );
+  }
 
   protected readonly cashAccounts = computed(() =>
     this.accounts().filter((account) => account.liquidity === 'CASH'),
@@ -131,6 +144,7 @@ export class CardPage {
       { id: 'pay', label: copy.payInvoice, disabled: this.payTarget() === null },
       { id: 'purchase', label: copy.newPurchase },
       { id: 'ongoing', label: this.t().debtOverview.actions.addOngoing },
+      { id: 'cashOut', label: copy.cashOut },
       { id: 'edit', label: copy.edit },
     ];
   });
@@ -204,6 +218,9 @@ export class CardPage {
         break;
       case 'ongoing':
         this.ongoingOpen.set(true);
+        break;
+      case 'cashOut':
+        void this.router.navigate(['/cards', this.id(), 'cash-out']);
         break;
       case 'edit':
         void this.router.navigate(['/cards', this.id(), 'edit']);

@@ -1,0 +1,75 @@
+<app-glass-panel variant="card">
+  <section class="cp" aria-labelledby="cp-title" data-cy="home-chart-panel">
+    <header class="cp__head">
+      <h2 class="cp__title" id="cp-title">{{ t().home.chart.title }}</h2>
+      <app-segmented-toggle
+        [options]="options()"
+        [value]="period()"
+        (valueChange)="onPeriod($event)"
+        [label]="t().home.chart.periodLabel"
+        cy="home-chart-period"
+      />
+    </header>
+
+    @switch (state().status) {
+      @case ('loading') {
+        <div class="cp__body" data-cy="home-chart-loading">
+          <p class="visually-hidden" role="status">{{ t().home.chart.loading }}</p>
+          <div class="cp__skeleton sk" aria-hidden="true"></div>
+        </div>
+      }
+      @case ('error') {
+        <div class="cp__state" role="alert" data-cy="home-chart-error">
+          @if (forbidden()) {
+            <p data-cy="home-chart-forbidden">{{ t().home.chart.forbidden }}</p>
+          } @else {
+            <p>{{ t().home.chart.error }}</p>
+            <button type="button" class="button" data-cy="home-chart-retry" (click)="retry.emit()">
+              {{ t().home.chart.retry }}
+            </button>
+          }
+        </div>
+      }
+      @case ('empty') {
+        <div class="cp__state" data-cy="home-chart-empty">
+          <p>{{ t().home.chart.empty }}</p>
+          <a class="button" routerLink="/transactions" data-cy="home-chart-empty-action">{{
+            t().home.chart.emptyAction
+          }}</a>
+        </div>
+      }
+      @case ('ready') {
+        @if (view(); as view) {
+          <dl class="cp__totals" data-cy="home-chart-totals">
+            <div class="cp__total">
+              <dt>
+                <span class="cp__mark" aria-hidden="true"></span>
+                {{ t().home.chart.totalIncome }}
+              </dt>
+              <dd><app-money [value]="view.totals.income" [maskable]="true" /></dd>
+            </div>
+            <div class="cp__total">
+              <dt>
+                <span class="cp__mark cp__mark--expense" aria-hidden="true"></span>
+                {{ t().home.chart.totalExpenses }}
+              </dt>
+              <dd><app-money [value]="view.totals.expenses" [maskable]="true" /></dd>
+            </div>
+          </dl>
+          <app-line-chart
+            class="cp__chart"
+            [label]="t().home.chart.title"
+            [series]="view.series"
+            [keys]="view.keys"
+            [summaryText]="view.summary"
+            [emptyText]="t().home.chart.empty"
+            cy="home-chart"
+            maskable
+            variant="area"
+          />
+          <p class="cp__basis" data-cy="home-chart-basis">{{ view.basis }}</p>
+        }
+      }
+    }
+  </section>
+</app-glass-panel>

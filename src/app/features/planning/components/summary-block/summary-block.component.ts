@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@angular/core';
 
 import { MoneyComponent } from '~/app/common/components/money/money.component';
 import type { Money } from '~/util/money';
@@ -20,10 +20,11 @@ import type { Money } from '~/util/money';
       <dd class="block__note" [attr.data-cy]="cy() + '-note'">{{ note() }}</dd>
     }
   `,
-  host: { class: 'block', '[attr.data-cy]': 'cy()' },
+  host: { class: 'block', '[class.block--focus]': 'focus()', '[attr.data-cy]': 'cy()' },
   styles: `
     :host {
       display: grid;
+      align-content: start;
       gap: var(--space-1);
     }
 
@@ -35,8 +36,15 @@ import type { Money } from '~/util/money';
     .block__value {
       margin: 0;
       font-size: var(--text-xl);
-      font-weight: var(--weight-semibold);
+      font-weight: var(--weight-medium);
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
       overflow-wrap: anywhere;
+    }
+
+    :host(.block--focus) .block__value {
+      font-size: var(--text-3xl);
+      line-height: 1.1;
     }
 
     .block__note {
@@ -52,4 +60,5 @@ export class SummaryBlockComponent {
   readonly value = input<Money | null>(null);
   readonly text = input<string>('');
   readonly note = input<string>();
+  readonly focus = input(false, { transform: booleanAttribute });
 }

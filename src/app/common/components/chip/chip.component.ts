@@ -56,9 +56,11 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
       max-width: 100%;
       min-height: 1.75rem;
       padding: 0 var(--space-3);
-      border: var(--border-width) solid var(--color-border);
+      border: var(--border-width) solid var(--btn-glass-border);
       border-radius: var(--radius-pill);
-      background-color: var(--color-surface);
+      background-color: var(--btn-glass-solid);
+      background-image: var(--btn-glass-bg);
+      box-shadow: var(--btn-glass-shadow);
       color: var(--color-text);
       font-size: var(--text-sm);
       line-height: var(--leading-tight);
@@ -68,8 +70,16 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
       min-height: 2.25rem;
       cursor: pointer;
       transition:
-        background-color var(--duration-fast) var(--ease-standard),
-        border-color var(--duration-fast) var(--ease-standard);
+        background-image var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard),
+        box-shadow var(--duration-base) var(--ease-standard),
+        transform var(--duration-base) var(--ease-standard);
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .chip--button:active {
+        transform: scale(0.97);
+      }
     }
 
     @media (width <= 640px), (pointer: coarse) {
@@ -78,8 +88,12 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
       }
     }
 
-    .chip--button:hover {
-      background-color: var(--color-hover-soft);
+    @media (hover: hover) {
+      .chip--button:hover {
+        border-color: var(--btn-glass-border-hover);
+        background-image: var(--btn-glass-bg-hover);
+        box-shadow: var(--btn-glass-shadow-hover);
+      }
     }
 
     .chip--button:focus-visible,
@@ -90,7 +104,7 @@ import { IconComponent } from '~/app/common/components/icon/icon.component';
 
     .chip.is-pressed {
       border-color: var(--color-accent);
-      background-color: var(--color-surface-muted);
+      background-image: var(--btn-soft-bg);
       box-shadow: inset 0 0 0 1px var(--color-accent);
       font-weight: var(--weight-medium);
     }

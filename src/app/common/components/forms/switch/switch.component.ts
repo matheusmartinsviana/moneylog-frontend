@@ -84,9 +84,10 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
       flex: none;
       width: 2.5rem;
       height: 1.5rem;
-      border: var(--border-width) solid var(--color-text-muted);
+      border: var(--border-width) solid var(--field-border);
       border-radius: var(--radius-pill);
-      background-color: var(--color-surface-muted);
+      background-color: var(--field-bg);
+      box-shadow: var(--field-shadow);
       transition:
         background-color var(--duration-fast) var(--ease-standard),
         border-color var(--duration-fast) var(--ease-standard);

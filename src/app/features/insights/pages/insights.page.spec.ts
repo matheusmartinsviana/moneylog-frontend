@@ -21,7 +21,7 @@ describe('InsightsPage', () => {
     const { container } = await setup(gateway);
 
     expect(await screen.findByTestId('insights-list')).toHaveTextContent('Alimentação subiu 33,3%');
-    expect(screen.getByTestId('insights-list')).toHaveTextContent(pt.ai.insights.source);
+    expect(screen.getByTestId('insights-page')).toHaveTextContent(pt.ai.insights.source);
     expect(screen.getByTestId('insight-spending-link')).toHaveAttribute(
       'href',
       '/transactions?categoryId=cat-1',

@@ -18,12 +18,12 @@ test.describe('/quick-add sem contas', () => {
       await page.goto(`/quick-add${mode}`);
       await waitForApp(page);
 
-      await expect(page.locator('[data-cy="empty-state-title"]')).toHaveText(
+      const dialog = page.getByRole('dialog');
+      await expect(dialog.locator('[data-cy="empty-state-title"]')).toHaveText(
         'Cadastre uma conta para registrar.',
       );
-      const action = page.locator('[data-cy="empty-state-action-add-account"]');
+      const action = dialog.locator('[data-cy="empty-state-action-add-account"]');
       await expect(action).toBeEnabled();
-      await expect(action).toHaveAttribute('href', '/accounts/new');
       await expectNoRawKeys(page);
     });
   }
@@ -32,7 +32,7 @@ test.describe('/quick-add sem contas', () => {
     await page.goto('/quick-add');
     await waitForApp(page);
 
-    await page.locator('[data-cy="empty-state-action-add-account"]').click();
+    await page.getByRole('dialog').locator('[data-cy="empty-state-action-add-account"]').click();
 
     await expect(page).toHaveURL(/\/accounts\/new$/);
   });
@@ -73,7 +73,7 @@ test.describe('detalhe /transactions/:id', () => {
     await expect(page).toHaveURL(/\/transactions\?type=EXPENSE$/);
   });
 
-  test('375 px: abre como página (a lista some) e o botão fechar volta para a lista', async ({
+  test('375 px: abre como página (a lista some) e o botão voltar volta para a lista', async ({
     page,
   }) => {
     await page.setViewportSize(VIEWPORTS.mobile);
@@ -87,7 +87,8 @@ test.describe('detalhe /transactions/:id', () => {
     expect(position).not.toBe('fixed');
     await expectNoHorizontalScroll(page);
 
-    await page.locator('[data-cy="detail-close"]').click();
+    await expect(page.locator('[data-cy="detail-close"]')).toBeHidden();
+    await page.locator('[data-cy="detail-back"]').click();
 
     await expect(page).toHaveURL(/\/transactions$/);
     await expect(page.locator('[data-cy="page-title"]')).toBeVisible();
@@ -109,7 +110,7 @@ test.describe('detalhe /transactions/:id', () => {
     await page.goto('/transactions/00000000-0000-4000-8000-0000000000aa/edit');
     await waitForApp(page);
 
-    await expect(page.locator('[data-cy="empty-state-title"]')).toHaveText(
+    await expect(page.getByRole('dialog').locator('[data-cy="empty-state-title"]')).toHaveText(
       'Movimentação não encontrada.',
     );
   });
