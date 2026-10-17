@@ -36,6 +36,26 @@ describe('SparklineComponent', () => {
     expect(x('trend')).toEqual(x('base').slice(1));
   });
 
+  it('Dado chaves fora de ordem entre as séries, então o domínio segue a ordem por code unit', async () => {
+    await render(SparklineComponent, {
+      inputs: {
+        series: [
+          { id: 'base', keys: ['2026-12', '2026-10'], values: ['3', '1'] },
+          { id: 'trend', keys: ['2026-11'], values: ['2'], dashed: true },
+        ],
+      },
+    });
+
+    const x = (id: string) =>
+      points(id)
+        .split(' ')
+        .map((c) => Number(c.split(',')[0]));
+    const [december, october] = x('base');
+    const [november] = x('trend');
+    expect(october!).toBeLessThan(november!);
+    expect(november!).toBeLessThan(december!);
+  });
+
   it('Dado a tendência (dashed), então a linha é tracejada: a leitura não depende só de cor', async () => {
     await render(SparklineComponent, {
       inputs: {

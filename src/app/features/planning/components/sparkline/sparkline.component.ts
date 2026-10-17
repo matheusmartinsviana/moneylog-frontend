@@ -11,6 +11,8 @@ const WIDTH = 320;
 const HEIGHT = 140;
 const PAD = 12;
 
+const byCodeUnit = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
 interface DrawnSeries {
   readonly id: string;
   readonly dashed: boolean;
@@ -145,7 +147,7 @@ export class SparklineComponent {
   private readonly domain = computed(() => {
     const keys = new Set<string>();
     for (const series of this.series()) for (const key of series.keys ?? []) keys.add(key);
-    return [...keys].sort();
+    return [...keys].sort(byCodeUnit);
   });
 
   protected readonly drawn = computed<readonly DrawnSeries[]>(() => {

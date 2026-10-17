@@ -138,8 +138,8 @@ export function decodeEntities(text: string): string {
     if (entity.startsWith('#')) {
       const code =
         entity[1]?.toLowerCase() === 'x'
-          ? parseInt(entity.slice(2), 16)
-          : parseInt(entity.slice(1), 10);
+          ? Number.parseInt(entity.slice(2), 16)
+          : Number.parseInt(entity.slice(1), 10);
       if (
         !Number.isFinite(code) ||
         code < 32 ||

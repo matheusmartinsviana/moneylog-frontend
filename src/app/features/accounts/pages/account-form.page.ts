@@ -165,7 +165,7 @@ export class AccountFormPage {
   }
 
   private backUrl(): string[] {
-    return this.editing() ? ['/accounts'] : ['/accounts'];
+    return ['/accounts'];
   }
 
   protected close(): void {
