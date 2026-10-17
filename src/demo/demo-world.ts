@@ -1,4 +1,4 @@
-import { addDays, addMonths, addMonthsKey, dateIn } from '~/demo/demo-dates';
+import { addDays, addMonths, addMonthsKey, compareIso, dateIn } from '~/demo/demo-dates';
 import type { components } from '~/util/api/schema.gen';
 
 export type S = components['schemas'];
@@ -607,7 +607,7 @@ export function buildWorld(today: string): World {
       });
     }
   }
-  const refs = [...new Set(installments.map((i) => i.invoiceRef))].sort();
+  const refs = [...new Set(installments.map((i) => i.invoiceRef))].sort(compareIso);
   const invoices: InvoiceDef[] = refs.map((ref, idx) => {
     const closingDate = dateIn(ref, card.closingDay);
     const dueDate = dateIn(addMonthsKey(ref, 1), card.dueDay);

@@ -41,3 +41,7 @@ export function localToday(): string {
   const dd = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${mm}-${dd}`;
 }
+
+export function compareIso(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}

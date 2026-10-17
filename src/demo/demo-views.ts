@@ -1,4 +1,4 @@
-import { addDays, addMonths, addMonthsKey, dateIn, lastDayOf } from '~/demo/demo-dates';
+import { addDays, addMonths, addMonthsKey, compareIso, dateIn, lastDayOf } from '~/demo/demo-dates';
 import {
   balanceAt,
   debtOutstanding,
@@ -111,11 +111,16 @@ export interface DemoInvoiceDocument {
   version: number;
 }
 
+function emptyInvoiceDocument(): DemoInvoiceDocument {
+  return { cents: null, version: 0 };
+}
+
 export function invoiceView(
   w: World,
   inv: InvoiceDef,
-  document: DemoInvoiceDocument = { cents: null, version: 0 },
+  document?: DemoInvoiceDocument,
 ): S['Invoice'] {
+  const doc = document ?? emptyInvoiceDocument();
   const pay = inv.paymentRecId ? w.recs.find((r) => r.id === inv.paymentRecId) : undefined;
   return {
     ...invoiceCore(w, inv),
@@ -133,12 +138,10 @@ export function invoiceView(
           },
         ]
       : [],
-    documentAmount: document.cents === null ? null : money(document.cents),
+    documentAmount: doc.cents === null ? null : money(doc.cents),
     documentDivergence:
-      document.cents === null || document.cents === inv.total
-        ? null
-        : money(inv.total - document.cents),
-    documentVersion: document.version,
+      doc.cents === null || doc.cents === inv.total ? null : money(inv.total - doc.cents),
+    documentVersion: doc.version,
   };
 }
 
@@ -512,7 +515,7 @@ export function personView(w: World, p: PersonDef): S['Person'] {
   const dates = open
     .map((d) => d.expectedDate)
     .filter((x): x is string => x !== null)
-    .sort();
+    .sort(compareIso);
   return {
     id: p.id,
     name: p.name,

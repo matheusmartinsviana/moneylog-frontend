@@ -378,17 +378,20 @@ export interface DemoProfile {
   version: number;
 }
 
-export function notificationSettings(
-  profile: DemoProfile = { displayName: null, hasPhoto: false, photoVersion: 0, version: 1 },
-): S['NotificationSettings'] {
+function anonymousProfile(): DemoProfile {
+  return { displayName: null, hasPhoto: false, photoVersion: 0, version: 1 };
+}
+
+export function notificationSettings(profile?: DemoProfile): S['NotificationSettings'] {
+  const p = profile ?? anonymousProfile();
   return {
     dailySummary: { enabled: true, time: '08:00', frequency: 'DAILY' },
     kinds: {},
     quietHours: { from: '22:00', to: '07:00' },
     push: { enabled: false },
-    displayName: profile.displayName,
-    version: profile.version,
-    hasPhoto: profile.hasPhoto,
-    photoVersion: profile.photoVersion,
+    displayName: p.displayName,
+    version: p.version,
+    hasPhoto: p.hasPhoto,
+    photoVersion: p.photoVersion,
   };
 }
