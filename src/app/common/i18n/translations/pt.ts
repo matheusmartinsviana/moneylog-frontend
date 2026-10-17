@@ -859,7 +859,7 @@ export const pt: AppI18n = {
       title: 'Entrar',
       description: 'Entre para ver as suas finanças.',
       email: 'E-mail',
-      password: 'Senha',
+      passwordLabel: 'Senha',
       submit: 'Entrar',
       submitting: 'Entrando…',
       errors: {
