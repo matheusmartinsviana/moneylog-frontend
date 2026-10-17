@@ -1,25 +1,48 @@
 # moneylog: frontend
 
-Angular 22 (standalone, zoneless, OnPush) + `@angular/pwa`. Node 24 (`.nvmrc`), npm 11, versões fixas e `package-lock.json`.
+[![ci](https://github.com/matheusmartinsviana/moneylog-frontend/actions/workflows/ci.yml/badge.svg)](https://github.com/matheusmartinsviana/moneylog-frontend/actions/workflows/ci.yml)
+[![codeql](https://github.com/matheusmartinsviana/moneylog-frontend/actions/workflows/codeql.yml/badge.svg)](https://github.com/matheusmartinsviana/moneylog-frontend/actions/workflows/codeql.yml)
+[![dependency review](https://github.com/matheusmartinsviana/moneylog-frontend/actions/workflows/dependency-review.yml/badge.svg)](https://github.com/matheusmartinsviana/moneylog-frontend/actions/workflows/dependency-review.yml)
+![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white)
+![Vitest](https://img.shields.io/badge/tests-Vitest-6E9F18?logo=vitest&logoColor=white)
+![Playwright](https://img.shields.io/badge/e2e-Playwright-2EAD33?logo=playwright&logoColor=white)
 
-| Script                          | O que faz                                                                                       |
-| ------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `npm start`                     | servidor de desenvolvimento com a **API real** (proxy de `/v1` para `http://localhost:8080`)    |
-| `npm run start:local`           | idem, em **HTTPS** com certificado do `mkcert` (veja abaixo); é o caminho para testar no iPhone |
-| `npm run start:mock`            | ambiente **mock** (`environment.mock.ts`): sem backend, sem chamada a `/v1`, sessão falsa       |
-| `npm run build`                 | build de produção, API real (gera `ngsw-worker.js` e `manifest.webmanifest`)                    |
-| `npm run build:production-mock` | build de produção com o ambiente mock (só para o projeto Playwright `prod`)                     |
-| `npm run api:types`             | gera `src/util/api/schema.gen.ts` a partir de `contracts/openapi.yaml` (`openapi-typescript`)   |
-| `npm run api:check`             | falha se `schema.gen.ts` está desatualizado em relação ao contrato                              |
-| `npm test`                      | Vitest + Angular Testing Library, sem cobertura (rápido, uso local)                             |
-| `npm run test:ci`               | o mesmo com cobertura e `coverageThreshold` (usado no CI)                                       |
-| `npm run e2e`                   | Playwright: projetos `mock` e `prod` (sem backend)                                              |
-| `npm run e2e:integration`       | Playwright `integration`: Postgres + backend reais (veja "E2E com backend real")                |
-| `npm run lint`                  | ESLint + regras visuais (`scripts/check-styles.mjs`) + contraste (`scripts/check-contrast.mjs`) |
-| `npm run lint:deps`             | fronteiras de camada e ciclos (`.dependency-cruiser.cjs`)                                       |
-| `npm run typecheck`             | `ngc` (templates estritos) + `tsc` dos testes                                                   |
-| `npm run format`                | Prettier                                                                                        |
-| `npm run icons`                 | gera favicon, PWA, apple-touch e logo da UI a partir de `brand/logo-source.png`                 |
+Interface do **moneylog**, controle financeiro pessoal em PWA mobile-first: Início com carteira e gráficos,
+movimentações, contas, cartões com fatura, metas, planejamento, orçamentos, pomodoro com modo foco e notificações.
+Angular 22 (standalone, zoneless, OnPush) + `@angular/pwa`. Node 24 (`.nvmrc`), npm 11, versões fixas e
+`package-lock.json`.
+
+- **Os cálculos ficam no backend.** A tela exibe o que a API devolve; o contrato OpenAPI é a fonte da verdade.
+- **Design system próprio:** tokens em `src/styles/tokens.css`, vidro (glass) com utilitários controlados, claro e escuro, e idiomas pt, en e es.
+- **Qualidade:** ESLint, regras visuais e de contraste, fronteiras de camada (`dependency-cruiser`), testes unitários, e2e com Playwright (Chromium e WebKit) e varredura de segredos no CI.
+
+## Scripts
+
+| Script                          | O que faz                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `npm start`                     | servidor de desenvolvimento com a **API real** (proxy de `/v1` para `http://localhost:8080`)                        |
+| `npm run start:local`           | idem, em **HTTPS** com certificado do `mkcert` (veja abaixo); é o caminho para testar no iPhone                     |
+| `npm run start:mock`            | ambiente **mock** (`environment.mock.ts`): sem backend, sem chamada a `/v1`, sessão falsa                           |
+| `npm run build`                 | build de produção, API real (gera `ngsw-worker.js` e `manifest.webmanifest`)                                        |
+| `npm run build:production-mock` | build de produção com o ambiente mock (só para o projeto Playwright `prod`)                                         |
+| `npm run api:types`             | gera `src/util/api/schema.gen.ts` a partir de `contracts/openapi.yaml` (`openapi-typescript`)                       |
+| `npm run api:check`             | falha se `schema.gen.ts` está desatualizado em relação ao contrato                                                  |
+| `npm test`                      | Vitest + Angular Testing Library, sem cobertura (rápido, uso local)                                                 |
+| `npm run test:ci`               | o mesmo com cobertura e `coverageThreshold` (usado no CI)                                                           |
+| `npm run e2e`                   | Playwright: projetos `mock` e `prod` (sem backend)                                                                  |
+| `npm run e2e:integration`       | Playwright `integration`: Postgres + backend reais (veja "E2E com backend real")                                    |
+| `npm run lint`                  | ESLint + regras visuais (`scripts/check-styles.mjs`), contraste e controles nativos (`lint:eslint` + `lint:checks`) |
+| `npm run lint:deps`             | fronteiras de camada e ciclos (`.dependency-cruiser.cjs`)                                                           |
+| `npm run typecheck`             | `ngc` (templates estritos) + `tsc` dos testes                                                                       |
+| `npm run format`                | Prettier                                                                                                            |
+| `npm run icons`                 | gera favicon, PWA, apple-touch e logo da UI a partir de `brand/logo-source.png`                                     |
+
+## Integração contínua
+
+O workflow `ci` roda em paralelo os jobs `quality` (lint e regras visuais), `typecheck`, `test`, `build` e
+`secrets-scan` (gitleaks). Além dele: `codeql` (análise estática, semanal e em PR) e `dependency-review` (PRs).
 
 ## Contrato e ambientes
 
