@@ -26,9 +26,9 @@ if (!existsSync(cert) || !existsSync(key)) {
 }
 
 const result = spawnSync(
-  'npx',
+  process.execPath,
   [
-    'ng',
+    resolve(root, 'node_modules', '@angular', 'cli', 'bin', 'ng.js'),
     'serve',
     '--configuration',
     'local',

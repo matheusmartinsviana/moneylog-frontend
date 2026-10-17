@@ -64,7 +64,7 @@ if (JSON.stringify(colors(mediaBlock)) !== JSON.stringify(themes.escuro)) {
 
 function luminance(hex) {
   const [r, g, b] = [1, 3, 5]
-    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((i) => Number.parseInt(hex.slice(i, i + 2), 16) / 255)
     .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
@@ -93,8 +93,8 @@ const hex = (r, g, b) =>
   '#' + [r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
 
 function mixHex(top, base, alpha) {
-  const t = [1, 3, 5].map((i) => parseInt(top.slice(i, i + 2), 16));
-  const b = [1, 3, 5].map((i) => parseInt(base.slice(i, i + 2), 16));
+  const t = [1, 3, 5].map((i) => Number.parseInt(top.slice(i, i + 2), 16));
+  const b = [1, 3, 5].map((i) => Number.parseInt(base.slice(i, i + 2), 16));
   return hex(...t.map((c, i) => c * alpha + b[i] * (1 - alpha)));
 }
 
@@ -159,7 +159,7 @@ function hoverOver(block, bgHex) {
   }
   const a = Number(m[4]) / 100;
   const over = [Number(m[1]), Number(m[2]), Number(m[3])];
-  const base = [1, 3, 5].map((i) => parseInt(bgHex.slice(i, i + 2), 16));
+  const base = [1, 3, 5].map((i) => Number.parseInt(bgHex.slice(i, i + 2), 16));
   return hex(...over.map((c, i) => c * a + base[i] * (1 - a)));
 }
 

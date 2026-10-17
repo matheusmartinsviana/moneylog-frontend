@@ -10,10 +10,14 @@ const dir = mkdtempSync(join(tmpdir(), 'moneylog-api-'));
 const fresh = join(dir, 'schema.gen.ts');
 
 try {
-  const run = spawnSync('npx', ['--no-install', 'openapi-typescript', contract, '-o', fresh], {
-    cwd: root,
-    encoding: 'utf8',
-  });
+  const run = spawnSync(
+    process.execPath,
+    [resolve(root, 'node_modules', 'openapi-typescript', 'bin', 'cli.js'), contract, '-o', fresh],
+    {
+      cwd: root,
+      encoding: 'utf8',
+    },
+  );
   if (run.status !== 0) {
     console.error(run.stdout, run.stderr);
     console.error('api:check: não foi possível gerar os tipos a partir de contracts/openapi.yaml.');
