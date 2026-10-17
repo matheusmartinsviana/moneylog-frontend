@@ -28,7 +28,7 @@ ajv.addSchema(spec as object, 'openapi');
 const routes = Object.entries(spec.paths).map(([template, item]) => ({
   template,
   regex: new RegExp(
-    '^' + template.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{[^}]+\}/g, '[^/]+') + '/?$',
+    '^' + template.replace(/[.*+?^$()|[\]\\]/g, '\\$&').replace(/\{[^{}]+\}/g, '[^/]+') + '/?$',
   ),
   item,
 }));

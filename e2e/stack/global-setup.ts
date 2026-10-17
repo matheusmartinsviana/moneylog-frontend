@@ -12,6 +12,8 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { dockerBinary } from '../support/binaries';
+
 const ROOT = resolve(__dirname, '..', '..', '..');
 const PROJECT = 'moneylog-e2e-run';
 const PG_PORT = '55433';
@@ -102,7 +104,7 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | voi
   });
 
   execFileSync(
-    'docker',
+    dockerBinary(),
     ['compose', '-p', PROJECT, '-f', join(ROOT, 'docker-compose.yml'), 'up', '-d', '--wait'],
     {
       env,
@@ -114,7 +116,7 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | voi
   const logPath = resolve(__dirname, '..', '.results', 'backend.log');
   const log = openSync(logPath, 'w');
   const backend: ChildProcess = spawn(
-    './mvnw',
+    join(ROOT, 'backend', 'mvnw'),
     ['-q', 'spring-boot:run', '-Dspring-boot.run.profiles=dev'],
     {
       cwd: join(ROOT, 'backend'),
@@ -140,7 +142,7 @@ export default async function globalSetup(): Promise<(() => Promise<void>) | voi
     }
     try {
       execFileSync(
-        'docker',
+        dockerBinary(),
         ['compose', '-p', PROJECT, '-f', join(ROOT, 'docker-compose.yml'), 'down', '-v'],
         {
           env,
