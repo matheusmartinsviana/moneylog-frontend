@@ -2,18 +2,18 @@
 
 Estilos globais, carregados pelo `angular.json` nesta ordem:
 
-| Arquivo          | Conteúdo                                                                                                                                                                         |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `tokens.css`     | **única** fonte de cores, tipografia, raios, sombras, espaçamento e movimento (DS 00, arquitetura §5.4)                                                                          |
-| (Fontsource)     | Geist e Geist Mono variáveis, self-hosted a partir de `node_modules` (sem CDN)                                                                                                   |
-| `typography.css` | escala 12/13/15/17/20/24/32 e a classe `.num` (`tabular-nums` + `"tnum"`); 11px (`--text-tab`) só na barra inferior                                                              |
-| `base.css`       | reset, foco visível e `prefers-reduced-motion`                                                                                                                                   |
-| `utilities.css`  | `.visually-hidden`, `.surface`, `.button` (`--primary`, `--soft`), `.lift`, `.row-hover`, `.field` (`__label`, `__hint`), `.input`, `.select`, `.ledger` (lista de valores, T19) |
+| Arquivo          | Conteúdo                                                                                                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tokens.css`     | **única** fonte de cores, tipografia, raios, sombras, espaçamento e movimento                                                                                               |
+| (Fontsource)     | Geist e Geist Mono variáveis, self-hosted a partir de `node_modules` (sem CDN)                                                                                              |
+| `typography.css` | escala 12/13/15/17/20/24/32 e a classe `.num` (`tabular-nums` + `"tnum"`); 11px (`--text-tab`) só na barra inferior                                                         |
+| `base.css`       | reset, foco visível e `prefers-reduced-motion`                                                                                                                              |
+| `utilities.css`  | `.visually-hidden`, `.surface`, `.button` (`--primary`, `--soft`), `.lift`, `.row-hover`, `.field` (`__label`, `__hint`), `.input`, `.select`, `.ledger` (lista de valores) |
 
 Tema: `:root` é o claro; `@media (prefers-color-scheme: dark)` aplica o escuro quando não há escolha
 manual; `[data-theme="light|dark"]` (gravado pelo `ThemeService`) vale contra o sistema.
 
-## Redesign "workspace" (DS 02, ADR-011)
+## Redesign "workspace"
 
 - **Paleta "old money" (verde-floresta e marfim):** claro com `canvas` marfim esverdeado (`#f1f2ea`) e cartões `surface`
   `#fcfcf8`; escuro com `canvas` verde-floresta quase preto (`#0b1d15`) e `surface` `#111b15`. Acento verde-floresta
@@ -29,10 +29,10 @@ manual; `[data-theme="light|dark"]` (gravado pelo `ThemeService`) vale contra o 
   4,35:1) deixam de existir por esse desenho.
 - **Gráficos:** `--color-chart-1` (acento verde) e `--color-chart-2` (pedra quente), conferidos a ≥ 3:1 (WCAG 1.4.11) sobre
   `surface` e `surface-muted`. Série 2 sempre tracejada: a diferença nunca é só de cor.
-- **Bordas:** `--color-border` é decorativa (cartões, divisores). Campos e controles interativos usam `--color-control-border` (>= 3:1, WCAG 1.4.11; FE-S-236). `--color-accent-soft-hover` é o hover sólido do `.button--soft`.
+- **Bordas:** `--color-border` é decorativa (cartões, divisores). Campos e controles interativos usam `--color-control-border` (>= 3:1, WCAG 1.4.11;). `--color-accent-soft-hover` é o hover sólido do `.button--soft`.
 - **Raios:** `--radius-window` 28px, `--radius-card` 20px, `--radius-panel` 24px, `--radius-control` 12px. **Sombras:**
   `--shadow-1`, `--shadow-2`, `--shadow-window` (todas por `--color-shadow*`, opacidade ≤ 12% no claro).
-- **Tipografia:** `--font-sans` começa no Geist (auto-hospedado, igual em todos os SO, sem depender de SF Pro; DS 00 §4 permite Geist Sans na web); títulos 600 com tracking negativo (h1 -0.025em, h2 -0.018em, h3 -0.012em, KPI -0.03em); `--text-kpi` 28px e
+- **Tipografia:** `--font-sans` começa no Geist (auto-hospedado, igual em todos os SO, sem depender de SF Pro); títulos 600 com tracking negativo (h1 -0.025em, h2 -0.018em, h3 -0.012em, KPI -0.03em); `--text-kpi` 28px e
   `--text-display` 32px; `.num` e `.num-kpi` são tabulares.
 - **Movimento:** `--duration-fast` 180ms, `--duration-base` 240ms, `--duration-slow` 300ms, `--ease-emphasized`.
   `prefers-reduced-motion` zera as três durações e os efeitos de `transform` (hover do `.lift`, pressão do `.button`) só
@@ -178,7 +178,7 @@ Gerado por `npm run contrast`.
 | escuro | `focus` #2dd4bf          | `surface` #161618           | 9.71:1    | ok (3:1)   |
 | escuro | `focus` #2dd4bf          | `surface-muted` #212124     | 8.63:1    | ok (3:1)   |
 
-## Linguagem "glass" azul, dark-first (DS 03, ADR-011)
+## Linguagem "glass" azul, dark-first
 
 > A cor principal passou de lilás (`#6948d2`) para azul `#094360` (tema claro) e `#7bc5ea` (escuro, a mesma matiz mais clara
 > para dar contraste). Os neutros seguem com o leve tom lavanda original.
