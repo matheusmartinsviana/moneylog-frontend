@@ -18,7 +18,7 @@
         <app-icon name="chevronLeft" [size]="18" />
       </button>
     }
-    <div class="gal__photo" tabindex="0" data-cy="goal-gallery-viewer">
+    <div class="gal__photo" data-cy="goal-gallery-viewer">
       @if (current(); as photo) {
         @for (shown of [photo]; track shown.id) {
           <app-goal-photo

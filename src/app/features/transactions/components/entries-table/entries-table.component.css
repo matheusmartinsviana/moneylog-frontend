@@ -12,11 +12,20 @@
 }
 
 .item {
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.item__button {
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
+  width: 100%;
   padding: var(--space-3) var(--space-4);
-  border-bottom: var(--border-width) solid var(--color-border);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
   cursor: pointer;
 }
 

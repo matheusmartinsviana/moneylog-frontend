@@ -20,11 +20,6 @@
   border-radius: var(--radius-card);
 }
 
-.gal__photo:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 .gal__nav {
   position: absolute;
   top: 50%;
