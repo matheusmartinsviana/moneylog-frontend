@@ -66,19 +66,25 @@ export default defineConfig({
             '**/evidence.e2e.ts',
             '**/webkit.e2e.ts',
             '**/demo-flows.e2e.ts',
+            '**/demo-keyboard.e2e.ts',
             '**/integration/**',
           ],
           use: { baseURL: `http://localhost:${MOCK_PORT}` },
         },
         {
           name: 'prod',
-          testIgnore: ['**/webkit.e2e.ts', '**/demo-flows.e2e.ts', '**/integration/**'],
+          testIgnore: [
+            '**/webkit.e2e.ts',
+            '**/demo-flows.e2e.ts',
+            '**/demo-keyboard.e2e.ts',
+            '**/integration/**',
+          ],
           use: { baseURL: `http://localhost:${PROD_PORT}` },
         },
         // Build `demo` (backend de exemplo, dados sintéticos): só a regra de "cabe na tela" (`fit-screen.e2e.ts`).
         {
           name: 'demo',
-          testMatch: ['**/fit-screen.e2e.ts', '**/demo-flows.e2e.ts'],
+          testMatch: ['**/fit-screen.e2e.ts', '**/demo-flows.e2e.ts', '**/demo-keyboard.e2e.ts'],
           use: { baseURL: `http://localhost:${DEMO_PORT}` },
         },
         // WebKit (motor do iOS Safari/Safari) na suíte mock: rotas principais e overlays.
