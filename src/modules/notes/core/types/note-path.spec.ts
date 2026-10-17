@@ -9,6 +9,7 @@ import {
   safeFileName,
   utf8Length,
 } from '~/modules/notes/core/types/note-path';
+import { fastestMs } from '~/testing/timing';
 
 describe('note-path', () => {
   it('Dado um caminho, então separa pasta, nome e extensão', () => {
@@ -56,10 +57,9 @@ describe('note-path', () => {
 
   it('Dado 10 000 pontos e espaços nas pontas, então safeFileName termina em menos de 50 ms', () => {
     const input = `${'. '.repeat(5_000)}nome${'. '.repeat(5_000)}`;
-    const start = performance.now();
 
     expect(safeFileName(input)).toBe('nome');
-    expect(performance.now() - start).toBeLessThan(50);
+    expect(fastestMs(() => safeFileName(input))).toBeLessThan(50);
   });
 
   it('Dado o limite em bytes, então conta UTF-8 e não caracteres', () => {

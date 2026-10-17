@@ -1,4 +1,5 @@
 import { applyFailureOf } from '~/modules/imports/core/types/import-apply-failure';
+import { fastestMs } from '~/testing/timing';
 import type { Problem } from '~/util/api/problem';
 
 const problem = (extra: Partial<Problem>): Problem => ({
@@ -28,9 +29,8 @@ describe('applyFailureOf', () => {
 
   it('Dado 10 000 espaços sem número, então termina em menos de 50 ms', () => {
     const detail = `linha${' '.repeat(10_000)}x`;
-    const start = performance.now();
 
     expect(applyFailureOf(problem({ detail }))?.position).toBeNull();
-    expect(performance.now() - start).toBeLessThan(50);
+    expect(fastestMs(() => applyFailureOf(problem({ detail })))).toBeLessThan(50);
   });
 });

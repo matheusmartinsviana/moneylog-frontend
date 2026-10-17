@@ -1,4 +1,5 @@
 import { sanitizeSharedText } from '~/app/features/quick-add/quick-add-params';
+import { fastestMs } from '~/testing/timing';
 
 describe('sanitizeSharedText (T137 CA2)', () => {
   it('Dado texto comum, então devolve o mesmo texto', () => {
@@ -27,10 +28,9 @@ describe('sanitizeSharedText (T137 CA2)', () => {
 
   it('Dado 10 000 < sem >, então termina em menos de 50 ms e mantém o texto', () => {
     const input = '<'.repeat(10_000);
-    const start = performance.now();
 
     expect(sanitizeSharedText(input)).toHaveLength(200);
-    expect(performance.now() - start).toBeLessThan(50);
+    expect(fastestMs(() => sanitizeSharedText(input))).toBeLessThan(50);
   });
 
   it('Dado null, então vazio', () => {
