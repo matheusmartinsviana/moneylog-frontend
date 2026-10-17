@@ -10,8 +10,8 @@ Uma pasta **plana** por seção (sem feature dentro de feature):
 └── utils/ constants/
 ```
 
-Seções da Etapa 1: `home` (dashboard ligado ao módulo `dashboard`, T19), `transactions`, `quick-add`, `goals`, `more`, `accounts`, `cards`, `people`,
+Seções: `home` (dashboard ligado ao módulo `dashboard`), `transactions`, `quick-add`, `goals`, `more`, `accounts`, `cards`, `people`,
 `planning`, `notes`, `import`, `insights`, `settings` e `not-found`. As demais mostram o estado vazio com
-as ações desabilitadas e a dica "disponível em breve" (S-33).
+as ações desabilitadas e a dica "disponível em breve".
 
 Uma feature não importa outra feature nem `src/modules/*/infra`.
