@@ -19,6 +19,20 @@ describe('sanitizeSharedText (T137 CA2)', () => {
     expect(sanitizeSharedText('x'.repeat(500))).toHaveLength(200);
   });
 
+  it('Dado um < solto dentro de uma tag, então o regex antigo e o laço descartam até o primeiro >', () => {
+    expect(sanitizeSharedText('<a<b> x')).toBe('x');
+    expect(sanitizeSharedText('a <b c')).toBe('a <b c');
+    expect(sanitizeSharedText('a<b>c<d>e')).toBe('a c e');
+  });
+
+  it('Dado 10 000 < sem >, então termina em menos de 50 ms e mantém o texto', () => {
+    const input = '<'.repeat(10_000);
+    const start = performance.now();
+
+    expect(sanitizeSharedText(input)).toHaveLength(200);
+    expect(performance.now() - start).toBeLessThan(50);
+  });
+
   it('Dado null, então vazio', () => {
     expect(sanitizeSharedText(null)).toBe('');
   });

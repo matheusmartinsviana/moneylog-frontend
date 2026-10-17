@@ -1,3 +1,7 @@
+import { trimMatching } from '~/util/trim';
+
+const isDot = (char: string): boolean => char === '.';
+
 const CONTROL_AND_BIDI =
   // eslint-disable-next-line no-control-regex
   /[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u2028-\u202e\u2060-\u2069\ufeff]/g;
@@ -33,10 +37,10 @@ export function safeFilenameFromContentDisposition(
     .replace(/[^\p{L}\p{N}._-]/gu, '_')
     .normalize('NFC');
   if (extension === '' || !cleaned.toLowerCase().endsWith(extension.toLowerCase())) return fallback;
-  const base = cleaned
-    .slice(0, cleaned.length - extension.length)
-    .replace(/^[.]+|[.]+$/g, '')
-    .slice(0, MAX_FILENAME_LENGTH - extension.length);
+  const base = trimMatching(cleaned.slice(0, cleaned.length - extension.length), isDot).slice(
+    0,
+    MAX_FILENAME_LENGTH - extension.length,
+  );
   if (/^[._-]*$/.test(base)) return fallback;
   return base + extension.toLowerCase();
 }

@@ -93,3 +93,18 @@ describe('safeFilenameFromContentDisposition', () => {
     expect(safeFilenameFromContentDisposition('attachment; filename="x.csv.exe"', CSV)).toBe(CSV);
   });
 });
+
+describe('safeFilenameFromContentDisposition com entrada adversa', () => {
+  it('Dado 10 000 pontos nas pontas do nome, então termina em menos de 50 ms', () => {
+    const dots = '.'.repeat(10_000);
+    const start = performance.now();
+
+    const name = safeFilenameFromContentDisposition(
+      `attachment; filename="${dots}a${dots}.csv"`,
+      CSV,
+    );
+
+    expect(performance.now() - start).toBeLessThan(50);
+    expect(name).toBe('a.csv');
+  });
+});

@@ -19,7 +19,10 @@ function toBase64Url(buffer: ArrayBuffer | null): string {
   if (!buffer) return '';
   let binary = '';
   for (const byte of new Uint8Array(buffer)) binary += String.fromCharCode(byte);
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(binary)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/={1,2}$/, '');
 }
 
 @Injectable({ providedIn: 'root' })
