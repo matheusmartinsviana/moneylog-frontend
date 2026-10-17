@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { Problem, toProblem } from '~/util/api/problem';
 
-function readText(blob: Blob): Promise<string> {
+export function readText(blob: Blob): Promise<string> {
   if (typeof blob.text === 'function') return blob.text();
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
