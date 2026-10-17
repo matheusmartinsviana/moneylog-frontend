@@ -794,7 +794,7 @@ export abstract class AppI18n {
       readonly title: string;
       readonly description: string;
       readonly email: string;
-      readonly password: string;
+      readonly passwordLabel: string;
       readonly submit: string;
       readonly submitting: string;
       readonly errors: {

@@ -7,9 +7,10 @@ import type { Locator, Page, Request } from '@playwright/test';
 import { expect, Lang, seedPreferences, test as base, waitForApp } from '../support';
 import { Api, FailureSink, resetDatabase } from '../support/api';
 import { ContractFailure, validateRequest, validateResponse } from '../support/contract';
+import { fmt } from '../support/format';
 import { expiredAccessToken, subjectOf } from '../support/jwt';
 
-export { expect, resetDatabase, seedPreferences, waitForApp };
+export { expect, fmt, resetDatabase, seedPreferences, waitForApp };
 export type { Lang };
 
 export const EVIDENCE_DIR = resolve(
@@ -336,15 +337,6 @@ export const norm = (s: string): string =>
     .replace(/\u00a0/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-
-export function fmt(amount: string): string {
-  const neg = amount.startsWith('-');
-  const abs = neg ? amount.slice(1) : amount;
-  const [int = '0', frac = '00'] = abs.split('.');
-  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  const isZero = /^0+(\.0+)?$/.test(abs);
-  return `${neg && !isZero ? '−' : ''}R$ ${grouped},${frac.padEnd(2, '0')}`;
-}
 
 export async function cyText(page: Page, cy: string): Promise<string> {
   const el = page.locator(`[data-cy="${cy}"]`).first();

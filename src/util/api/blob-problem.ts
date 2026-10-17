@@ -2,12 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import { Problem, toProblem } from '~/util/api/problem';
 
-function readText(blob: Blob): Promise<string> {
+export function readText(blob: Blob): Promise<string> {
   if (typeof blob.text === 'function') return blob.text();
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ''));
-    reader.onerror = () => reject(reader.error);
+    reader.onerror = () => reject(reader.error ?? new Error('blob read failed'));
     reader.readAsText(blob);
   });
 }

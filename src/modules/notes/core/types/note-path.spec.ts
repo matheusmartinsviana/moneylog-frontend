@@ -9,6 +9,7 @@ import {
   safeFileName,
   utf8Length,
 } from '~/modules/notes/core/types/note-path';
+import { fastestMs } from '~/testing/timing';
 
 describe('note-path', () => {
   it('Dado um caminho, então separa pasta, nome e extensão', () => {
@@ -40,7 +41,7 @@ describe('note-path', () => {
     ['a?b.md', 'INVALID'],
     ['a#b.md', 'INVALID'],
     ['a[b].md', 'INVALID'],
-    ['a‮b.md', 'INVALID'],
+    ['a\u202Eb.md', 'INVALID'],
     ['.oculta/x.md', 'INVALID'],
     ['a//b.md', 'INVALID'],
   ])('Dado o caminho %j, então o problema é %s', (path, expected) => {
@@ -50,7 +51,15 @@ describe('note-path', () => {
   it('Dado um rótulo livre, então vira nome de arquivo seguro', () => {
     expect(safeFileName('Notebook: MacBook Pro 14" / 2026?')).toBe('Notebook MacBook Pro 14 2026');
     expect(safeFileName('  ..  ')).toBe('');
+    expect(safeFileName('..a b..')).toBe('a b');
     expect(safeFileName('x'.repeat(200))).toHaveLength(80);
+  });
+
+  it('Dado 10 000 pontos e espaços nas pontas, então safeFileName termina em menos de 50 ms', () => {
+    const input = `${'. '.repeat(5_000)}nome${'. '.repeat(5_000)}`;
+
+    expect(safeFileName(input)).toBe('nome');
+    expect(fastestMs(() => safeFileName(input))).toBeLessThan(50);
   });
 
   it('Dado o limite em bytes, então conta UTF-8 e não caracteres', () => {

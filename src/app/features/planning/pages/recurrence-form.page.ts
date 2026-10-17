@@ -407,7 +407,7 @@ export class RecurrenceFormPage {
   }
 
   private backUrl(): string[] {
-    return this.editing() ? ['/planning/recurrences'] : ['/planning/recurrences'];
+    return ['/planning/recurrences'];
   }
 
   protected close(): void {

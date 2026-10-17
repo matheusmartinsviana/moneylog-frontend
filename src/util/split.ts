@@ -54,8 +54,8 @@ const PERCENT = /^(\d{1,3})(?:[.,](\d{1,2}))?$/;
 export function percentToBps(text: string | null): number | null {
   const match = PERCENT.exec((text ?? '').trim());
   if (!match) return null;
-  const whole = parseInt(match[1] ?? '0', 10);
-  const fraction = parseInt((match[2] ?? '').padEnd(2, '0'), 10);
+  const whole = Number.parseInt(match[1] ?? '0', 10);
+  const fraction = Number.parseInt((match[2] ?? '').padEnd(2, '0'), 10);
   const bps = whole * 100 + fraction;
   return bps >= 1 && bps <= FULL_BPS ? bps : null;
 }

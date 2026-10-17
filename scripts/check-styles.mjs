@@ -40,15 +40,48 @@ function classesOf(selector) {
   return new Set([...selector.matchAll(/\.(-?[_a-zA-Z][\w-]*)/g)].map((match) => match[1]));
 }
 
+export function cssBlocks(text) {
+  const blocks = [];
+  let start = 0;
+  let startLine = 1;
+  let open = -1;
+  let openLine = 1;
+  let newlines = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '\n') newlines++;
+    else if (char === '{') {
+      if (open !== -1) {
+        start = open + 1;
+        startLine = openLine;
+      }
+      open = i;
+      openLine = newlines + 1;
+    } else if (char === '}') {
+      if (open !== -1 && start < open) {
+        const raw = text.slice(start, open);
+        const leading = raw.slice(0, Math.max(0, raw.search(/\S/)));
+        blocks.push({
+          selector: raw.trim(),
+          body: text.slice(open + 1, i),
+          index: start,
+          line: startLine + leading.split('\n').length - 1,
+        });
+      }
+      start = i + 1;
+      startLine = newlines + 1;
+      open = -1;
+    }
+  }
+  return blocks;
+}
+
 export function findFixedBlurProblems(rel, source) {
   const text = source.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
   const found = [];
   const fixed = [];
   const blurred = [];
-  for (const match of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    const selector = match[1].trim();
-    const body = match[2];
-    const line = text.slice(0, match.index + match[0].indexOf(selector)).split('\n').length;
+  for (const { selector, body, index, line } of cssBlocks(text)) {
     const classes = classesOf(selector);
     const isFixed = FIXED_OR_STICKY.test(body);
     const isBlur = ACTIVE_BLUR.test(body);
@@ -58,8 +91,8 @@ export function findFixedBlurProblems(rel, source) {
       found.push(
         `${rel}:${line} elemento fixo ou sticky não recebe vidro (use .glass-panel--flat)`,
       );
-    if (isFixed) fixed.push({ classes, line, index: match.index });
-    if (isBlur) blurred.push({ classes, line, index: match.index });
+    if (isFixed) fixed.push({ classes, line, index });
+    if (isBlur) blurred.push({ classes, line, index });
   }
   for (const f of fixed)
     for (const b of blurred) {
@@ -141,7 +174,9 @@ export function checkStyles(root) {
     const text = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, (m) =>
       m.replace(/[^\n]/g, ' '),
     );
-    for (const match of text.matchAll(/(?<![-\w])(transition|animation)\s*:\s*([^;{}]+);/g)) {
+    for (const match of text.matchAll(
+      /(?<![-\w])(transition|animation)\s*:\s*([^\s;{}][^;{}]*);/g,
+    )) {
       const [, kind, value] = match;
       const line = text.slice(0, match.index).split('\n').length;
       for (const item of splitTopLevel(value)) {
@@ -149,7 +184,7 @@ export function checkStyles(root) {
         const property = item.split(/\s+/)[0];
         const infinite = /\binfinite\b/.test(item);
         const tokenized = /var\(--(duration|motion)-/.test(item) || /^none\b/.test(item);
-        if (!tokenized && !infinite && !/^0s?\b|\s0(s|ms)\b/.test(item)) {
+        if (!tokenized && !infinite && !/(?:^0s?\b)|(?:\s0(?:s|ms)\b)/.test(item)) {
           problems.push(`${rel}:${line} ${kind} sem duração por token (--duration-*): ${item}`);
         }
         if (

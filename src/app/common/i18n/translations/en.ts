@@ -853,7 +853,7 @@ export const en: AppI18n = {
       title: 'Sign in',
       description: 'Sign in to see your finances.',
       email: 'Email',
-      password: 'Password',
+      passwordLabel: 'Password',
       submit: 'Sign in',
       submitting: 'Signing in…',
       errors: {

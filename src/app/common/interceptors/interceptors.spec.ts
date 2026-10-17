@@ -178,12 +178,14 @@ describe('unauthorizedInterceptor', () => {
     controller.expectNone(AUTH_ENDPOINTS.refresh);
   });
 
-  it('Dado 401 em outra origem, então não tenta refresh', async () => {
+  it('Dado 401 em outra origem, então o erro chega ao chamador e não tenta refresh', async () => {
     const { http, controller } = await setup();
-    http.get('https://outra.example/v1/a').subscribe({ error: () => undefined });
+    let error: unknown;
+    http.get('https://outra.example/v1/a').subscribe({ error: (e: unknown) => (error = e) });
 
     controller.expectOne('https://outra.example/v1/a').flush(null, unauthorized);
 
+    expect(error).toMatchObject({ status: 401 });
     controller.expectNone(AUTH_ENDPOINTS.refresh);
   });
 });

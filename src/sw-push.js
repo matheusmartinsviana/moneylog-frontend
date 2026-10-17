@@ -116,7 +116,17 @@ async function storedLanguage() {
   }
 }
 
+function messageOrigin(event) {
+  if (event.origin) return event.origin;
+  try {
+    return new URL(event.source.url).origin;
+  } catch {
+    return '';
+  }
+}
+
 self.addEventListener('message', (event) => {
+  if (messageOrigin(event) !== self.location.origin) return;
   const data = event.data;
   if (!data || data.type !== 'LANGUAGE' || typeof data.language !== 'string') return;
   if (!Object.prototype.hasOwnProperty.call(TEXTS, data.language)) return;

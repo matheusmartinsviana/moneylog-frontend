@@ -6,7 +6,12 @@ import { dirname, join } from 'node:path';
 import { after, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
-import { TEMPORARY_EXCEPTIONS, checkStyles, findFixedBlurProblems } from './check-styles.mjs';
+import {
+  TEMPORARY_EXCEPTIONS,
+  checkStyles,
+  cssBlocks,
+  findFixedBlurProblems,
+} from './check-styles.mjs';
 
 const BOTTOM_NAV = 'src/app/common/components/app-shell/bottom-nav/bottom-nav.component.css';
 const script = fileURLToPath(new URL('./check-styles.mjs', import.meta.url));
@@ -70,6 +75,30 @@ test('transition com duração literal ou propriedade de layout falha', () => {
   assert.ok(problems.some((p) => /anima `width`/.test(p)));
 });
 
+test('transition com valor vazio não é tratada como duração literal', () => {
+  const problems = problemsOf({ 'src/app/x.css': '.a { transition: ; }\n' });
+  assert.deepEqual(
+    problems.filter((p) => /sem duração por token/.test(p)),
+    [],
+  );
+});
+
+test('cssBlocks devolve o bloco interno com seletor, corpo e linha, inclusive aninhado', () => {
+  const css = '@media (x) {\n  .a,\n  .b {\n    color: red;\n  }\n}\n.c{}\n';
+  assert.deepEqual(cssBlocks(css), [
+    { selector: '.a,\n  .b', body: '\n    color: red;\n  ', index: 12, line: 2 },
+    { selector: '.c', body: '', index: 47, line: 7 },
+  ]);
+});
+
+test('cssBlocks ignora chaves sem seletor e termina em tempo linear', () => {
+  assert.deepEqual(cssBlocks('{ x }'), []);
+  assert.deepEqual(cssBlocks('a } b { c }'), [{ selector: 'b', body: ' c ', index: 3, line: 1 }]);
+  const start = performance.now();
+  cssBlocks('a'.repeat(100000) + '}'.repeat(5000) + '{'.repeat(5000));
+  assert.ok(performance.now() - start < 50);
+});
+
 test('theme-color divergente do canvas falha', () => {
   const problems = problemsOf({
     'src/manifest.webmanifest': '{"background_color":"#000000","theme_color":"#f1f2ea"}',
@@ -128,12 +157,7 @@ test('o utilities.css real não tem blur em elemento fixo ou sticky', () => {
   assert.deepEqual(findFixedBlurProblems('src/styles/utilities.css', utilities), []);
 });
 
-function blocksOf(css) {
-  return [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
-    selector: m[1].trim(),
-    body: m[2],
-  }));
-}
+const blocksOf = cssBlocks;
 
 test('css do vidro do painel: o blur só existe com data-glass-panel', () => {
   const blurs = blocksOf(utilities).filter(

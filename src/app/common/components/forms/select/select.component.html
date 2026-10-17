@@ -65,7 +65,7 @@
           />
         </div>
       }
-      <ul
+      <div
         class="select__listbox"
         role="listbox"
         [id]="listboxId()"
@@ -78,17 +78,17 @@
         (keydown)="onKeydown($event)"
       >
         @for (section of sections(); track $index; let s = $index) {
-          <li role="presentation" class="select__section">
+          <div role="presentation" class="select__section">
             @if (section.label) {
               <span class="select__group" [id]="groupId(s)">{{ section.label }}</span>
             }
-            <ul
+            <div
               class="select__section-list"
               [attr.role]="section.label ? 'group' : 'presentation'"
               [attr.aria-labelledby]="section.label ? groupId(s) : null"
             >
               @for (entry of section.entries; track entry.option.value) {
-                <li
+                <div
                   role="option"
                   class="select__option"
                   [id]="optionId(entry.index)"
@@ -107,12 +107,12 @@
                     <span class="select__hint">{{ entry.option.hint }}</span>
                   }
                   <app-icon class="select__check" name="check" [size]="16" />
-                </li>
+                </div>
               }
-            </ul>
-          </li>
+            </div>
+          </div>
         }
-      </ul>
+      </div>
       @if (visible().length === 0) {
         <p class="select__empty" role="status" [attr.data-cy]="fieldId() + '-empty'">
           {{ query() ? t().form.ui.noResults : t().form.noOptions }}

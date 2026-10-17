@@ -108,7 +108,7 @@ export class DemoHttpBackend extends HttpBackend {
 
   handle(req: HttpRequest<unknown>): Observable<HttpEvent<unknown>> {
     try {
-      const url = new URL(req.urlWithParams, 'http://demo.local');
+      const url = new URL(req.urlWithParams, 'https://demo.local');
       const body = this.route(req, url);
       return of(new HttpResponse({ status: body === null ? 204 : 200, body, url: req.url })).pipe(
         delay(120),

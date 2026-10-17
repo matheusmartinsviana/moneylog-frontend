@@ -1,3 +1,4 @@
+import { fastestMs } from '~/testing/timing';
 import {
   MAX_FILENAME_LENGTH,
   safeFilenameFromContentDisposition,
@@ -91,5 +92,15 @@ describe('safeFilenameFromContentDisposition', () => {
     expect(safeFilenameFromContentDisposition('attachment; filename="x.json"', CSV)).toBe(CSV);
     expect(safeFilenameFromContentDisposition('attachment; filename="X.CSV"', CSV)).toBe('X.csv');
     expect(safeFilenameFromContentDisposition('attachment; filename="x.csv.exe"', CSV)).toBe(CSV);
+  });
+});
+
+describe('safeFilenameFromContentDisposition com entrada adversa', () => {
+  it('Dado 10 000 pontos nas pontas do nome, então termina em menos de 50 ms', () => {
+    const dots = '.'.repeat(10_000);
+    const header = `attachment; filename="${dots}a${dots}.csv"`;
+
+    expect(safeFilenameFromContentDisposition(header, CSV)).toBe('a.csv');
+    expect(fastestMs(() => safeFilenameFromContentDisposition(header, CSV))).toBeLessThan(50);
   });
 });

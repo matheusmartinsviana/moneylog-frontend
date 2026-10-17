@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const LIMIT_BYTES = 8 * 1024;
-const dist = process.argv[2] ?? new URL('../dist/moneylog/browser', import.meta.url).pathname;
+const root = resolve(import.meta.dirname, '..');
+const dist = resolve(root, process.argv[2] ?? 'dist/moneylog/browser');
+
+if (!dist.startsWith(root + sep)) {
+  console.error(`check-chart-budget: o diretório medido precisa ficar dentro de ${root}.`);
+  process.exit(2);
+}
 
 let files;
 try {

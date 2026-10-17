@@ -23,7 +23,7 @@ function causeOf(raw: string | null | undefined, detail: string): ImportApplyCau
 export function applyFailureOf(problem: Problem | null): ImportApplyFailure | null {
   if (problem?.code !== 'IMPORT_APPLY_FAILED') return null;
   const detail = problem.detail ?? '';
-  const match = /(?:linha|line|línea)\s*#?\s*(\d+)/i.exec(detail);
+  const match = /(?:linha|line|línea)\s*(?:#\s*)?(\d+)/i.exec(detail);
   const position =
     typeof problem.position === 'number'
       ? problem.position

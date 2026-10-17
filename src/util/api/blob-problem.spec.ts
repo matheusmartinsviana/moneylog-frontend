@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 
-import { problemFromBlobError } from '~/util/api/blob-problem';
+import { problemFromBlobError, readText } from '~/util/api/blob-problem';
 
 const blobError = (status: number, body: string) =>
   new HttpErrorResponse({
@@ -32,5 +32,30 @@ describe('problemFromBlobError', () => {
 
   it('Dado algo que não é HttpErrorResponse, então é NETWORK', async () => {
     expect(await problemFromBlobError(new Error('x'))).toMatchObject({ code: 'NETWORK' });
+  });
+
+  it('Dado um Blob sem text() e um FileReader que falha sem error, então a leitura rejeita com um Error e vira o código padrão', async () => {
+    class FailingReader {
+      error: DOMException | null = null;
+      onerror: (() => void) | null = null;
+      onload: (() => void) | null = null;
+      result: string | null = null;
+      readAsText(): void {
+        this.onerror?.();
+      }
+    }
+    vi.stubGlobal('FileReader', FailingReader);
+    const blob = new Blob(['{}']);
+    Object.defineProperty(blob, 'text', { value: undefined });
+    try {
+      const problem = await problemFromBlobError(
+        new HttpErrorResponse({ status: 400, error: blob, headers: new HttpHeaders() }),
+      );
+
+      expect(problem).toMatchObject({ status: 400, code: 'VALIDATION_FAILED' });
+      await expect(readText(blob)).rejects.toBeInstanceOf(Error);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

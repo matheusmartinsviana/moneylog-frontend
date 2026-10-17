@@ -52,40 +52,42 @@
 </div>
 <ul class="narrow" data-cy="entries-list">
   @for (entry of items(); track $index) {
-    <li
-      class="item"
-      tabindex="0"
-      [attr.data-cy]="'entry-item-' + $index"
-      [attr.aria-label]="openLabel(entry)"
-      (click)="open.emit(entry)"
-      (keydown.enter)="open.emit(entry)"
-    >
-      <div class="item__main">
-        <span class="item__description">{{ description(entry) }}</span>
-        <span class="item__meta">{{ entry.category.name }} · {{ competence(entry) }}</span>
-      </div>
-      <span class="item__amount" [class.is-negative]="negative(entry.amount)"
-        ><app-money [value]="entry.amount"
-      /></span>
+    <li class="item">
+      <button
+        type="button"
+        class="item__button"
+        [attr.data-cy]="'entry-item-' + $index"
+        [attr.aria-label]="openLabel(entry)"
+        (click)="open.emit(entry)"
+      >
+        <span class="item__main">
+          <span class="item__description">{{ description(entry) }}</span>
+          <span class="item__meta">{{ entry.category.name }} · {{ competence(entry) }}</span>
+        </span>
+        <span class="item__amount" [class.is-negative]="negative(entry.amount)"
+          ><app-money [value]="entry.amount"
+        /></span>
+      </button>
     </li>
   }
   @for (debt of debtItems(); track debt.debtId; let i = $index) {
-    <li
-      class="item"
-      tabindex="0"
-      [attr.data-cy]="'debt-entry-item-' + i"
-      [attr.aria-label]="debtLabel(debt)"
-      (click)="openDebt.emit(debt)"
-      (keydown.enter)="openDebt.emit(debt)"
-    >
-      <div class="item__main">
-        <span class="item__description">{{ debt.description }}</span>
-        <span class="item__meta"
-          >{{ t().transactions.debtEntry }} · {{ debt.category.name }} ·
-          {{ debtCompetence(debt) }}</span
-        >
-      </div>
-      <span class="item__amount"><app-money [value]="debt.amount" /></span>
+    <li class="item">
+      <button
+        type="button"
+        class="item__button"
+        [attr.data-cy]="'debt-entry-item-' + i"
+        [attr.aria-label]="debtLabel(debt)"
+        (click)="openDebt.emit(debt)"
+      >
+        <span class="item__main">
+          <span class="item__description">{{ debt.description }}</span>
+          <span class="item__meta"
+            >{{ t().transactions.debtEntry }} · {{ debt.category.name }} ·
+            {{ debtCompetence(debt) }}</span
+          >
+        </span>
+        <span class="item__amount"><app-money [value]="debt.amount" /></span>
+      </button>
     </li>
   }
 </ul>

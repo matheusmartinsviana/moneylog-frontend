@@ -8,6 +8,8 @@ type Listener = (event: any) => void;
 const root = process.cwd();
 const code = readFileSync(join(root, 'src/sw-push.js'), 'utf8');
 
+const APP_ORIGIN = 'https://app.moneylog.example';
+
 function loadWorker(language = 'pt') {
   const listeners = new Map<string, Listener>();
   const shown: { title: string; options: any }[] = [];
@@ -28,6 +30,7 @@ function loadWorker(language = 'pt') {
       }),
   };
   const self = {
+    location: { origin: APP_ORIGIN },
     addEventListener: (type: string, listener: Listener) => listeners.set(type, listener),
     registration: {
       showNotification: (title: string, options: unknown) => {
@@ -202,12 +205,57 @@ describe('sw-push.js (T137 CA1)', () => {
     const worker = loadWorker('pt');
     const waits: Promise<unknown>[] = [];
     const send = (data: unknown) =>
-      worker.listeners.get('message')!({ data, waitUntil: (p: Promise<unknown>) => waits.push(p) });
+      worker.listeners.get('message')!({
+        data,
+        origin: APP_ORIGIN,
+        waitUntil: (p: Promise<unknown>) => waits.push(p),
+      });
     send({ type: 'LANGUAGE', language: 'es' });
     send({ type: 'LANGUAGE', language: '../../x' });
     await Promise.all(waits);
     expect(waits).toHaveLength(1);
     expect(worker.store.get('/__language')).toBe('es');
+  });
+
+  describe('origem da mensagem LANGUAGE', () => {
+    const languageFrom = async (event: { origin?: string; source?: unknown }) => {
+      const worker = loadWorker('pt');
+      const waits: Promise<unknown>[] = [];
+      worker.listeners.get('message')!({
+        data: { type: 'LANGUAGE', language: 'es' },
+        waitUntil: (p: Promise<unknown>) => waits.push(p),
+        ...event,
+      });
+      await Promise.all(waits);
+      return { stored: worker.store.get('/__language'), waits: waits.length };
+    };
+
+    it('Dado a mensagem de outra origem, então nada é gravado e waitUntil não é chamado', async () => {
+      expect(await languageFrom({ origin: 'https://outra.example' })).toEqual({
+        stored: 'pt',
+        waits: 0,
+      });
+    });
+
+    it('Dado origin vazio e source.url da própria origem, então usa a origem do source e grava', async () => {
+      expect(await languageFrom({ origin: '', source: { url: `${APP_ORIGIN}/settings` } })).toEqual(
+        { stored: 'es', waits: 1 },
+      );
+    });
+
+    it('Dado origin vazio e source de outra origem, então nada é gravado', async () => {
+      expect(
+        await languageFrom({ origin: '', source: { url: 'https://outra.example/x' } }),
+      ).toEqual({ stored: 'pt', waits: 0 });
+    });
+
+    it('Dado origin vazio e sem source utilizável, então nada é gravado', async () => {
+      expect(await languageFrom({ origin: '' })).toEqual({ stored: 'pt', waits: 0 });
+      expect(await languageFrom({ origin: '', source: { url: 'não é url' } })).toEqual({
+        stored: 'pt',
+        waits: 0,
+      });
+    });
   });
 });
 

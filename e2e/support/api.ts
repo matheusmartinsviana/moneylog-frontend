@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { APIRequestContext } from '@playwright/test';
 
+import { dockerBinary } from './binaries';
 import { ContractFailure, validateRequest, validateResponse } from './contract';
 
 export interface Money {
@@ -165,7 +166,7 @@ function pg(args: string[]): string {
   const user = process.env['DB_USER'] ?? 'moneylog';
   const db = process.env['DB_NAME'] ?? 'moneylog_e2e';
   return execFileSync(
-    'docker',
+    dockerBinary(),
     ['exec', container, 'psql', '-At', '-v', 'ON_ERROR_STOP=1', '-U', user, '-d', db, ...args],
     { encoding: 'utf8' },
   ).trim();

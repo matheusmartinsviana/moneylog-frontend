@@ -54,7 +54,7 @@ describe('GoalGalleryComponent', () => {
 
   it('Dado o teclado, então setas, Home e End navegam e a lista dá a volta', async () => {
     await setup(photos(3));
-    screen.getByTestId('goal-gallery-viewer').focus();
+    screen.getByTestId('goal-gallery-next').focus();
 
     await userEvent.keyboard('{ArrowRight}');
     expect(bigAlt()).toBe('Foto 2 de 3 da meta Carro de exemplo');
@@ -83,6 +83,13 @@ describe('GoalGalleryComponent', () => {
     expect(bigAlt()).toBe('Foto 1 de 1 da meta Carro de exemplo');
     expect(screen.queryByTestId('goal-gallery-next')).not.toBeInTheDocument();
     expect(screen.queryByTestId('goal-gallery-thumbs')).not.toBeInTheDocument();
+    expect(screen.queryAllByRole('button')).toHaveLength(0);
+  });
+
+  it('Dado o visualizador, então não é parada de Tab (a navegação segue pelos botões e miniaturas)', async () => {
+    await setup(photos(3));
+
+    expect(screen.getByTestId('goal-gallery-viewer')).not.toHaveAttribute('tabindex');
   });
 
   it('Dado a foto atual removida, então volta para uma posição válida', async () => {

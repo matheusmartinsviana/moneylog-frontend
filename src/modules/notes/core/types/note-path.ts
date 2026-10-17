@@ -1,10 +1,12 @@
 import { MAX_NOTE_BYTES, MAX_PATH_LENGTH } from '~/modules/notes/core/types/note';
 import type { NoteSummary } from '~/modules/notes/core/types/note';
+import { trimMatching } from '~/util/trim';
 
 const FORBIDDEN_PATH_CHARS =
   // eslint-disable-next-line no-control-regex
   /[<>:"|?*#^[\]\\\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/;
 const MAX_DEPTH = 10;
+const isDotOrSpace = (char: string): boolean => char === '.' || /\s/.test(char);
 
 export type PathProblem = 'EMPTY' | 'TOO_LONG' | 'TOO_DEEP' | 'INVALID';
 
@@ -47,16 +49,12 @@ export function pathProblem(path: string): PathProblem | null {
 }
 
 export function safeFileName(label: string): string {
-  return (
-    label
-      .replace(/[<>:"|?*#^[\]\\/]/g, ' ')
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '')
-      .replace(/\s+/g, ' ')
-      .replace(/^[.\s]+|[.\s]+$/g, '')
-      .slice(0, 80)
-      .trim()
-  );
+  const cleaned = label
+    .replace(/[<>:"|?*#^[\]\\/]/g, ' ')
+    // eslint-disable-next-line no-control-regex
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g, '')
+    .replace(/\s+/g, ' ');
+  return trimMatching(cleaned, isDotOrSpace).slice(0, 80).trim();
 }
 
 export function utf8Length(text: string): number {
