@@ -7,6 +7,7 @@ import {
   OnInit,
   untracked,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
   FormControl,
@@ -158,11 +159,27 @@ export class NotificationSettingsPage implements OnInit {
     }
   });
 
+  private keepEditsOnNextLoad = false;
+
   constructor() {
     effect(() => {
       const settings = this.facade.settings();
       if (!settings) return;
-      untracked(() => this.fill(settings));
+      untracked(() => {
+        if (this.keepEditsOnNextLoad && this.form.dirty) {
+          this.keepEditsOnNextLoad = false;
+          return;
+        }
+        this.keepEditsOnNextLoad = false;
+        this.fill(settings);
+      });
+    });
+    this.push.changed$.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.keepEditsOnNextLoad = true;
+      this.facade.refresh();
+    });
+    this.facade.refreshFailed$.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.keepEditsOnNextLoad = false;
     });
     this.form.valueChanges.subscribe(() => this.facade.markEdited());
   }

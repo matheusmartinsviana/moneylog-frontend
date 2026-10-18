@@ -36,6 +36,7 @@ export class PushFacade {
   private readonly device = inject(PushDevice);
   private readonly loads = new Subject<void>();
   private readonly commands = new Subject<'enable' | 'disable'>();
+  private readonly changes = new Subject<void>();
   private readonly statusState = signal<PushStatus>('loading');
   private readonly busyState = signal(false);
   private readonly problemState = signal<Problem | null>(null);
@@ -44,6 +45,7 @@ export class PushFacade {
   readonly status = this.statusState.asReadonly();
   readonly busy = this.busyState.asReadonly();
   readonly problem = this.problemState.asReadonly();
+  readonly changed$ = this.changes.asObservable();
 
   constructor() {
     this.loads
@@ -77,7 +79,10 @@ export class PushFacade {
           this.problemState.set(null);
           const run = command === 'enable' ? this.enableFlow() : this.disableFlow();
           return from(run).pipe(
-            tap((status) => this.statusState.set(status)),
+            tap((status) => {
+              this.statusState.set(status);
+              if (status === 'subscribed' || command === 'disable') this.changes.next();
+            }),
             catchError((error: unknown) => {
               if (error instanceof Error && error.message === 'push-denied') {
                 this.statusState.set('denied');
