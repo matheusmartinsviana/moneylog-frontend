@@ -14,10 +14,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Entra com e-mail e senha do dono
+         * Entra com e-mail e senha
          * @description Devolve o access token (JWT de 15 min, guardado só em memória no front) e grava o refresh token em cookie
          *     `ml_refresh` (`HttpOnly; Secure; SameSite=Strict; Path=/v1/auth; Max-Age=2592000`). A mesma resposta
-         *     (`401 INVALID_CREDENTIALS`) vale para e-mail ou senha errados. Limite: 5 falhas por IP em 15 min → `429`.
+         *     (`401 INVALID_CREDENTIALS`) vale para e-mail inexistente, senha errada e usuário `DISABLED`, com corpo, cabeçalhos e tempo equivalentes (2.38.0). Limite: 5 falhas por IP ou por e-mail normalizado em 15 min → `429`, idêntico exista ou não o e-mail.
+         *     A resposta traz `user` (`id`, `email`, `role`).
          */
         post: operations["login"];
         delete?: never;
@@ -84,6 +85,7 @@ export interface paths {
          * Troca o refresh token (cookie) por um novo par
          * @description Rotativo: o cookie é substituído. O `Origin` precisa estar em `MONEYLOG_ALLOWED_ORIGINS` (proteção CSRF).
          *     Um refresh já rotacionado, reapresentado em até 30 s, gera um novo par da mesma família sem revogar nada (S-83).
+         *     Usuário `DISABLED` recebe `401 REFRESH_INVALID` e nenhum token novo (2.38.0).
          */
         post: operations["refreshToken"];
         delete?: never;
@@ -103,6 +105,185 @@ export interface paths {
         put?: never;
         /** Revoga a família do refresh token */
         post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invitations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista os convites (só o dono; lista curta, sem paginação, mais novos primeiro)
+         * @description Sem `status`, devolve todos. Um `PENDING` vencido sai como `EXPIRED`. Convites em estado final são apagados após `moneylog.invitations.retention-days` (90).
+         */
+        get: operations["listInvitations"];
+        put?: never;
+        /**
+         * Convida uma pessoa por e-mail (só o dono)
+         * @description Cria o convite `PENDING` (validade de 7 dias, token aleatório de 256 bits guardado só como hash) e envia o e-mail com o link
+         *     `https://moneylog.mviana.tech/convite#<token>`. O token em claro nunca aparece na resposta. Convite `PENDING` vencido do mesmo e-mail vira `EXPIRED` na mesma transação.
+         *     Erros: `409 EMAIL_ALREADY_REGISTERED` (e-mail já é usuário, ativo ou desativado, em qualquer caixa), `409 INVITATION_PENDING` (já há pendente não expirado; `invitationId` aponta o existente e o
+         *     caminho é `resend`), `409 USER_LIMIT_REACHED`, `404 INVITATIONS_DISABLED` com os convites desligados, `403 FORBIDDEN` para `MEMBER`.
+         *     `502 EMAIL_DELIVERY_FAILED`: o convite foi criado com `deliveryStatus = FAILED` e o `problem+json` traz `invitationId`; `POST /v1/invitations/{id}/resend` o reenvia.
+         */
+        post: operations["createInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invitations/{id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reenvia o convite com novo token (só o dono)
+         * @description Vale em `PENDING` e `EXPIRED`: o convite fica `PENDING` com novo token e novo `expiresAt` (7 dias); o token anterior passa a dar `404 INVALID_INVITATION`. Sem corpo.
+         *     `ACCEPTED` ou `REVOKED` → `409 INVITATION_NOT_RESENDABLE`. Em `EXPIRED` reavalia as regras de `POST /v1/invitations`:
+         *     `409 EMAIL_ALREADY_REGISTERED`, `409 INVITATION_PENDING` (há outro pendente não expirado para o e-mail; `invitationId` aponta o outro) e `409 USER_LIMIT_REACHED`
+         *     (o convite continua `EXPIRED`). `502 EMAIL_DELIVERY_FAILED` traz `invitationId` deste convite. `404 INVITATIONS_DISABLED` com os convites desligados; id desconhecido: `404 INVITATION_NOT_FOUND`.
+         */
+        post: operations["resendInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invitations/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoga o convite (só o dono)
+         * @description `PENDING` e `EXPIRED` viram `REVOKED`; repetir em `REVOKED` é idempotente e devolve o mesmo recurso. `ACCEPTED` → `409 INVITATION_NOT_REVOCABLE`.
+         *     Devolve o convite atualizado (`200`), não `204`. Id desconhecido: `404 INVITATION_NOT_FOUND`.
+         */
+        delete: operations["revokeInvitation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invitations/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mostra o e-mail e a validade de um convite (público)
+         * @description Público, sem JWT. O token vai **no corpo** (lido do fragmento da URL pelo front), nunca em caminho nem query. Token expirado, usado, revogado ou inexistente:
+         *     `404 INVALID_INVITATION`, idêntico (corpo, cabeçalhos e tempo) nos quatro casos. Com os convites desligados também responde `404`. Limite de tentativas por IP e hash do token
+         *     apresentado: `429 TOO_MANY_ATTEMPTS` com `Retry-After`, idêntico exista ou não o token. Sempre `Cache-Control: no-store`.
+         */
+        post: operations["previewInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/invitations/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Aceita o convite, cria a conta e abre a sessão (público)
+         * @description Público, sem JWT e sem cookie de autenticação prévio (não é alvo de CSRF). O token vai **no corpo**, nunca em caminho nem query. Consome o convite de forma atômica, cria o usuário
+         *     `MEMBER`/`ACTIVE`, semeia as categorias do sistema e devolve o mesmo par do login (cookie `ml_refresh` + `AuthToken`), tudo na mesma transação; falha em qualquer parte desfaz tudo e o token continua válido.
+         *     Senha: mesma política do primeiro acesso (12 a 72 bytes e diferente do e-mail); fraca → `422 WEAK_PASSWORD`, sem consumir o token. Token expirado, usado, revogado, inexistente, convites
+         *     desligados, ou e-mail que passou a existir como usuário desde o convite (o convite vira `REVOKED`): `404 INVALID_INVITATION`, idêntico. Limite de tentativas: `429` com `Retry-After`.
+         *     Sempre `Cache-Control: no-store`.
+         */
+        post: operations["acceptInvitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista os usuários (só o dono; lista curta, sem paginação)
+         * @description Traz e-mail, papel, status e datas. Nunca traz dado financeiro de ninguém. O total é limitado por `moneylog.users.max`.
+         */
+        get: operations["listUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/users/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Desativa um usuário (só o dono)
+         * @description Bloqueia o login e o refresh, revoga as sessões na mesma transação e **não apaga dados**; o access token em uso recebe `401` na chamada seguinte. Sem corpo.
+         *     Repetir em usuário já `DISABLED` devolve o mesmo recurso. O dono não se desativa: `409 CANNOT_DISABLE_OWNER`. Usuário inexistente: `404 USER_NOT_FOUND`.
+         */
+        post: operations["disableUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/users/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reativa um usuário (só o dono)
+         * @description O usuário volta a entrar com a mesma senha e vê os mesmos dados. Sem corpo. Repetir em usuário já `ACTIVE` devolve o mesmo recurso. Usuário inexistente: `404 USER_NOT_FOUND`.
+         */
+        post: operations["enableUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3169,7 +3350,7 @@ export interface paths {
         };
         /**
          * Estado da IA (ligada ou não, restos de limite e disjuntor)
-         * @description Nunca devolve a chave nem a URL base. `enabled: false` = nenhum provedor configurado; o app segue normal.
+         * @description Nunca devolve a chave nem a URL base. `enabled: false` = nenhum provedor configurado; o app segue normal. Para `MEMBER` (2.38.0) responde `200` com `enabled: false`, nunca `403`: é a sonda de capacidade do front.
          */
         get: operations["getAiStatus"];
         put?: never;
@@ -3974,6 +4155,11 @@ export interface components {
             errors?: components["schemas"]["FieldError"][];
             /** @description Só em `IMPORT_APPLY_FAILED` (2.10.0): posição (1 = primeira) da linha do lote que falhou. */
             position?: number;
+            /**
+             * Format: uuid
+             * @description Só em `INVITATION_PENDING` (2.38.0: o convite pendente existente) e `EMAIL_DELIVERY_FAILED` (o convite criado ou reenviado, com `deliveryStatus = FAILED`).
+             */
+            invitationId?: string;
             /** @description Só em `IMPORT_APPLY_FAILED` (2.10.0): `code` da recusa da linha (ex.: `IMPORT_LINE_ALREADY_RECORDED`, `IMPORT_TRANSFER_LEG_ALREADY_RECORDED`). Código aberto; o front trata os desconhecidos como genéricos. */
             cause?: string;
         };
@@ -4102,6 +4288,79 @@ export interface components {
             accessToken: string;
             /** Format: date-time */
             expiresAt: string;
+            user: components["schemas"]["AuthUser"];
+        };
+        /** @description Quem abriu a sessão (2.38.0, aditivo). `role` é só dica para a interface; a autorização vem do papel no banco. */
+        AuthUser: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            role: components["schemas"]["UserRole"];
+        };
+        /** @enum {string} */
+        UserRole: "OWNER" | "MEMBER";
+        /** @enum {string} */
+        UserStatus: "ACTIVE" | "DISABLED";
+        /** @description Usuário na visão do dono (2.38.0). Nenhum dado financeiro. */
+        ManagedUser: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            role: components["schemas"]["UserRole"];
+            status: components["schemas"]["UserStatus"];
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Instante do último login; ausente ou nulo se nunca entrou.
+             */
+            lastLoginAt?: string | null;
+        };
+        /** @enum {string} */
+        InvitationStatus: "PENDING" | "ACCEPTED" | "EXPIRED" | "REVOKED";
+        /** @enum {string} */
+        InvitationDeliveryStatus: "SENT" | "FAILED";
+        /** @description Convite na visão do dono (2.38.0). Nunca traz o token em claro. */
+        Invitation: {
+            /** Format: uuid */
+            id: string;
+            /** Format: email */
+            email: string;
+            status: components["schemas"]["InvitationStatus"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            expiresAt: string;
+            /**
+             * Format: date-time
+             * @description Só em `ACCEPTED`.
+             */
+            acceptedAt?: string | null;
+            /** Format: date-time */
+            lastSentAt: string;
+            deliveryStatus: components["schemas"]["InvitationDeliveryStatus"];
+        };
+        InvitationInput: {
+            /** Format: email */
+            email: string;
+        };
+        InvitationPreviewRequest: {
+            /** @description Token lido do fragmento da URL do e-mail; nunca em caminho nem query. */
+            token: string;
+        };
+        InvitationPreview: {
+            /** Format: email */
+            email: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        InvitationAcceptRequest: {
+            /** @description Token lido do fragmento da URL do e-mail; nunca em caminho nem query. */
+            token: string;
+            /** @description 12 a 72 bytes e diferente do e-mail; fraca → `422 WEAK_PASSWORD`, sem consumir o token. */
+            password: string;
         };
         Account: {
             /** Format: uuid */
@@ -9618,7 +9877,31 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
-        /** @description `<FEATURE>_NOT_FOUND`: o recurso não existe **ou é de outro usuário**. */
+        /**
+         * @description `FORBIDDEN` (2.38.0): o usuário autenticado não tem o papel exigido (`MEMBER` em gestão de usuários, de convites ou em IA). O papel e o status vêm do banco a cada requisição;
+         *     a claim `role` do JWT não autoriza nada. Distinto de `ORIGIN_NOT_ALLOWED`.
+         */
+        ForbiddenRole: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /**
+         * @description `EMAIL_DELIVERY_FAILED` (2.38.0): o provedor de e-mail recusou o envio. O convite **foi gravado** com `deliveryStatus = FAILED`; `invitationId` no corpo identifica o convite para `resend`.
+         *     Mensagem genérica, sem credencial nem corpo do e-mail.
+         */
+        EmailDeliveryFailed: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+        /** @description `<FEATURE>_NOT_FOUND`: o recurso não existe **ou é de outro usuário**. Em `preview` e `accept` de convite: `INVALID_INVITATION`, também com os convites desligados. Na gestão: `INVITATION_NOT_FOUND`, `USER_NOT_FOUND` e, com os convites desligados, `INVITATIONS_DISABLED` em criar e reenviar. */
         NotFound: {
             headers: {
                 [name: string]: unknown;
@@ -9628,7 +9911,8 @@ export interface components {
             };
         };
         /**
-         * @description `VERSION_CONFLICT`, `CATEGORY_NAME_TAKEN`, `IDEMPOTENCY_KEY_REUSED`, `CARD_BILLING_CHANGE_STALE` ou `CONFLICT`.
+         * @description `VERSION_CONFLICT`, `CATEGORY_NAME_TAKEN`, `IDEMPOTENCY_KEY_REUSED`, `CARD_BILLING_CHANGE_STALE` ou `CONFLICT`. Em convites e usuários (2.38.0): `EMAIL_ALREADY_REGISTERED`,
+         *     `INVITATION_PENDING` (com `invitationId`), `USER_LIMIT_REACHED`, `INVITATION_NOT_RESENDABLE`, `INVITATION_NOT_REVOCABLE` e `CANNOT_DISABLE_OWNER`.
          *     `CONFLICT` vale para qualquer rota de escrita: duas requisições simultâneas colidiram numa trava (deadlock); o
          *     servidor desfez a que perdeu, nada foi gravado e o cliente repete a mesma requisição. Vem com o header
          *     `Retry-After` (segundos) e mensagem genérica.
@@ -9852,6 +10136,267 @@ export interface operations {
                 content?: never;
             };
             403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listInvitations: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["InvitationStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Convites. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"][];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationInput"];
+            };
+        };
+        responses: {
+            /** @description Convite criado e e-mail enviado. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["UnprocessableEntity"];
+            500: components["responses"]["InternalServerError"];
+            502: components["responses"]["EmailDeliveryFailed"];
+        };
+    };
+    resendInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Convite atualizado e e-mail reenviado. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalServerError"];
+            502: components["responses"]["EmailDeliveryFailed"];
+        };
+    };
+    revokeInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Convite com `status = REVOKED`. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Invitation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    previewInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description O convite é válido. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitationPreview"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    acceptInvitation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationAcceptRequest"];
+            };
+        };
+        responses: {
+            /** @description Conta criada e sessão aberta. */
+            200: {
+                headers: {
+                    "Set-Cookie": components["headers"]["RefreshCookie"];
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuthToken"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["UnprocessableEntity"];
+            429: components["responses"]["TooManyRequests"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    listUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Usuários, o dono primeiro. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedUser"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    disableUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Usuário com `status = DISABLED`. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    enableUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Usuário com `status = ACTIVE`. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManagedUser"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
+            404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -14330,6 +14875,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
             422: components["responses"]["UnprocessableEntity"];
             500: components["responses"]["InternalServerError"];
         };
@@ -14356,6 +14902,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
             404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
         };
@@ -14420,6 +14967,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
             404: components["responses"]["NotFound"];
             422: components["responses"]["UnprocessableEntity"];
             429: components["responses"]["AiRateLimited"];
@@ -14449,6 +14997,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
             404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
         };
@@ -14673,6 +15222,7 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
             500: components["responses"]["InternalServerError"];
         };
     };
@@ -14701,6 +15251,7 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+            403: components["responses"]["ForbiddenRole"];
             422: components["responses"]["UnprocessableEntity"];
             500: components["responses"]["InternalServerError"];
         };
