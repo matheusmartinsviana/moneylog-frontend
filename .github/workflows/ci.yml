@@ -63,15 +63,16 @@ jobs:
         if: github.event_name == 'push' || (github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: >
-          npx --yes @sonar/scan
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.organization=matheusmartinsviana
-          -Dsonar.projectKey=matheusmartinsviana_moneylog-frontend
-          -Dsonar.sources=.
-          -Dsonar.exclusions=node_modules/**,coverage/**,dist/**,.angular/**
-          -Dsonar.test.inclusions=**/*.spec.ts,e2e/**
-          -Dsonar.cpd.exclusions=src/app/common/i18n/**,src/util/api/schema.gen.ts
+        run: |
+          npm install --no-save --ignore-scripts --no-audit --no-fund @sonar/scan@5.0.2
+          ./node_modules/.bin/sonar-scanner-npm \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.organization=matheusmartinsviana \
+          -Dsonar.projectKey=matheusmartinsviana_moneylog-frontend \
+          -Dsonar.sources=. \
+          -Dsonar.exclusions=node_modules/**,coverage/**,dist/**,.angular/** \
+          -Dsonar.test.inclusions=**/*.spec.ts,e2e/** \
+          -Dsonar.cpd.exclusions=src/app/common/i18n/**,src/util/api/schema.gen.ts \
           -Dsonar.javascript.lcov.reportPaths=coverage/moneylog/lcov.info
 
   build:
