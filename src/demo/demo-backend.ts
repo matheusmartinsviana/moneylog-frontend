@@ -547,7 +547,15 @@ export class DemoHttpBackend extends HttpBackend {
   }
 
   private token(): S['AuthToken'] {
-    return { accessToken: 'demo-session', expiresAt: `${addDays(localToday(), 1)}T12:00:00Z` };
+    return {
+      accessToken: 'demo-session',
+      expiresAt: `${addDays(localToday(), 1)}T12:00:00Z`,
+      user: {
+        id: '00000000-0000-4000-8000-000000000001',
+        email: 'demo@moneylog.app',
+        role: 'OWNER',
+      },
+    };
   }
 
   private purchasePreview(input: {
