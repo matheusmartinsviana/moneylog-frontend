@@ -81,6 +81,7 @@ export class NotificationsGatewayStub extends NotificationsGateway {
   settingsValue: NotificationSettings = someSettings();
   pushConfigValue: PushConfig = { enabled: false, publicKey: null };
   unread = 0;
+  settingsLoads = 0;
   daily: DailyMessage | null = null;
   readonly calls: string[] = [];
   readonly queries: NotificationsQuery[] = [];
@@ -154,6 +155,7 @@ export class NotificationsGatewayStub extends NotificationsGateway {
   }
 
   settings(): Observable<NotificationSettings> {
+    this.settingsLoads += 1;
     return of(this.settingsValue);
   }
 

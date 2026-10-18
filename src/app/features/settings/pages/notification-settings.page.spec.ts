@@ -267,6 +267,58 @@ describe('NotificationSettingsPage (T136)', () => {
     fixture.detectChanges();
   });
 
+  it('Dado push ativado, então recarrega as configurações e salva com a version nova', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.pushConfigValue = { enabled: true, publicKey: 'K' };
+    const { fixture } = await setup(gateway);
+    expect(gateway.settingsLoads).toBe(1);
+
+    gateway.settingsValue = someSettings({ version: 4 });
+    await userEvent.click(screen.getByTestId('push-enable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(2));
+    await fixture.whenStable();
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+
+    expect(gateway.savedSettings[0]?.version).toBe(4);
+  });
+
+  it('Dado push desativado, então recarrega as configurações', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.pushConfigValue = { enabled: true, publicKey: 'K' };
+    const { device } = await setup(gateway);
+    device.endpoint = 'https://push.example/abc';
+    await userEvent.click(screen.getByTestId('push-enable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(2));
+
+    await userEvent.click(screen.getByTestId('push-disable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(3));
+  });
+
+  it('Dado falha ao ativar o push, então não recarrega as configurações', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.pushConfigValue = { enabled: true, publicKey: 'K' };
+    const device = new PushDeviceFake();
+    device.denyOnSubscribe = true;
+    await setup(gateway, device);
+
+    await userEvent.click(screen.getByTestId('push-enable'));
+    await vi.waitFor(() => expect(screen.getByTestId('push-status')).toHaveTextContent('Reative'));
+
+    expect(gateway.settingsLoads).toBe(1);
+  });
+
+  it('Dado edição pendente, quando o push é ativado, então preserva o que foi digitado', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.pushConfigValue = { enabled: true, publicKey: 'K' };
+    await setup(gateway);
+
+    await userEvent.type(screen.getByTestId('settings-display-name'), 'Ana');
+    await userEvent.click(screen.getByTestId('push-enable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(2));
+
+    expect(screen.getByTestId('settings-display-name')).toHaveValue('Ana');
+  });
+
   it('Dado a página, então o axe não aponta violações', async () => {
     const { container } = await setup();
     const violations = await axeViolations(container);
