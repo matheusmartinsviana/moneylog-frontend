@@ -319,6 +319,44 @@ describe('NotificationSettingsPage (T136)', () => {
     expect(screen.getByTestId('settings-display-name')).toHaveValue('Ana');
   });
 
+  it('Dado edição pendente, quando o push é ativado e salva, então envia o texto digitado com a version e o push novos', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.pushConfigValue = { enabled: true, publicKey: 'K' };
+    const { fixture } = await setup(gateway);
+
+    await userEvent.type(screen.getByTestId('settings-display-name'), 'Ana');
+    gateway.settingsValue = someSettings({ version: 7, push: { enabled: true } });
+    await userEvent.click(screen.getByTestId('push-enable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(2));
+    await fixture.whenStable();
+    await userEvent.click(screen.getByTestId('notification-settings-save'));
+
+    expect(gateway.savedSettings[0]?.displayName).toBe('Ana');
+    expect(gateway.savedSettings[0]?.version).toBe(7);
+    expect(gateway.savedSettings[0]?.push.enabled).toBe(true);
+  });
+
+  it('Dado falha ao recarregar após o push, então mantém o formulário sem erro e sem estado oculto', async () => {
+    const gateway = new NotificationsGatewayStub();
+    gateway.pushConfigValue = { enabled: true, publicKey: 'K' };
+    const { fixture } = await setup(gateway);
+
+    await userEvent.type(screen.getByTestId('settings-display-name'), 'Ana');
+    gateway.settingsError = aProblem(500, 'INTERNAL');
+    await userEvent.click(screen.getByTestId('push-enable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(2));
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(screen.getByTestId('settings-display-name')).toHaveValue('Ana');
+    expect(screen.queryByTestId('error-state')).not.toBeInTheDocument();
+
+    gateway.settingsError = null;
+    gateway.settingsValue = someSettings({ displayName: 'Bia', version: 9 });
+    await userEvent.click(screen.getByTestId('push-disable'));
+    await vi.waitFor(() => expect(gateway.settingsLoads).toBe(3));
+  });
+
   it('Dado a página, então o axe não aponta violações', async () => {
     const { container } = await setup();
     const violations = await axeViolations(container);

@@ -176,7 +176,10 @@ export class NotificationSettingsPage implements OnInit {
     });
     this.push.changed$.pipe(takeUntilDestroyed()).subscribe(() => {
       this.keepEditsOnNextLoad = true;
-      this.facade.load();
+      this.facade.refresh();
+    });
+    this.facade.refreshFailed$.pipe(takeUntilDestroyed()).subscribe(() => {
+      this.keepEditsOnNextLoad = false;
     });
     this.form.valueChanges.subscribe(() => this.facade.markEdited());
   }

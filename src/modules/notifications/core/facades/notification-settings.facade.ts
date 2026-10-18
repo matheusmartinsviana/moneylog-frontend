@@ -16,7 +16,8 @@ export type SettingsState =
 export class NotificationSettingsFacade {
   private readonly gateway = inject(NotificationsGateway);
   private readonly profile = inject(ProfileFacade);
-  private readonly loads = new Subject<void>();
+  private readonly loads = new Subject<boolean>();
+  private readonly refreshFailures = new Subject<void>();
   private readonly saves = new Subject<NotificationSettings>();
   private readonly current = signal<SettingsState>({ status: 'loading' });
   private readonly savingState = signal(false);
@@ -31,20 +32,27 @@ export class NotificationSettingsFacade {
   readonly saving = this.savingState.asReadonly();
   readonly problem = this.problemState.asReadonly();
   readonly saved = this.savedState.asReadonly();
+  readonly refreshFailed$ = this.refreshFailures.asObservable();
 
   constructor() {
     this.loads
       .pipe(
-        switchMap(() =>
-          this.gateway.settings().pipe(
+        switchMap((silent) => {
+          const keep = silent ? this.current() : null;
+          const quiet = keep?.status === 'ready';
+          return this.gateway.settings().pipe(
             tap((settings) => this.profile.adopt(settings)),
             map((settings): SettingsState => ({ status: 'ready', settings })),
-            startWith<SettingsState>({ status: 'loading' }),
-            catchError((error: unknown) =>
-              of<SettingsState>({ status: 'error', problem: problemOf(error) }),
-            ),
-          ),
-        ),
+            startWith<SettingsState>(quiet && keep ? keep : { status: 'loading' }),
+            catchError((error: unknown) => {
+              if (quiet && keep) {
+                this.refreshFailures.next();
+                return of<SettingsState>(keep);
+              }
+              return of<SettingsState>({ status: 'error', problem: problemOf(error) });
+            }),
+          );
+        }),
         takeUntilDestroyed(),
       )
       .subscribe((state) => this.current.set(state));
@@ -65,7 +73,7 @@ export class NotificationSettingsFacade {
             catchError((error: unknown) => {
               const problem = problemOf(error);
               this.problemState.set(problem);
-              if (problem.code === 'VERSION_CONFLICT') this.loads.next();
+              if (problem.code === 'VERSION_CONFLICT') this.loads.next(false);
               return of(null);
             }),
           );
@@ -76,7 +84,11 @@ export class NotificationSettingsFacade {
   }
 
   load(): void {
-    this.loads.next();
+    this.loads.next(false);
+  }
+
+  refresh(): void {
+    this.loads.next(true);
   }
 
   save(settings: NotificationSettings): void {
