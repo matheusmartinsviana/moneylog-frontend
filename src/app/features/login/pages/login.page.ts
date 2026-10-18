@@ -39,6 +39,8 @@ export class LoginPage {
   protected readonly t = inject(I18nService).t;
 
   readonly returnUrl = input<string>();
+  readonly ended = input<string>();
+  protected readonly sessionEnded = computed(() => this.ended() === '1');
 
   protected readonly form = new FormGroup({
     email: new FormControl('', {
@@ -183,6 +185,7 @@ export class LoginPage {
     });
 
     this.session.signedIn$.pipe(takeUntilDestroyed()).subscribe(() => {
+      if (this.session.signedInAsAnotherUser()) return;
       void this.router.navigateByUrl(safeReturnUrl(this.returnUrl()));
     });
   }

@@ -595,6 +595,7 @@ export const en: AppI18n = {
   },
   ai: {
     status: {
+      forbidden: 'This area is only for the account administrator.',
       on: 'AI on',
       providerLine: 'Provider: {provider}. Model: {model}.',
       remaining: '{calls} calls left today and {tokens} tokens left this month.',
@@ -865,6 +866,7 @@ export const en: AppI18n = {
       statusUnavailable:
         "We couldn't check whether this is the first access. If it is, try again in a moment.",
       checking: 'Checking…',
+      sessionEnded: 'Your session ended. Sign in again to continue.',
     },
     setup: {
       title: 'First access',

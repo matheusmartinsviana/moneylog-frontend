@@ -4,6 +4,9 @@ import {
   MORE_ITEMS,
   SIDEBAR_GROUPS,
   SIDEBAR_ITEMS,
+  SIDEBAR_POPOVER_ITEMS,
+  visibleGroups,
+  visibleItems,
 } from '~/app/common/components/app-shell/navigation';
 import { en } from '~/app/common/i18n/translations/en';
 import { es } from '~/app/common/i18n/translations/es';
@@ -96,5 +99,27 @@ describe('Navegação em grupos (DS 02, T193)', () => {
 
   it('Dado o rótulo de planejamento, então segue "Planejamento" (decisão do dono, não "Relatórios")', () => {
     expect(pt.nav.planning).toBe('Planejamento');
+  });
+});
+
+describe('Navegação por papel (T11)', () => {
+  it('Dado um convidado, então IA e MCP somem dos itens e o resto permanece', () => {
+    const keys = visibleItems(SIDEBAR_POPOVER_ITEMS, false).map((item) => item.key);
+
+    expect(keys).not.toContain('ai');
+    expect(keys).not.toContain('mcp');
+    expect(keys).toContain('vault');
+    expect(keys).toContain('import');
+  });
+
+  it('Dado o dono, então vê todos os itens', () => {
+    expect(visibleItems(SIDEBAR_POPOVER_ITEMS, true)).toEqual(SIDEBAR_POPOVER_ITEMS);
+  });
+
+  it('Dado um convidado, então os grupos do "Mais" não trazem IA nem MCP', () => {
+    const keys = visibleGroups(MORE_GROUPS, false).flatMap((g) => g.items.map((i) => i.key));
+
+    expect(keys).not.toContain('ai');
+    expect(keys).not.toContain('mcp');
   });
 });

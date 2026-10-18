@@ -7,13 +7,17 @@ import { provideRouter, Router } from '@angular/router';
 import { authInterceptor } from '~/app/common/interceptors/auth.interceptor';
 import { unauthorizedInterceptor } from '~/app/common/interceptors/unauthorized.interceptor';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
-import { AUTH_ENDPOINTS, provideAuthOverHttp } from '~/testing/auth-testing';
+import { AUTH_ENDPOINTS, OWNER_USER, provideAuthOverHttp } from '~/testing/auth-testing';
 
 @Component({ selector: 'app-dummy', template: '' })
 class DummyComponent {}
 
 const unauthorized = { status: 401, statusText: 'Unauthorized' };
-const token = (accessToken: string) => ({ accessToken, expiresAt: '2026-10-10T12:15:00Z' });
+const token = (accessToken: string) => ({
+  accessToken,
+  expiresAt: '2026-10-10T12:15:00Z',
+  user: OWNER_USER,
+});
 
 async function setup() {
   TestBed.configureTestingModule({
@@ -122,7 +126,7 @@ describe('unauthorizedInterceptor', () => {
     expect(session.status()).toBe('anonymous');
     expect(session.token()).toBeNull();
     expect(error).toMatchObject({ status: 401 });
-    await vi.waitFor(() => expect(router.url).toBe('/login?returnUrl=%2Ftransactions'));
+    await vi.waitFor(() => expect(router.url).toBe('/login?returnUrl=%2Ftransactions&ended=1'));
   });
 
   it('Dado três 401 e o refresh recusado, então navega para o login uma vez só', async () => {

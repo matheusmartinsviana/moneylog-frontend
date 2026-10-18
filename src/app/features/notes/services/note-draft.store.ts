@@ -5,7 +5,8 @@ export interface NoteDraft {
   readonly version: number;
 }
 
-const PREFIX = 'moneylog:note-draft:';
+export const NOTE_DRAFT_PREFIX = 'moneylog:note-draft:';
+const PREFIX = NOTE_DRAFT_PREFIX;
 
 @Injectable({ providedIn: 'root' })
 export class NoteDraftStore {

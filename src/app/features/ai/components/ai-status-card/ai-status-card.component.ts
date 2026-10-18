@@ -14,10 +14,19 @@ import { AiStatusFacade } from '~/modules/ai/core/facades/ai-status.facade';
           <p role="status" data-cy="ai-status-loading">{{ t().ai.status.loading }}</p>
         }
         @case ('error') {
-          <p role="alert" data-cy="ai-status-error">{{ t().ai.status.error }}</p>
-          <button type="button" class="button" data-cy="ai-status-retry" (click)="status.reload()">
-            {{ t().ai.status.retry }}
-          </button>
+          @if (forbidden()) {
+            <p role="alert" data-cy="ai-status-forbidden">{{ t().ai.status.forbidden }}</p>
+          } @else {
+            <p role="alert" data-cy="ai-status-error">{{ t().ai.status.error }}</p>
+            <button
+              type="button"
+              class="button"
+              data-cy="ai-status-retry"
+              (click)="status.reload()"
+            >
+              {{ t().ai.status.retry }}
+            </button>
+          }
         }
         @case ('ready') {
           @if (status.data(); as data) {
@@ -65,6 +74,10 @@ export class AiStatusCardComponent {
   protected readonly status = inject(AiStatusFacade);
   protected readonly t = inject(I18nService).t;
 
+  protected readonly forbidden = computed(() => {
+    const state = this.status.state();
+    return state.status === 'error' && state.problem.status === 403;
+  });
   protected readonly providerLine = computed(() => {
     const data = this.status.data();
     return interpolate(this.t().ai.status.providerLine, {

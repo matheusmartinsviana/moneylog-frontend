@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { AppShellComponent } from '~/app/common/components/app-shell/app-shell.component';
 import { authGuard, guestGuard } from '~/app/common/guards/auth.guard';
+import { ownerGuard } from '~/app/common/guards/role.guard';
 import { devRoutes } from '~/app/config/dev-routes';
 
 const quickAddRoutes = () => import('~/app/features/quick-add/quick-add.routes');
@@ -52,8 +53,16 @@ export const routes: Routes = [
       { path: 'insights', loadChildren: () => import('~/app/features/insights/insights.routes') },
       { path: 'budgets', loadChildren: () => import('~/app/features/budgets/budgets.routes') },
       { path: 'vault', loadChildren: () => import('~/app/features/vault/vault.routes') },
-      { path: 'ai', loadChildren: () => import('~/app/features/ai/ai.routes') },
-      { path: 'mcp', loadChildren: () => import('~/app/features/mcp/mcp.routes') },
+      {
+        path: 'ai',
+        canMatch: [ownerGuard],
+        loadChildren: () => import('~/app/features/ai/ai.routes'),
+      },
+      {
+        path: 'mcp',
+        canMatch: [ownerGuard],
+        loadChildren: () => import('~/app/features/mcp/mcp.routes'),
+      },
       { path: 'settings', loadChildren: () => import('~/app/features/settings/settings.routes') },
       ...devRoutes,
       { path: '**', loadChildren: () => import('~/app/features/not-found/not-found.routes') },

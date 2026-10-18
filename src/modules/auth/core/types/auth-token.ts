@@ -1,6 +1,15 @@
+export type UserRole = 'OWNER' | 'MEMBER';
+
+export interface SessionUser {
+  readonly id: string;
+  readonly email: string;
+  readonly role: UserRole;
+}
+
 export interface AuthToken {
   readonly accessToken: string;
   readonly expiresAt: string;
+  readonly user: SessionUser;
 }
 
 export interface Credentials {

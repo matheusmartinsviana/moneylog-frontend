@@ -117,6 +117,11 @@
         <p class="login__brand" data-cy="login-brand">{{ t().shell.brand }}</p>
         <h1 class="login__title" data-cy="page-title">{{ t().auth.login.title }}</h1>
         <p class="login__description">{{ t().auth.login.description }}</p>
+        @if (sessionEnded()) {
+          <p class="login__description" role="status" data-cy="login-session-ended">
+            {{ t().auth.login.sessionEnded }}
+          </p>
+        }
       </header>
 
       <app-text-field

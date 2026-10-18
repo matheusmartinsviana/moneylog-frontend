@@ -2,12 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
+import { of } from 'rxjs';
 
 import { LANGUAGE_STORAGE_KEY } from '~/app/common/i18n/i18n.service';
 import { THEME_STORAGE_KEY } from '~/app/common/services/theme.service';
 import { SettingsPage } from '~/app/features/settings/pages/settings.page';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
-import { AuthGatewayStub, provideAuthStub } from '~/testing/auth-testing';
+import { aToken, AuthGatewayStub, MEMBER_USER, provideAuthStub } from '~/testing/auth-testing';
 import { provideExportsStub } from '~/testing/etapa5-testing';
 import { provideI18nTesting } from '~/testing/i18n-testing';
 import { provideNotesStub } from '~/testing/notes-testing';
@@ -89,5 +90,24 @@ describe('SettingsPage', () => {
       'href',
       '/settings/categories',
     );
+  });
+
+  it('Dado o dono, então há o atalho para a IA', async () => {
+    const { fixture } = await setup();
+    TestBed.inject(SessionFacade).login({ email: 'a@b.c', password: 'x' });
+    fixture.detectChanges();
+
+    expect(screen.getByTestId('settings-ai-link')).toHaveAttribute('href', '/ai');
+  });
+
+  it('Dado um convidado, então não há o atalho para a IA, mas o cofre continua', async () => {
+    const gateway = new AuthGatewayStub();
+    gateway.login$ = of(aToken('t', MEMBER_USER));
+    const { fixture } = await setup(gateway);
+    TestBed.inject(SessionFacade).login({ email: MEMBER_USER.email, password: 'x' });
+    fixture.detectChanges();
+
+    expect(screen.queryByTestId('settings-ai-link')).toBeNull();
+    expect(screen.getByTestId('settings-vault-link')).toBeInTheDocument();
   });
 });

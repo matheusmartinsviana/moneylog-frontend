@@ -556,6 +556,7 @@ export abstract class AppI18n {
 
   abstract readonly ai: {
     readonly status: {
+      readonly forbidden: string;
       readonly on: string;
       readonly providerLine: string;
       readonly remaining: string;
@@ -805,6 +806,7 @@ export abstract class AppI18n {
       };
       readonly statusUnavailable: string;
       readonly checking: string;
+      readonly sessionEnded: string;
     };
     readonly setup: {
       readonly title: string;

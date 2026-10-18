@@ -32,10 +32,12 @@
         <span>{{ t().notifications.settings.title }}</span>
         <app-icon name="chevronRight" [size]="18" />
       </a>
-      <a class="links__row" routerLink="/ai" data-cy="settings-ai-link">
-        <span>{{ t().nav.ai }}</span>
-        <app-icon name="chevronRight" [size]="18" />
-      </a>
+      @if (isOwner()) {
+        <a class="links__row" routerLink="/ai" data-cy="settings-ai-link">
+          <span>{{ t().nav.ai }}</span>
+          <app-icon name="chevronRight" [size]="18" />
+        </a>
+      }
       <a class="links__row" routerLink="/vault" data-cy="settings-vault-link">
         <span>{{ t().workspacePages.vault.cardTitle }}</span>
         <app-icon name="chevronRight" [size]="18" />
