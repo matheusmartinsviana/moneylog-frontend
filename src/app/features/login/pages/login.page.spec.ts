@@ -2,26 +2,34 @@ import { Component } from '@angular/core';
 import { provideRouter, Router } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { of, Subject, throwError } from 'rxjs';
+import { firstValueFrom, of, Subject, throwError } from 'rxjs';
 
 import { pt } from '~/app/common/i18n/translations/pt';
+import { HardNavigation } from '~/app/common/services/hard-navigation';
+import { SessionSwitchReload } from '~/app/common/services/session-switch-reload';
 import { LoginPage } from '~/app/features/login/pages/login.page';
+import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 import { AuthFailure } from '~/modules/auth/core/types/auth-failure';
 import type { AuthToken } from '~/modules/auth/core/types/auth-token';
-import { aToken, AuthGatewayStub, provideAuthStub } from '~/testing/auth-testing';
+import { aToken, AuthGatewayStub, MEMBER_USER, provideAuthStub } from '~/testing/auth-testing';
 import { axeViolations, describeViolations } from '~/testing/axe';
 import { provideI18nTesting } from '~/testing/i18n-testing';
 
 @Component({ selector: 'app-dummy', template: '' })
 class DummyComponent {}
 
-async function setup(returnUrl?: string, gateway = new AuthGatewayStub()) {
+beforeEach(() => localStorage.clear());
+
+async function setup(returnUrl?: string, gateway = new AuthGatewayStub(), ended?: string) {
+  const hardNavigation = { go: vi.fn() };
   const result = await render(LoginPage, {
-    inputs: { returnUrl },
+    inputs: { returnUrl, ended },
     providers: [
+      { provide: HardNavigation, useValue: hardNavigation },
       provideI18nTesting('pt'),
       provideAuthStub(gateway),
       provideRouter([
+        { path: 'login', component: DummyComponent },
         { path: 'transactions', component: DummyComponent },
         { path: '', component: DummyComponent },
       ]),
@@ -32,6 +40,7 @@ async function setup(returnUrl?: string, gateway = new AuthGatewayStub()) {
   return {
     ...result,
     gateway,
+    hardNavigation,
     email,
     password,
     router: result.fixture.debugElement.injector.get(Router),
@@ -57,7 +66,58 @@ describe('LoginPage', () => {
 
     expect(gateway.logins).toEqual([{ email: 'dono@moneylog.app', password: 'segredo' }]);
     expect(router.url).toBe('/transactions');
-    expect(localStorage.length + sessionStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+    expect(Object.keys({ ...localStorage })).toEqual(['moneylog.lastUserId']);
+  });
+
+  it('Dado a sessão encerrada pelo servidor, quando abre o login, então mostra o aviso neutro', async () => {
+    await setup(undefined, new AuthGatewayStub(), '1');
+
+    expect(screen.getByTestId('login-session-ended')).toHaveTextContent(
+      'Sua sessão terminou. Entre de novo para continuar.',
+    );
+  });
+
+  it('Dado o login comum, então não mostra o aviso de sessão encerrada', async () => {
+    await setup();
+
+    expect(screen.queryByTestId('login-session-ended')).toBeNull();
+  });
+
+  it('Dado que o usuário A saiu e o B entra no mesmo navegador, quando entra, então recarrega o app por inteiro em vez de navegar', async () => {
+    const gateway = new AuthGatewayStub();
+    const { email, password, hardNavigation, fixture } = await setup('/transactions', gateway);
+    fixture.debugElement.injector.get(SessionSwitchReload).start();
+    const session = fixture.debugElement.injector.get(SessionFacade);
+    session.login({ email: 'dono@moneylog.app', password: 'x' });
+    await fixture.whenStable();
+    await firstValueFrom(session.logout());
+    await fixture.debugElement.injector
+      .get(Router)
+      .navigateByUrl('/login?returnUrl=%2Ftransactions');
+    gateway.login$ = of(aToken('token-b', MEMBER_USER));
+
+    await fillAndSubmit(email, password, MEMBER_USER.email);
+    await fixture.whenStable();
+
+    expect(hardNavigation.go).toHaveBeenCalledWith('/transactions');
+  });
+
+  it('Dado o mesmo usuário voltando, quando entra, então navega sem recarregar', async () => {
+    const gateway = new AuthGatewayStub();
+    const { email, password, hardNavigation, router, fixture } = await setup(
+      '/transactions',
+      gateway,
+    );
+    const session = fixture.debugElement.injector.get(SessionFacade);
+    session.login({ email: 'dono@moneylog.app', password: 'x' });
+    await firstValueFrom(session.logout());
+
+    await fillAndSubmit(email, password);
+    await fixture.whenStable();
+
+    expect(hardNavigation.go).not.toHaveBeenCalled();
+    expect(router.url).toBe('/transactions');
   });
 
   it.each(['https://evil.example', '//evil.example', 'javascript:alert(1)', undefined])(

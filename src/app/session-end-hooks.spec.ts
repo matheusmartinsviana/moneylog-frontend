@@ -1,13 +1,30 @@
+import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, of, throwError } from 'rxjs';
 
 import {
   cancelPushHook,
+  clearBusinessMemoryHook,
+  clearNoteDraftsHook,
   clearPrivateCachesHook,
+  forgetPushHook,
+  provideSessionEndHooks,
   revokeGoalPhotosHook,
 } from '~/app/session-end-hooks';
+import {
+  SESSION_END_HOOKS,
+  SESSION_LOCAL_RESET_HOOKS,
+} from '~/modules/auth/core/interfaces/session-end-hook';
+import { FEATURED_CARD_KEY } from '~/modules/cards/core/facades/featured-card.facade';
 import { GoalPhotoCache } from '~/modules/goals/core/facades/goal-photo-cache';
+import { ProfileFacade } from '~/modules/notifications/core/facades/profile.facade';
 import { PUSH_SUBSCRIPTION_KEY } from '~/modules/notifications/core/facades/push.facade';
-import { NotificationsGatewayStub } from '~/testing/notifications-testing';
+import {
+  NotificationsGatewayStub,
+  PushDeviceFake,
+  provideNotificationsStub,
+} from '~/testing/notifications-testing';
+import { LAST_ACCOUNT_KEY } from '~/util/last-used-account';
+import { LAST_CARD_KEY } from '~/util/last-used-card';
 
 describe('cancelPushHook (M4)', () => {
   afterEach(() => localStorage.clear());
@@ -81,5 +98,73 @@ describe('revokeGoalPhotosHook (ADR-018)', () => {
 
     expect(revoked.sort()).toEqual(['blob:sintetico-1', 'blob:sintetico-2']);
     expect(cache.size).toBe(0);
+  });
+});
+
+describe('limpeza local ao trocar de usuário (T11)', () => {
+  afterEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  it('Dado rascunhos de notas e outras chaves, quando limpa, então remove só os rascunhos', async () => {
+    sessionStorage.setItem('moneylog:note-draft:n1', '{"body":"A","version":1}');
+    sessionStorage.setItem('moneylog:note-draft:n2', '{"body":"B","version":2}');
+    sessionStorage.setItem('outra', 'x');
+
+    await firstValueFrom(clearNoteDraftsHook(sessionStorage)());
+
+    expect(sessionStorage.getItem('moneylog:note-draft:n1')).toBeNull();
+    expect(sessionStorage.getItem('moneylog:note-draft:n2')).toBeNull();
+    expect(sessionStorage.getItem('outra')).toBe('x');
+  });
+
+  it('Dado storage indisponível, então não lança', async () => {
+    await expect(firstValueFrom(clearNoteDraftsHook(undefined)())).resolves.toBeUndefined();
+  });
+
+  it('Dado a assinatura de push do usuário anterior, quando esquece, então remove o id local e cancela a assinatura do navegador sem chamar o backend', async () => {
+    localStorage.setItem(PUSH_SUBSCRIPTION_KEY, 'sub-9');
+    const device = new PushDeviceFake();
+
+    await firstValueFrom(forgetPushHook(device)());
+
+    expect(localStorage.getItem(PUSH_SUBSCRIPTION_KEY)).toBeNull();
+    expect(device.unsubscribed).toBe(1);
+  });
+
+  it('Dado o navegador falhando ao cancelar o push, então não lança', async () => {
+    const device = new PushDeviceFake();
+    device.unsubscribe = () => Promise.reject(new Error('x'));
+
+    await expect(firstValueFrom(forgetPushHook(device)())).resolves.toBeUndefined();
+  });
+
+  it('Dado cartão, conta e destaque do usuário anterior, quando limpa, então remove as três chaves e mantém as preferências', async () => {
+    localStorage.setItem(LAST_CARD_KEY, 'c1');
+    localStorage.setItem(LAST_ACCOUNT_KEY, 'a1');
+    localStorage.setItem(FEATURED_CARD_KEY, 'c2');
+    localStorage.setItem('moneylog-theme', 'dark');
+
+    await firstValueFrom(clearBusinessMemoryHook()());
+
+    expect(localStorage.getItem(LAST_CARD_KEY)).toBeNull();
+    expect(localStorage.getItem(LAST_ACCOUNT_KEY)).toBeNull();
+    expect(localStorage.getItem(FEATURED_CARD_KEY)).toBeNull();
+    expect(localStorage.getItem('moneylog-theme')).toBe('dark');
+  });
+
+  it('Dado o provider da sessão, então registra o conjunto completo de limpeza local e de saída', () => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideNotificationsStub(),
+        { provide: ProfileFacade, useValue: { clear: vi.fn() } },
+        GoalPhotoCache,
+        provideSessionEndHooks(),
+      ],
+    });
+
+    expect(TestBed.inject(SESSION_LOCAL_RESET_HOOKS)).toHaveLength(6);
+    expect(TestBed.inject(SESSION_END_HOOKS)).toHaveLength(6);
   });
 });

@@ -10,6 +10,7 @@ export interface NavItem {
   readonly path: string;
   readonly icon: IconName;
   readonly activeOptions: IsActiveMatchOptions | { exact: boolean };
+  readonly ownerOnly?: true;
 }
 
 const PREFIX = { exact: false } as const;
@@ -42,8 +43,8 @@ const ITEMS = {
   insights: { key: 'insights', path: '/insights', icon: 'insights', activeOptions: PREFIX },
   budgets: { key: 'budgets', path: '/budgets', icon: 'budgets', activeOptions: PREFIX },
   vault: { key: 'vault', path: '/vault', icon: 'folder', activeOptions: PREFIX },
-  ai: { key: 'ai', path: '/ai', icon: 'sparkle', activeOptions: PREFIX },
-  mcp: { key: 'mcp', path: '/mcp', icon: 'link', activeOptions: PREFIX },
+  ai: { key: 'ai', path: '/ai', icon: 'sparkle', activeOptions: PREFIX, ownerOnly: true },
+  mcp: { key: 'mcp', path: '/mcp', icon: 'link', activeOptions: PREFIX, ownerOnly: true },
   settings: { key: 'settings', path: '/settings', icon: 'settings', activeOptions: PREFIX },
 } as const satisfies Record<NavKey, NavItem>;
 
@@ -121,4 +122,14 @@ export function isNavActive(item: NavItem, url: string): boolean {
   const path = url.split(/[?#]/)[0] ?? '';
   if (item.path === '/') return path === '/';
   return path === item.path || path.startsWith(`${item.path}/`);
+}
+
+export function visibleItems(items: readonly NavItem[], isOwner: boolean): readonly NavItem[] {
+  return items.filter((item) => isOwner || !item.ownerOnly);
+}
+
+export function visibleGroups(groups: readonly NavGroup[], isOwner: boolean): readonly NavGroup[] {
+  return groups
+    .map((group) => ({ key: group.key, items: visibleItems(group.items, isOwner) }))
+    .filter((group) => group.items.length > 0);
 }

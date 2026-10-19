@@ -27,6 +27,7 @@ import { isModalNavigation } from '~/app/common/routing/modal-route';
 import { provideRouteScroll } from '~/app/common/routing/route-scroll';
 import { FeedbackToastService } from '~/app/common/services/feedback-toast.service';
 import { I18nTitleStrategy } from '~/app/common/services/i18n-title.strategy';
+import { SessionSwitchReload } from '~/app/common/services/session-switch-reload';
 import { provideTheme } from '~/app/common/services/theme.providers';
 import { provideDemoMode } from '~/app/config/demo-mode';
 import { environment } from '~/app/config/environment';
@@ -80,6 +81,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => trackInputModality(inject(DOCUMENT))),
     provideRouteScroll(),
     provideAppInitializer(() => inject(FeedbackToastService).start()),
+    provideAppInitializer(() => inject(SessionSwitchReload).start()),
     provideAppInitializer(() => inject(SessionFacade).restore()),
     provideServiceWorker('sw-push.js', {
       enabled: !isDevMode(),

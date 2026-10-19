@@ -21,7 +21,11 @@ import { toProblem } from '~/util/api/problem';
 import { API_MOCKS } from '~/util/api-mocks';
 
 function toToken(response: AuthTokenResponse): AuthToken {
-  return { accessToken: response.accessToken, expiresAt: response.expiresAt };
+  return {
+    accessToken: response.accessToken,
+    expiresAt: response.expiresAt,
+    user: { id: response.user.id, email: response.user.email, role: response.user.role },
+  };
 }
 
 function loginFailure(error: unknown): Observable<never> {

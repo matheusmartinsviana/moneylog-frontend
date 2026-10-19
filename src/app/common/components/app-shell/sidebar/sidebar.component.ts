@@ -23,6 +23,7 @@ import {
   SIDEBAR_MORE_ITEM,
   SIDEBAR_POPOVER_ITEMS,
   SIDEBAR_SETTINGS_ITEM,
+  visibleItems,
 } from '~/app/common/components/app-shell/navigation';
 import { IconComponent } from '~/app/common/components/icon/icon.component';
 import type { MenuItem } from '~/app/common/components/menu/menu.component';
@@ -70,7 +71,7 @@ export class SidebarComponent {
   protected readonly settingsActive = computed(() => isNavActive(this.settings, this.url()));
 
   protected readonly moreItems = computed<readonly MenuItem[]>(() =>
-    SIDEBAR_POPOVER_ITEMS.map((item) => ({
+    visibleItems(SIDEBAR_POPOVER_ITEMS, this.session.isOwner()).map((item) => ({
       id: item.key,
       label:
         item.key === 'ai'

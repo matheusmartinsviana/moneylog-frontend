@@ -57,6 +57,7 @@ export class SettingsPage {
   private readonly i18n = inject(I18nService);
   private readonly theme = inject(ThemeService);
   private readonly session = inject(SessionFacade);
+  protected readonly isOwner = this.session.isOwner;
   private readonly router = inject(Router);
   private readonly signOuts = new Subject<void>();
 

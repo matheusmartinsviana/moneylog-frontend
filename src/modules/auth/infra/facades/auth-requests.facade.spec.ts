@@ -7,6 +7,7 @@ import { AuthGateway } from '~/modules/auth/core/interfaces/auth.gateway';
 import { provideAuth } from '~/modules/auth/infra/auth.providers';
 import { AUTH_ENDPOINTS } from '~/modules/auth/infra/endpoints';
 import { FAKE_SESSION } from '~/modules/auth/mock-data/fake-session';
+import { OWNER_USER } from '~/testing/auth-testing';
 import { API_MOCKS } from '~/util/api-mocks';
 
 function setup(useMocks: boolean) {
@@ -21,7 +22,7 @@ function setup(useMocks: boolean) {
   return { gateway: TestBed.inject(AuthGateway), http: TestBed.inject(HttpTestingController) };
 }
 
-const token = { accessToken: 'jwt-1', expiresAt: '2026-10-10T12:15:00Z' };
+const token = { accessToken: 'jwt-1', expiresAt: '2026-10-10T12:15:00Z', user: OWNER_USER };
 
 describe('AuthRequestsFacade', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());

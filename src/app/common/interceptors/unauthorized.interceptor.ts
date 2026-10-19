@@ -28,10 +28,12 @@ export const unauthorizedInterceptor: HttpInterceptorFn = (req, next) => {
           if (failure instanceof AuthFailure) {
             if (failure.reason === 'refresh_invalid' && session.status() !== 'anonymous') {
               const returnUrl = router.url;
-              session.clear();
+              session.expire();
               void router.navigate(['/login'], {
                 queryParams:
-                  returnUrl === '/' || returnUrl.startsWith('/login') ? {} : { returnUrl },
+                  returnUrl === '/' || returnUrl.startsWith('/login')
+                    ? { ended: '1' }
+                    : { returnUrl, ended: '1' },
               });
             }
             return throwError(() => error);

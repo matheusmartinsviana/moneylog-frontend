@@ -599,6 +599,7 @@ export const pt: AppI18n = {
   },
   ai: {
     status: {
+      forbidden: 'Esta área é só para quem administra a conta.',
       on: 'IA ligada',
       providerLine: 'Provedor: {provider}. Modelo: {model}.',
       remaining: 'Restam {calls} chamadas hoje e {tokens} tokens neste mês.',
@@ -871,6 +872,7 @@ export const pt: AppI18n = {
       statusUnavailable:
         'Não foi possível verificar se é o primeiro acesso. Se for, tente de novo em instantes.',
       checking: 'Verificando…',
+      sessionEnded: 'Sua sessão terminou. Entre de novo para continuar.',
     },
     setup: {
       title: 'Primeiro acesso',

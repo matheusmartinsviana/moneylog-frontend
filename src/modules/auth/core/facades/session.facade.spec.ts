@@ -1,20 +1,30 @@
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom, NEVER, of, Subject, throwError } from 'rxjs';
+import { delay, firstValueFrom, NEVER, of, Subject, throwError } from 'rxjs';
 
-import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
+import { LAST_USER_KEY, SessionFacade } from '~/modules/auth/core/facades/session.facade';
 import {
   SESSION_END_HOOKS,
+  SESSION_LOCAL_RESET_HOOKS,
   type SessionEndHook,
 } from '~/modules/auth/core/interfaces/session-end-hook';
 import { AuthFailure } from '~/modules/auth/core/types/auth-failure';
 import type { AuthToken } from '~/modules/auth/core/types/auth-token';
-import { aToken, AuthGatewayStub, provideAuthStub } from '~/testing/auth-testing';
+import {
+  aToken,
+  AuthGatewayStub,
+  MEMBER_USER,
+  OWNER_USER,
+  provideAuthStub,
+} from '~/testing/auth-testing';
 
-function setup(hook?: SessionEndHook) {
+beforeEach(() => localStorage.clear());
+
+function setup(hook?: SessionEndHook, localHook?: SessionEndHook) {
   const gateway = new AuthGatewayStub();
   TestBed.configureTestingModule({
     providers: [
       provideAuthStub(gateway),
+      ...(localHook ? [{ provide: SESSION_LOCAL_RESET_HOOKS, useValue: [localHook] }] : []),
       ...(hook ? [{ provide: SESSION_END_HOOKS, useValue: [hook] }] : []),
     ],
   });
@@ -37,7 +47,7 @@ describe('SessionFacade', () => {
       expect(signedIn).toBe(1);
       expect(JSON.stringify({ ...localStorage })).not.toContain('token-1');
       expect(JSON.stringify({ ...sessionStorage })).not.toContain('token-1');
-      expect(localStorage.length).toBe(0);
+      expect(Object.keys({ ...localStorage })).toEqual([LAST_USER_KEY]);
       expect(sessionStorage.length).toBe(0);
     });
 
@@ -276,6 +286,174 @@ describe('SessionFacade', () => {
       gateway.setupRequired$ = throwError(() => new AuthFailure('network'));
 
       expect(await firstValueFrom(session.passwordSetupRequired())).toBeNull();
+    });
+  });
+
+  describe('papel e troca de usuário', () => {
+    it('Dado um login de convidado, então expõe usuário e papel MEMBER e não é dono', () => {
+      const { gateway, session } = setup();
+      gateway.login$ = of(aToken('t', MEMBER_USER));
+
+      session.login({ email: MEMBER_USER.email, password: 'x' });
+
+      expect(session.user()).toEqual(MEMBER_USER);
+      expect(session.role()).toBe('MEMBER');
+      expect(session.isOwner()).toBe(false);
+    });
+
+    it('Dado um login do dono, então isOwner é verdadeiro', () => {
+      const { session } = setup();
+
+      session.login({ email: OWNER_USER.email, password: 'x' });
+
+      expect(session.isOwner()).toBe(true);
+    });
+
+    it('Dado a sessão limpa, então o papel some', () => {
+      const { session } = setup();
+      session.login({ email: OWNER_USER.email, password: 'x' });
+
+      session.clear();
+
+      expect(session.user()).toBeNull();
+      expect(session.role()).toBeNull();
+      expect(session.isOwner()).toBe(false);
+    });
+
+    it('Dado logout de A e login de B, então detecta a troca e roda a limpeza local', async () => {
+      const localHook = vi.fn(() => of(undefined));
+      const { gateway, session } = setup(undefined, localHook);
+      session.login({ email: OWNER_USER.email, password: 'x' });
+      await firstValueFrom(session.logout());
+      gateway.login$ = of(aToken('t2', MEMBER_USER));
+
+      session.login({ email: MEMBER_USER.email, password: 'x' });
+
+      expect(session.signedInAsAnotherUser()).toBe(true);
+      expect(session.user()).toEqual(MEMBER_USER);
+      expect(localHook).toHaveBeenCalledTimes(1);
+    });
+
+    it('Dado logout e novo login do mesmo usuário, então não conta como troca', async () => {
+      const localHook = vi.fn(() => of(undefined));
+      const { session } = setup(undefined, localHook);
+      session.login({ email: OWNER_USER.email, password: 'x' });
+      await firstValueFrom(session.logout());
+
+      session.login({ email: OWNER_USER.email, password: 'x' });
+
+      expect(session.signedInAsAnotherUser()).toBe(false);
+      expect(localHook).not.toHaveBeenCalled();
+    });
+
+    it('Dado o primeiro login do navegador, então não conta como troca', () => {
+      const { session } = setup();
+
+      session.login({ email: OWNER_USER.email, password: 'x' });
+
+      expect(session.signedInAsAnotherUser()).toBe(false);
+    });
+
+    it('Dado a sessão encerrada pelo servidor (expire), então limpa token e papel e roda só a limpeza local, sem chamar o logout', () => {
+      const endHook = vi.fn(() => of(undefined));
+      const localHook = vi.fn(() => of(undefined));
+      const { gateway, session } = setup(endHook, localHook);
+      session.login({ email: OWNER_USER.email, password: 'x' });
+
+      session.expire();
+
+      expect(session.status()).toBe('anonymous');
+      expect(session.token()).toBeNull();
+      expect(session.role()).toBeNull();
+      expect(localHook).toHaveBeenCalledTimes(1);
+      expect(endHook).not.toHaveBeenCalled();
+      expect(gateway.logouts).toBe(0);
+    });
+
+    it('Dado o refresh devolvendo outro usuário, então troca o papel e roda a limpeza local', () => {
+      const localHook = vi.fn(() => of(undefined));
+      const { gateway, session } = setup(undefined, localHook);
+      session.login({ email: OWNER_USER.email, password: 'x' });
+      gateway.refresh$ = of(aToken('t3', MEMBER_USER));
+
+      session.refresh().subscribe();
+
+      expect(session.role()).toBe('MEMBER');
+      expect(localHook).toHaveBeenCalledTimes(1);
+    });
+
+    it('Dado o refresh devolvendo outro usuário, então avisa a troca uma única vez para recarregar o app', () => {
+      const { gateway, session } = setup();
+      let switches = 0;
+      session.userSwitched$.subscribe(() => switches++);
+      session.login({ email: OWNER_USER.email, password: 'x' });
+      gateway.refresh$ = of(aToken('t3', MEMBER_USER));
+
+      session.refresh().subscribe();
+
+      expect(switches).toBe(1);
+    });
+
+    it('Dado a limpeza local lenta, quando o refresh traz outro usuário, então só avisa a troca depois que ela termina', () => {
+      vi.useFakeTimers();
+      try {
+        const slow = vi.fn(() => of(undefined).pipe(delay(500)));
+        const { gateway, session } = setup(undefined, slow);
+        let switches = 0;
+        session.userSwitched$.subscribe(() => switches++);
+        session.login({ email: OWNER_USER.email, password: 'x' });
+        gateway.refresh$ = of(aToken('t3', MEMBER_USER));
+
+        session.refresh().subscribe();
+
+        expect(switches).toBe(0);
+        expect(session.role()).toBe('OWNER');
+        vi.advanceTimersByTime(500);
+        expect(switches).toBe(1);
+        expect(session.role()).toBe('MEMBER');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('Dado um hook de limpeza travado, quando o login traz outro usuário, então segue após o timeout', () => {
+      vi.useFakeTimers();
+      try {
+        const { gateway, session } = setup(undefined, () => NEVER);
+        session.login({ email: OWNER_USER.email, password: 'x' });
+        gateway.refresh$ = of(aToken('t3', MEMBER_USER));
+        session.refresh().subscribe();
+
+        vi.advanceTimersByTime(3000);
+
+        expect(session.role()).toBe('MEMBER');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('Dado o último usuário guardado no navegador, quando outro entra numa carga nova, então detecta a troca e limpa', async () => {
+      localStorage.setItem(LAST_USER_KEY, OWNER_USER.id);
+      const localHook = vi.fn(() => of(undefined));
+      const { gateway, session } = setup(undefined, localHook);
+      gateway.refresh$ = of(aToken('t4', MEMBER_USER));
+
+      await session.restore();
+
+      expect(session.signedInAsAnotherUser()).toBe(true);
+      expect(localHook).toHaveBeenCalledTimes(1);
+      expect(localStorage.getItem(LAST_USER_KEY)).toBe(MEMBER_USER.id);
+    });
+
+    it('Dado a API fora do ar na carga, então o papel fica desconhecido e o dono não é tratado como dono', async () => {
+      const { gateway, session } = setup();
+      gateway.refresh$ = throwError(() => new AuthFailure('network'));
+
+      await session.restore();
+
+      expect(session.status()).toBe('unreachable');
+      expect(session.role()).toBeNull();
+      expect(session.isOwner()).toBe(false);
     });
   });
 });
