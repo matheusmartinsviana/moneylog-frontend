@@ -4,4 +4,6 @@ export const AUTH_ENDPOINTS = {
   login: '/v1/auth/login',
   refresh: '/v1/auth/refresh',
   logout: '/v1/auth/logout',
+  invitationPreview: '/v1/invitations/preview',
+  invitationAccept: '/v1/invitations/accept',
 } as const;

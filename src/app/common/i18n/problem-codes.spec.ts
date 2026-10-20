@@ -31,6 +31,21 @@ const CODES_FROM_CONTRACT_2_24_TO_2_32 = [
   'TRANSACTION_NATURE_INVALID',
 ] as const;
 
+const CODES_FROM_CONTRACT_2_38 = [
+  'EMAIL_ALREADY_REGISTERED',
+  'INVITATION_PENDING',
+  'USER_LIMIT_REACHED',
+  'EMAIL_DELIVERY_FAILED',
+  'INVITATION_NOT_RESENDABLE',
+  'INVITATION_NOT_REVOCABLE',
+  'INVITATION_NOT_FOUND',
+  'INVITATIONS_DISABLED',
+  'INVALID_INVITATION',
+  'USER_NOT_FOUND',
+  'CANNOT_DISABLE_OWNER',
+  'FORBIDDEN',
+] as const;
+
 const CODES_FROM_CONTRACT_2_34 = ['PROFILE_PHOTO_NOT_FOUND'] as const;
 
 describe('Mensagens para os códigos de erro do contrato 2.24 a 2.32', () => {
@@ -41,6 +56,14 @@ describe('Mensagens para os códigos de erro do contrato 2.24 a 2.32', () => {
       );
 
       expect(missing).toEqual([]);
+    });
+  }
+
+  for (const [language, dict] of Object.entries({ pt, en, es })) {
+    it(`Dado ${language}, então os códigos de convites e usuários do contrato 2.38 têm mensagem própria`, () => {
+      expect(
+        CODES_FROM_CONTRACT_2_38.filter((code) => !Object.hasOwn(dict.errors.codes, code)),
+      ).toEqual([]);
     });
   }
 

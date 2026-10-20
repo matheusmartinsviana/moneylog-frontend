@@ -15,6 +15,7 @@ export interface Problem {
   readonly detail?: string | null;
   readonly position?: number | null;
   readonly cause?: string | null;
+  readonly invitationId?: string | null;
 }
 
 export class ProblemError extends Error {
@@ -95,6 +96,8 @@ export function toProblem(error: unknown): Problem {
         ? body['position']
         : null,
     cause: isRecord(body) && typeof body['cause'] === 'string' ? body['cause'] : null,
+    invitationId:
+      isRecord(body) && typeof body['invitationId'] === 'string' ? body['invitationId'] : null,
   };
 }
 

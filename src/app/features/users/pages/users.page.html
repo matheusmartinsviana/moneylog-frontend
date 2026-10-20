@@ -1,0 +1,135 @@
+<app-page-layout
+  reading
+  [heading]="t().access.users.pageTitle"
+  [description]="t().access.users.description"
+>
+  <a pageActions class="link-more hit-area" routerLink="/settings" data-cy="users-back">
+    {{ t().access.users.backToSettings }}
+  </a>
+
+  @if (admin.forbidden()) {
+    <app-empty-state
+      [heading]="t().access.users.forbidden.title"
+      [description]="t().access.users.forbidden.description"
+      illustration="document"
+    />
+  } @else {
+    <app-section-container [heading]="t().access.users.invite.heading">
+      <app-invite-form
+        [submitting]="admin.inviting()"
+        [problem]="inviteProblem()"
+        [unavailable]="admin.invitationsUnavailable()"
+        [resets]="admin.inviteResets()"
+        (invited)="admin.invite($event)"
+        (resendExisting)="admin.resend($event)"
+        (edited)="admin.clearInviteProblem()"
+      />
+    </app-section-container>
+
+    <app-section-container [heading]="t().access.users.people.heading">
+      @let users = admin.users();
+      @switch (users.status) {
+        @case ('loading') {
+          <div data-cy="users-loading">
+            <p class="visually-hidden" role="status">{{ t().access.users.loading }}</p>
+            <div class="list-skeleton" aria-hidden="true">
+              <div class="list-skeleton__row"></div>
+              <div class="list-skeleton__row"></div>
+            </div>
+          </div>
+        }
+        @case ('error') {
+          <div data-cy="users-error">
+            <app-error-state [problem]="users.problem" (retry)="admin.reloadUsers()" />
+          </div>
+        }
+        @case ('ready') {
+          <ul class="list card-flat" data-cy="users-list">
+            @for (user of users.data; track user.id) {
+              <li
+                app-user-row
+                [user]="user"
+                [isSelf]="user.id === selfId()"
+                [busy]="admin.busyIds().has(user.id)"
+                (disable)="askDisable($event)"
+                (enable)="admin.enable($event.id)"
+              ></li>
+            }
+          </ul>
+          @if (onlyOwner()) {
+            <div class="note" data-cy="users-only-owner">
+              <p class="note__title">{{ t().access.users.people.onlyYouTitle }}</p>
+              <p class="note__text">{{ t().access.users.people.onlyYouDescription }}</p>
+            </div>
+          }
+        }
+      }
+    </app-section-container>
+
+    <app-section-container [heading]="t().access.users.invitations.heading">
+      @let invitations = admin.invitations();
+      @switch (invitations.status) {
+        @case ('loading') {
+          <div data-cy="invitations-loading">
+            <p class="visually-hidden" role="status">{{ t().access.users.loading }}</p>
+            <div class="list-skeleton" aria-hidden="true">
+              <div class="list-skeleton__row"></div>
+              <div class="list-skeleton__row"></div>
+            </div>
+          </div>
+        }
+        @case ('error') {
+          <div data-cy="invitations-error">
+            <app-error-state [problem]="invitations.problem" (retry)="admin.reloadInvitations()" />
+          </div>
+        }
+        @case ('ready') {
+          @if (invitations.data.length === 0) {
+            <div data-cy="invitations-empty">
+              <app-empty-state
+                [heading]="t().access.users.invitations.emptyTitle"
+                [description]="t().access.users.invitations.emptyDescription"
+                [actions]="emptyInvitationActions()"
+                (action)="focusInvite()"
+                illustration="log"
+              />
+            </div>
+          } @else {
+            <ul class="list card-flat" data-cy="invitations-list">
+              @for (invitation of invitations.data; track invitation.id) {
+                <li
+                  app-invitation-row
+                  [invitation]="invitation"
+                  [busy]="admin.busyIds().has(invitation.id)"
+                  (resend)="admin.resend($event.id)"
+                  (revoke)="askRevoke($event)"
+                ></li>
+              }
+            </ul>
+          }
+        }
+      }
+    </app-section-container>
+  }
+
+  <app-confirm-dialog
+    [open]="pendingDisable() !== null"
+    tone="risk"
+    [heading]="disableTitle()"
+    [description]="t().access.users.people.disableConfirm.description"
+    [confirmLabel]="t().access.users.people.disableConfirm.confirm"
+    [cancelLabel]="t().access.users.cancel"
+    (confirmed)="confirmDisable()"
+    (cancelled)="pendingDisable.set(null)"
+  />
+  <app-confirm-dialog
+    [open]="pendingRevoke() !== null"
+    tone="risk"
+    [heading]="revokeTitle()"
+    [description]="t().access.users.invitations.revokeConfirm.description"
+    [confirmLabel]="t().access.users.invitations.revokeConfirm.confirm"
+    [cancelLabel]="t().access.users.cancel"
+    (confirmed)="confirmRevoke()"
+    (cancelled)="pendingRevoke.set(null)"
+  />
+</app-page-layout>

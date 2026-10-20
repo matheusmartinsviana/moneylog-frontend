@@ -20,9 +20,11 @@ import { provideRecurrences } from '~/modules/recurrences/infra/recurrences.prov
 import { provideReports } from '~/modules/reports/infra/reports.providers';
 import { provideSimulations } from '~/modules/simulations/infra/simulations.providers';
 import { provideThirdParties } from '~/modules/third-parties/infra/third-parties.providers';
+import { provideUsers } from '~/modules/users/infra/users.providers';
 
 export const STATEMENT_PROVIDERS: Provider[] = [provideOwnerStatement()];
 export const SIMULATOR_PROVIDERS: Provider[] = [provideSimulations(), provideRecurrences()];
+export const USERS_PROVIDERS: Provider[] = [provideUsers()];
 export const IMPORT_PROVIDERS: Provider[] = [provideImports()];
 export const SETTINGS_PROVIDERS: Provider[] = [provideExports(), provideNotes()];
 export const PLANNING_PROVIDERS: Provider[] = [

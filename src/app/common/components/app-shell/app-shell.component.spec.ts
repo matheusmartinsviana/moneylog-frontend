@@ -11,6 +11,7 @@ import {
   NavKey,
   SIDEBAR_ITEMS,
 } from '~/app/common/components/app-shell/navigation';
+import { ownerGuard } from '~/app/common/guards/role.guard';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { pt } from '~/app/common/i18n/translations/pt';
 import { I18nTitleStrategy } from '~/app/common/services/i18n-title.strategy';
@@ -389,11 +390,21 @@ describe('App shell e rotas', () => {
     const children = (routes.find((route) => route.component)?.children ?? []).filter(
       (route) => !route.path?.startsWith('dev/') && !route.outlet,
     );
-    expect(children).toHaveLength(22);
+    expect(children).toHaveLength(23);
     children.forEach((route) => {
       expect(route.loadChildren).toBeTypeOf('function');
       expect(route.component).toBeUndefined();
     });
+  });
+
+  it('Dado as rotas, então o convite é público e fora do shell, e a gestão de pessoas exige o dono', () => {
+    const invitation = routes.find((route) => route.path === 'convite');
+    const users = routes
+      .find((route) => route.component)
+      ?.children?.find((route) => route.path === 'users');
+    expect(invitation?.component).toBeUndefined();
+    expect(invitation?.canMatch).toBeUndefined();
+    expect(users?.canMatch).toEqual([ownerGuard]);
   });
 
   it('Dado as rotas, então o login fica fora do shell e o shell fica atrás do authGuard', () => {

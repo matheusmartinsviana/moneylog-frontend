@@ -1,0 +1,44 @@
+@let u = user();
+<div class="row__main">
+  <div class="row__title">
+    <span class="row__email" [attr.data-cy]="'user-email-' + u.id">{{ u.email }}</span>
+    @if (isSelf()) {
+      <span class="row__tag" [attr.data-cy]="'user-self-' + u.id">{{
+        t().access.users.people.you
+      }}</span>
+    }
+    <span class="row__tag" [attr.data-cy]="'user-role-' + u.id">{{
+      t().access.users.people.roles[u.role]
+    }}</span>
+    <span class="row__tag" [attr.data-status]="u.status" [attr.data-cy]="'user-status-' + u.id">{{
+      t().access.users.people.statuses[u.status]
+    }}</span>
+  </div>
+  <p class="row__detail" [attr.data-cy]="'user-last-access-' + u.id">{{ lastAccess() }}</p>
+</div>
+@if (canDisable() || canEnable()) {
+  <div class="row__actions" role="group" [attr.aria-label]="actionsLabel()">
+    @if (canDisable()) {
+      <button
+        type="button"
+        class="button"
+        [attr.data-cy]="'user-disable-' + u.id"
+        [disabled]="busy()"
+        (click)="disable.emit(u)"
+      >
+        {{ t().access.users.people.disable }}
+      </button>
+    }
+    @if (canEnable()) {
+      <button
+        type="button"
+        class="button"
+        [attr.data-cy]="'user-enable-' + u.id"
+        [disabled]="busy()"
+        (click)="enable.emit(u)"
+      >
+        {{ t().access.users.people.enable }}
+      </button>
+    }
+  </div>
+}

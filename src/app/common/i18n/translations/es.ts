@@ -1,4 +1,5 @@
 import type { AppI18n } from '~/app/common/i18n/i18n';
+import { accessEs } from '~/app/common/i18n/sections/access';
 import { cardCashOutEs } from '~/app/common/i18n/sections/card-cash-out';
 import { incomeEs } from '~/app/common/i18n/sections/income';
 import { netWorthEs } from '~/app/common/i18n/sections/net-worth';
@@ -1017,6 +1018,23 @@ export const es: AppI18n = {
       REFRESH_INVALID: 'Tu sesión terminó. Inicia sesión de nuevo.',
       ORIGIN_NOT_ALLOWED: 'Esta dirección no tiene permiso para acceder a Monelog.',
       FORBIDDEN: 'No tienes permiso para hacer esto.',
+      EMAIL_ALREADY_REGISTERED:
+        'Ese correo ya tiene acceso a Monelog. Si la cuenta está desactivada, reactívala en la lista de personas.',
+      INVITATION_PENDING:
+        'Ya hay una invitación esperando respuesta para ese correo. Puedes reenviarla.',
+      USER_LIMIT_REACHED:
+        'Se alcanzó el límite de personas con acceso. Revoca una invitación pendiente para liberar espacio.',
+      EMAIL_DELIVERY_FAILED:
+        'La invitación se creó, pero no pudimos enviar el correo ahora. Reenvíala desde la lista de invitaciones.',
+      INVITATION_NOT_RESENDABLE:
+        'Esta invitación ya no se puede reenviar. Crea una nueva invitación para el mismo correo.',
+      INVITATION_NOT_REVOCABLE: 'Esta invitación ya fue aceptada y no se puede revocar.',
+      INVITATION_NOT_FOUND: 'No encontramos esa invitación. La lista se actualizó.',
+      INVITATIONS_DISABLED:
+        'Las invitaciones no están disponibles por ahora. Quien ya tiene acceso sigue entrando con normalidad.',
+      INVALID_INVITATION: 'Esta invitación ya no es válida.',
+      USER_NOT_FOUND: 'No encontramos a esa persona. La lista se actualizó.',
+      CANNOT_DISABLE_OWNER: 'El dueño de Monelog no se puede desactivar.',
       NOT_FOUND: 'No encontramos lo que buscas.',
       METHOD_NOT_ALLOWED: 'El servidor no acepta esta acción.',
       NOT_ACCEPTABLE: 'El servidor no acepta esta acción.',
@@ -4560,4 +4578,5 @@ export const es: AppI18n = {
   income: incomeEs,
   netWorth: netWorthEs,
   cardCashOut: cardCashOutEs,
+  access: accessEs,
 };

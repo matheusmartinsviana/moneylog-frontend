@@ -1,0 +1,51 @@
+:host {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.invite {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.invite__field {
+  min-width: 0;
+}
+
+.invite__submit {
+  justify-self: start;
+  min-height: 2.75rem;
+}
+
+.invite__error {
+  color: var(--color-risk);
+  font-size: var(--text-sm);
+}
+
+.invite__unavailable {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.invite__unavailable-title {
+  font-weight: var(--weight-medium);
+}
+
+.invite__unavailable-text {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (width >= 768px) {
+  .invite {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .invite__submit {
+    margin-top: var(--space-6);
+  }
+}

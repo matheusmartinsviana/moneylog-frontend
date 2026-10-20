@@ -98,6 +98,7 @@ describe('SettingsPage', () => {
     fixture.detectChanges();
 
     expect(screen.getByTestId('settings-ai-link')).toHaveAttribute('href', '/ai');
+    expect(screen.getByTestId('settings-users-link')).toHaveAttribute('href', '/users');
   });
 
   it('Dado um convidado, então não há o atalho para a IA, mas o cofre continua', async () => {
@@ -108,6 +109,7 @@ describe('SettingsPage', () => {
     fixture.detectChanges();
 
     expect(screen.queryByTestId('settings-ai-link')).toBeNull();
+    expect(screen.queryByTestId('settings-users-link')).toBeNull();
     expect(screen.getByTestId('settings-vault-link')).toBeInTheDocument();
   });
 });
