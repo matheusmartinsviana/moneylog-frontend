@@ -45,6 +45,14 @@ const PROPER_NOUNS = new Set([
   'FGTS',
   'INSS',
   'IRRF',
+  'AWS',
+  'SES',
+  'Amazon',
+  'Cloudflare',
+  'EUA',
+  'US',
+  'EE',
+  'IP',
 ]);
 
 function sentenceCaseProblems(text: string): string[] {
