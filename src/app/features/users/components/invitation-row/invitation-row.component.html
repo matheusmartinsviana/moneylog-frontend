@@ -1,0 +1,40 @@
+@let i = invitation();
+<div class="row__main">
+  <div class="row__title">
+    <span class="row__email" [attr.data-cy]="'invitation-email-' + i.id">{{ i.email }}</span>
+    <span
+      class="row__tag"
+      [attr.data-status]="i.status"
+      [attr.data-cy]="'invitation-status-' + i.id"
+      >{{ t().access.users.invitations.statuses[i.status] }}</span
+    >
+  </div>
+  <p class="row__detail" [attr.data-cy]="'invitation-detail-' + i.id">{{ detail() }}</p>
+  @if (deliveryFailed()) {
+    <p class="row__warning" role="status" [attr.data-cy]="'invitation-delivery-failed-' + i.id">
+      {{ t().access.users.invitations.deliveryFailed }}
+    </p>
+  }
+</div>
+@if (canAct()) {
+  <div class="row__actions" role="group" [attr.aria-label]="actionsLabel()">
+    <button
+      type="button"
+      class="button"
+      [attr.data-cy]="'invitation-resend-' + i.id"
+      [disabled]="busy()"
+      (click)="resend.emit(i)"
+    >
+      {{ t().access.users.invitations.resend }}
+    </button>
+    <button
+      type="button"
+      class="button"
+      [attr.data-cy]="'invitation-revoke-' + i.id"
+      [disabled]="busy()"
+      (click)="revoke.emit(i)"
+    >
+      {{ t().access.users.invitations.revoke }}
+    </button>
+  </div>
+}

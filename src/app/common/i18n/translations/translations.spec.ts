@@ -125,6 +125,7 @@ describe('Traduções', () => {
   it('Dado as telas e os componentes, então as chaves são agrupadas por contexto', () => {
     const contexts = new Set(ptKeys.map((key) => key.split('.')[0]));
     expect([...contexts].sort()).toEqual([
+      'access',
       'accounts',
       'ai',
       'auth',

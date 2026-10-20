@@ -24,8 +24,10 @@ import {
 } from '~/modules/auth/core/interfaces/session-end-hook';
 import { AuthFailure } from '~/modules/auth/core/types/auth-failure';
 import type {
+  AcceptInvitationInput,
   AuthToken,
   Credentials,
+  InvitationPreview,
   SessionUser,
   SetupPasswordInput,
 } from '~/modules/auth/core/types/auth-token';
@@ -121,6 +123,17 @@ export class SessionFacade {
 
   setupPassword(input: SetupPasswordInput): void {
     this.setupSubmissions.next(input);
+  }
+
+  previewInvitation(token: string): Observable<InvitationPreview> {
+    return this.gateway.previewInvitation(token);
+  }
+
+  acceptInvitation(input: AcceptInvitationInput): Observable<void> {
+    return this.gateway.acceptInvitation(input).pipe(
+      switchMap((token) => this.authenticate(token)),
+      tap(() => this.signedInEvents.next()),
+    );
   }
 
   token(): string | null {

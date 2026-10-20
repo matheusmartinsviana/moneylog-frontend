@@ -38,6 +38,12 @@
           <app-icon name="chevronRight" [size]="18" />
         </a>
       }
+      @if (isOwner()) {
+        <a class="links__row" routerLink="/users" data-cy="settings-users-link">
+          <span>{{ t().access.users.settingsLink }}</span>
+          <app-icon name="chevronRight" [size]="18" />
+        </a>
+      }
       <a class="links__row" routerLink="/vault" data-cy="settings-vault-link">
         <span>{{ t().workspacePages.vault.cardTitle }}</span>
         <app-icon name="chevronRight" [size]="18" />

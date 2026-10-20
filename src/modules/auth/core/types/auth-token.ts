@@ -17,6 +17,16 @@ export interface Credentials {
   readonly password: string;
 }
 
+export interface InvitationPreview {
+  readonly email: string;
+  readonly expiresAt: string;
+}
+
+export interface AcceptInvitationInput {
+  readonly token: string;
+  readonly password: string;
+}
+
 export interface SetupPasswordInput {
   readonly email: string;
   readonly setupCode: string;

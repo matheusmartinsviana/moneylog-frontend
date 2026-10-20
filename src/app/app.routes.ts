@@ -14,6 +14,10 @@ export const routes: Routes = [
     loadChildren: () => import('~/app/features/login/login.routes'),
   },
   {
+    path: 'convite',
+    loadChildren: () => import('~/app/features/invitation/invitation.routes'),
+  },
+  {
     path: '',
     component: AppShellComponent,
     canMatch: [authGuard],
@@ -62,6 +66,11 @@ export const routes: Routes = [
         path: 'mcp',
         canMatch: [ownerGuard],
         loadChildren: () => import('~/app/features/mcp/mcp.routes'),
+      },
+      {
+        path: 'users',
+        canMatch: [ownerGuard],
+        loadChildren: () => import('~/app/features/users/users.routes'),
       },
       { path: 'settings', loadChildren: () => import('~/app/features/settings/settings.routes') },
       ...devRoutes,

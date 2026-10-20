@@ -4,8 +4,10 @@ import { Observable, of } from 'rxjs';
 import { SessionFacade } from '~/modules/auth/core/facades/session.facade';
 import { AuthGateway } from '~/modules/auth/core/interfaces/auth.gateway';
 import type {
+  AcceptInvitationInput,
   AuthToken,
   Credentials,
+  InvitationPreview,
   SessionUser,
   SetupPasswordInput,
 } from '~/modules/auth/core/types/auth-token';
@@ -37,6 +39,13 @@ export class AuthGatewayStub extends AuthGateway {
   logout$: Observable<void> = of(undefined);
   setupRequired$: Observable<boolean> = of(false);
   setup$: Observable<AuthToken> = of(aToken('token-setup'));
+  preview$: Observable<InvitationPreview> = of({
+    email: MEMBER_USER.email,
+    expiresAt: '2026-10-25T12:00:00Z',
+  });
+  accept$: Observable<AuthToken> = of(aToken('token-member', MEMBER_USER));
+  readonly previews: string[] = [];
+  readonly accepts: AcceptInvitationInput[] = [];
   readonly setups: SetupPasswordInput[] = [];
   readonly logins: Credentials[] = [];
   refreshes = 0;
@@ -54,6 +63,16 @@ export class AuthGatewayStub extends AuthGateway {
   setupPassword(input: SetupPasswordInput): Observable<AuthToken> {
     this.setups.push(input);
     return this.setup$;
+  }
+
+  previewInvitation(token: string): Observable<InvitationPreview> {
+    this.previews.push(token);
+    return this.preview$;
+  }
+
+  acceptInvitation(input: AcceptInvitationInput): Observable<AuthToken> {
+    this.accepts.push(input);
+    return this.accept$;
   }
 
   refresh(): Observable<AuthToken> {

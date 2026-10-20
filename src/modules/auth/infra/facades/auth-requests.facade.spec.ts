@@ -213,4 +213,75 @@ describe('AuthRequestsFacade', () => {
       expect(await result).toMatchObject({ reason: 'rate_limited', retryAfterSeconds: 42 });
     });
   });
+  describe('convite', () => {
+    it('Dado o preview, então POST com o token só no corpo (nunca no caminho nem na query) e devolve e-mail e validade', async () => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(gateway.previewInvitation('tok-1'));
+      const req = http.expectOne(AUTH_ENDPOINTS.invitationPreview);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ token: 'tok-1' });
+      expect(req.request.urlWithParams).not.toContain('tok-1');
+      req.flush({ email: 'a@b.co', expiresAt: '2026-10-25T12:00:00Z' });
+
+      expect(await result).toEqual({ email: 'a@b.co', expiresAt: '2026-10-25T12:00:00Z' });
+    });
+
+    it('Dado o aceite, então POST com token e senha no corpo e devolve a sessão do convidado', async () => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(gateway.acceptInvitation({ token: 'tok-1', password: 'p' }));
+      const req = http.expectOne(AUTH_ENDPOINTS.invitationAccept);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({ token: 'tok-1', password: 'p' });
+      req.flush({
+        accessToken: 'jwt-2',
+        expiresAt: '2026-10-10T12:15:00Z',
+        user: { id: 'u2', email: 'a@b.co', role: 'MEMBER' },
+      });
+
+      expect((await result).user.role).toBe('MEMBER');
+    });
+
+    it.each([
+      [404, 'INVALID_INVITATION', 'invalid_invitation'],
+      [422, 'WEAK_PASSWORD', 'weak_password'],
+      [429, 'TOO_MANY_ATTEMPTS', 'rate_limited'],
+      [400, 'VALIDATION_FAILED', 'validation'],
+      [500, 'INTERNAL_ERROR', 'unavailable'],
+      [0, 'NETWORK', 'network'],
+    ])('Dado %i %s no aceite, então a falha é %s', async (status, code, reason) => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(gateway.acceptInvitation({ token: 't', password: 'p' })).catch(
+        (error: unknown) => error,
+      );
+      const req = http.expectOne(AUTH_ENDPOINTS.invitationAccept);
+      if (status === 0) req.error(new ProgressEvent('error'));
+      else req.flush({ code }, { status, statusText: code });
+
+      expect(await result).toMatchObject({ reason });
+    });
+
+    it('Dado 404 no preview, então a falha é convite inválido', async () => {
+      const { gateway, http } = setup(false);
+
+      const result = firstValueFrom(gateway.previewInvitation('t')).catch((e: unknown) => e);
+      http
+        .expectOne(AUTH_ENDPOINTS.invitationPreview)
+        .flush({ code: 'INVALID_INVITATION' }, { status: 404, statusText: 'Not Found' });
+
+      expect(await result).toMatchObject({ reason: 'invalid_invitation' });
+    });
+
+    it('Dado o mock, então preview e aceite não fazem requisição', async () => {
+      const { gateway, http } = setup(true);
+
+      await firstValueFrom(gateway.previewInvitation('t'));
+      expect(
+        (await firstValueFrom(gateway.acceptInvitation({ token: 't', password: 'p' }))).user.role,
+      ).toBe('MEMBER');
+      http.expectNone(() => true);
+    });
+  });
 });

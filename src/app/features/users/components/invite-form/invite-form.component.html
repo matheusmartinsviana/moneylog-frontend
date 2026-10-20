@@ -1,0 +1,49 @@
+@if (unavailable()) {
+  <div class="invite__unavailable" role="status" data-cy="invite-unavailable">
+    <p class="invite__unavailable-title">{{ t().access.users.invite.unavailableTitle }}</p>
+    <p class="invite__unavailable-text">{{ t().access.users.invite.unavailableDescription }}</p>
+  </div>
+} @else {
+  <form
+    class="invite"
+    (submit)="$event.preventDefault(); submit()"
+    novalidate
+    data-cy="invite-form"
+  >
+    <app-text-field
+      class="invite__field"
+      [formControl]="email"
+      fieldId="invite-email"
+      type="email"
+      inputmode="email"
+      autocomplete="off"
+      [maxlength]="maxLength"
+      [label]="t().access.users.invite.emailLabel"
+      [hint]="t().access.users.invite.emailHint"
+    />
+    <button
+      type="submit"
+      class="button button--primary invite__submit"
+      data-cy="invite-submit"
+      [disabled]="submitting()"
+      [attr.aria-busy]="submitting()"
+    >
+      {{ submitting() ? t().access.users.invite.submitting : t().access.users.invite.submit }}
+    </button>
+  </form>
+  <div aria-live="assertive" role="alert">
+    @if (message(); as text) {
+      <p class="invite__error" data-cy="invite-error">{{ text }}</p>
+      @if (existingInvitationId(); as id) {
+        <button
+          type="button"
+          class="button"
+          data-cy="invite-resend-existing"
+          (click)="resendExisting.emit(id)"
+        >
+          {{ t().access.users.invite.resendExisting }}
+        </button>
+      }
+    }
+  </div>
+}

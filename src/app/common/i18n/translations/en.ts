@@ -1,4 +1,5 @@
 import type { AppI18n } from '~/app/common/i18n/i18n';
+import { accessEn } from '~/app/common/i18n/sections/access';
 import { cardCashOutEn } from '~/app/common/i18n/sections/card-cash-out';
 import { incomeEn } from '~/app/common/i18n/sections/income';
 import { netWorthEn } from '~/app/common/i18n/sections/net-worth';
@@ -1001,6 +1002,23 @@ export const en: AppI18n = {
       REFRESH_INVALID: 'Your session ended. Sign in again.',
       ORIGIN_NOT_ALLOWED: 'This address is not allowed to access Monelog.',
       FORBIDDEN: 'You do not have permission to do this.',
+      EMAIL_ALREADY_REGISTERED:
+        'That email already has access to Monelog. If the account is disabled, re-enable it in the people list.',
+      INVITATION_PENDING:
+        'There is already an invitation waiting for a reply for that email. You can resend it.',
+      USER_LIMIT_REACHED:
+        'The limit of people with access was reached. Revoke a pending invitation to free up room.',
+      EMAIL_DELIVERY_FAILED:
+        'The invitation was created, but we could not send the email right now. Resend it from the invitations list.',
+      INVITATION_NOT_RESENDABLE:
+        'This invitation can no longer be resent. Create a new invitation for the same email.',
+      INVITATION_NOT_REVOCABLE: 'This invitation was already accepted and cannot be revoked.',
+      INVITATION_NOT_FOUND: 'We could not find that invitation. The list was refreshed.',
+      INVITATIONS_DISABLED:
+        'Invitations are unavailable right now. People who already have access can keep signing in.',
+      INVALID_INVITATION: 'This invitation is no longer valid.',
+      USER_NOT_FOUND: 'We could not find that person. The list was refreshed.',
+      CANNOT_DISABLE_OWNER: 'The Monelog owner cannot be disabled.',
       NOT_FOUND: 'We could not find what you are looking for.',
       METHOD_NOT_ALLOWED: 'The server does not accept this action.',
       NOT_ACCEPTABLE: 'The server does not accept this action.',
@@ -4521,4 +4539,5 @@ export const en: AppI18n = {
   income: incomeEn,
   netWorth: netWorthEn,
   cardCashOut: cardCashOutEn,
+  access: accessEn,
 };

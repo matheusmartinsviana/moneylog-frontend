@@ -1,4 +1,5 @@
 import type { AppI18n } from '~/app/common/i18n/i18n';
+import { accessPt } from '~/app/common/i18n/sections/access';
 import { cardCashOutPt } from '~/app/common/i18n/sections/card-cash-out';
 import { incomePt } from '~/app/common/i18n/sections/income';
 import { netWorthPt } from '~/app/common/i18n/sections/net-worth';
@@ -1010,6 +1011,23 @@ export const pt: AppI18n = {
       REFRESH_INVALID: 'Sua sessão acabou. Entre de novo.',
       ORIGIN_NOT_ALLOWED: 'Este endereço não tem permissão para acessar o Monelog.',
       FORBIDDEN: 'Você não tem permissão para fazer isso.',
+      EMAIL_ALREADY_REGISTERED:
+        'Esse e-mail já tem acesso ao Monelog. Se a conta está desativada, reative-a na lista de pessoas.',
+      INVITATION_PENDING:
+        'Já existe um convite aguardando resposta para esse e-mail. Você pode reenviá-lo.',
+      USER_LIMIT_REACHED:
+        'O limite de pessoas com acesso foi atingido. Revogue um convite pendente para liberar espaço.',
+      EMAIL_DELIVERY_FAILED:
+        'O convite foi criado, mas não conseguimos enviar o e-mail agora. Reenvie pela lista de convites.',
+      INVITATION_NOT_RESENDABLE:
+        'Este convite não pode mais ser reenviado. Crie um novo convite para o mesmo e-mail.',
+      INVITATION_NOT_REVOCABLE: 'Este convite já foi aceito e não pode ser revogado.',
+      INVITATION_NOT_FOUND: 'Não encontramos esse convite. A lista foi atualizada.',
+      INVITATIONS_DISABLED:
+        'Os convites estão indisponíveis no momento. Quem já tem acesso continua entrando normalmente.',
+      INVALID_INVITATION: 'Este convite não é mais válido.',
+      USER_NOT_FOUND: 'Não encontramos essa pessoa. A lista foi atualizada.',
+      CANNOT_DISABLE_OWNER: 'O dono do Monelog não pode ser desativado.',
       NOT_FOUND: 'Não encontramos o que você procura.',
       METHOD_NOT_ALLOWED: 'Esta ação não é aceita pelo servidor.',
       NOT_ACCEPTABLE: 'Esta ação não é aceita pelo servidor.',
@@ -4539,4 +4557,5 @@ export const pt: AppI18n = {
   income: incomePt,
   netWorth: netWorthPt,
   cardCashOut: cardCashOutPt,
+  access: accessPt,
 };

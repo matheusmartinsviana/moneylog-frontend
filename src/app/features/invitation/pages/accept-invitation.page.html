@@ -1,0 +1,156 @@
+<main id="main-content" class="invite" tabindex="-1" data-cy="invitation-page">
+  <section class="invite__card glass glass--strong">
+    <header class="invite__header">
+      <img
+        class="invite__logo"
+        src="assets/brand/logo-mark-128.webp"
+        srcset="assets/brand/logo-mark-128.webp 1x, assets/brand/logo-mark-256.webp 2x"
+        alt=""
+        width="48"
+        height="48"
+        decoding="async"
+      />
+      <p class="invite__brand">{{ t().shell.brand }}</p>
+    </header>
+
+    @switch (accept.state().status) {
+      @case ('checking') {
+        <div aria-busy="true" data-cy="invitation-checking">
+          <p class="invite__text" role="status">{{ t().access.invitation.checking }}</p>
+        </div>
+      }
+      @case ('invalid') {
+        <div class="invite__block" data-cy="invitation-invalid">
+          <h1 class="invite__title" tabindex="-1" data-cy="page-title">
+            {{ t().access.invitation.invalid.title }}
+          </h1>
+          <p class="invite__text">{{ t().access.invitation.invalid.description }}</p>
+          <a class="button invite__action" routerLink="/login" data-cy="invitation-go-login">
+            {{ t().access.invitation.invalid.goToLogin }}
+          </a>
+        </div>
+      }
+      @case ('unavailable') {
+        <div class="invite__block" role="alert" data-cy="invitation-unavailable">
+          <h1 class="invite__title" tabindex="-1" data-cy="page-title">
+            {{ t().access.invitation.unavailable.title }}
+          </h1>
+          <p class="invite__text">{{ unavailableMessage() }}</p>
+          <button
+            type="button"
+            class="button button--primary invite__action"
+            data-cy="invitation-retry"
+            (click)="accept.verify()"
+          >
+            {{ t().access.invitation.unavailable.retry }}
+          </button>
+        </div>
+      }
+      @case ('existing_session') {
+        <div class="invite__block" data-cy="invitation-existing-session">
+          <h1 class="invite__title" tabindex="-1" data-cy="page-title">
+            {{ t().access.invitation.existingSession.title }}
+          </h1>
+          <p class="invite__text">{{ t().access.invitation.existingSession.description }}</p>
+          <div class="invite__buttons">
+            <button
+              type="button"
+              class="button button--primary invite__action"
+              data-cy="invitation-sign-out-and-use"
+              (click)="accept.signOutAndContinue()"
+            >
+              {{ t().access.invitation.existingSession.signOutAndUse }}
+            </button>
+            <button
+              type="button"
+              class="button invite__action"
+              data-cy="invitation-keep-session"
+              (click)="accept.keepCurrentSession()"
+            >
+              {{ t().access.invitation.existingSession.keep }}
+            </button>
+          </div>
+        </div>
+      }
+      @case ('ready') {
+        <form
+          class="invite__block"
+          [formGroup]="form"
+          (ngSubmit)="onSubmit()"
+          novalidate
+          data-cy="invitation-form"
+        >
+          <h1 class="invite__title" tabindex="-1" data-cy="page-title">
+            {{ t().access.invitation.title }}
+          </h1>
+          <p class="invite__text">{{ t().access.invitation.description }}</p>
+          <p class="invite__email" data-cy="invitation-email">{{ invitedEmail() }}</p>
+          <p class="invite__meta" data-cy="invitation-valid-until">{{ validUntil() }}</p>
+
+          <app-text-field
+            formControlName="password"
+            fieldId="invitation-password"
+            type="password"
+            autocomplete="new-password"
+            [revealable]="true"
+            [showLabelText]="t().access.invitation.show"
+            [hideLabelText]="t().access.invitation.hide"
+            [label]="t().access.invitation.newPassword"
+          />
+          <app-text-field
+            formControlName="confirmPassword"
+            fieldId="invitation-confirm-password"
+            type="password"
+            autocomplete="new-password"
+            [revealable]="true"
+            [showLabelText]="t().access.invitation.show"
+            [hideLabelText]="t().access.invitation.hide"
+            [label]="t().access.invitation.confirmPassword"
+          />
+
+          <div class="invite__rules" data-cy="invitation-rules">
+            <p class="invite__rules-title">{{ t().access.invitation.rulesTitle }}</p>
+            <ul>
+              @for (rule of rules(); track rule.key) {
+                <li
+                  [class.invite__rule--met]="rule.met"
+                  [attr.data-cy]="'invitation-rule-' + rule.key"
+                >
+                  <span aria-hidden="true">{{ rule.met ? '✓' : '○' }}</span> {{ rule.text }}
+                  <span class="visually-hidden"
+                    >({{
+                      rule.met ? t().access.invitation.ruleMet : t().access.invitation.rulePending
+                    }})</span
+                  >
+                </li>
+              }
+            </ul>
+          </div>
+
+          <div aria-live="assertive" role="alert">
+            @if (submitError(); as message) {
+              <p class="invite__error" data-cy="invitation-error">{{ message }}</p>
+            }
+          </div>
+
+          <button
+            type="submit"
+            class="button button--primary invite__submit"
+            data-cy="invitation-submit"
+            [disabled]="accept.submitting()"
+            [attr.aria-busy]="accept.submitting()"
+          >
+            {{
+              accept.submitting() ? t().access.invitation.submitting : t().access.invitation.submit
+            }}
+          </button>
+        </form>
+      }
+    }
+
+    <app-invitation-privacy
+      [heading]="t().access.invitation.privacy.title"
+      [paragraphs]="t().access.invitation.privacy.paragraphs"
+    />
+  </section>
+</main>

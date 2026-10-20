@@ -6,7 +6,8 @@ export type AuthFailureReason =
   | 'unavailable'
   | 'invalid_setup_code'
   | 'weak_password'
-  | 'validation';
+  | 'validation'
+  | 'invalid_invitation';
 
 export class AuthFailure extends Error {
   constructor(

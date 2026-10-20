@@ -1,3 +1,4 @@
+import type { AccessCopy } from '~/app/common/i18n/sections/access';
 import type { CardCashOutCopy } from '~/app/common/i18n/sections/card-cash-out';
 import type { IncomeCopy } from '~/app/common/i18n/sections/income';
 import type { NetWorthCopy } from '~/app/common/i18n/sections/net-worth';
@@ -3765,4 +3766,5 @@ export abstract class AppI18n {
   abstract readonly income: IncomeCopy;
   abstract readonly netWorth: NetWorthCopy;
   abstract readonly cardCashOut: CardCashOutCopy;
+  abstract readonly access: AccessCopy;
 }
