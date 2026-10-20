@@ -181,7 +181,7 @@ export const test = base.extend<{ observed: Observed }>({
         apiRequests: [],
         failedRequests: [],
       };
-      const integration = testInfo.project.name === 'integration';
+      const integration = testInfo.project.name === 'integration' || testInfo.project.name === 'api-stub';
       page.on('console', (msg) => {
         if (msg.type() === 'error' || msg.type() === 'warning') {
           if (
@@ -215,7 +215,7 @@ export const test = base.extend<{ observed: Observed }>({
 
       expect.soft(observed.consoleProblems, 'console sem erros nem warnings').toEqual([]);
       expect.soft(observed.thirdPartyRequests, 'nenhuma requisição a terceiros').toEqual([]);
-      if (testInfo.project.name !== 'integration') {
+      if (!integration) {
         expect.soft(observed.apiRequests, 'nenhuma chamada a /v1 em modo mock').toEqual([]);
       }
       expect.soft(observed.failedRequests, 'nenhuma requisição com falha').toEqual([]);
