@@ -10,6 +10,8 @@ import { defineConfig, devices } from '@playwright/test';
  * - `webkit-iphone` / `webkit-desktop`: o mesmo ambiente `mock` no WebKit (iPhone 14 e Safari desktop), só
  *   `e2e/webkit.e2e.ts` (rotas principais, Select como folha, DatePicker, trava de rolagem). Requer
  *   `npx playwright install webkit`;
+ * - `api-stub`: `ng serve --configuration local` (HTTP real do front, sem mocks do front) com a API
+ *   substituída por `page.route` (`e2e/access/api-stub.ts`); cobre erros de API do acesso multiusuário sem backend;
  * - `integration` (T44): backend real. Só existe com `E2E_INTEGRATION=1` (`npm run e2e:integration`).
  *   Nesse modo `mock` e `prod` não rodam (não há motivo para subir os dois servidores de mock), e a
  *   configuração sobe: `e2e/stack/global-setup.ts` (Postgres descartável + backend com perfil `dev`),
@@ -23,6 +25,7 @@ import { defineConfig, devices } from '@playwright/test';
 const MOCK_PORT = Number(process.env['E2E_MOCK_PORT'] ?? 4200);
 const PROD_PORT = Number(process.env['E2E_PROD_PORT'] ?? 4300);
 const DEMO_PORT = Number(process.env['E2E_DEMO_PORT'] ?? 4212);
+const STUB_PORT = Number(process.env['E2E_STUB_PORT'] ?? 4410);
 const INTEGRATION_PORT = 4400;
 const integration = process.env['E2E_INTEGRATION'] === '1';
 
@@ -68,6 +71,7 @@ export default defineConfig({
             '**/demo-flows.e2e.ts',
             '**/demo-keyboard.e2e.ts',
             '**/integration/**',
+            '**/access/**',
           ],
           use: { baseURL: `http://localhost:${MOCK_PORT}` },
         },
@@ -78,6 +82,7 @@ export default defineConfig({
             '**/demo-flows.e2e.ts',
             '**/demo-keyboard.e2e.ts',
             '**/integration/**',
+            '**/access/**',
           ],
           use: { baseURL: `http://localhost:${PROD_PORT}` },
         },
@@ -86,6 +91,11 @@ export default defineConfig({
           name: 'demo',
           testMatch: ['**/fit-screen.e2e.ts', '**/demo-flows.e2e.ts', '**/demo-keyboard.e2e.ts'],
           use: { baseURL: `http://localhost:${DEMO_PORT}` },
+        },
+        {
+          name: 'api-stub',
+          testMatch: '**/access/**/*.e2e.ts',
+          use: { baseURL: `http://localhost:${STUB_PORT}`, serviceWorkers: 'block' },
         },
         // WebKit (motor do iOS Safari/Safari) na suíte mock: rotas principais e overlays.
         {
@@ -114,6 +124,14 @@ export default defineConfig({
         {
           command: `npx ng serve --configuration mock --port ${MOCK_PORT} --no-open`,
           url: `http://localhost:${MOCK_PORT}`,
+          reuseExistingServer: false,
+          timeout: 120_000,
+          stdout: 'ignore',
+          stderr: 'pipe',
+        },
+        {
+          command: `npx ng serve --configuration local --port ${STUB_PORT} --no-open`,
+          url: `http://localhost:${STUB_PORT}`,
           reuseExistingServer: false,
           timeout: 120_000,
           stdout: 'ignore',
