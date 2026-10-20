@@ -123,6 +123,18 @@ describe('AcceptInvitationPage', () => {
     );
   });
 
+  it('Dado o formulário, então mostra a privacidade completa e a linha de aceite, sem pendências', async () => {
+    await setup();
+
+    const privacy = screen.getByTestId('invitation-privacy');
+    expect(privacy.querySelectorAll('p')).toHaveLength(5);
+    expect(privacy.textContent).toContain('c@mviana.tech');
+    expect(privacy.textContent).not.toMatch(/CONFIRMAR/i);
+    expect(screen.getByTestId('invitation-acceptance').textContent).toContain(
+      'Ao criar a conta, você concorda com o tratamento dos seus dados',
+    );
+  });
+
   it('Dado senha curta, então mostra as regras e só marca como atendidas as cumpridas', async () => {
     await setup();
 

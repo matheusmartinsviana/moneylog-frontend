@@ -34,6 +34,8 @@ test.describe('aceite do convite', () => {
     await expect(page.locator('[data-cy="invitation-form"]')).toBeVisible();
     await expect(page.locator('[data-cy="invitation-email"]')).toContainText(MEMBER.email);
     await expect(page.locator('[data-cy="invitation-valid-until"]')).toBeVisible();
+    await expect(page.locator('[data-cy="invitation-privacy"]')).toBeVisible();
+    await expect(page.locator('[data-cy="invitation-acceptance"]')).toBeVisible();
     expect(page.url()).not.toContain(TOKEN);
     expect(page.url()).not.toContain('#');
     expect(stub.callsTo('POST', '/v1/invitations/preview')[0]?.body).toEqual({ token: TOKEN });

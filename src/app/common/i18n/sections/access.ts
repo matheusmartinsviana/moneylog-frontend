@@ -107,6 +107,7 @@ export interface AccessCopy {
     readonly privacy: {
       readonly title: string;
       readonly paragraphs: readonly string[];
+      readonly acceptance: string;
     };
   };
 }
@@ -233,7 +234,17 @@ export const accessPt: AccessCopy = {
       signOutAndUse: 'Sair e usar o convite',
       keep: 'Continuar com a conta atual',
     },
-    privacy: { title: 'Privacidade', paragraphs: [] },
+    privacy: {
+      title: 'Privacidade',
+      paragraphs: [
+        'O Monelog é um app de finanças pessoais de acesso por convite. O responsável por este serviço é o dono, c@mviana.tech. Fale com esse e-mail para qualquer dúvida ou pedido sobre seus dados.',
+        'Guardamos o seu e-mail, a sua senha (só de forma criptografada, nunca em texto), o seu papel e status na conta, as datas do convite, da criação da conta e do último acesso, e os dados financeiros que você mesmo cadastrar. Os dados financeiros de cada pessoa ficam separados dos de todas as outras. O dono vê apenas e-mail, papel, status e datas; não vê as suas finanças.',
+        'O e-mail do convite é enviado pelo serviço AWS SES (Amazon, região dos EUA), então o seu e-mail passa por ele. O link vale por 7 dias e só pode ser usado uma vez. Convites já usados, vencidos ou cancelados são apagados depois de 90 dias. Não usamos rastreamento, publicidade nem analytics de terceiros. Os servidores e a Cloudflare, que fica na frente do endereço, registram o seu IP e as páginas acessadas por tempo limitado, apenas para segurança e funcionamento.',
+        'Fazemos um backup diário do banco inteiro, que contém os dados de todas as contas. Ele é cifrado, guardado na AWS por 7 dias e usado só para recuperar o serviço.',
+        'Ainda não há recuperação de senha por e-mail nem exclusão automática da conta. Para recuperar o acesso, corrigir ou pedir seus dados, ou encerrar a conta, escreva para c@mviana.tech. Os pedidos são tratados manualmente, sem prazo prometido. Os lançamentos financeiros são registros imutáveis; o que acontece com eles ao encerrar a conta é combinado no pedido.',
+      ],
+      acceptance: 'Ao criar a conta, você concorda com o tratamento dos seus dados conforme descrito acima.',
+    },
   },
 };
 
@@ -361,7 +372,17 @@ export const accessEn: AccessCopy = {
       signOutAndUse: 'Sign out and use the invitation',
       keep: 'Keep the current account',
     },
-    privacy: { title: 'Privacy', paragraphs: [] },
+    privacy: {
+      title: 'Privacy',
+      paragraphs: [
+        'Monelog is a personal finance app available by invitation only. The person responsible for this service is the owner, c@mviana.tech. Write to that address with any question or request about your data.',
+        'We store your email, your password (only in encrypted form, never as plain text), your role and status in the account, the dates of the invitation, account creation and last access, and the financial data you enter yourself. Each person\'s financial data is kept separate from everyone else\'s. The owner only sees email, role, status and dates; they cannot see your finances.',
+        'The invitation email is sent through AWS SES (Amazon, US region), so your email address passes through it. The link is valid for 7 days and can be used only once. Used, expired or cancelled invitations are deleted after 90 days. We use no tracking, advertising or third-party analytics. The servers and Cloudflare, which sits in front of the address, record your IP and the pages accessed for a limited time, only for security and operation.',
+        'We make a daily backup of the whole database, which contains the data of all accounts. It is encrypted, stored on AWS for 7 days and used only to restore the service.',
+        'There is no password recovery by email or automatic account deletion yet. To regain access, correct or request your data, or close your account, write to c@mviana.tech. Requests are handled manually, with no promised deadline. Financial entries are immutable records; what happens to them when an account is closed is agreed in the request.',
+      ],
+      acceptance: 'By creating the account, you agree to the processing of your data as described above.',
+    },
   },
 };
 
@@ -489,6 +510,16 @@ export const accessEs: AccessCopy = {
       signOutAndUse: 'Salir y usar la invitación',
       keep: 'Seguir con la cuenta actual',
     },
-    privacy: { title: 'Privacidad', paragraphs: [] },
+    privacy: {
+      title: 'Privacidad',
+      paragraphs: [
+        'Monelog es una app de finanzas personales con acceso solo por invitación. El responsable de este servicio es el dueño, c@mviana.tech. Escribe a ese correo para cualquier duda o solicitud sobre tus datos.',
+        'Guardamos tu correo, tu contraseña (solo de forma cifrada, nunca en texto), tu rol y estado en la cuenta, las fechas de la invitación, de la creación de la cuenta y del último acceso, y los datos financieros que tú mismo registres. Los datos financieros de cada persona están separados de los de las demás. El dueño solo ve correo, rol, estado y fechas; no ve tus finanzas.',
+        'El correo de la invitación se envía mediante AWS SES (Amazon, región de EE. UU.), por lo que tu correo pasa por ese servicio. El enlace vale 7 días y solo puede usarse una vez. Las invitaciones usadas, vencidas o canceladas se eliminan después de 90 días. No usamos rastreo, publicidad ni analítica de terceros. Los servidores y Cloudflare, que está delante de la dirección, registran tu IP y las páginas visitadas por un tiempo limitado, solo por seguridad y funcionamiento.',
+        'Hacemos una copia de seguridad diaria de toda la base de datos, que contiene los datos de todas las cuentas. Está cifrada, se guarda en AWS durante 7 días y se usa solo para restaurar el servicio.',
+        'Aún no hay recuperación de contraseña por correo ni eliminación automática de la cuenta. Para recuperar el acceso, corregir o pedir tus datos, o cerrar la cuenta, escribe a c@mviana.tech. Las solicitudes se atienden manualmente, sin plazo prometido. Los movimientos financieros son registros inmutables; lo que ocurre con ellos al cerrar la cuenta se acuerda en la solicitud.',
+      ],
+      acceptance: 'Al crear la cuenta, aceptas el tratamiento de tus datos según lo descrito arriba.',
+    },
   },
 };

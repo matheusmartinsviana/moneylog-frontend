@@ -133,6 +133,12 @@
             }
           </div>
 
+          @if (t().access.invitation.privacy.paragraphs.length > 0) {
+            <p class="invite__meta" data-cy="invitation-acceptance">
+              {{ t().access.invitation.privacy.acceptance }}
+            </p>
+          }
+
           <button
             type="submit"
             class="button button--primary invite__submit"
