@@ -7,7 +7,7 @@ export type PushPermission = 'default' | 'granted' | 'denied';
 export abstract class PushDevice {
   abstract capability(): PushCapability;
   abstract permission(): PushPermission;
-  abstract currentEndpoint(): Promise<string | null>;
+  abstract currentSubscription(): Promise<PushSubscriptionInput | null>;
   abstract subscribe(publicKey: string): Promise<PushSubscriptionInput>;
   abstract unsubscribe(): Promise<void>;
 }

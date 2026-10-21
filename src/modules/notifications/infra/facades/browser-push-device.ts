@@ -48,11 +48,11 @@ export class BrowserPushDevice extends PushDevice {
     return this.win && 'Notification' in this.win ? this.win.Notification.permission : 'denied';
   }
 
-  async currentEndpoint(): Promise<string | null> {
+  async currentSubscription(): Promise<PushSubscriptionInput | null> {
     const registration = await this.registration();
     this.syncLanguage(registration);
     const subscription = await registration?.pushManager.getSubscription();
-    return subscription?.endpoint ?? null;
+    return subscription ? this.describe(subscription) : null;
   }
 
   async subscribe(publicKey: string): Promise<PushSubscriptionInput> {
@@ -69,20 +69,24 @@ export class BrowserPushDevice extends PushDevice {
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToBytes(publicKey),
       }));
-    return {
-      endpoint: subscription.endpoint,
-      keys: {
-        p256dh: toBase64Url(subscription.getKey('p256dh')),
-        auth: toBase64Url(subscription.getKey('auth')),
-      },
-      userAgent: w.navigator.userAgent.slice(0, 200),
-    };
+    return this.describe(subscription);
   }
 
   async unsubscribe(): Promise<void> {
     const registration = await this.registration();
     const subscription = await registration?.pushManager.getSubscription();
     await subscription?.unsubscribe();
+  }
+
+  private describe(subscription: PushSubscription): PushSubscriptionInput {
+    return {
+      endpoint: subscription.endpoint,
+      keys: {
+        p256dh: toBase64Url(subscription.getKey('p256dh')),
+        auth: toBase64Url(subscription.getKey('auth')),
+      },
+      userAgent: this.win?.navigator.userAgent.slice(0, 200) ?? null,
+    };
   }
 
   private syncLanguage(registration: ServiceWorkerRegistration | null): void {
