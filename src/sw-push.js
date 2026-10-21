@@ -116,17 +116,20 @@ async function storedLanguage() {
   }
 }
 
-function messageOrigin(event) {
-  if (event.origin) return event.origin;
+function sourceOrigin(source) {
   try {
-    return new URL(event.source.url).origin;
+    return new URL(source.url).origin;
   } catch {
     return '';
   }
 }
 
 self.addEventListener('message', (event) => {
-  if (messageOrigin(event) !== self.location.origin) return;
+  if (event.origin) {
+    if (event.origin !== self.location.origin) return;
+  } else if (sourceOrigin(event.source) !== self.location.origin) {
+    return;
+  }
   const data = event.data;
   if (!data || data.type !== 'LANGUAGE' || typeof data.language !== 'string') return;
   if (!Object.prototype.hasOwnProperty.call(TEXTS, data.language)) return;

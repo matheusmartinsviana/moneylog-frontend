@@ -475,7 +475,7 @@ export const accessEs: AccessCopy = {
     description: 'Crea una contraseña para entrar en Monelog.',
     invitedEmail: 'Invitación para {email}',
     validUntil: 'Válida hasta el {when}',
-    newPassword: 'Contraseña',
+    newPassword: 'Tu contraseña',
     confirmPassword: 'Repite la contraseña',
     show: 'Mostrar',
     hide: 'Ocultar',
