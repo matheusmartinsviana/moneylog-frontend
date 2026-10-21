@@ -8,5 +8,7 @@ regexes = [
   "senha-do-membro-456",
   "uma-senha-bem-longa-123",
   "0c8a1d52-3f1e-4c0b-8a67-5d2e9b7f4a31",
+  "mlq_TESTE001_SEGREDO-DE-TESTE-NAO-USAR-EM-LUGAR-NENHUM-00000",
+  "mlq_Ab3dE9xK_EXEMPLO-FICTICIO-SEM-VALOR-0000000000000000",
   "notification\\.[a-z.0-9]+",
 ]
