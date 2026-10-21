@@ -56,6 +56,14 @@ const SECURITY_TEXTS = {
     new_login: ['Novo acesso', 'Alguém entrou na sua conta a partir de um novo local.'],
     setup_completed: ['Senha definida', 'O primeiro acesso foi concluído.'],
     password_reset: ['Senha redefinida', 'A senha do dono foi redefinida.'],
+    quick_token_created: [
+      'Novo token de atalho criado',
+      'Se não foi você, revogue o token nos ajustes.',
+    ],
+    quick_token_revoked: [
+      'Token de atalho revogado',
+      'O atalho que usava esse token parou de funcionar.',
+    ],
     DEFAULT: ['Alerta de segurança', 'Abra o app para conferir.'],
   },
   en: {
@@ -66,6 +74,14 @@ const SECURITY_TEXTS = {
     new_login: ['New sign-in', 'Someone signed in to your account from a new location.'],
     setup_completed: ['Password set', 'The first access was completed.'],
     password_reset: ['Password reset', "The owner's password was reset."],
+    quick_token_created: [
+      'New shortcut token created',
+      "If it wasn't you, revoke the token in settings.",
+    ],
+    quick_token_revoked: [
+      'Shortcut token revoked',
+      'The shortcut that used this token stopped working.',
+    ],
     DEFAULT: ['Security alert', 'Open the app to check.'],
   },
   es: {
@@ -76,6 +92,14 @@ const SECURITY_TEXTS = {
     new_login: ['Nuevo acceso', 'Alguien entró en tu cuenta desde un lugar nuevo.'],
     setup_completed: ['Contraseña definida', 'Se completó el primer acceso.'],
     password_reset: ['Contraseña restablecida', 'Se restableció la contraseña del dueño.'],
+    quick_token_created: [
+      'Nuevo token de atajo creado',
+      'Si no fuiste tú, revoca el token en los ajustes.',
+    ],
+    quick_token_revoked: [
+      'Token de atajo revocado',
+      'El atajo que usaba este token dejó de funcionar.',
+    ],
     DEFAULT: ['Alerta de seguridad', 'Abre la app para revisar.'],
   },
 };
