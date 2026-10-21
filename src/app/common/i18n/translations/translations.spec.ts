@@ -171,6 +171,7 @@ describe('Traduções', () => {
       'purchaseGroups',
       'pwa',
       'quickAdd',
+      'quickEntry',
       'recurrences',
       'search',
       'settings',

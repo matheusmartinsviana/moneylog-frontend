@@ -111,5 +111,9 @@ describe('SettingsPage', () => {
     expect(screen.queryByTestId('settings-ai-link')).toBeNull();
     expect(screen.queryByTestId('settings-users-link')).toBeNull();
     expect(screen.getByTestId('settings-vault-link')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-shortcuts-link')).toHaveAttribute(
+      'href',
+      '/settings/shortcuts',
+    );
   });
 });

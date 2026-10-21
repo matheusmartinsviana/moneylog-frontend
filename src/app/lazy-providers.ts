@@ -16,6 +16,7 @@ import { provideOwnerStatement } from '~/modules/owner-statement/infra/owner-sta
 import { providePeople } from '~/modules/people/infra/people.providers';
 import { provideProjections } from '~/modules/projections/infra/projections.providers';
 import { providePurchaseGroups } from '~/modules/purchase-groups/infra/purchase-groups.providers';
+import { provideQuickEntry } from '~/modules/quick-entry/infra/quick-entry.providers';
 import { provideRecurrences } from '~/modules/recurrences/infra/recurrences.providers';
 import { provideReports } from '~/modules/reports/infra/reports.providers';
 import { provideSimulations } from '~/modules/simulations/infra/simulations.providers';
@@ -26,7 +27,11 @@ export const STATEMENT_PROVIDERS: Provider[] = [provideOwnerStatement()];
 export const SIMULATOR_PROVIDERS: Provider[] = [provideSimulations(), provideRecurrences()];
 export const USERS_PROVIDERS: Provider[] = [provideUsers()];
 export const IMPORT_PROVIDERS: Provider[] = [provideImports()];
-export const SETTINGS_PROVIDERS: Provider[] = [provideExports(), provideNotes()];
+export const SETTINGS_PROVIDERS: Provider[] = [
+  provideExports(),
+  provideNotes(),
+  provideQuickEntry(),
+];
 export const PLANNING_PROVIDERS: Provider[] = [
   provideRecurrences(),
   provideDashboard(),

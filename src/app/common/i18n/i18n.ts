@@ -3,6 +3,7 @@ import type { CardCashOutCopy } from '~/app/common/i18n/sections/card-cash-out';
 import type { IncomeCopy } from '~/app/common/i18n/sections/income';
 import type { NetWorthCopy } from '~/app/common/i18n/sections/net-worth';
 import type { PurchaseGroupsCopy } from '~/app/common/i18n/sections/purchase-groups';
+import type { QuickEntryCopy } from '~/app/common/i18n/sections/quick-entry';
 
 export const SUPPORTED_LANGUAGES = ['pt', 'en', 'es'] as const;
 export type Language = (typeof SUPPORTED_LANGUAGES)[number];
@@ -3767,4 +3768,5 @@ export abstract class AppI18n {
   abstract readonly netWorth: NetWorthCopy;
   abstract readonly cardCashOut: CardCashOutCopy;
   abstract readonly access: AccessCopy;
+  abstract readonly quickEntry: QuickEntryCopy;
 }

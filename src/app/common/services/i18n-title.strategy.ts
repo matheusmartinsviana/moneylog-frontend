@@ -5,7 +5,7 @@ import { RouterStateSnapshot, TitleStrategy } from '@angular/router';
 import type { NavKey } from '~/app/common/components/app-shell/navigation';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 
-export type PageTitleKey = NavKey | 'notFound' | 'login' | 'users' | 'invitation';
+export type PageTitleKey = NavKey | 'notFound' | 'login' | 'users' | 'invitation' | 'shortcuts';
 
 export function pageTitle(key: PageTitleKey): string {
   return key;
@@ -34,7 +34,9 @@ export class I18nTitleStrategy extends TitleStrategy {
                 ? t.access.users.pageTitle
                 : key === 'invitation'
                   ? t.access.invitation.pageTitle
-                  : t.nav[key];
+                  : key === 'shortcuts'
+                    ? t.quickEntry.pageTitle
+                    : t.nav[key];
       this.title.setTitle(page ? `${page} · ${t.shell.brand}` : t.shell.brand);
     });
   }

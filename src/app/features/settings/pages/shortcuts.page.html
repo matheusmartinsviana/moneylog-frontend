@@ -1,0 +1,128 @@
+<app-page-layout
+  reading
+  [heading]="t().quickEntry.pageTitle"
+  [description]="t().quickEntry.description"
+>
+  <a pageActions class="link-more hit-area" routerLink="/settings" data-cy="shortcuts-back">
+    {{ t().quickEntry.backToSettings }}
+  </a>
+
+  @if (tokens.forbidden()) {
+    <div data-cy="shortcuts-forbidden">
+      <app-empty-state
+        [heading]="t().quickEntry.forbidden.title"
+        [description]="t().quickEntry.forbidden.description"
+        illustration="document"
+      />
+    </div>
+  } @else {
+    <app-section-container [heading]="t().quickEntry.generate.heading">
+      @let accountsState = accountsList.state();
+      @switch (accountsState.status) {
+        @case ('loading') {
+          <div data-cy="shortcuts-accounts-loading">
+            <p class="visually-hidden" role="status">
+              {{ t().quickEntry.generate.accountsLoading }}
+            </p>
+            <div class="list-skeleton" aria-hidden="true">
+              <div class="list-skeleton__row"></div>
+            </div>
+          </div>
+        }
+        @case ('error') {
+          <div data-cy="shortcuts-accounts-error">
+            <app-error-state
+              [problem]="accountsState.problem"
+              (retry)="accountsList.load('ACTIVE')"
+            />
+          </div>
+        }
+        @default {
+          @if (eligibleAccounts().length === 0) {
+            <div data-cy="shortcuts-no-accounts">
+              <app-empty-state
+                [heading]="t().quickEntry.generate.noAccountsTitle"
+                [description]="t().quickEntry.generate.noAccountsDescription"
+                [actions]="noAccountsActions()"
+                (action)="openAccounts()"
+                illustration="document"
+              />
+            </div>
+          } @else {
+            <app-token-generate-form
+              [accounts]="eligibleAccounts()"
+              [submitting]="tokens.creating()"
+              [problem]="createProblem()"
+              [resets]="formResets()"
+              (generated)="generate($event)"
+              (edited)="tokens.clearCreateProblem()"
+            />
+          }
+        }
+      }
+    </app-section-container>
+
+    <app-section-container [heading]="t().quickEntry.list.heading">
+      @let state = tokens.tokens();
+      @switch (state.status) {
+        @case ('loading') {
+          <div data-cy="shortcuts-loading">
+            <p class="visually-hidden" role="status">{{ t().quickEntry.loading }}</p>
+            <div class="list-skeleton" aria-hidden="true">
+              <div class="list-skeleton__row"></div>
+              <div class="list-skeleton__row"></div>
+            </div>
+          </div>
+        }
+        @case ('error') {
+          <div data-cy="shortcuts-error">
+            <app-error-state [problem]="state.problem" (retry)="tokens.load()" />
+          </div>
+        }
+        @case ('ready') {
+          @if (state.data.length === 0) {
+            <div data-cy="shortcuts-empty">
+              <app-empty-state
+                [heading]="t().quickEntry.list.emptyTitle"
+                [description]="t().quickEntry.list.emptyDescription"
+                [actions]="emptyActions()"
+                (action)="focusForm()"
+                illustration="log"
+              />
+            </div>
+          } @else {
+            <ul class="list card-flat" data-cy="shortcuts-list">
+              @for (token of state.data; track token.id) {
+                <li
+                  app-token-row
+                  [token]="token"
+                  [busy]="tokens.busyIds().has(token.id)"
+                  (rename)="askRename($event)"
+                  (revoke)="askRevoke($event)"
+                ></li>
+              }
+            </ul>
+          }
+        }
+      }
+    </app-section-container>
+  }
+
+  <app-token-secret-dialog [secret]="tokens.secret()" (closed)="tokens.dismissSecret()" />
+  <app-token-rename-dialog
+    [token]="pendingRename()"
+    [busy]="renaming()"
+    (saved)="confirmRename($event)"
+    (cancelled)="pendingRename.set(null)"
+  />
+  <app-confirm-dialog
+    [open]="pendingRevoke() !== null"
+    tone="risk"
+    [heading]="revokeTitle()"
+    [description]="t().quickEntry.revokeConfirm.description"
+    [confirmLabel]="t().quickEntry.revokeConfirm.confirm"
+    [cancelLabel]="t().quickEntry.cancel"
+    (confirmed)="confirmRevoke()"
+    (cancelled)="pendingRevoke.set(null)"
+  />
+</app-page-layout>

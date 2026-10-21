@@ -4,6 +4,7 @@ import { cardCashOutPt } from '~/app/common/i18n/sections/card-cash-out';
 import { incomePt } from '~/app/common/i18n/sections/income';
 import { netWorthPt } from '~/app/common/i18n/sections/net-worth';
 import { purchaseGroupsPt } from '~/app/common/i18n/sections/purchase-groups';
+import { quickEntryPt } from '~/app/common/i18n/sections/quick-entry';
 import { BRAND_NAME } from '~/app/config/brand';
 
 export const pt: AppI18n = {
@@ -1025,6 +1026,11 @@ export const pt: AppI18n = {
       INVITATION_NOT_FOUND: 'Não encontramos esse convite. A lista foi atualizada.',
       INVITATIONS_DISABLED:
         'Os convites estão indisponíveis no momento. Quem já tem acesso continua entrando normalmente.',
+      QUICK_TOKEN_LIMIT_REACHED:
+        'Você já tem o máximo de tokens ativos. Revogue um para gerar outro.',
+      QUICK_ACCOUNT_NOT_ALLOWED:
+        'Esta conta não aceita lançamento rápido. Escolha uma conta corrente, poupança ou carteira ativa.',
+      QUICK_TOKEN_NOT_FOUND: 'Não encontramos esse token. A lista foi atualizada.',
       INVALID_INVITATION: 'Este convite não é mais válido.',
       USER_NOT_FOUND: 'Não encontramos essa pessoa. A lista foi atualizada.',
       CANNOT_DISABLE_OWNER: 'O dono do Monelog não pode ser desativado.',
@@ -4558,4 +4564,5 @@ export const pt: AppI18n = {
   netWorth: netWorthPt,
   cardCashOut: cardCashOutPt,
   access: accessPt,
+  quickEntry: quickEntryPt,
 };

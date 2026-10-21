@@ -1,0 +1,38 @@
+:host {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.generate {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.generate__label {
+  min-width: 0;
+}
+
+.generate__submit {
+  justify-self: start;
+  min-height: 2.75rem;
+}
+
+.generate__error {
+  color: var(--color-risk);
+  font-size: var(--text-sm);
+}
+
+@media (width >= 768px) {
+  .generate {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .generate__label {
+    grid-column: 1 / -1;
+  }
+
+  .generate__submit {
+    grid-column: 1 / -1;
+  }
+}
