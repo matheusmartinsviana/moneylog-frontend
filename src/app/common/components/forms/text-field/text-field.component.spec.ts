@@ -104,4 +104,28 @@ describe('TextFieldComponent', () => {
     expect(screen.getByText('Buscar')).toHaveClass('visually-hidden');
     expect(input).toHaveAttribute('data-autofocus', '');
   });
+
+  it('Dado um campo revelável, Quando toca em Mostrar, Então o texto aparece e o botão vira Ocultar', async () => {
+    const control = new FormControl('segredo', { nonNullable: true });
+    await render(
+      `<app-text-field [formControl]="control" fieldId="senha" type="password" label="Senha" [revealable]="true" showLabelText="Mostrar" hideLabelText="Ocultar" />`,
+      {
+        imports: [ReactiveFormsModule, TextFieldComponent],
+        providers: [provideI18nTesting('pt')],
+        componentProperties: { control },
+      },
+    );
+    const input = screen.getByTestId('senha');
+    const reveal = screen.getByTestId('senha-reveal');
+    expect(input).toHaveAttribute('type', 'password');
+
+    await userEvent.click(reveal);
+
+    expect(input).toHaveAttribute('type', 'text');
+    expect(reveal).toHaveTextContent('Ocultar');
+    expect(reveal).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(reveal);
+    expect(input).toHaveAttribute('type', 'password');
+    expect(reveal).toHaveTextContent('Mostrar');
+  });
 });
