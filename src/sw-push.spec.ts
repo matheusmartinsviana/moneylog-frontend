@@ -122,6 +122,12 @@ describe('sw-push.js (T137 CA1)', () => {
     ['en', 'security.new_login', 'New sign-in'],
     ['es', 'security.password_reset', 'Contraseña restablecida'],
     ['pt', 'security.setup_completed', 'Senha definida'],
+    ['pt', 'security.quick_token_created', 'Novo token de atalho criado'],
+    ['en', 'security.quick_token_created', 'New shortcut token created'],
+    ['es', 'security.quick_token_created', 'Nuevo token de atajo creado'],
+    ['pt', 'security.quick_token_revoked', 'Token de atalho revogado'],
+    ['en', 'security.quick_token_revoked', 'Shortcut token revoked'],
+    ['es', 'security.quick_token_revoked', 'Token de atajo revocado'],
     ['pt', 'security.desconhecido', 'Alerta de segurança'],
   ])(
     'Dado um alerta de segurança (%s, %s), então o título é "%s" e o toque abre o início',
