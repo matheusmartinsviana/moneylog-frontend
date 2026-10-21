@@ -19,4 +19,5 @@ export const FAKE_MEMBER_SESSION: AuthTokenResponse = {
 export const FAKE_INVITATION_PREVIEW = {
   email: 'convidado@moneylog.app',
   expiresAt: '2099-12-31T00:00:00Z',
+  invitedByName: 'Matheus',
 };

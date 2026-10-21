@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
-import { NEVER, throwError } from 'rxjs';
+import { NEVER, of, throwError } from 'rxjs';
 
 import { pt } from '~/app/common/i18n/translations/pt';
 import { AcceptInvitationPage } from '~/app/features/invitation/pages/accept-invitation.page';
@@ -43,6 +43,46 @@ describe('AcceptInvitationPage', () => {
     expect(gateway.previews).toEqual(['tok-secreto']);
     expect(screen.getByTestId('invitation-email')).toHaveTextContent(MEMBER_USER.email);
     expect(screen.getByTestId('invitation-valid-until')).toHaveTextContent('Válido até');
+  });
+
+  it('Dado um convite sem apelido de quem convidou, então o título é Você foi convidado', async () => {
+    await setup();
+
+    expect(screen.getByTestId('typed-title-full')).toHaveTextContent(/^Você foi convidado$/);
+  });
+
+  it('Dado um convite com apelido, então o título completo fica para leitor de tela e não muda o foco', async () => {
+    const gateway = new AuthGatewayStub();
+    gateway.preview$ = of({
+      email: MEMBER_USER.email,
+      expiresAt: '2026-10-25T12:00:00Z',
+      invitedByName: 'Matheus',
+    });
+    await setup('tok-secreto', gateway);
+
+    expect(screen.getByTestId('typed-title-full')).toHaveTextContent(
+      'Você foi convidado por Matheus',
+    );
+    expect(screen.getByTestId('page-title')).not.toHaveAttribute('aria-label');
+    expect(screen.getByTestId('invitation-password')).toHaveFocus();
+  });
+
+  it('Dado o apelido, então digitar a senha não reinicia o título', async () => {
+    const gateway = new AuthGatewayStub();
+    gateway.preview$ = of({
+      email: MEMBER_USER.email,
+      expiresAt: '2026-10-25T12:00:00Z',
+      invitedByName: 'Matheus',
+    });
+    await setup('tok-secreto', gateway);
+    const title = screen.getByTestId('typed-title-visual');
+
+    await userEvent.type(screen.getByTestId('invitation-password'), 'abc');
+
+    expect(screen.getByTestId('typed-title-visual')).toBe(title);
+    expect(screen.getByTestId('typed-title-typed')).toHaveTextContent(
+      'Você foi convidado por Matheus',
+    );
   });
 
   it('Dado o formulário, então o token nunca aparece no DOM', async () => {

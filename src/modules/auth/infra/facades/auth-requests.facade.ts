@@ -122,7 +122,11 @@ export class AuthRequestsFacade extends AuthGateway {
     if (this.useMocks) return of(FAKE_INVITATION_PREVIEW);
     const body: InvitationPreviewRequest = { token };
     return this.http.post<InvitationPreviewResponse>(AUTH_ENDPOINTS.invitationPreview, body).pipe(
-      map((response) => ({ email: response.email, expiresAt: response.expiresAt })),
+      map((response) => ({
+        email: response.email,
+        expiresAt: response.expiresAt,
+        invitedByName: response.invitedByName?.trim() || null,
+      })),
       catchError(invitationFailure),
     );
   }

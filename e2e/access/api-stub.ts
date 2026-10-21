@@ -51,6 +51,7 @@ export interface Stub {
   users: StubManagedUser[];
   invitations: StubInvitation[];
   previewEmail: string;
+  previewInvitedBy: string | null;
   failures: Map<string, StubFailure[]>;
   calls: { method: string; path: string; body: unknown }[];
   fail(key: string, ...failures: StubFailure[]): void;
@@ -89,13 +90,16 @@ export function invitation(
 }
 
 export function createStub(
-  initial: Partial<Pick<Stub, 'session' | 'users' | 'invitations' | 'previewEmail'>> = {},
+  initial: Partial<
+    Pick<Stub, 'session' | 'users' | 'invitations' | 'previewEmail' | 'previewInvitedBy'>
+  > = {},
 ): Stub {
   const stub: Stub = {
     session: initial.session === undefined ? OWNER : initial.session,
     users: initial.users ?? [managedUser(OWNER, { lastLoginAt: '2026-10-19T09:30:00Z' })],
     invitations: initial.invitations ?? [],
     previewEmail: initial.previewEmail ?? MEMBER.email,
+    previewInvitedBy: initial.previewInvitedBy === undefined ? 'Matheus' : initial.previewInvitedBy,
     failures: new Map(),
     calls: [],
     fail(key, ...failures) {
@@ -159,7 +163,11 @@ export async function installStub(page: Page, stub: Stub): Promise<void> {
       return route.fulfill({ status: 204 });
     }
     if (key === 'POST /v1/invitations/preview') {
-      return json(route, { email: stub.previewEmail, expiresAt: '2099-12-31T00:00:00Z' });
+      return json(route, {
+        email: stub.previewEmail,
+        expiresAt: '2099-12-31T00:00:00Z',
+        invitedByName: stub.previewInvitedBy,
+      });
     }
     if (key === 'POST /v1/invitations/accept') {
       const user = { ...MEMBER, email: stub.previewEmail };

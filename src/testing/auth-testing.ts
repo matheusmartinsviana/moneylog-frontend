@@ -42,6 +42,7 @@ export class AuthGatewayStub extends AuthGateway {
   preview$: Observable<InvitationPreview> = of({
     email: MEMBER_USER.email,
     expiresAt: '2026-10-25T12:00:00Z',
+    invitedByName: null,
   });
   accept$: Observable<AuthToken> = of(aToken('token-member', MEMBER_USER));
   readonly previews: string[] = [];

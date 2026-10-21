@@ -20,6 +20,7 @@ export interface Credentials {
 export interface InvitationPreview {
   readonly email: string;
   readonly expiresAt: string;
+  readonly invitedByName: string | null;
 }
 
 export interface AcceptInvitationInput {

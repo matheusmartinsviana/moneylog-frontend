@@ -33,6 +33,9 @@ test.describe('aceite do convite', () => {
 
     await expect(page.locator('[data-cy="invitation-form"]')).toBeVisible();
     await expect(page.locator('[data-cy="invitation-email"]')).toContainText(MEMBER.email);
+    await expect(page.locator('[data-cy="typed-title-full"]')).toHaveText(
+      'Você foi convidado por Matheus',
+    );
     await expect(page.locator('[data-cy="invitation-valid-until"]')).toBeVisible();
     await expect(page.locator('[data-cy="invitation-privacy"]')).toBeVisible();
     await expect(page.locator('[data-cy="invitation-acceptance"]')).toBeVisible();
@@ -40,6 +43,15 @@ test.describe('aceite do convite', () => {
     expect(page.url()).not.toContain('#');
     expect(stub.callsTo('POST', '/v1/invitations/preview')[0]?.body).toEqual({ token: TOKEN });
     expect(await page.evaluate(() => document.location.hash)).toBe('');
+  });
+
+  test('Dado um convite sem apelido de quem convidou, Quando a tela abre, Então o título fica em Você foi convidado', async ({
+    page,
+  }) => {
+    const stub = createStub({ session: null, previewInvitedBy: null });
+    await openInvitation(page, stub);
+
+    await expect(page.locator('[data-cy="typed-title-full"]')).toHaveText('Você foi convidado');
   });
 
   test('Dado um token inválido (404), Quando a tela abre, Então mostra convite inválido com saída para a entrada', async ({

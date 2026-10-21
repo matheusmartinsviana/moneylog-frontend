@@ -222,9 +222,33 @@ describe('AuthRequestsFacade', () => {
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({ token: 'tok-1' });
       expect(req.request.urlWithParams).not.toContain('tok-1');
-      req.flush({ email: 'a@b.co', expiresAt: '2026-10-25T12:00:00Z' });
+      req.flush({
+        email: 'a@b.co',
+        expiresAt: '2026-10-25T12:00:00Z',
+        invitedByName: ' Mateus ',
+      });
 
-      expect(await result).toEqual({ email: 'a@b.co', expiresAt: '2026-10-25T12:00:00Z' });
+      expect(await result).toEqual({
+        email: 'a@b.co',
+        expiresAt: '2026-10-25T12:00:00Z',
+        invitedByName: 'Mateus',
+      });
+    });
+
+    it('Dado preview sem apelido do convidante (nulo ou ausente), então invitedByName é nulo', async () => {
+      const { gateway, http } = setup(false);
+
+      const nullName = firstValueFrom(gateway.previewInvitation('tok-1'));
+      http
+        .expectOne(AUTH_ENDPOINTS.invitationPreview)
+        .flush({ email: 'a@b.co', expiresAt: '2026-10-25T12:00:00Z', invitedByName: null });
+      expect((await nullName).invitedByName).toBeNull();
+
+      const blank = firstValueFrom(gateway.previewInvitation('tok-1'));
+      http
+        .expectOne(AUTH_ENDPOINTS.invitationPreview)
+        .flush({ email: 'a@b.co', expiresAt: '2026-10-25T12:00:00Z', invitedByName: '   ' });
+      expect((await blank).invitedByName).toBeNull();
     });
 
     it('Dado o aceite, então POST com token e senha no corpo e devolve a sessão do convidado', async () => {
