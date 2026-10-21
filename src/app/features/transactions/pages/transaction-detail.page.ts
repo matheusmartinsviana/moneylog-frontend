@@ -395,6 +395,9 @@ export class TransactionDetailPage {
     }
     if (tx.method)
       fields.push({ key: 'method', label: copy.method, text: labels.methods[tx.method] });
+    if (tx.source === 'QUICK_SHORTCUT') {
+      fields.push({ key: 'source', label: copy.source, text: labels.sources[tx.source] });
+    }
     if (tx.direction) {
       fields.push({
         key: 'direction',

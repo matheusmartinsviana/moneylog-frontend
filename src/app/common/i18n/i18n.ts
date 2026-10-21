@@ -1005,6 +1005,12 @@ export abstract class AppI18n {
     readonly methods: Readonly<
       Record<'CASH' | 'DEBIT' | 'PIX' | 'TRANSFER' | 'BOLETO' | 'OTHER', string>
     >;
+    readonly sources: Readonly<
+      Record<
+        'MANUAL' | 'IMPORT' | 'RECURRENCE' | 'ONGOING' | 'HISTORICAL' | 'QUICK_SHORTCUT',
+        string
+      >
+    >;
     readonly directions: Readonly<
       Record<'CONTRIBUTION' | 'REDEMPTION' | 'INCREASE' | 'DECREASE', string>
     >;
@@ -1029,6 +1035,8 @@ export abstract class AppI18n {
       readonly allAccounts: string;
       readonly allCategories: string;
       readonly allMethods: string;
+      readonly source: string;
+      readonly allSources: string;
       readonly clear: string;
     };
     readonly totals: {
@@ -1062,6 +1070,7 @@ export abstract class AppI18n {
         readonly counterpartTo: string;
         readonly counterpartInvestment: string;
         readonly method: string;
+        readonly source: string;
         readonly direction: string;
         readonly adjustmentKind: string;
         readonly reason: string;

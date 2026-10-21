@@ -96,4 +96,13 @@ describe('Lista de movimentações com cartão (T70 CA1)', () => {
     expect(row).toHaveTextContent('R$ 200,00');
     expect(screen.getByTestId('entry-item-0')).toHaveTextContent('Notebook 1/6');
   });
+
+  it('Dado movimentação do Atalho na tabela de Registros, então a linha mostra "Atalho"', async () => {
+    await render(RecordsTableComponent, {
+      inputs: { items: [aTransaction({ id: 'tx-quick', source: 'QUICK_SHORTCUT' })] },
+      providers: [provideI18nTesting('pt')],
+    });
+
+    expect(screen.getByTestId('transaction-row-tx-quick')).toHaveTextContent('Atalho');
+  });
 });

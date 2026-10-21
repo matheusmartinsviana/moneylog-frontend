@@ -1,0 +1,29 @@
+@let copy = t().quickEntry.guide;
+<app-section-container [heading]="copy.heading" [description]="copy.description">
+  <div class="guide" data-cy="shortcut-guide">
+    <p class="guide__note" data-cy="shortcut-guide-iphone-only">{{ copy.iphoneOnly }}</p>
+
+    <h3 class="guide__title">{{ copy.stepsHeading }}</h3>
+    <ol class="guide__list" data-cy="shortcut-guide-steps">
+      @for (step of copy.steps; track $index) {
+        <li class="guide__item" [attr.data-cy]="'shortcut-guide-step-' + ($index + 1)">
+          {{ step }}
+        </li>
+      }
+    </ol>
+
+    <h3 class="guide__title">{{ copy.actionsHeading }}</h3>
+    <p class="guide__muted" data-cy="shortcut-guide-no-link">{{ copy.actionsDescription }}</p>
+    <ol class="guide__list" data-cy="shortcut-guide-actions">
+      @for (action of copy.actions; track $index) {
+        <li class="guide__item" [attr.data-cy]="'shortcut-guide-action-' + ($index + 1)">
+          <strong>{{ action.title }}.</strong> {{ action.detail }}
+        </li>
+      }
+    </ol>
+
+    <div class="guide__risk" role="note" data-cy="shortcut-guide-risk">
+      <strong>{{ copy.riskTitle }}.</strong> {{ copy.risk }}
+    </div>
+  </div>
+</app-section-container>

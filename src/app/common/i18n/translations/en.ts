@@ -1421,6 +1421,14 @@ export const en: AppI18n = {
       BOLETO: 'Boleto',
       OTHER: 'Other',
     },
+    sources: {
+      MANUAL: 'Manual',
+      IMPORT: 'Import',
+      RECURRENCE: 'Recurrence',
+      ONGOING: 'Ongoing installments',
+      HISTORICAL: 'History',
+      QUICK_SHORTCUT: 'Shortcut',
+    },
     directions: {
       CONTRIBUTION: 'Contribution',
       REDEMPTION: 'Redemption',
@@ -1448,6 +1456,8 @@ export const en: AppI18n = {
       allAccounts: 'All accounts',
       allCategories: 'All categories',
       allMethods: 'All methods',
+      source: 'Source',
+      allSources: 'All sources',
       clear: 'Clear filters',
     },
     totals: {
@@ -1480,6 +1490,7 @@ export const en: AppI18n = {
         accountFrom: 'Source account',
         counterpartTo: 'Destination account',
         counterpartInvestment: 'Investment account',
+        source: 'Source',
         method: 'Method',
         direction: 'Direction',
         adjustmentKind: 'Adjustment type',

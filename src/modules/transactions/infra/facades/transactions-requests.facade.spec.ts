@@ -93,6 +93,7 @@ describe('TransactionsRequestsFacade', () => {
             accountId: ACC,
             categoryId: ACC,
             method: 'PIX',
+            source: 'QUICK_SHORTCUT',
             q: ' café ',
             status: 'VOIDED',
           },
@@ -109,6 +110,7 @@ describe('TransactionsRequestsFacade', () => {
       expect(params.get('accountId')).toBe(ACC);
       expect(params.get('categoryId')).toBe(ACC);
       expect(params.get('method')).toBe('PIX');
+      expect(params.get('source')).toBe('QUICK_SHORTCUT');
       expect(params.get('status')).toBe('VOIDED');
       expect(params.get('q')).toBe('café');
       expect(params.get('page')).toBe('3');

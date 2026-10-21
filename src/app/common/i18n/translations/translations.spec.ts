@@ -53,6 +53,16 @@ const PROPER_NOUNS = new Set([
   'US',
   'EE',
   'IP',
+  'EXPENSE',
+  'INCOME',
+  'POST',
+  'URL',
+  'Authorization',
+  'Bearer',
+  'Idempotency-Key',
+  'Content-Type',
+  'Face',
+  'ID',
 ]);
 
 function sentenceCaseProblems(text: string): string[] {

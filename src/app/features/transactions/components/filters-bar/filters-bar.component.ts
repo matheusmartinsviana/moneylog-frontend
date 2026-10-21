@@ -28,6 +28,7 @@ import { ListFilters, SEARCH_MAX_LENGTH } from '~/modules/transactions/core/type
 import {
   ACCOUNT_TRANSACTION_TYPES,
   PAYMENT_METHODS,
+  TRANSACTION_SOURCES,
 } from '~/modules/transactions/core/types/transaction-enums';
 import type {
   PaymentMethod,
@@ -97,6 +98,7 @@ export class FiltersBarComponent {
     accountId: new FormControl<string | null>(null),
     categoryId: new FormControl<string | null>(null),
     method: new FormControl<string | null>(null),
+    source: new FormControl<string | null>(null),
     competence: new FormControl<string | null>(null),
     lens: new FormControl<string | null>('CONSUMPTION'),
     voided: new FormControl(false, { nonNullable: true }),
@@ -112,6 +114,12 @@ export class FiltersBarComponent {
     PAYMENT_METHODS.map((method) => ({
       value: method,
       label: this.t().transactions.methods[method],
+    })),
+  );
+  protected readonly sourceOptions = computed<readonly ChoiceOption[]>(() =>
+    TRANSACTION_SOURCES.map((source) => ({
+      value: source,
+      label: this.t().transactions.sources[source],
     })),
   );
   protected readonly lensOptions = computed<readonly ChoiceOption[]>(() => [
@@ -142,6 +150,7 @@ export class FiltersBarComponent {
         this.sync('accountId', f.accountId, this.form.controls.accountId);
         this.sync('categoryId', f.categoryId, this.form.controls.categoryId);
         this.sync('method', f.method, this.form.controls.method);
+        this.sync('source', f.source, this.form.controls.source);
         this.sync('competence', f.competence, this.form.controls.competence);
         this.sync('lens', f.lens, this.form.controls.lens);
         this.sync('voided', f.status === 'VOIDED', this.form.controls.voided);
@@ -162,7 +171,7 @@ export class FiltersBarComponent {
     controls.competence.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       if (value && MONTH.test(value)) this.patch.emit({ competence: value });
     });
-    for (const key of ['type', 'accountId', 'categoryId', 'method'] as const) {
+    for (const key of ['type', 'accountId', 'categoryId', 'method', 'source'] as const) {
       controls[key].valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
         this.patch.emit({ [key]: value as TransactionType | PaymentMethod | string | null });
       });

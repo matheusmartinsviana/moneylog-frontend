@@ -45,6 +45,11 @@ import { formatIsoDate } from '~/util/date';
           <span>{{ note }}</span>
         </span>
       }
+      @if (tx.source === 'QUICK_SHORTCUT') {
+        <span class="item__tag status" data-cy="transaction-source-badge">{{
+          t().transactions.sources.QUICK_SHORTCUT
+        }}</span>
+      }
       @if (tx.status === 'VOIDED') {
         <span class="item__tag status" data-tone="warning">{{ t().transactions.voided }}</span>
       }
