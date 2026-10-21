@@ -4,6 +4,7 @@ import { pageTitle } from '~/app/common/services/i18n-title.strategy';
 import { CategoriesPage } from '~/app/features/settings/pages/categories.page';
 import { NotificationSettingsPage } from '~/app/features/settings/pages/notification-settings.page';
 import { SettingsPage } from '~/app/features/settings/pages/settings.page';
+import { ShortcutGuidePage } from '~/app/features/settings/pages/shortcut-guide.page';
 import { ShortcutsPage } from '~/app/features/settings/pages/shortcuts.page';
 import { SETTINGS_PROVIDERS } from '~/app/lazy-providers';
 
@@ -19,6 +20,7 @@ const routes: Routes = [
         title: pageTitle('notifications'),
       },
       { path: 'shortcuts', component: ShortcutsPage, title: pageTitle('shortcuts') },
+      { path: 'shortcuts/guide', component: ShortcutGuidePage, title: pageTitle('shortcuts') },
       { path: 'categories', component: CategoriesPage, title: pageTitle('settings') },
     ],
   },
