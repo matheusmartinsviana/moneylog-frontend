@@ -64,6 +64,14 @@ const SECURITY_TEXTS = {
       'Token de atalho revogado',
       'O atalho que usava esse token parou de funcionar.',
     ],
+    quick_token_failure_burst: [
+      'Tentativas inválidas de token de atalho',
+      'Houve várias tentativas com um token inválido. Se não foi você, revogue o token nos ajustes.',
+    ],
+    quick_token_new_ip: [
+      'Token de atalho usado em novo local',
+      'Se não foi você, revogue o token nos ajustes.',
+    ],
     DEFAULT: ['Alerta de segurança', 'Abra o app para conferir.'],
   },
   en: {
@@ -82,6 +90,14 @@ const SECURITY_TEXTS = {
       'Shortcut token revoked',
       'The shortcut that used this token stopped working.',
     ],
+    quick_token_failure_burst: [
+      'Invalid shortcut token attempts',
+      "There were several attempts with an invalid token. If it wasn't you, revoke the token in settings.",
+    ],
+    quick_token_new_ip: [
+      'Shortcut token used from a new location',
+      "If it wasn't you, revoke the token in settings.",
+    ],
     DEFAULT: ['Security alert', 'Open the app to check.'],
   },
   es: {
@@ -99,6 +115,14 @@ const SECURITY_TEXTS = {
     quick_token_revoked: [
       'Token de atajo revocado',
       'El atajo que usaba este token dejó de funcionar.',
+    ],
+    quick_token_failure_burst: [
+      'Intentos inválidos de token de atajo',
+      'Hubo varios intentos con un token inválido. Si no fuiste tú, revoca el token en los ajustes.',
+    ],
+    quick_token_new_ip: [
+      'Token de atajo usado desde un lugar nuevo',
+      'Si no fuiste tú, revoca el token en los ajustes.',
     ],
     DEFAULT: ['Alerta de seguridad', 'Abre la app para revisar.'],
   },
