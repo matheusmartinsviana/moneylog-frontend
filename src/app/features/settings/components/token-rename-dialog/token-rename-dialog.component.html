@@ -1,0 +1,43 @@
+<app-dialog
+  [open]="token() !== null"
+  [heading]="t().quickEntry.rename.title"
+  [dismissable]="!busy()"
+  cy="token-rename-dialog"
+  (closed)="cancelled.emit()"
+>
+  <form
+    class="rename"
+    (submit)="$event.preventDefault(); submit()"
+    novalidate
+    data-cy="token-rename-form"
+  >
+    <app-text-field
+      [formControl]="label"
+      fieldId="token-rename-label"
+      autocomplete="off"
+      [maxlength]="maxLength"
+      [autofocus]="true"
+      [label]="t().quickEntry.rename.labelLabel"
+    />
+    <div class="rename__actions">
+      <button
+        type="button"
+        class="button"
+        data-cy="token-rename-cancel"
+        [disabled]="busy()"
+        (click)="cancelled.emit()"
+      >
+        {{ t().quickEntry.cancel }}
+      </button>
+      <button
+        type="submit"
+        class="button button--primary"
+        data-cy="token-rename-save"
+        [disabled]="busy()"
+        [attr.aria-busy]="busy()"
+      >
+        {{ busy() ? t().quickEntry.rename.saving : t().quickEntry.rename.save }}
+      </button>
+    </div>
+  </form>
+</app-dialog>

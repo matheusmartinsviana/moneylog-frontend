@@ -32,6 +32,10 @@
         <span>{{ t().notifications.settings.title }}</span>
         <app-icon name="chevronRight" [size]="18" />
       </a>
+      <a class="links__row" routerLink="/settings/shortcuts" data-cy="settings-shortcuts-link">
+        <span>{{ t().quickEntry.settingsLink }}</span>
+        <app-icon name="chevronRight" [size]="18" />
+      </a>
       @if (isOwner()) {
         <a class="links__row" routerLink="/ai" data-cy="settings-ai-link">
           <span>{{ t().nav.ai }}</span>

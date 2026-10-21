@@ -1,0 +1,44 @@
+<form
+  class="generate"
+  [formGroup]="form"
+  (submit)="$event.preventDefault(); submit()"
+  novalidate
+  data-cy="token-form"
+>
+  <app-text-field
+    class="generate__label"
+    formControlName="label"
+    fieldId="token-label"
+    autocomplete="off"
+    [maxlength]="maxLength"
+    [label]="t().quickEntry.generate.labelLabel"
+    [hint]="t().quickEntry.generate.labelHint"
+  />
+  <app-select
+    formControlName="accountId"
+    fieldId="token-account"
+    [label]="t().quickEntry.generate.accountLabel"
+    [hint]="t().quickEntry.generate.accountHint"
+    [options]="accountOptions()"
+  />
+  <app-select
+    formControlName="validity"
+    fieldId="token-validity"
+    [label]="t().quickEntry.generate.validityLabel"
+    [options]="validityOptions()"
+  />
+  <button
+    type="submit"
+    class="button button--primary generate__submit"
+    data-cy="token-submit"
+    [disabled]="submitting()"
+    [attr.aria-busy]="submitting()"
+  >
+    {{ submitting() ? t().quickEntry.generate.submitting : t().quickEntry.generate.submit }}
+  </button>
+</form>
+<div aria-live="assertive" role="alert">
+  @if (message(); as text) {
+    <p class="generate__error" data-cy="token-error">{{ text }}</p>
+  }
+</div>

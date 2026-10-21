@@ -81,6 +81,18 @@ describe('Mensagens para os códigos de erro do contrato 2.24 a 2.32', () => {
     });
   }
 
+  for (const [language, dict] of Object.entries({ pt, en, es })) {
+    it(`Dado ${language}, então os códigos do token de lançamento rápido do contrato 2.40 têm mensagem própria`, () => {
+      const codes = [
+        'QUICK_TOKEN_LIMIT_REACHED',
+        'QUICK_ACCOUNT_NOT_ALLOWED',
+        'QUICK_TOKEN_NOT_FOUND',
+      ];
+
+      expect(codes.filter((code) => !Object.hasOwn(dict.errors.codes, code))).toEqual([]);
+    });
+  }
+
   it('Dado um código novo sem tradução, então o texto cai no genérico do status', () => {
     const text = problemMessage(
       {

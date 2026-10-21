@@ -4,6 +4,7 @@ import { cardCashOutEn } from '~/app/common/i18n/sections/card-cash-out';
 import { incomeEn } from '~/app/common/i18n/sections/income';
 import { netWorthEn } from '~/app/common/i18n/sections/net-worth';
 import { purchaseGroupsEn } from '~/app/common/i18n/sections/purchase-groups';
+import { quickEntryEn } from '~/app/common/i18n/sections/quick-entry';
 import { BRAND_NAME } from '~/app/config/brand';
 
 export const en: AppI18n = {
@@ -1016,6 +1017,11 @@ export const en: AppI18n = {
       INVITATION_NOT_FOUND: 'We could not find that invitation. The list was refreshed.',
       INVITATIONS_DISABLED:
         'Invitations are unavailable right now. People who already have access can keep signing in.',
+      QUICK_TOKEN_LIMIT_REACHED:
+        'You already have the maximum number of active tokens. Revoke one to generate another.',
+      QUICK_ACCOUNT_NOT_ALLOWED:
+        "This account doesn't accept quick entries. Choose an active checking, savings or wallet account.",
+      QUICK_TOKEN_NOT_FOUND: "We couldn't find that token. The list was refreshed.",
       INVALID_INVITATION: 'This invitation is no longer valid.',
       USER_NOT_FOUND: 'We could not find that person. The list was refreshed.',
       CANNOT_DISABLE_OWNER: 'The Monelog owner cannot be disabled.',
@@ -4540,4 +4546,5 @@ export const en: AppI18n = {
   netWorth: netWorthEn,
   cardCashOut: cardCashOutEn,
   access: accessEn,
+  quickEntry: quickEntryEn,
 };

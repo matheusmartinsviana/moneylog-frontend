@@ -1,0 +1,44 @@
+@let k = token();
+<div class="row__main">
+  <div class="row__title">
+    <span class="row__label" [attr.data-cy]="'token-label-' + k.id">{{ k.label }}</span>
+    <span class="row__tag" [attr.data-status]="k.status" [attr.data-cy]="'token-status-' + k.id">{{
+      t().quickEntry.list.statuses[k.status]
+    }}</span>
+  </div>
+  <p class="row__detail" [attr.data-cy]="'token-account-' + k.id">
+    {{ accountText() }} · <span class="row__prefix">{{ prefixText() }}</span>
+  </p>
+  <p class="row__detail" [attr.data-cy]="'token-dates-' + k.id">{{ datesText() }}</p>
+  <p class="row__detail" [attr.data-cy]="'token-usage-' + k.id">
+    {{ usageText() }}
+    @if (ipText(); as ip) {
+      · <span [attr.data-cy]="'token-ip-' + k.id">{{ ip }}</span>
+    }
+  </p>
+  @if (agentText(); as agent) {
+    <p class="row__detail row__agent" [attr.data-cy]="'token-agent-' + k.id">{{ agent }}</p>
+  }
+</div>
+@if (canAct()) {
+  <div class="row__actions" role="group" [attr.aria-label]="actionsLabel()">
+    <button
+      type="button"
+      class="button"
+      [attr.data-cy]="'token-rename-' + k.id"
+      [disabled]="busy()"
+      (click)="rename.emit(k)"
+    >
+      {{ t().quickEntry.list.rename }}
+    </button>
+    <button
+      type="button"
+      class="button"
+      [attr.data-cy]="'token-revoke-' + k.id"
+      [disabled]="busy()"
+      (click)="revoke.emit(k)"
+    >
+      {{ t().quickEntry.list.revoke }}
+    </button>
+  </div>
+}
