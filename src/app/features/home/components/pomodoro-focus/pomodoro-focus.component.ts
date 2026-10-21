@@ -79,10 +79,6 @@ export class PomodoroFocusComponent {
 
   private leaveFullscreen(): void {
     if (!this.document.fullscreenElement) return;
-    try {
-      void this.document.exitFullscreen().catch(() => undefined);
-    } catch {
-      return;
-    }
+    void this.document.exitFullscreen().catch(() => undefined);
   }
 }

@@ -865,7 +865,7 @@ export const es: AppI18n = {
       title: 'Iniciar sesión',
       description: 'Inicia sesión para ver tus finanzas.',
       email: 'Correo electrónico',
-      passwordLabel: 'Contraseña',
+      passwordLabel: 'Tu contraseña',
       submit: 'Iniciar sesión',
       submitting: 'Iniciando sesión…',
       errors: {
