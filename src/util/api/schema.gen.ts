@@ -290,6 +290,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/quick-entry-tokens": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Lista os tokens do usuário (lista curta, sem paginação)
+         * @description Sessão JWT. Só os tokens do próprio usuário, os mais recentes primeiro, **incluindo revogados e expirados** (auditoria). Nunca traz o token em claro, só `prefix`.
+         *     `lastUsedIp` vem mascarado (IPv4 sem o último octeto; IPv6 sem os 80 bits finais). Sem paginação: a lista traz todos os tokens do usuário, e os revogados e expirados ficam no histórico para auditoria.
+         */
+        get: operations["listQuickEntryTokens"];
+        put?: never;
+        /**
+         * Gera um token de lançamento rápido, vinculado a uma conta
+         * @description Sessão JWT de usuário `ACTIVE`; cada usuário gera token só da própria conta (`OWNER` e `MEMBER`). O token (`mlq_<prefixo de 8>_<256 bits em base64url>`) aparece em claro **somente nesta resposta**
+         *     (`Cache-Control: no-store`); no banco fica apenas o SHA-256 e o prefixo. `expiresInDays` de 1 a 90 (padrão 30). O token só cria `EXPENSE` e `INCOME` na conta informada.
+         *     Erros: `404 ACCOUNT_NOT_FOUND` (conta de outro usuário ou inexistente), `422 QUICK_ACCOUNT_NOT_ALLOWED` (conta arquivada ou de tipo não permitido), `409 QUICK_TOKEN_LIMIT_REACHED` (máximo de tokens ativos por usuário; revogar libera a vaga).
+         *     Nada é gravado em caso de erro.
+         */
+        post: operations["createQuickEntryToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/quick-entry-tokens/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Renomeia um token
+         * @description Sessão JWT. Só o rótulo muda; conta, validade e segredo não são editáveis. Token de outro usuário ou inexistente: `404 QUICK_TOKEN_NOT_FOUND`.
+         */
+        put: operations["renameQuickEntryToken"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/quick-entry-tokens/{id}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Revoga um token
+         * @description Sessão JWT. Sem corpo. **Idempotente**: repetir devolve o mesmo recurso com o `revokedAt` da primeira revogação. Revogar libera a vaga do limite de tokens ativos. Não há `DELETE`
+         *     (o histórico fica para auditoria). Token de outro usuário ou inexistente: `404 QUICK_TOKEN_NOT_FOUND`. Os lançamentos já criados pelo token continuam; o estorno é pelo fluxo normal.
+         */
+        post: operations["revokeQuickEntryToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/quick-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Registra um gasto ou uma entrada pelo token do Atalho
+         * @description Autenticado **somente** por `Authorization: Bearer mlq_...` (`quickEntryToken`); o JWT de sessão não vale aqui. Cria `EXPENSE` ou `INCOME` pelo mesmo caso de uso de `POST /v1/transactions`
+         *     (nenhuma regra financeira própria: gasto de 100,00 numa conta com 1000,00 deixa 900,00 e entra no consumo da categoria; entrada é receita na competência do mês da `date`). A conta é a
+         *     do token; **não existe campo `account`** no corpo (campo desconhecido é `400`). Não há saldo, nem lista de contas ou categorias na resposta.
+         *
+         *     `amount` é **texto** em formato brasileiro: `R$` e espaços são ignorados; com vírgula, ela é o decimal (1 ou 2 casas) e os pontos antes dela são milhar em grupos de 3; sem vírgula, o ponto só é decimal
+         *     com 1 ou 2 casas depois. Exemplos: `35`, `35,5`, `35,50`, `1.234,56`, `R$ 35,00`, `35.50` valem; `1.234`, `35.500` e `1.234.567` são `422 QUICK_AMOUNT_AMBIGUOUS`; `10,005`, `0`, `-5`, vazio e
+         *     `abc` são `422 QUICK_AMOUNT_INVALID`. `amount` também aceita **número JSON** (é o que o campo Número do Atalho envia, com ponto decimal e sem milhar, por exemplo `27.6`): o servidor lê o texto do número como decimal exato (nunca como ponto flutuante), com no máximo 2 casas e positivo; mais de 2 casas (`27.605`), zero, negativo ou notação científica (`1e3`) são `422 QUICK_AMOUNT_INVALID`, e os tetos são os mesmos do texto. O hash de idempotência usa o valor como veio no corpo (texto cru). `category` é opcional: omitida (fluxo tipo, nome e valor), a movimentação recebe a categoria de sistema `OTHER_EXPENSE` (gasto) ou `OTHER_INCOME` (entrada), a mesma regra de `categoryId` ausente em `POST /v1/transactions` (2.11.0); nunca fica sem categoria, e a resposta traz a categoria aplicada. Se a categoria padrão não existir ou estiver arquivada, `422 DEFAULT_CATEGORY_UNAVAILABLE`. Enviada, `category` é a chave de sistema
+         *     (`FOOD`) ou o nome sem diferenciar acento e caixa, entre as categorias ativas do próprio usuário. `method` é só do gasto e fica nulo se omitido; enviado numa entrada, é `400`. `date` omitida = hoje no fuso
+         *     do usuário; aceita de hoje menos 366 dias até hoje; a hora não é gravada.
+         *
+         *     Tetos (ADR-034): valor por lançamento, quantidade de lançamentos por dia e valor total por dia (gasto e entrada separados), contando só lançamentos ativos criados no dia do fuso do usuário. São configuráveis
+         *     no servidor e **desligados por padrão** (sem limite). Só com um teto configurado, acima dele responde `422 QUICK_LIMIT_REACHED` e nada é gravado. Sempre vale o limite técnico de sanidade do valor, o mesmo de
+         *     `POST /v1/transactions` (R$ 999.999.999,99), e o rate limit por token e por IP.
+         *
+         *     `Idempotency-Key`: mesma chave e mesmo corpo devolvem `201` com o **mesmo `id` e o mesmo `message`**; mesma chave e corpo diferente, `409 IDEMPOTENCY_KEY_REUSED`. Erros não memorizam a chave. Se o lançamento já foi estornado, o replay devolve o mesmo `id` com `status = VOIDED` e um `message` que diz que foi estornado; nada é recriado. A chave protege o
+         *     reenvio do mesmo disparo, não duas execuções manuais com valores digitados (são dois lançamentos).
+         */
+        post: operations["createQuickEntry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/accounts": {
         parameters: {
             query?: never;
@@ -4241,10 +4345,10 @@ export interface components {
         /** @enum {string} */
         TransactionStatus: "ACTIVE" | "VOIDED";
         /**
-         * @description Como nasceu. `RECURRENCE` quando a movimentação confirma uma ocorrência (Etapa 4). `ONGOING` (2.13.0) é a compra parcelada cadastrada já em andamento. `HISTORICAL` (2.16.0) é o item de fatura histórica.
+         * @description Como nasceu. `RECURRENCE` quando a movimentação confirma uma ocorrência (Etapa 4). `ONGOING` (2.13.0) é a compra parcelada cadastrada já em andamento. `HISTORICAL` (2.16.0) é o item de fatura histórica. `QUICK_SHORTCUT` (2.40.0) é o lançamento criado pelo token do Atalho do iPhone.
          * @enum {string}
          */
-        TransactionSource: "MANUAL" | "IMPORT" | "RECURRENCE" | "ONGOING" | "HISTORICAL";
+        TransactionSource: "MANUAL" | "IMPORT" | "RECURRENCE" | "ONGOING" | "HISTORICAL" | "QUICK_SHORTCUT";
         /** @enum {string} */
         EntryLens: "CONSUMPTION" | "INCOME";
         /** @enum {string} */
@@ -9846,6 +9950,141 @@ export interface components {
             /** @description Há financiamento pendente (P-20). */
             financingWarning: boolean;
         };
+        /**
+         * @description Derivado na leitura: `REVOKED` se há `revokedAt`; senão `EXPIRED` se `expiresAt` já passou; senão `ACTIVE`.
+         * @enum {string}
+         */
+        QuickEntryTokenStatus: "ACTIVE" | "EXPIRED" | "REVOKED";
+        /**
+         * @description `USER` = revogado pelo usuário; `USER_DISABLED` = o dono desativou o usuário (reativar o usuário não ressuscita o token).
+         * @enum {string}
+         */
+        QuickEntryTokenRevokedReason: "USER" | "USER_DISABLED";
+        /**
+         * @description Enum fechado: o lançamento rápido nunca cria transferência, investimento, empréstimo, compra no cartão, parcelado nem estorno.
+         * @enum {string}
+         */
+        QuickEntryKind: "EXPENSE" | "INCOME";
+        QuickEntryTokenInput: {
+            /** @description Nome para o usuário reconhecer o token (por exemplo, o aparelho). */
+            label: string;
+            /**
+             * Format: uuid
+             * @description Conta própria, ativa, de tipo `CHECKING`, `SAVINGS` ou `WALLET`. Todo lançamento do token cai nela.
+             */
+            accountId: string;
+            /**
+             * @description Validade em dias a partir da criação.
+             * @default 30
+             */
+            expiresInDays: number;
+        };
+        QuickEntryTokenRename: {
+            label: string;
+        };
+        /** @description Token na visão de listagem. Nunca traz o segredo. */
+        QuickEntryToken: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            /** @description Identificador de 8 caracteres para o usuário reconhecer o token na lista. Não faz parte da parte secreta e não serve para autenticar. */
+            prefix: string;
+            /** @enum {string} */
+            scope: "QUICK_ENTRY";
+            /** Format: uuid */
+            accountId: string;
+            /** @description Nome da conta vinculada, para a tela não precisar de outra chamada. */
+            accountName: string;
+            status: components["schemas"]["QuickEntryTokenStatus"];
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Atualizado no máximo uma vez por minuto.
+             */
+            lastUsedAt: string | null;
+            /** @description IP do último uso, mascarado (IPv4 sem o último octeto, por exemplo `187.12.34.0`; IPv6 sem os 80 bits finais). */
+            lastUsedIp: string | null;
+            /** @description User-Agent do último uso, truncado em 120 caracteres. */
+            lastUsedUserAgent: string | null;
+            /** Format: date-time */
+            revokedAt: string | null;
+            revokedReason: components["schemas"]["QuickEntryTokenRevokedReason"] | null;
+        };
+        /** @description Resposta da criação. Os campos de `QuickEntryToken` (repetidos de propósito, para o `additionalProperties false` valer sem depender de composição) mais o segredo em claro, que existe só aqui. */
+        QuickEntryTokenCreated: {
+            /** Format: uuid */
+            id: string;
+            label: string;
+            /** @description Identificador de 8 caracteres para o usuário reconhecer o token na lista. Não faz parte da parte secreta e não serve para autenticar. */
+            prefix: string;
+            /** @enum {string} */
+            scope: "QUICK_ENTRY";
+            /** Format: uuid */
+            accountId: string;
+            /** @description Nome da conta vinculada, para a tela não precisar de outra chamada. */
+            accountName: string;
+            status: components["schemas"]["QuickEntryTokenStatus"];
+            /** Format: date-time */
+            expiresAt: string;
+            /** Format: date-time */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Atualizado no máximo uma vez por minuto.
+             */
+            lastUsedAt: string | null;
+            /** @description IP do último uso, mascarado (IPv4 sem o último octeto, por exemplo `187.12.34.0`; IPv6 sem os 80 bits finais). */
+            lastUsedIp: string | null;
+            /** @description User-Agent do último uso, truncado em 120 caracteres. */
+            lastUsedUserAgent: string | null;
+            /** Format: date-time */
+            revokedAt: string | null;
+            revokedReason: components["schemas"]["QuickEntryTokenRevokedReason"] | null;
+            /** @description Segredo completo. Mostrado uma única vez; o servidor guarda apenas o hash. */
+            token: string;
+        };
+        QuickEntryInput: {
+            kind: components["schemas"]["QuickEntryKind"];
+            /**
+             * @description Valor em texto brasileiro (`35,50`, `1.234,56`, `R$ 35,00`; ver `POST /v1/quick-entries`) ou número JSON decimal exato (`27.6`), que o servidor lê pelo texto do número, nunca como ponto flutuante. Número com mais de 2 casas, zero, negativo ou em notação científica é `422 QUICK_AMOUNT_INVALID`.
+             * @example 35,50
+             * @example 1.234,56
+             * @example R$ 35,00
+             * @example 27.6
+             */
+            amount: string | number;
+            /** @description Chave de sistema (`FOOD`) ou nome sem diferenciar acento e caixa. Omitida = `OTHER_EXPENSE` ou `OTHER_INCOME`. */
+            category?: string;
+            description?: string;
+            method?: components["schemas"]["PaymentMethod"];
+            /**
+             * Format: date
+             * @description Opcional. Padrão: hoje no fuso do usuário. De hoje menos 366 dias até hoje.
+             */
+            date?: string;
+        };
+        /** @description Lançamento criado pelo Atalho. Sem saldo e sem listas de contas ou categorias. */
+        QuickEntryResult: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["QuickEntryKind"];
+            status: components["schemas"]["TransactionStatus"];
+            amount: components["schemas"]["Money"];
+            /** Format: date */
+            date: string;
+            description: string | null;
+            /** @description Categoria aplicada. Nunca nula; sem `category` no pedido, é a categoria padrão de sistema. */
+            category: components["schemas"]["CategoryRef"];
+            account: components["schemas"]["AccountRef"];
+            method: components["schemas"]["PaymentMethod"] | null;
+            /** @enum {string} */
+            source: "QUICK_SHORTCUT";
+            /** @description Frase pronta para a notificação do Atalho, montada só com valor formatado e nomes já gravados (categoria e conta), nunca com a `description`. Por exemplo, `Gasto de R$ 35,50 em Alimentação (Carteira) registrado.` */
+            message: string;
+        };
     };
     responses: {
         /**
@@ -9959,6 +10198,15 @@ export interface components {
                 "application/problem+json": components["schemas"]["Problem"];
             };
         };
+        /** @description `QUICK_TOKEN_NOT_FOUND`: o token não existe ou é de outro usuário. */
+        QuickTokenNotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
         /** @description `AI_RATE_LIMITED`: limite diário de chamadas de IA atingido (reinicia à meia-noite de America/Sao_Paulo). */
         AiRateLimited: {
             headers: {
@@ -10002,6 +10250,11 @@ export interface components {
          *     `POST /v1/recurrences`. Envie sempre que o cliente puder repetir a chamada (duplo clique, retry de rede, resposta perdida).
          */
         IdempotencyKeyOptional: string;
+        /**
+         * @description Chave opaca gerada pelo Atalho a cada disparo (2.40.0): UUID ou texto `[A-Za-z0-9_-]{8,64}` (o UUID também cabe nesse padrão). Escopo `POST /v1/quick-entries`, válida por 24 h.
+         *     Reenviar o mesmo corpo com a mesma chave devolve o mesmo lançamento; corpo diferente com a mesma chave é `409 IDEMPOTENCY_KEY_REUSED`.
+         */
+        QuickIdempotencyKey: string;
     };
     requestBodies: never;
     headers: {
@@ -10402,6 +10655,226 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    listQuickEntryTokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tokens do usuário. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickEntryToken"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createQuickEntryToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickEntryTokenInput"];
+            };
+        };
+        responses: {
+            /** @description Token criado. O campo `token` não volta em nenhuma outra resposta. A `Location` aponta para `/v1/quick-entry-tokens/{id}`, que não tem `GET` próprio; o recurso é lido pela lista. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickEntryTokenCreated"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            /** @description `ACCOUNT_NOT_FOUND`: a conta não existe ou é de outro usuário. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `QUICK_TOKEN_LIMIT_REACHED`: o usuário já tem o máximo de tokens ativos. Revogar um libera a vaga. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `QUICK_ACCOUNT_NOT_ALLOWED`: a conta está arquivada ou é de tipo não permitido (só `CHECKING`, `SAVINGS` e `WALLET` servem; conta de investimento não). */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    renameQuickEntryToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickEntryTokenRename"];
+            };
+        };
+        responses: {
+            /** @description Token com o novo rótulo. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickEntryToken"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["QuickTokenNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    revokeQuickEntryToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IdPath"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Token com `status = REVOKED`. */
+            200: {
+                headers: {
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickEntryToken"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["QuickTokenNotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    createQuickEntry: {
+        parameters: {
+            query?: never;
+            header: {
+                /**
+                 * @description Chave opaca gerada pelo Atalho a cada disparo (2.40.0): UUID ou texto `[A-Za-z0-9_-]{8,64}` (o UUID também cabe nesse padrão). Escopo `POST /v1/quick-entries`, válida por 24 h.
+                 *     Reenviar o mesmo corpo com a mesma chave devolve o mesmo lançamento; corpo diferente com a mesma chave é `409 IDEMPOTENCY_KEY_REUSED`.
+                 */
+                "Idempotency-Key": components["parameters"]["QuickIdempotencyKey"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuickEntryInput"];
+            };
+        };
+        responses: {
+            /** @description Lançamento criado (ou replay da mesma chave, com o mesmo `id` e `message`). A `Location` aponta para `/v1/transactions/{id}`, rota que o token não acessa; o dono consulta o lançamento pelo app. */
+            201: {
+                headers: {
+                    Location: components["headers"]["Location"];
+                    "Cache-Control": components["headers"]["NoStore"];
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QuickEntryResult"];
+                };
+            };
+            /** @description `VALIDATION_FAILED`: campo desconhecido (inclusive `account`), `amount` que não é texto nem número, `kind` fora de `EXPENSE` e `INCOME`, `method` numa entrada, `date` fora do formato ou header `Idempotency-Key` ausente ou fora do formato. */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `QUICK_TOKEN_INVALID`: token inexistente, expirado, revogado ou de usuário desativado. Mesmo status, corpo e cabeçalhos nos quatro casos. Um JWT de sessão nesta rota também cai aqui. */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `IDEMPOTENCY_KEY_REUSED`: a mesma chave foi usada com um corpo diferente. */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /**
+             * @description Regra de negócio, nada gravado: `QUICK_AMOUNT_INVALID`, `QUICK_AMOUNT_AMBIGUOUS`, `QUICK_CATEGORY_NOT_FOUND`, `QUICK_DATE_OUT_OF_RANGE`, `QUICK_LIMIT_REACHED` (só quando o dono configura um teto: por lançamento, por quantidade no dia
+             *     ou por valor no dia), `DEFAULT_CATEGORY_UNAVAILABLE` (sem `category` e a categoria padrão de sistema não existe ou está arquivada) e `QUICK_ACCOUNT_NOT_ALLOWED` (a conta do token foi arquivada depois de gerado). O `detail` já vem em português para o Atalho exibir.
+             */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description `TOO_MANY_ATTEMPTS`: falhas de token demais por IP, ou chamadas demais por minuto com um token válido (o token continua válido). */
+            429: {
+                headers: {
+                    /** @description Segundos até poder tentar de novo. */
+                    "Retry-After"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     listAccounts: {
         parameters: {
             query?: {
@@ -10730,6 +11203,8 @@ export interface operations {
                 status?: components["schemas"]["TransactionStatus"];
                 /** @description Busca na descrição, sem diferenciar maiúsculas de minúsculas. Os acentos contam: `cafe` não acha `Café`. */
                 q?: string;
+                /** @description Origem da movimentação (2.40.0). `QUICK_SHORTCUT` traz só o que o Atalho do iPhone criou. Sem o filtro, todas as origens. */
+                source?: components["schemas"]["TransactionSource"];
                 /** @description Página (1-indexada). */
                 page?: components["parameters"]["Page"];
                 /** @description Itens por página. */
