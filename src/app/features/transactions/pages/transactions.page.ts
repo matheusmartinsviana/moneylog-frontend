@@ -129,7 +129,7 @@ export class TransactionsPage {
   }
 
   protected setView(view: ListView): void {
-    this.list.patch({ view });
+    this.list.patch(view === 'entries' ? { view, source: null } : { view });
   }
 
   protected patch(changes: Partial<ListFilters>): void {
