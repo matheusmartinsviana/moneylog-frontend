@@ -1091,6 +1091,8 @@ html[data-glass-panel] {
   min-height: var(--touch-min);
 }
 
-.page__header::before {
-  backdrop-filter: blur(14px);
+@media (width >= 768px) {
+  .page__header::before {
+    backdrop-filter: blur(14px);
+  }
 }
