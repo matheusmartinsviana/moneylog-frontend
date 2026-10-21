@@ -7,3 +7,27 @@
   margin: 0;
   padding: 0;
 }
+
+.install {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.install__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  text-decoration: none;
+}
+
+.install__hint {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.guide-link {
+  margin: 0;
+}

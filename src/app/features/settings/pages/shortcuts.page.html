@@ -7,6 +7,20 @@
     {{ t().quickEntry.backToSettings }}
   </a>
 
+  <section class="install" data-cy="shortcut-install">
+    <a
+      class="button button--primary install__button"
+      [href]="installUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      data-cy="shortcut-add-link"
+    >
+      {{ t().quickEntry.install.button }}
+      <span class="visually-hidden">{{ t().quickEntry.install.newTab }}</span>
+    </a>
+    <p class="install__hint">{{ t().quickEntry.install.hint }}</p>
+  </section>
+
   @if (tokens.forbidden()) {
     <div data-cy="shortcuts-forbidden">
       <app-empty-state
@@ -107,7 +121,15 @@
       }
     </app-section-container>
 
-    <app-shortcut-guide />
+    <p class="guide-link">
+      <a
+        class="link-more hit-area"
+        routerLink="/settings/shortcuts/guide"
+        data-cy="shortcut-guide-link"
+      >
+        {{ t().quickEntry.install.guideLink }}
+      </a>
+    </p>
   }
 
   <app-token-secret-dialog [secret]="tokens.secret()" (closed)="tokens.dismissSecret()" />

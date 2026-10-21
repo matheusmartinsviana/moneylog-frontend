@@ -48,6 +48,8 @@ export interface QuickEntryCopy {
     readonly warning: string;
     readonly tokenLabel: string;
     readonly copy: string;
+    readonly copyAndAdd: string;
+    readonly pasteHint: string;
     readonly copied: string;
     readonly copyFailed: string;
     readonly close: string;
@@ -63,7 +65,14 @@ export interface QuickEntryCopy {
     readonly description: string;
     readonly confirm: string;
   };
+  readonly install: {
+    readonly button: string;
+    readonly hint: string;
+    readonly newTab: string;
+    readonly guideLink: string;
+  };
   readonly guide: {
+    readonly back: string;
     readonly heading: string;
     readonly description: string;
     readonly iphoneOnly: string;
@@ -84,8 +93,7 @@ export interface QuickEntryCopy {
 export const quickEntryPt: QuickEntryCopy = {
   pageTitle: 'Atalhos',
   settingsLink: 'Atalhos',
-  description:
-    'Gere um token para registrar gastos e entradas pelo app de atalhos do iPhone, sem abrir o Monelog. Cada token serve a uma conta e só cria lançamentos.',
+  description: 'Registre gastos e entradas pelo iPhone com duas batidas, sem abrir o Monelog.',
   backToSettings: 'Voltar aos ajustes',
   loading: 'Carregando seus tokens…',
   cancel: 'Cancelar',
@@ -141,6 +149,8 @@ export const quickEntryPt: QuickEntryCopy = {
     warning:
       'Quem tem este token pode registrar lançamentos na conta escolhida. Guarde-o só no atalho; se ele vazar, revogue aqui.',
     tokenLabel: 'Token de {label}',
+    copyAndAdd: 'Copiar e adicionar atalho',
+    pasteHint: 'Cole o token quando o app de atalhos pedir.',
     copy: 'Copiar token',
     copied: 'Token copiado',
     copyFailed: 'Não foi possível copiar. Selecione o texto do token e copie manualmente.',
@@ -158,15 +168,22 @@ export const quickEntryPt: QuickEntryCopy = {
       'O atalho que usa este token para de funcionar na hora. Os lançamentos já feitos continuam; para desfazer algum, estorne pelo app.',
     confirm: 'Revogar',
   },
+  install: {
+    button: 'Adicionar atalho',
+    hint: 'O atalho vai pedir o token. Gere um abaixo e cole quando ele pedir.',
+    newTab: 'Abre em nova aba',
+    guideLink: 'Como ativar o toque duplo',
+  },
   guide: {
+    back: 'Voltar aos atalhos',
     heading: 'Como ativar o toque duplo',
     description:
       'Monte o atalho no iPhone e associe-o a duas batidas na traseira do aparelho. Dá para ler os passos aqui, em qualquer aparelho.',
     iphoneOnly: 'O toque nas costas existe só no iPhone. Faça a configuração no próprio iPhone.',
     stepsHeading: 'Passo a passo',
     steps: [
-      'Gere o token acima e copie. Ele aparece uma vez só.',
-      'No app atalhos do iPhone, crie um atalho novo com as ações da próxima seção e cole o token no cabeçalho Authorization, depois da palavra Bearer e de um espaço.',
+      'Gere o token na página de atalhos e copie. Ele aparece uma vez só.',
+      'Toque em adicionar atalho e cole o token quando o app de atalhos pedir. Se preferir montar à mão, use as ações da próxima seção e cole o token no cabeçalho Authorization, depois da palavra Bearer e de um espaço.',
       'Rode o atalho uma vez no app atalhos e permita o acesso à rede para {host} e as notificações.',
       'Abra ajustes do iPhone > acessibilidade > toque > toque nas costas.',
       'Toque em toque duplo e escolha o seu atalho na lista de atalhos.',
@@ -174,8 +191,7 @@ export const quickEntryPt: QuickEntryCopy = {
       'Perdeu o iPhone? Em outro aparelho, abra ajustes > atalhos no Monelog e revogue o token.',
     ],
     actionsHeading: 'Ações do atalho',
-    actionsDescription:
-      'Ainda não há um atalho pronto para importar. Monte o seu com estas ações, nesta ordem.',
+    actionsDescription: 'Se preferir montar o seu atalho à mão, use estas ações, nesta ordem.',
     actions: [
       {
         title: 'Escolher do menu',
@@ -217,8 +233,7 @@ export const quickEntryPt: QuickEntryCopy = {
 export const quickEntryEn: QuickEntryCopy = {
   pageTitle: 'Shortcuts',
   settingsLink: 'Shortcuts',
-  description:
-    'Generate a token to log expenses and income from the iPhone shortcuts app, without opening Monelog. Each token serves one account and can only create entries.',
+  description: 'Log expenses and income from your iPhone with two taps, without opening Monelog.',
   backToSettings: 'Back to settings',
   loading: 'Loading your tokens…',
   cancel: 'Cancel',
@@ -274,6 +289,8 @@ export const quickEntryEn: QuickEntryCopy = {
     warning:
       'Anyone with this token can log entries in the chosen account. Keep it only in the shortcut; if it leaks, revoke it here.',
     tokenLabel: 'Token for {label}',
+    copyAndAdd: 'Copy and add shortcut',
+    pasteHint: 'Paste the token when the shortcuts app asks for it.',
     copy: 'Copy token',
     copied: 'Token copied',
     copyFailed: "Couldn't copy. Select the token text and copy it manually.",
@@ -291,15 +308,22 @@ export const quickEntryEn: QuickEntryCopy = {
       'The shortcut using this token stops working right away. Entries already made stay; to undo one, reverse it in the app.',
     confirm: 'Revoke',
   },
+  install: {
+    button: 'Add shortcut',
+    hint: 'The shortcut will ask for the token. Generate one below and paste it when asked.',
+    newTab: 'Opens in a new tab',
+    guideLink: 'How to turn on double tap',
+  },
   guide: {
+    back: 'Back to shortcuts',
     heading: 'How to turn on double tap',
     description:
       'Build the shortcut on your iPhone and link it to two taps on the back of the device. You can read the steps here on any device.',
     iphoneOnly: 'Back tap exists only on the iPhone. Do the setup on the iPhone itself.',
     stepsHeading: 'Step by step',
     steps: [
-      'Generate the token above and copy it. It is shown only once.',
-      'In the iPhone shortcuts app, create a new shortcut with the actions in the next section and paste the token into the Authorization header, after the word Bearer and a space.',
+      'Generate the token on the shortcuts page and copy it. It is shown only once.',
+      'Tap add shortcut and paste the token when the shortcuts app asks for it. If you prefer to build it by hand, use the actions in the next section and paste the token into the Authorization header, after the word Bearer and a space.',
       'Run the shortcut once in the shortcuts app and allow network access to {host} and notifications.',
       'Open iPhone settings > accessibility > touch > back tap.',
       'Tap double tap and pick your shortcut from the shortcuts list.',
@@ -308,7 +332,7 @@ export const quickEntryEn: QuickEntryCopy = {
     ],
     actionsHeading: 'Shortcut actions',
     actionsDescription:
-      'There is no ready-made shortcut to import yet. Build yours with these actions, in this order.',
+      'If you prefer to build your shortcut by hand, use these actions, in this order.',
     actions: [
       {
         title: 'Choose from menu',
@@ -350,8 +374,7 @@ export const quickEntryEn: QuickEntryCopy = {
 export const quickEntryEs: QuickEntryCopy = {
   pageTitle: 'Atajos',
   settingsLink: 'Atajos',
-  description:
-    'Genera un token para registrar gastos e ingresos desde la app de atajos del iPhone, sin abrir Monelog. Cada token sirve a una cuenta y solo crea movimientos.',
+  description: 'Registra gastos e ingresos desde el iPhone con dos toques, sin abrir Monelog.',
   backToSettings: 'Volver a los ajustes',
   loading: 'Cargando tus tokens…',
   cancel: 'Cancelar',
@@ -407,6 +430,8 @@ export const quickEntryEs: QuickEntryCopy = {
     warning:
       'Quien tenga este token puede registrar movimientos en la cuenta elegida. Guárdalo solo en el atajo; si se filtra, revócalo aquí.',
     tokenLabel: 'Token de {label}',
+    copyAndAdd: 'Copiar y añadir atajo',
+    pasteHint: 'Pega el token cuando la app de atajos lo pida.',
     copy: 'Copiar token',
     copied: 'Token copiado',
     copyFailed: 'No se pudo copiar. Selecciona el texto del token y cópialo a mano.',
@@ -424,15 +449,22 @@ export const quickEntryEs: QuickEntryCopy = {
       'El atajo que usa este token deja de funcionar al instante. Los movimientos ya hechos siguen; para deshacer alguno, reviértelo en la app.',
     confirm: 'Revocar',
   },
+  install: {
+    button: 'Añadir atajo',
+    hint: 'El atajo pedirá el token. Genera uno abajo y pégalo cuando lo pida.',
+    newTab: 'Se abre en una pestaña nueva',
+    guideLink: 'Cómo activar el toque doble',
+  },
   guide: {
+    back: 'Volver a los atajos',
     heading: 'Cómo activar el toque doble',
     description:
       'Crea el atajo en el iPhone y asócialo a dos toques en la parte trasera del dispositivo. Puedes leer los pasos aquí, en cualquier dispositivo.',
     iphoneOnly: 'Tocar atrás existe solo en el iPhone. Haz la configuración en el propio iPhone.',
     stepsHeading: 'Paso a paso',
     steps: [
-      'Genera el token de arriba y cópialo. Se muestra una sola vez.',
-      'En la app atajos del iPhone, crea un atajo nuevo con las acciones de la siguiente sección y pega el token en el encabezado Authorization, después de la palabra Bearer y un espacio.',
+      'Genera el token en la página de atajos y cópialo. Se muestra una sola vez.',
+      'Toca añadir atajo y pega el token cuando la app de atajos lo pida. Si prefieres crearlo a mano, usa las acciones de la siguiente sección y pega el token en el encabezado Authorization, después de la palabra Bearer y un espacio.',
       'Ejecuta el atajo una vez en la app atajos y permite el acceso a la red para {host} y las notificaciones.',
       'Abre ajustes del iPhone > accesibilidad > tocar > tocar atrás.',
       'Toca toque doble y elige tu atajo en la lista de atajos.',
@@ -440,8 +472,7 @@ export const quickEntryEs: QuickEntryCopy = {
       '¿Perdiste el iPhone? En otro dispositivo, abre ajustes > atajos en Monelog y revoca el token.',
     ],
     actionsHeading: 'Acciones del atajo',
-    actionsDescription:
-      'Todavía no hay un atajo listo para importar. Crea el tuyo con estas acciones, en este orden.',
+    actionsDescription: 'Si prefieres crear tu atajo a mano, usa estas acciones, en este orden.',
     actions: [
       {
         title: 'Elegir del menú',

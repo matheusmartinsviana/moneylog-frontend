@@ -7,6 +7,7 @@ import { NEVER, of } from 'rxjs';
 import { pt } from '~/app/common/i18n/translations/pt';
 import { ClipboardService } from '~/app/common/services/clipboard.service';
 import { ToastService } from '~/app/common/services/toast.service';
+import { SHORTCUT_INSTALL_URL } from '~/app/config/shortcut';
 import { ShortcutsPage } from '~/app/features/settings/pages/shortcuts.page';
 import {
   anAccount,
@@ -126,6 +127,20 @@ describe('ShortcutsPage', () => {
     expect(container.querySelector('script')).toBeNull();
   });
 
+  it('Dado a página enxuta, então tem o botão de adicionar atalho em nova aba e um link para o guia, sem o guia na mesma página', async () => {
+    await setup();
+
+    const add = screen.getByTestId('shortcut-add-link');
+    expect(add).toHaveAttribute('href', SHORTCUT_INSTALL_URL);
+    expect(add).toHaveAttribute('target', '_blank');
+    expect(add).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(screen.getByTestId('shortcut-guide-link')).toHaveAttribute(
+      'href',
+      '/settings/shortcuts/guide',
+    );
+    expect(screen.queryByTestId('shortcut-guide')).toBeNull();
+  });
+
   it('Dado nenhum token, então mostra o vazio com ação que leva ao formulário', async () => {
     await setup();
 
@@ -170,13 +185,6 @@ describe('ShortcutsPage', () => {
     );
     expect(screen.queryByTestId('token-form')).toBeNull();
     expect(screen.queryByTestId('shortcut-guide')).toBeNull();
-  });
-
-  it('Dado a página pronta, então mostra o guia do toque duplo', async () => {
-    await setup();
-
-    expect(screen.getByTestId('shortcut-guide')).toBeInTheDocument();
-    expect(screen.getByTestId('shortcut-guide-steps').querySelectorAll('li')).toHaveLength(7);
   });
 
   it('Dado que não há conta elegível (só investimento), então explica e leva às contas', async () => {
@@ -261,6 +269,24 @@ describe('ShortcutsPage', () => {
       await userEvent.click(screen.getByTestId('token-copy'));
 
       expect(screen.getByTestId('token-copy-failed')).toBeInTheDocument();
+    });
+
+    it('Dado o diálogo, quando usa copiar e adicionar atalho, então copia o token e o link do iCloud não leva o token', async () => {
+      const { clipboard } = await setup();
+      await fillAndSubmit();
+      const link = screen.getByTestId('token-copy-and-add');
+      link.addEventListener('click', (event) => event.preventDefault());
+
+      await userEvent.click(link);
+
+      expect(clipboard.written).toEqual([TEST_SECRET]);
+      expect(link).toHaveAttribute('href', SHORTCUT_INSTALL_URL);
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+      expect(link.getAttribute('href')).not.toContain(TEST_SECRET);
+      expect(screen.getByTestId('token-paste-hint')).toHaveTextContent(
+        pt.quickEntry.secret.pasteHint,
+      );
     });
 
     it('Dado o diálogo fechado, então o token não está no DOM, em storage, na URL nem em log, e a lista não o tem', async () => {

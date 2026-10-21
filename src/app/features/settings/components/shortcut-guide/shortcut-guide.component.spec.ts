@@ -21,11 +21,11 @@ describe('ShortcutGuideComponent', () => {
     expect(screen.getByTestId('shortcut-guide-iphone-only')).toHaveTextContent('só no iPhone');
   });
 
-  it('Dado que não há link de Atalho compartilhado, então lista as ações para montar à mão sem link inventado', async () => {
+  it('Dado o guia, então lista as ações para quem prefere montar à mão, sem link no conteúdo', async () => {
     const { container } = await setup();
 
     expect(screen.getByTestId('shortcut-guide-no-link')).toHaveTextContent(
-      /Ainda não há um Atalho pronto para importar/i,
+      /preferir montar o seu atalho à mão/i,
     );
     const actions = screen.getByTestId('shortcut-guide-actions');
     expect(actions.querySelectorAll('li')).toHaveLength(6);

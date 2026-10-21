@@ -12,6 +12,7 @@ import { DialogComponent } from '~/app/common/components/dialog/dialog.component
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import { ClipboardService } from '~/app/common/services/clipboard.service';
+import { SHORTCUT_INSTALL_URL } from '~/app/config/shortcut';
 import type { QuickEntrySecret } from '~/modules/quick-entry/core/types/quick-entry-token';
 
 type CopyState = 'idle' | 'copied' | 'failed';
@@ -26,6 +27,7 @@ type CopyState = 'idle' | 'copied' | 'failed';
 export class TokenSecretDialogComponent {
   private readonly clipboard = inject(ClipboardService);
   protected readonly t = inject(I18nService).t;
+  protected readonly installUrl = SHORTCUT_INSTALL_URL;
 
   readonly secret = input<QuickEntrySecret | null>(null);
 
