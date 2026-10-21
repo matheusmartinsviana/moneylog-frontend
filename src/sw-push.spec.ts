@@ -153,6 +153,122 @@ describe('sw-push.js (T137 CA1)', () => {
     },
   );
 
+  describe('lançamento pelo Atalho (security.quick_entry_created)', () => {
+    async function shownFor(language: string, params: Record<string, string>) {
+      const worker = loadWorker(language);
+      const { event, done } = pushEvent({
+        id: 'q-1',
+        kind: 'SECURITY_ALERT',
+        titleKey: 'security.quick_entry_created',
+        params,
+      });
+      worker.listeners.get('push')!(event);
+      await done();
+      return worker.shown[0]!;
+    }
+
+    it.each([
+      ['pt', 'EXPENSE', 'Despesa incluída pelo Atalho'],
+      ['pt', 'INCOME', 'Receita incluída pelo Atalho'],
+      ['en', 'EXPENSE', 'Expense added by Shortcuts'],
+      ['en', 'INCOME', 'Income added by Shortcuts'],
+      ['es', 'EXPENSE', 'Gasto añadido por Atajos'],
+      ['es', 'INCOME', 'Ingreso añadido por Atajos'],
+    ])('Dado %s e %s, então o título é "%s"', async (language, type, title) => {
+      const shown = await shownFor(language, { type, amount: '54.60', transactionId: 't-1' });
+
+      expect(shown.title).toBe(title);
+    });
+
+    it('Dado valor com centavos e descrição, então o corpo traz R$ em pt-BR e a descrição', async () => {
+      const shown = await shownFor('pt', {
+        type: 'EXPENSE',
+        amount: '54.60',
+        description: 'Mercado',
+        transactionId: 't-1',
+      });
+
+      expect(shown.options.body).toBe('R$ 54,60 · Mercado');
+    });
+
+    it('Dado valor com milhar, então formata com separadores brasileiros', async () => {
+      const shown = await shownFor('pt', {
+        type: 'INCOME',
+        amount: '1234.5',
+        transactionId: 't-1',
+      });
+
+      expect(shown.options.body).toBe('R$ 1.234,50');
+    });
+
+    it('Dado descrição ausente ou vazia, então o corpo não tem o separador', async () => {
+      const without = await shownFor('pt', { type: 'EXPENSE', amount: '10.00' });
+      const empty = await shownFor('pt', { type: 'EXPENSE', amount: '10.00', description: '  ' });
+
+      expect(without.options.body).toBe('R$ 10,00');
+      expect(empty.options.body).toBe('R$ 10,00');
+    });
+
+    it('Dado descrição com caracteres especiais, então vai como texto puro, sem quebra de linha', async () => {
+      const hostile = '<b>Mercado</b> & "cia" \n<img src=x onerror=alert(1)>';
+      const shown = await shownFor('pt', {
+        type: 'EXPENSE',
+        amount: '5.00',
+        description: hostile,
+      });
+
+      expect(shown.options.body).toBe(
+        'R$ 5,00 · <b>Mercado</b> & "cia" <img src=x onerror=alert(1)>',
+      );
+      expect(shown.options.body).not.toContain('\n');
+    });
+
+    it('Dado descrição longa, então corta em 80 caracteres', async () => {
+      const shown = await shownFor('pt', {
+        type: 'EXPENSE',
+        amount: '5.00',
+        description: 'a'.repeat(200),
+      });
+
+      expect(shown.options.body).toBe('R$ 5,00 · ' + 'a'.repeat(80));
+    });
+
+    it('Dado valor inválido, então omite o valor em vez de mostrar lixo', async () => {
+      const shown = await shownFor('pt', {
+        type: 'EXPENSE',
+        amount: 'abc',
+        description: 'Mercado',
+      });
+
+      expect(shown.options.body).toBe('Mercado');
+    });
+
+    it('Dado tipo desconhecido, então cai no texto neutro de segurança', async () => {
+      const shown = await shownFor('pt', { type: 'OUTRO', amount: '1.00' });
+
+      expect(shown.title).toBe('Alerta de segurança');
+    });
+
+    it('Dado um transactionId válido, então o toque abre o detalhe da movimentação', async () => {
+      const id = '3f2b8c1e-0d4a-4b7e-9a11-2c5d6e7f8091';
+      const shown = await shownFor('pt', { type: 'EXPENSE', amount: '1.00', transactionId: id });
+
+      expect(shown.options.data.url).toBe('/transactions/' + id);
+    });
+
+    it.each([[undefined], ['../x'], ['a/b'], ['id?x=1']])(
+      'Dado transactionId %s, então o toque abre o início',
+      async (id) => {
+        const params: Record<string, string> = { type: 'EXPENSE', amount: '1.00' };
+        if (id !== undefined) params['transactionId'] = id;
+
+        const shown = await shownFor('pt', params);
+
+        expect(shown.options.data.url).toBe('/');
+      },
+    );
+  });
+
   it('Dado um alerta de segurança com o IP mascarado, então o corpo traz o IP e nunca um e-mail', async () => {
     const worker = loadWorker('pt');
     const { event, done } = pushEvent({

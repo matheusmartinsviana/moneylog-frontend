@@ -128,7 +128,58 @@ const SECURITY_TEXTS = {
   },
 };
 
+const QUICK_ENTRY_TITLES = {
+  pt: { EXPENSE: 'Despesa incluída pelo Atalho', INCOME: 'Receita incluída pelo Atalho' },
+  en: { EXPENSE: 'Expense added by Shortcuts', INCOME: 'Income added by Shortcuts' },
+  es: { EXPENSE: 'Gasto añadido por Atajos', INCOME: 'Ingreso añadido por Atajos' },
+};
+const LOCALES = { pt: 'pt-BR', en: 'en', es: 'es' };
+const AMOUNT_PATTERN = /^\d{1,15}(\.\d{1,2})?$/;
+const TRANSACTION_ID_PATTERN = /^[A-Za-z0-9-]{1,64}$/;
+const DESCRIPTION_LIMIT = 80;
+
+function paramText(payload, name) {
+  return payload.params && typeof payload.params[name] === 'string' ? payload.params[name] : '';
+}
+
+function formatAmount(language, amount) {
+  if (!AMOUNT_PATTERN.test(amount)) return '';
+  return new Intl.NumberFormat(LOCALES[language], { style: 'currency', currency: 'BRL' })
+    .format(Number(amount))
+    .replace(/\u00a0/g, ' ');
+}
+
+function plainDescription(value) {
+  return value
+    .replace(/[\u0000-\u0020\u007f]+/g, ' ')
+    .trim()
+    .slice(0, DESCRIPTION_LIMIT);
+}
+
+function quickEntryText(language, payload) {
+  const titles = QUICK_ENTRY_TITLES[language];
+  const type = paramText(payload, 'type');
+  if (!Object.prototype.hasOwnProperty.call(titles, type)) return null;
+  const parts = [
+    formatAmount(language, paramText(payload, 'amount')),
+    plainDescription(paramText(payload, 'description')),
+  ].filter((part) => part !== '');
+  return [titles[type], parts.join(' · ')];
+}
+
+function securityUrl(payload) {
+  const id = paramText(payload, 'transactionId');
+  if (payload.titleKey === 'security.quick_entry_created' && TRANSACTION_ID_PATTERN.test(id)) {
+    return '/transactions/' + id;
+  }
+  return SECURITY_URL;
+}
+
 function securityText(language, payload) {
+  if (payload.titleKey === 'security.quick_entry_created') {
+    const quick = quickEntryText(language, payload);
+    if (quick) return quick;
+  }
   const table = SECURITY_TEXTS[language];
   const key =
     typeof payload.titleKey === 'string' && payload.titleKey.startsWith('security.')
@@ -206,7 +257,7 @@ self.addEventListener('push', (event) => {
         icon: ICON_URL,
         badge: BADGE_URL,
         tag: typeof payload.id === 'string' ? payload.id : undefined,
-        data: { url: security ? SECURITY_URL : NOTIFICATIONS_URL },
+        data: { url: security ? securityUrl(payload) : NOTIFICATIONS_URL },
       });
     }),
   );
