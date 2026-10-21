@@ -64,7 +64,6 @@ export interface QuickEntryCopy {
     readonly confirm: string;
   };
   readonly toast: {
-    readonly created: string;
     readonly renamed: string;
     readonly revoked: string;
   };
@@ -148,7 +147,6 @@ export const quickEntryPt: QuickEntryCopy = {
     confirm: 'Revogar',
   },
   toast: {
-    created: 'Token gerado.',
     renamed: 'Token renomeado.',
     revoked: 'Token revogado.',
   },
@@ -232,7 +230,6 @@ export const quickEntryEn: QuickEntryCopy = {
     confirm: 'Revoke',
   },
   toast: {
-    created: 'Token generated.',
     renamed: 'Token renamed.',
     revoked: 'Token revoked.',
   },
@@ -316,7 +313,6 @@ export const quickEntryEs: QuickEntryCopy = {
     confirm: 'Revocar',
   },
   toast: {
-    created: 'Token generado.',
     renamed: 'Token renombrado.',
     revoked: 'Token revocado.',
   },
