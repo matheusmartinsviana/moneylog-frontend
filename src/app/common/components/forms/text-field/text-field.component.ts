@@ -58,6 +58,7 @@ export type TextFieldType = 'text' | 'email' | 'password' | 'search';
             [attr.aria-pressed]="revealed()"
             [attr.aria-controls]="controlId()"
             [attr.aria-label]="revealed() ? hideLabelText() : showLabelText()"
+            (mousedown)="$event.preventDefault()"
             (click)="revealed.set(!revealed())"
           >
             {{ revealed() ? hideLabelText() : showLabelText() }}
@@ -104,15 +105,30 @@ export type TextFieldType = 'text' | 'email' | 'password' | 'search';
       top: 50%;
       right: var(--space-2);
       transform: translateY(-50%);
+      min-width: var(--touch-min);
       min-height: var(--touch-min);
       padding: 0 var(--space-2);
+      border: 0;
       border-radius: var(--radius-control);
+      appearance: none;
+      -webkit-appearance: none;
+      background: transparent;
       color: var(--color-text-muted);
       font-size: var(--text-sm);
       font-weight: var(--weight-medium);
+      line-height: 1;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: color var(--duration-fast) var(--ease-standard);
     }
 
-    .field__reveal:hover {
+    @media (hover: hover) {
+      .field__reveal:hover {
+        color: var(--color-text);
+      }
+    }
+
+    .field__reveal:active {
       color: var(--color-text);
     }
   `,

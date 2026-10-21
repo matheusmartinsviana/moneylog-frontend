@@ -54,6 +54,38 @@ test.describe('aceite do convite', () => {
     await expect(page.locator('[data-cy="typed-title-full"]')).toHaveText('Você foi convidado');
   });
 
+  test('Dado os dois campos de senha, Quando toca em Mostrar, Então cada campo revela de forma independente e o botão tem estilo próprio', async ({
+    page,
+  }) => {
+    const stub = createStub({ session: null });
+    await openInvitation(page, stub);
+    const password = page.locator('[data-cy="invitation-password"]');
+    const confirm = page.locator('[data-cy="invitation-confirm-password"]');
+    const revealPassword = page.locator('[data-cy="invitation-password-reveal"]');
+    const revealConfirm = page.locator('[data-cy="invitation-confirm-password-reveal"]');
+
+    await expect(revealPassword).toHaveText('Mostrar');
+    await expect(revealPassword).toHaveCSS('border-top-width', '0px');
+    await expect(revealPassword).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const box = await revealPassword.boundingBox();
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+
+    await revealPassword.click();
+    await expect(password).toHaveAttribute('type', 'text');
+    await expect(revealPassword).toHaveText('Ocultar');
+    await expect(revealPassword).toHaveAttribute('aria-pressed', 'true');
+    await expect(confirm).toHaveAttribute('type', 'password');
+    await expect(revealConfirm).toHaveText('Mostrar');
+
+    await revealConfirm.click();
+    await expect(confirm).toHaveAttribute('type', 'text');
+    await expect(revealConfirm).toHaveText('Ocultar');
+    await revealPassword.click();
+    await expect(password).toHaveAttribute('type', 'password');
+    await expect(confirm).toHaveAttribute('type', 'text');
+  });
+
   test('Dado um token inválido (404), Quando a tela abre, Então mostra convite inválido com saída para a entrada', async ({
     page,
   }) => {
