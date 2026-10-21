@@ -128,6 +128,12 @@ describe('sw-push.js (T137 CA1)', () => {
     ['pt', 'security.quick_token_revoked', 'Token de atalho revogado'],
     ['en', 'security.quick_token_revoked', 'Shortcut token revoked'],
     ['es', 'security.quick_token_revoked', 'Token de atajo revocado'],
+    ['pt', 'security.quick_token_failure_burst', 'Tentativas inválidas de token de atalho'],
+    ['en', 'security.quick_token_failure_burst', 'Invalid shortcut token attempts'],
+    ['es', 'security.quick_token_failure_burst', 'Intentos inválidos de token de atajo'],
+    ['pt', 'security.quick_token_new_ip', 'Token de atalho usado em novo local'],
+    ['en', 'security.quick_token_new_ip', 'Shortcut token used from a new location'],
+    ['es', 'security.quick_token_new_ip', 'Token de atajo usado desde un lugar nuevo'],
     ['pt', 'security.desconhecido', 'Alerta de segurança'],
   ])(
     'Dado um alerta de segurança (%s, %s), então o título é "%s" e o toque abre o início',
