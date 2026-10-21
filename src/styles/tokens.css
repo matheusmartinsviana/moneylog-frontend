@@ -373,18 +373,12 @@
   --gradient-header-veil: linear-gradient(
     to bottom,
     var(--page-header-veil) 0,
-    var(--page-header-veil) 70%,
+    var(--page-header-veil) 62%,
+    color-mix(in srgb, var(--page-header-veil) 82%, transparent) 70%,
+    color-mix(in srgb, var(--page-header-veil) 55%, transparent) 80%,
+    color-mix(in srgb, var(--page-header-veil) 25%, transparent) 90%,
     transparent
   );
-  --mask-header-fade:
-    linear-gradient(to bottom, #000 76%, rgb(0 0 0 / 60%) 90%, transparent),
-    linear-gradient(
-      to right,
-      transparent,
-      #000 var(--space-8),
-      #000 calc(100% - var(--space-8)),
-      transparent
-    );
   --mask-shell-fade:
     linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 35%) var(--space-4), #000 var(--space-8)),
     linear-gradient(
@@ -438,15 +432,6 @@
   :root {
     --page-header-veil: color-mix(in srgb, var(--color-canvas) 55%, transparent);
     --gradient-header-veil: linear-gradient(to bottom, var(--page-header-veil), transparent);
-    --mask-header-fade:
-      linear-gradient(to bottom, #000 40%, rgb(0 0 0 / 40%) 70%, transparent),
-      linear-gradient(
-        to right,
-        transparent,
-        #000 var(--space-8),
-        #000 calc(100% - var(--space-8)),
-        transparent
-      );
     --page-gutter: 1.5rem;
     --page-pad-top: var(--space-2);
     --page-pad-bottom: var(--space-8);

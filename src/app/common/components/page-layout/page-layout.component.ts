@@ -66,8 +66,6 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       inset: 0 0 calc(var(--space-8) * -1);
       z-index: -1;
       background: var(--gradient-header-veil);
-      mask-image: var(--mask-header-fade);
-      mask-composite: intersect;
       pointer-events: none;
     }
 
