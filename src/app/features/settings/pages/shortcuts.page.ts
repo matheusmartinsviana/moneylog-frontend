@@ -21,6 +21,7 @@ import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import { problemMessage } from '~/app/common/i18n/problem-message';
 import { ToastService } from '~/app/common/services/toast.service';
+import { ShortcutGuideComponent } from '~/app/features/settings/components/shortcut-guide/shortcut-guide.component';
 import { TokenGenerateFormComponent } from '~/app/features/settings/components/token-generate-form/token-generate-form.component';
 import { TokenRenameDialogComponent } from '~/app/features/settings/components/token-rename-dialog/token-rename-dialog.component';
 import { TokenRowComponent } from '~/app/features/settings/components/token-row/token-row.component';
@@ -48,6 +49,7 @@ const ELIGIBLE_ACCOUNT_TYPES: ReadonlySet<Account['type']> = new Set([
     EmptyStateComponent,
     ErrorStateComponent,
     ConfirmDialogComponent,
+    ShortcutGuideComponent,
     TokenGenerateFormComponent,
     TokenRenameDialogComponent,
     TokenRowComponent,

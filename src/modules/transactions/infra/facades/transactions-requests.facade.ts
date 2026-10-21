@@ -60,6 +60,7 @@ export function recordsParams(filters: ListFilters, page: number, pageSize: numb
   if (filters.accountId) params = params.set('accountId', filters.accountId);
   if (filters.categoryId) params = params.set('categoryId', filters.categoryId);
   if (filters.method) params = params.set('method', filters.method);
+  if (filters.source) params = params.set('source', filters.source);
   const q = cleanSearchTerm(filters.q).trim();
   if (q !== '') params = params.set('q', q);
   return params;

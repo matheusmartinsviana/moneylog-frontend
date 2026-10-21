@@ -1445,6 +1445,14 @@ export const es: AppI18n = {
       BOLETO: 'Boleto',
       OTHER: 'Otro',
     },
+    sources: {
+      MANUAL: 'Manual',
+      IMPORT: 'Importación',
+      RECURRENCE: 'Recurrencia',
+      ONGOING: 'En curso en cuotas',
+      HISTORICAL: 'Historial',
+      QUICK_SHORTCUT: 'Atajo',
+    },
     directions: {
       CONTRIBUTION: 'Aporte',
       REDEMPTION: 'Rescate',
@@ -1472,6 +1480,8 @@ export const es: AppI18n = {
       allAccounts: 'Todas las cuentas',
       allCategories: 'Todas las categorías',
       allMethods: 'Todos los métodos',
+      source: 'Origen',
+      allSources: 'Todos los orígenes',
       clear: 'Limpiar filtros',
     },
     totals: {
@@ -1504,6 +1514,7 @@ export const es: AppI18n = {
         accountFrom: 'Cuenta de origen',
         counterpartTo: 'Cuenta de destino',
         counterpartInvestment: 'Cuenta de inversión',
+        source: 'Origen',
         method: 'Método',
         direction: 'Sentido',
         adjustmentKind: 'Tipo de ajuste',

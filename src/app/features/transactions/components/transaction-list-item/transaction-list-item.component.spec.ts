@@ -79,6 +79,16 @@ describe('TransactionListItemComponent', () => {
     expect(open).toHaveBeenCalledTimes(2);
   });
 
+  it('Dado movimentação criada pelo Atalho, então mostra a origem "Atalho"; as demais não mostram', async () => {
+    await setup({ transaction: aTransaction({ source: 'QUICK_SHORTCUT' }) });
+    expect(screen.getByTestId('transaction-source-badge')).toHaveTextContent('Atalho');
+  });
+
+  it('Dado movimentação manual, então não mostra selo de origem', async () => {
+    await setup({ transaction: aTransaction({ source: 'MANUAL' }) });
+    expect(screen.queryByTestId('transaction-source-badge')).not.toBeInTheDocument();
+  });
+
   it('Dado a linha, então não há violações de acessibilidade', async () => {
     const { container } = await setup({ glyph: true });
     const violations = await axeViolations(container);

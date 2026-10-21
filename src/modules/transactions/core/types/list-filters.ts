@@ -1,10 +1,12 @@
 import type { EntryLens } from '~/modules/transactions/core/types/entry';
 import {
   PAYMENT_METHODS,
+  TRANSACTION_SOURCES,
   TRANSACTION_TYPES,
 } from '~/modules/transactions/core/types/transaction-enums';
 import type {
   PaymentMethod,
+  TransactionSource,
   TransactionStatus,
   TransactionType,
 } from '~/modules/transactions/core/types/transaction-enums';
@@ -27,6 +29,7 @@ export interface ListFilters {
   readonly categoryId: string | null;
   readonly method: PaymentMethod | null;
   readonly status: TransactionStatus;
+  readonly source: TransactionSource | null;
   readonly q: string;
 }
 
@@ -62,6 +65,7 @@ export function defaultFilters(today: string): ListFilters {
     categoryId: null,
     method: null,
     status: 'ACTIVE',
+    source: null,
     q: '',
   };
 }
@@ -80,6 +84,7 @@ export function filtersToQuery(filters: ListFilters, today: string): Record<stri
   if (filters.categoryId) query['categoryId'] = filters.categoryId;
   if (filters.method) query['method'] = filters.method;
   if (filters.status !== base.status) query['status'] = filters.status;
+  if (filters.source) query['source'] = filters.source;
   if (filters.q.trim() !== '') query['q'] = filters.q;
   return query;
 }
@@ -112,6 +117,7 @@ export function filtersFromQuery(read: (key: string) => string | null, today: st
     categoryId: uuid('categoryId'),
     method: oneOf('method', PAYMENT_METHODS),
     status: oneOf('status', ['ACTIVE', 'VOIDED'] as const) ?? base.status,
+    source: oneOf('source', TRANSACTION_SOURCES),
     q: cleanSearchTerm(read('q') ?? ''),
   };
 }

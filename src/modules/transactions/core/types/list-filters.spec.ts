@@ -36,6 +36,7 @@ describe('list-filters', () => {
       categoryId: null,
       method: null,
       status: 'ACTIVE',
+      source: null,
       q: '',
     });
   });
@@ -55,6 +56,7 @@ describe('list-filters', () => {
       categoryId: ACC,
       method: 'PIX' as const,
       status: 'VOIDED' as const,
+      source: 'QUICK_SHORTCUT' as const,
       from: '2026-09-01',
       to: '2026-09-30',
       q: 'café',
@@ -72,6 +74,7 @@ describe('list-filters', () => {
         'lens',
         'method',
         'q',
+        'source',
         'status',
         'to',
         'type',
@@ -94,6 +97,7 @@ describe('list-filters', () => {
         categoryId: '1',
         method: 'CREDIT',
         status: 'DELETED',
+        source: 'WEB',
       }),
       TODAY,
     );
