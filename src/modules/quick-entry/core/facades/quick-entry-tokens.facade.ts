@@ -112,6 +112,7 @@ export class QuickEntryTokensFacade {
             tap((creation) => {
               this.secretCurrent.set({ label: creation.token.label, value: creation.secret });
               this.listState.update((state) => upsert(state, creation.token, true));
+              if (this.listState().status !== 'ready') this.loads.next('initial');
               this.createCurrent.set(IDLE);
               this.noticeEvents.next({ kind: 'created', token: creation.token });
             }),

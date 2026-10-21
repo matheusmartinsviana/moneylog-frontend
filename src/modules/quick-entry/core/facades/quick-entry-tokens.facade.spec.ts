@@ -90,6 +90,21 @@ describe('QuickEntryTokensFacade', () => {
       expect(JSON.stringify(facade.tokens())).not.toContain(TEST_SECRET);
     });
 
+    it('Dado criar com a lista ainda carregando, então recarrega e o token criado aparece na lista', () => {
+      const stub = new QuickEntryGatewayStub();
+      stub.listResult = NEVER;
+      const { facade } = setup(stub);
+      facade.load();
+      expect(facade.tokens().status).toBe('loading');
+      stub.listResult = null;
+      stub.tokens = [aQuickToken({ id: 'tok-new' })];
+
+      facade.create(INPUT);
+
+      expect(ids(facade)).toEqual(['tok-new']);
+      expect(facade.secret()?.value).toBe(TEST_SECRET);
+    });
+
     it('Dado clique repetido enquanto envia, então chama o backend uma vez só', () => {
       const stub = new QuickEntryGatewayStub();
       const pending = new Subject<QuickEntryTokenCreation>();

@@ -3,8 +3,10 @@ import {
   Component,
   computed,
   ElementRef,
+  effect,
   inject,
   signal,
+  untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -106,6 +108,12 @@ export class ShortcutsPage {
   constructor() {
     this.tokens.load();
     this.accountsList.load('ACTIVE');
+    effect(() => {
+      const code = this.createProblem()?.code;
+      if (code === 'ACCOUNT_NOT_FOUND' || code === 'QUICK_ACCOUNT_NOT_ALLOWED') {
+        untracked(() => this.accountsList.load('ACTIVE'));
+      }
+    });
     this.tokens.notices$.pipe(takeUntilDestroyed()).subscribe((notice) => this.announce(notice));
   }
 

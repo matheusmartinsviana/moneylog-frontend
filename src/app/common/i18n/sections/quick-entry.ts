@@ -76,7 +76,6 @@ export interface QuickEntryCopy {
     readonly risk: string;
   };
   readonly toast: {
-    readonly created: string;
     readonly renamed: string;
     readonly revoked: string;
   };
@@ -210,7 +209,6 @@ export const quickEntryPt: QuickEntryCopy = {
     risk: 'O atalho roda com o iPhone bloqueado, sem Face ID. Quem estiver com o seu aparelho pode registrar lançamentos com duas batidas. O token só cria lançamentos, e não há limite de valor por padrão. Se algo parecer estranho, revogue o token em ajustes > atalhos.',
   },
   toast: {
-    created: 'Token gerado.',
     renamed: 'Token renomeado.',
     revoked: 'Token revogado.',
   },
@@ -344,7 +342,6 @@ export const quickEntryEn: QuickEntryCopy = {
     risk: 'The shortcut runs with the iPhone locked, without Face ID. Anyone holding your device can log entries with two taps. The token can only create entries, and there is no amount limit by default. If anything looks off, revoke the token in settings > shortcuts.',
   },
   toast: {
-    created: 'Token generated.',
     renamed: 'Token renamed.',
     revoked: 'Token revoked.',
   },
@@ -478,7 +475,6 @@ export const quickEntryEs: QuickEntryCopy = {
     risk: 'El atajo se ejecuta con el iPhone bloqueado, sin Face ID. Quien tenga tu dispositivo puede registrar movimientos con dos toques. El token solo crea movimientos y no hay límite de valor por defecto. Si algo parece raro, revoca el token en ajustes > atajos.',
   },
   toast: {
-    created: 'Token generado.',
     renamed: 'Token renombrado.',
     revoked: 'Token revocado.',
   },

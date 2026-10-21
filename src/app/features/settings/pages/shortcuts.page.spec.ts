@@ -292,6 +292,21 @@ describe('ShortcutsPage', () => {
       expect(stub.calls.filter((call) => call === 'list')).toHaveLength(2);
     });
 
+    it.each(['QUICK_ACCOUNT_NOT_ALLOWED', 'ACCOUNT_NOT_FOUND'])(
+      'Dado %s ao gerar, então recarrega as contas do select',
+      async (code) => {
+        const stub = new QuickEntryGatewayStub();
+        const accounts = accountsStub();
+        stub.createResult = failWith(code === 'ACCOUNT_NOT_FOUND' ? 404 : 422, code);
+        await setup(stub, accounts);
+        const before = accounts.queries.length;
+
+        await fillAndSubmit();
+
+        expect(accounts.queries.length).toBeGreaterThan(before);
+      },
+    );
+
     it.each([
       [422, 'QUICK_ACCOUNT_NOT_ALLOWED', pt.errors.codes['QUICK_ACCOUNT_NOT_ALLOWED']],
       [401, 'UNAUTHENTICATED', pt.errors.codes['UNAUTHENTICATED']],
