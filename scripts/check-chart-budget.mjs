@@ -1,17 +1,11 @@
 #!/usr/bin/env node
 import { readdirSync, readFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 
 const LIMIT_BYTES = 8 * 1024;
 const root = resolve(import.meta.dirname, '..');
-const dist = resolve(root, process.argv[2] ?? 'dist/moneylog/browser');
-
-const fromRoot = relative(root, dist);
-if (fromRoot === '' || fromRoot.startsWith('..') || isAbsolute(fromRoot)) {
-  console.error(`check-chart-budget: o diretório medido precisa ficar dentro de ${root}.`);
-  process.exit(2);
-}
+const dist = resolve(root, 'dist/moneylog/browser');
 
 let files;
 try {
