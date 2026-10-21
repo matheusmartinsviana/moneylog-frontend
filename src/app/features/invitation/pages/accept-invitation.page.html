@@ -81,7 +81,7 @@
           data-cy="invitation-form"
         >
           <h1 class="invite__title" tabindex="-1" data-cy="page-title">
-            {{ t().access.invitation.title }}
+            <app-typed-title [text]="formTitle()" [hesitateAt]="nameStart()" />
           </h1>
           <p class="invite__text">{{ t().access.invitation.description }}</p>
           <p class="invite__email" data-cy="invitation-email">{{ invitedEmail() }}</p>

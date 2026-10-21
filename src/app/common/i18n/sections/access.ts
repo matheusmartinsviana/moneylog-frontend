@@ -65,6 +65,7 @@ export interface AccessCopy {
     readonly pageTitle: string;
     readonly checking: string;
     readonly title: string;
+    readonly titleInvitedBy: string;
     readonly description: string;
     readonly invitedEmail: string;
     readonly validUntil: string;
@@ -193,6 +194,7 @@ export const accessPt: AccessCopy = {
     pageTitle: 'Convite',
     checking: 'Verificando o convite…',
     title: 'Você foi convidado',
+    titleInvitedBy: 'Você foi convidado por {name}',
     description: 'Crie uma senha para entrar no Monelog.',
     invitedEmail: 'Convite para {email}',
     validUntil: 'Válido até {when}',
@@ -329,6 +331,7 @@ export const accessEn: AccessCopy = {
     pageTitle: 'Invitation',
     checking: 'Checking the invitation…',
     title: 'You were invited',
+    titleInvitedBy: 'You were invited by {name}',
     description: 'Create a password to sign in to Monelog.',
     invitedEmail: 'Invitation for {email}',
     validUntil: 'Valid until {when}',
@@ -468,6 +471,7 @@ export const accessEs: AccessCopy = {
     pageTitle: 'Invitación',
     checking: 'Verificando la invitación…',
     title: 'Te invitaron',
+    titleInvitedBy: 'Te invitó {name}',
     description: 'Crea una contraseña para entrar en Monelog.',
     invitedEmail: 'Invitación para {email}',
     validUntil: 'Válida hasta el {when}',

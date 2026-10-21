@@ -1,0 +1,12 @@
+<span class="visually-hidden" data-cy="typed-title-full">{{ text() }}</span>
+<span class="typed" aria-hidden="true" data-cy="typed-title-visual"
+  ><span data-cy="typed-title-typed">{{ typed() }}</span>
+  @if (cursorVisible()) {
+    <span
+      class="typed__cursor"
+      [class.typed__cursor--typing]="typing()"
+      data-cy="typed-title-cursor"
+    ></span>
+  }
+  <span class="typed__rest" data-cy="typed-title-rest">{{ rest() }}</span></span
+>

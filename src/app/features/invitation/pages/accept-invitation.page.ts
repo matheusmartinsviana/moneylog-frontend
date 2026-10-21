@@ -18,6 +18,7 @@ import { HTML_LANG } from '~/app/common/i18n/i18n';
 import { I18nService } from '~/app/common/i18n/i18n.service';
 import { interpolate } from '~/app/common/i18n/interpolate';
 import { InvitationPrivacyComponent } from '~/app/features/invitation/components/invitation-privacy/invitation-privacy.component';
+import { TypedTitleComponent } from '~/app/features/invitation/components/typed-title/typed-title.component';
 import { takeInvitationToken } from '~/app/features/invitation/invitation-token';
 import { InvitationAcceptFacade } from '~/modules/auth/core/facades/invitation-accept.facade';
 import { formatInstant } from '~/util/date';
@@ -27,7 +28,13 @@ const MAX_PASSWORD_BYTES = 72;
 
 @Component({
   selector: 'app-accept-invitation-page',
-  imports: [ReactiveFormsModule, RouterLink, TextFieldComponent, InvitationPrivacyComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    TextFieldComponent,
+    InvitationPrivacyComponent,
+    TypedTitleComponent,
+  ],
   providers: [InvitationAcceptFacade],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './accept-invitation.page.html',
@@ -78,6 +85,17 @@ export class AcceptInvitationPage {
     return state
       ? interpolate(this.t().access.invitation.invitedEmail, { email: state.email })
       : '';
+  });
+
+  protected readonly inviter = computed(() => this.ready()?.invitedByName?.trim() || null);
+  protected readonly formTitle = computed(() => {
+    const copy = this.t().access.invitation;
+    const name = this.inviter();
+    return name === null ? copy.title : interpolate(copy.titleInvitedBy, { name });
+  });
+  protected readonly nameStart = computed(() => {
+    const name = this.inviter();
+    return name === null ? null : [...this.formTitle()].length - [...name].length;
   });
 
   protected readonly rules = computed(() => {

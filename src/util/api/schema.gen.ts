@@ -4355,6 +4355,8 @@ export interface components {
             email: string;
             /** Format: date-time */
             expiresAt: string;
+            /** @description Apelido de quem convidou (2.39.0); nulo quando o convidante não definiu. */
+            invitedByName?: string | null;
         };
         InvitationAcceptRequest: {
             /** @description Token lido do fragmento da URL do e-mail; nunca em caminho nem query. */

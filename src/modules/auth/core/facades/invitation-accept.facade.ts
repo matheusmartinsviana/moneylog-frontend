@@ -12,7 +12,12 @@ export type InvitationAcceptState =
   | { readonly status: 'invalid' }
   | { readonly status: 'unavailable'; readonly retryAfterSeconds: number | null }
   | { readonly status: 'existing_session' }
-  | { readonly status: 'ready'; readonly email: string; readonly expiresAt: string }
+  | {
+      readonly status: 'ready';
+      readonly email: string;
+      readonly expiresAt: string;
+      readonly invitedByName: string | null;
+    }
   | { readonly status: 'discarded' }
   | { readonly status: 'done' };
 
@@ -106,6 +111,7 @@ export class InvitationAcceptFacade {
         status: 'ready',
         email: preview.email,
         expiresAt: preview.expiresAt,
+        invitedByName: preview.invitedByName,
       })),
       catchError((error: unknown) => {
         const failure = asFailure(error);

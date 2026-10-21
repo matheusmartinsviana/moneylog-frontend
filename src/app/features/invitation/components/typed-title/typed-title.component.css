@@ -1,0 +1,42 @@
+:host {
+  display: inline;
+}
+
+.typed__rest {
+  visibility: hidden;
+}
+
+.typed__cursor {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 0.9em;
+  vertical-align: -0.08em;
+}
+
+.typed__cursor::after {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0.04em;
+  width: 0.07em;
+  border-radius: 1px;
+  background-color: currentcolor;
+  content: '';
+  animation: typed-blink 1.06s steps(1, end) infinite;
+}
+
+.typed__cursor--typing::after {
+  animation: none;
+}
+
+@keyframes typed-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .typed__cursor::after {
+    animation: none;
+  }
+}

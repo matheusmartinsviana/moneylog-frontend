@@ -28,6 +28,7 @@ describe('InvitationAcceptFacade', () => {
       status: 'ready',
       email: MEMBER_USER.email,
       expiresAt: '2026-10-25T12:00:00Z',
+      invitedByName: null,
     });
   });
 
@@ -69,7 +70,11 @@ describe('InvitationAcceptFacade', () => {
     facade.start('tok-1');
     expect(facade.state()).toEqual({ status: 'unavailable', retryAfterSeconds: null });
 
-    gateway.preview$ = of({ email: 'a@b.c', expiresAt: '2026-10-25T12:00:00Z' });
+    gateway.preview$ = of({
+      email: 'a@b.c',
+      expiresAt: '2026-10-25T12:00:00Z',
+      invitedByName: 'Mateus',
+    });
     facade.verify();
 
     expect(gateway.previews).toEqual(['tok-1', 'tok-1']);
