@@ -29,7 +29,11 @@ describe('ShortcutGuideComponent', () => {
     );
     const actions = screen.getByTestId('shortcut-guide-actions');
     expect(actions.querySelectorAll('li')).toHaveLength(6);
-    expect(actions).toHaveTextContent('https://moneylog.mviana.tech/v1/quick-entries');
+    expect(actions).toHaveTextContent(`${window.location.origin}/v1/quick-entries`);
+    expect(actions).toHaveTextContent('yyyyMMddHHmmss');
+    expect(actions).toHaveTextContent('de 8 a 64 caracteres');
+    expect(actions).toHaveTextContent('Bearer seguido de um espaço');
+    expect(actions).toHaveTextContent('EXPENSE ou INCOME, não o rótulo');
     expect(actions).toHaveTextContent('Idempotency-Key');
     expect(actions).toHaveTextContent('EXPENSE');
     expect(actions).toHaveTextContent('INCOME');
@@ -43,6 +47,10 @@ describe('ShortcutGuideComponent', () => {
       'roda com o iPhone bloqueado, sem Face ID',
     );
     expect(screen.getByTestId('shortcut-guide-risk')).toHaveTextContent(/Ajustes > Atalhos/i);
+    expect(screen.getByTestId('shortcut-guide-risk')).toHaveTextContent('iCloud e no backup');
+    expect(screen.getByTestId('shortcut-guide-step-6')).toHaveTextContent(
+      'desbloqueado e depois bloqueado',
+    );
   });
 
   it.each(['en', 'es'] as const)(

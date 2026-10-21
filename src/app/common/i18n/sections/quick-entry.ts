@@ -166,11 +166,11 @@ export const quickEntryPt: QuickEntryCopy = {
     stepsHeading: 'Passo a passo',
     steps: [
       'Gere o token acima e copie. Ele aparece uma vez só.',
-      'No app atalhos do iPhone, crie um atalho novo com as ações da próxima seção e cole o token no cabeçalho Authorization.',
-      'Rode o atalho uma vez no app atalhos e permita o acesso à rede para moneylog.mviana.tech e as notificações.',
+      'No app atalhos do iPhone, crie um atalho novo com as ações da próxima seção e cole o token no cabeçalho Authorization, depois da palavra Bearer e de um espaço.',
+      'Rode o atalho uma vez no app atalhos e permita o acesso à rede para {host} e as notificações.',
       'Abra ajustes do iPhone > acessibilidade > toque > toque nas costas.',
       'Toque em toque duplo e escolha o seu atalho na lista de atalhos.',
-      'Teste com o aparelho desbloqueado: dê duas batidas, registre um gasto de teste, confira no Monelog e estorne.',
+      'Teste com duas batidas, primeiro com o aparelho desbloqueado e depois bloqueado: registre um gasto de teste, confira no Monelog e estorne.',
       'Perdeu o iPhone? Em outro aparelho, abra ajustes > atalhos no Monelog e revogue o token.',
     ],
     actionsHeading: 'Ações do atalho',
@@ -193,12 +193,12 @@ export const quickEntryPt: QuickEntryCopy = {
       {
         title: 'Obter conteúdo de URL',
         detail:
-          'Método POST em https://moneylog.mviana.tech/v1/quick-entries, com os cabeçalhos Authorization: Bearer seguido do token, Idempotency-Key com um valor diferente a cada execução (por exemplo, a data e a hora atuais) e Content-Type: application/json.',
+          'Método POST em {origin}/v1/quick-entries, com os cabeçalhos Authorization: Bearer seguido de um espaço e do token, Idempotency-Key e Content-Type: application/json. Na Idempotency-Key, use a ação data atual com formato personalizado yyyyMMddHHmmss: só letras, dígitos, _ e -, de 8 a 64 caracteres. Duas execuções no mesmo segundo repetem a chave e a segunda não cria outro lançamento.',
       },
       {
         title: 'Corpo da requisição (JSON)',
         detail:
-          'Três campos: kind recebe o texto do menu, description recebe o nome e amount recebe o valor.',
+          'Três campos: kind recebe o resultado do menu (EXPENSE ou INCOME, não o rótulo), description recebe o nome e amount recebe o valor. Use o tipo número em amount e o tipo texto em kind e description.',
       },
       {
         title: 'Obter valor do dicionário e mostrar notificação',
@@ -206,7 +206,7 @@ export const quickEntryPt: QuickEntryCopy = {
       },
     ],
     riskTitle: 'Antes de ativar',
-    risk: 'O atalho roda com o iPhone bloqueado, sem Face ID. Quem estiver com o seu aparelho pode registrar lançamentos com duas batidas. O token só cria lançamentos, e não há limite de valor por padrão. Se algo parecer estranho, revogue o token em ajustes > atalhos.',
+    risk: 'O atalho roda com o iPhone bloqueado, sem Face ID. Quem estiver com o seu aparelho pode registrar lançamentos com duas batidas. O token só cria lançamentos, receitas inclusive, e não há limite de valor por padrão. Ele fica salvo em texto dentro do atalho, inclusive no iCloud e no backup do iPhone. Lançamentos indevidos se desfazem estornando pelo app. Se algo parecer estranho, revogue o token em ajustes > atalhos.',
   },
   toast: {
     renamed: 'Token renomeado.',
@@ -299,11 +299,11 @@ export const quickEntryEn: QuickEntryCopy = {
     stepsHeading: 'Step by step',
     steps: [
       'Generate the token above and copy it. It is shown only once.',
-      'In the iPhone shortcuts app, create a new shortcut with the actions in the next section and paste the token into the Authorization header.',
-      'Run the shortcut once in the shortcuts app and allow network access to moneylog.mviana.tech and notifications.',
+      'In the iPhone shortcuts app, create a new shortcut with the actions in the next section and paste the token into the Authorization header, after the word Bearer and a space.',
+      'Run the shortcut once in the shortcuts app and allow network access to {host} and notifications.',
       'Open iPhone settings > accessibility > touch > back tap.',
       'Tap double tap and pick your shortcut from the shortcuts list.',
-      'Test with the device unlocked: tap twice, log a test expense, check it in Monelog and reverse it.',
+      'Test with two taps, first with the device unlocked and then locked: log a test expense, check it in Monelog and reverse it.',
       'Lost your iPhone? On another device, open settings > shortcuts in Monelog and revoke the token.',
     ],
     actionsHeading: 'Shortcut actions',
@@ -326,12 +326,12 @@ export const quickEntryEn: QuickEntryCopy = {
       {
         title: 'Get contents of URL',
         detail:
-          'POST method to https://moneylog.mviana.tech/v1/quick-entries, with the headers Authorization: Bearer followed by the token, Idempotency-Key with a different value on each run (for example, the current date and time) and Content-Type: application/json.',
+          'POST method to {origin}/v1/quick-entries, with the headers Authorization: Bearer followed by a space and the token, Idempotency-Key and Content-Type: application/json. For the Idempotency-Key, use the current date action with the custom format yyyyMMddHHmmss: only letters, digits, _ and -, from 8 to 64 characters. Two runs in the same second repeat the key and the second one does not create another entry.',
       },
       {
         title: 'Request body (JSON)',
         detail:
-          'Three fields: kind takes the menu text, description takes the name and amount takes the amount.',
+          'Three fields: kind takes the menu result (EXPENSE or INCOME, not the label), description takes the name and amount takes the amount. Use the number type for amount and the text type for kind and description.',
       },
       {
         title: 'Get dictionary value and show notification',
@@ -339,7 +339,7 @@ export const quickEntryEn: QuickEntryCopy = {
       },
     ],
     riskTitle: 'Before you turn it on',
-    risk: 'The shortcut runs with the iPhone locked, without Face ID. Anyone holding your device can log entries with two taps. The token can only create entries, and there is no amount limit by default. If anything looks off, revoke the token in settings > shortcuts.',
+    risk: 'The shortcut runs with the iPhone locked, without Face ID. Anyone holding your device can log entries with two taps. The token can only create entries, income included, and there is no amount limit by default. It is stored as plain text inside the shortcut, including in iCloud and in the iPhone backup. Unwanted entries are undone by reversing them in the app. If anything looks off, revoke the token in settings > shortcuts.',
   },
   toast: {
     renamed: 'Token renamed.',
@@ -432,11 +432,11 @@ export const quickEntryEs: QuickEntryCopy = {
     stepsHeading: 'Paso a paso',
     steps: [
       'Genera el token de arriba y cópialo. Se muestra una sola vez.',
-      'En la app atajos del iPhone, crea un atajo nuevo con las acciones de la siguiente sección y pega el token en el encabezado Authorization.',
-      'Ejecuta el atajo una vez en la app atajos y permite el acceso a la red para moneylog.mviana.tech y las notificaciones.',
+      'En la app atajos del iPhone, crea un atajo nuevo con las acciones de la siguiente sección y pega el token en el encabezado Authorization, después de la palabra Bearer y un espacio.',
+      'Ejecuta el atajo una vez en la app atajos y permite el acceso a la red para {host} y las notificaciones.',
       'Abre ajustes del iPhone > accesibilidad > tocar > tocar atrás.',
       'Toca toque doble y elige tu atajo en la lista de atajos.',
-      'Prueba con el dispositivo desbloqueado: da dos toques, registra un gasto de prueba, revísalo en Monelog y anúlalo.',
+      'Prueba con dos toques, primero con el dispositivo desbloqueado y después bloqueado: registra un gasto de prueba, revísalo en Monelog y anúlalo.',
       '¿Perdiste el iPhone? En otro dispositivo, abre ajustes > atajos en Monelog y revoca el token.',
     ],
     actionsHeading: 'Acciones del atajo',
@@ -459,12 +459,12 @@ export const quickEntryEs: QuickEntryCopy = {
       {
         title: 'Obtener contenido de URL',
         detail:
-          'Método POST en https://moneylog.mviana.tech/v1/quick-entries, con los encabezados Authorization: Bearer seguido del token, Idempotency-Key con un valor distinto en cada ejecución (por ejemplo, la fecha y la hora actuales) y Content-Type: application/json.',
+          'Método POST en {origin}/v1/quick-entries, con los encabezados Authorization: Bearer seguido de un espacio y del token, Idempotency-Key y Content-Type: application/json. En la Idempotency-Key, usa la acción fecha actual con formato personalizado yyyyMMddHHmmss: solo letras, dígitos, _ y -, de 8 a 64 caracteres. Dos ejecuciones en el mismo segundo repiten la clave y la segunda no crea otro movimiento.',
       },
       {
         title: 'Cuerpo de la solicitud (JSON)',
         detail:
-          'Tres campos: kind recibe el texto del menú, description recibe el nombre y amount recibe el valor.',
+          'Tres campos: kind recibe el resultado del menú (EXPENSE o INCOME, no la etiqueta), description recibe el nombre y amount recibe el valor. Usa el tipo número en amount y el tipo texto en kind y description.',
       },
       {
         title: 'Obtener valor del diccionario y mostrar notificación',
@@ -472,7 +472,7 @@ export const quickEntryEs: QuickEntryCopy = {
       },
     ],
     riskTitle: 'Antes de activar',
-    risk: 'El atajo se ejecuta con el iPhone bloqueado, sin Face ID. Quien tenga tu dispositivo puede registrar movimientos con dos toques. El token solo crea movimientos y no hay límite de valor por defecto. Si algo parece raro, revoca el token en ajustes > atajos.',
+    risk: 'El atajo se ejecuta con el iPhone bloqueado, sin Face ID. Quien tenga tu dispositivo puede registrar movimientos con dos toques. El token solo crea movimientos, ingresos incluidos, y no hay límite de valor por defecto. Se guarda como texto dentro del atajo, también en iCloud y en la copia de seguridad del iPhone. Los movimientos indebidos se deshacen anulándolos en la app. Si algo parece raro, revoca el token en ajustes > atajos.',
   },
   toast: {
     renamed: 'Token renombrado.',

@@ -169,6 +169,14 @@ describe('ShortcutsPage', () => {
       pt.quickEntry.forbidden.title,
     );
     expect(screen.queryByTestId('token-form')).toBeNull();
+    expect(screen.queryByTestId('shortcut-guide')).toBeNull();
+  });
+
+  it('Dado a página pronta, então mostra o guia do toque duplo', async () => {
+    await setup();
+
+    expect(screen.getByTestId('shortcut-guide')).toBeInTheDocument();
+    expect(screen.getByTestId('shortcut-guide-steps').querySelectorAll('li')).toHaveLength(7);
   });
 
   it('Dado que não há conta elegível (só investimento), então explica e leva às contas', async () => {

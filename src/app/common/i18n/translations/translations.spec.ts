@@ -61,12 +61,10 @@ const PROPER_NOUNS = new Set([
   'Bearer',
   'Idempotency-Key',
   'Content-Type',
-  'Face',
-  'ID',
 ]);
 
 function sentenceCaseProblems(text: string): string[] {
-  const raw = text.split(/\s+/);
+  const raw = text.replaceAll('Face ID', '').split(/\s+/).filter(Boolean);
   const clean = (w: string) => w.replace(/^[“"(]+|[”"),.:;!?]+$/g, '');
   return raw
     .map((word, i) => ({ word: clean(word), afterSentenceEnd: /[.!?]$/.test(raw[i - 1] ?? '') }))

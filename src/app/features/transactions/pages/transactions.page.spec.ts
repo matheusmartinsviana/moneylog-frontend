@@ -262,6 +262,18 @@ describe('TransactionsPage', () => {
     expect(screen.getByTestId('view-entries')).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('Dado origem Atalho ativa, quando troca para Competência, então a origem sai da URL', async () => {
+    const { router } = await setup(
+      new TransactionsGatewayStub(),
+      '/transactions?source=QUICK_SHORTCUT',
+    );
+
+    await userEvent.click(screen.getByTestId('view-entries'));
+
+    await vi.waitFor(() => expect(router.url).toContain('view=entries'));
+    expect(router.url).not.toContain('source');
+  });
+
   it('Dado hasNext, quando clico em "carregar mais", então anexa a próxima página e mantém os totals recebidos', async () => {
     const gateway = new TransactionsGatewayStub();
     const totals = someTotals(7);

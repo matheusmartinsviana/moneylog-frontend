@@ -105,6 +105,13 @@ describe('list-filters', () => {
     expect(restored).toEqual(defaultFilters(TODAY));
   });
 
+  it('Dado source válido na URL, então volta no filtro; inválido vira null', () => {
+    expect(filtersFromQuery(reader({ source: 'QUICK_SHORTCUT' }), TODAY).source).toBe(
+      'QUICK_SHORTCUT',
+    );
+    expect(filtersFromQuery(reader({ source: 'WEB' }), TODAY).source).toBeNull();
+  });
+
   it('Dado uma busca maior que o limite do contrato, então é cortada em 100 caracteres', () => {
     expect(filtersFromQuery(reader({ q: 'a'.repeat(150) }), TODAY).q).toHaveLength(100);
   });
