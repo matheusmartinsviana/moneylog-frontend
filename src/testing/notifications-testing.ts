@@ -92,6 +92,7 @@ export class NotificationsGatewayStub extends NotificationsGateway {
   listError: Problem | null = null;
   saveError: Problem | null = null;
   pushConfigError: Problem | null = null;
+  subscribeError: Problem | null = null;
 
   list(query: NotificationsQuery): Observable<Slice<AppNotification>> {
     this.queries.push(query);
@@ -203,6 +204,9 @@ export class NotificationsGatewayStub extends NotificationsGateway {
 
   subscribePush(input: PushSubscriptionInput): Observable<string> {
     this.subscriptions.push(input);
+    if (this.subscribeError) {
+      return throwError(() => new ProblemError(this.subscribeError as Problem));
+    }
     return of('sub-1');
   }
 
@@ -235,8 +239,12 @@ export class PushDeviceFake extends PushDevice {
     return this.permissionValue;
   }
 
-  currentEndpoint(): Promise<string | null> {
-    return Promise.resolve(this.endpoint);
+  currentSubscription(): Promise<PushSubscriptionInput | null> {
+    return Promise.resolve(
+      this.endpoint
+        ? { endpoint: this.endpoint, keys: { p256dh: 'p', auth: 'a' }, userAgent: null }
+        : null,
+    );
   }
 
   subscribe(publicKey: string): Promise<PushSubscriptionInput> {

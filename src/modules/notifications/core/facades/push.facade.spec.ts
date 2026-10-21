@@ -92,4 +92,70 @@ describe('PushFacade (T136)', () => {
     expect(device.unsubscribed).toBe(1);
     expect(window.localStorage.getItem(PUSH_SUBSCRIPTION_KEY)).toBeNull();
   });
+
+  describe('estado do aparelho ao abrir a tela', () => {
+    const LIVE = 'https://push.example/abc';
+
+    beforeEach(() => window.localStorage.removeItem(PUSH_SUBSCRIPTION_KEY));
+
+    it('Dado storage limpo, permissão concedida e inscrição viva no navegador, então recupera sozinho, grava o id e fica "subscribed"', async () => {
+      const { facade, gateway, device } = await setup((_, d) => {
+        d.permissionValue = 'granted';
+        d.endpoint = LIVE;
+      });
+
+      expect(facade.status()).toBe('subscribed');
+      expect(gateway.subscriptions).toEqual([
+        { endpoint: LIVE, keys: { p256dh: 'p', auth: 'a' }, userAgent: null },
+      ]);
+      expect(window.localStorage.getItem(PUSH_SUBSCRIPTION_KEY)).toBe('sub-1');
+      expect(device.subscribeKeys).toEqual([]);
+    });
+
+    it('Dado a chave local presente e a inscrição viva, então "subscribed" sem chamar a API', async () => {
+      window.localStorage.setItem(PUSH_SUBSCRIPTION_KEY, 'sub-9');
+      const { facade, gateway } = await setup((_, d) => {
+        d.permissionValue = 'granted';
+        d.endpoint = LIVE;
+      });
+
+      expect(facade.status()).toBe('subscribed');
+      expect(gateway.subscriptions).toEqual([]);
+    });
+
+    it('Dado falha da API na recuperação, então fica "ready" sem erro visível e sem gravar a chave', async () => {
+      const { facade } = await setup((g, d) => {
+        d.permissionValue = 'granted';
+        d.endpoint = LIVE;
+        g.subscribeError = aProblem(500, 'INTERNAL_ERROR');
+      });
+
+      expect(facade.status()).toBe('ready');
+      expect(facade.problem()).toBeNull();
+      expect(window.localStorage.getItem(PUSH_SUBSCRIPTION_KEY)).toBeNull();
+    });
+
+    it.each(['default', 'denied'] as const)(
+      'Dado permissão %s, então nunca tenta recuperar',
+      async (permission) => {
+        const { gateway, device } = await setup((_, d) => {
+          d.permissionValue = permission;
+          d.endpoint = LIVE;
+        });
+
+        expect(gateway.subscriptions).toEqual([]);
+        expect(device.subscribeKeys).toEqual([]);
+        expect(window.localStorage.getItem(PUSH_SUBSCRIPTION_KEY)).toBeNull();
+      },
+    );
+
+    it('Dado permissão concedida, sem inscrição no navegador e com chave local, então "ready" e a chave obsoleta some', async () => {
+      window.localStorage.setItem(PUSH_SUBSCRIPTION_KEY, 'sub-9');
+      const { facade, gateway } = await setup((_, d) => (d.permissionValue = 'granted'));
+
+      expect(facade.status()).toBe('ready');
+      expect(window.localStorage.getItem(PUSH_SUBSCRIPTION_KEY)).toBeNull();
+      expect(gateway.subscriptions).toEqual([]);
+    });
+  });
 });

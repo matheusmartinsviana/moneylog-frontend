@@ -15,6 +15,7 @@ import {
 
 import { NotificationsGateway } from '~/modules/notifications/core/interfaces/notifications.gateway';
 import { PushDevice } from '~/modules/notifications/core/interfaces/push-device';
+import type { PushSubscriptionInput } from '~/modules/notifications/core/types/notification';
 import { Problem, problemOf } from '~/util/api/problem';
 import { readStorage, removeStorage, writeStorage } from '~/util/safe-storage';
 
@@ -114,11 +115,26 @@ export class PushFacade {
   private async deviceStatus(): Promise<PushStatus> {
     const capability = this.device.capability();
     if (capability !== 'supported') return capability;
-    if (this.device.permission() === 'denied') return 'denied';
-    const endpoint = await this.device.currentEndpoint();
-    return endpoint !== null && readStorage(PUSH_SUBSCRIPTION_KEY) !== null
-      ? 'subscribed'
-      : 'ready';
+    const permission = this.device.permission();
+    if (permission === 'denied') return 'denied';
+    const subscription = await this.device.currentSubscription();
+    const storedId = readStorage(PUSH_SUBSCRIPTION_KEY);
+    if (subscription === null) {
+      if (storedId !== null) removeStorage(PUSH_SUBSCRIPTION_KEY);
+      return 'ready';
+    }
+    if (storedId !== null) return 'subscribed';
+    return permission === 'granted' ? this.recover(subscription) : 'ready';
+  }
+
+  private async recover(subscription: PushSubscriptionInput): Promise<PushStatus> {
+    try {
+      const id = await lastValueFrom(this.gateway.subscribePush(subscription));
+      writeStorage(PUSH_SUBSCRIPTION_KEY, id);
+      return 'subscribed';
+    } catch {
+      return 'ready';
+    }
   }
 
   private async enableFlow(): Promise<PushStatus> {
