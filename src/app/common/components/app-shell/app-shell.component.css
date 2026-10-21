@@ -57,8 +57,7 @@
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   scroll-padding-top: var(--page-header-height);
-  mask-image: var(--mask-shell-fade);
-  mask-composite: intersect;
+  mask-image: var(--mask-shell-fade-vertical);
   padding-bottom: calc(
     var(--bottom-nav-height) + var(--space-2) + max(var(--space-2), env(safe-area-inset-bottom))
   );
@@ -119,6 +118,8 @@
 
   .shell__scroll {
     padding-bottom: 0;
+    mask-image: var(--mask-shell-fade);
+    mask-composite: intersect;
   }
 }
 

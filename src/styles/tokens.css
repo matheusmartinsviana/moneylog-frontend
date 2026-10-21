@@ -353,7 +353,7 @@
   --page-gap: var(--space-4);
   --card-flat-bg: var(--glass-panel-solid);
   --page-header-height: 3.5rem;
-  --page-header-veil: color-mix(in srgb, var(--color-canvas) 94%, transparent);
+  --page-header-veil: color-mix(in srgb, var(--color-canvas) 90%, transparent);
   --page-header-line: color-mix(in srgb, var(--color-text) 8%, transparent);
   --page-header-shadow: 0 10px 18px -16px var(--color-shadow-strong);
   --section-gap: var(--space-4);
@@ -372,12 +372,21 @@
   --shadow-popover: 0 8px 28px var(--color-shadow-strong);
   --gradient-header-veil: linear-gradient(
     to bottom,
-    var(--page-header-veil) 0,
-    var(--page-header-veil) 62%,
-    color-mix(in srgb, var(--page-header-veil) 82%, transparent) 70%,
-    color-mix(in srgb, var(--page-header-veil) 55%, transparent) 80%,
-    color-mix(in srgb, var(--page-header-veil) 25%, transparent) 90%,
-    transparent
+    color-mix(in srgb, var(--page-header-veil) 100%, transparent) 0,
+    color-mix(in srgb, var(--page-header-veil) 96%, transparent) 42%,
+    color-mix(in srgb, var(--page-header-veil) 84%, transparent) 52%,
+    color-mix(in srgb, var(--page-header-veil) 64%, transparent) 62%,
+    color-mix(in srgb, var(--page-header-veil) 44%, transparent) 72%,
+    color-mix(in srgb, var(--page-header-veil) 26%, transparent) 81%,
+    color-mix(in srgb, var(--page-header-veil) 12%, transparent) 89%,
+    color-mix(in srgb, var(--page-header-veil) 4%, transparent) 95%,
+    transparent 100%
+  );
+  --mask-shell-fade-vertical: linear-gradient(
+    to bottom,
+    transparent 0,
+    rgb(0 0 0 / 35%) var(--space-4),
+    #000 var(--space-8)
   );
   --mask-shell-fade:
     linear-gradient(to bottom, transparent 0, rgb(0 0 0 / 35%) var(--space-4), #000 var(--space-8)),
