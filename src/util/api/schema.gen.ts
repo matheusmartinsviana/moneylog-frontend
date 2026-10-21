@@ -307,8 +307,8 @@ export interface paths {
         /**
          * Gera um token de lançamento rápido, vinculado a uma conta
          * @description Sessão JWT de usuário `ACTIVE`; cada usuário gera token só da própria conta (`OWNER` e `MEMBER`). O token (`mlq_<prefixo de 8>_<256 bits em base64url>`) aparece em claro **somente nesta resposta**
-         *     (`Cache-Control: no-store`); no banco fica apenas o SHA-256 e o prefixo. `expiresInDays` de 1 a 90 (padrão 30). O token só cria `EXPENSE` e `INCOME` na conta informada.
-         *     Erros: `404 ACCOUNT_NOT_FOUND` (conta de outro usuário ou inexistente), `422 QUICK_ACCOUNT_NOT_ALLOWED` (conta arquivada ou de tipo não permitido), `409 QUICK_TOKEN_LIMIT_REACHED` (máximo de tokens ativos por usuário; revogar libera a vaga).
+         *     (`Cache-Control: no-store`); no banco fica apenas o SHA-256 e o prefixo. `expiresInDays` de 1 ao máximo configurado no servidor (padrão 30; máximo padrão e absoluto 90). O token só cria `EXPENSE` e `INCOME` na conta informada.
+         *     Erros: `404 ACCOUNT_NOT_FOUND` (conta de outro usuário ou inexistente), `422 QUICK_ACCOUNT_NOT_ALLOWED` (conta arquivada ou de tipo não permitido), `422 QUICK_TOKEN_VALIDITY_INVALID` (validade acima do máximo configurado no servidor), `409 QUICK_TOKEN_LIMIT_REACHED` (máximo de tokens ativos por usuário; revogar libera a vaga).
          *     Nada é gravado em caso de erro.
          */
         post: operations["createQuickEntryToken"];
@@ -375,9 +375,9 @@ export interface paths {
          *     do token; **não existe campo `account`** no corpo (campo desconhecido é `400`). Não há saldo, nem lista de contas ou categorias na resposta.
          *
          *     `amount` é **texto** em formato brasileiro: `R$` e espaços são ignorados; com vírgula, ela é o decimal (1 ou 2 casas) e os pontos antes dela são milhar em grupos de 3; sem vírgula, o ponto só é decimal
-         *     com 1 ou 2 casas depois. Exemplos: `35`, `35,5`, `35,50`, `1.234,56`, `R$ 35,00`, `35.50` valem; `1.234`, `35.500` e `1.234.567` são `422 QUICK_AMOUNT_AMBIGUOUS`; `10,005`, `0`, `-5`, vazio e
-         *     `abc` são `422 QUICK_AMOUNT_INVALID`. `amount` também aceita **número JSON** (é o que o campo Número do Atalho envia, com ponto decimal e sem milhar, por exemplo `27.6`): o servidor lê o texto do número como decimal exato (nunca como ponto flutuante), com no máximo 2 casas e positivo; mais de 2 casas (`27.605`), zero, negativo ou notação científica (`1e3`) são `422 QUICK_AMOUNT_INVALID`, e os tetos são os mesmos do texto. O hash de idempotência usa o valor como veio no corpo (texto cru). `category` é opcional: omitida (fluxo tipo, nome e valor), a movimentação recebe a categoria de sistema `OTHER_EXPENSE` (gasto) ou `OTHER_INCOME` (entrada), a mesma regra de `categoryId` ausente em `POST /v1/transactions` (2.11.0); nunca fica sem categoria, e a resposta traz a categoria aplicada. Se a categoria padrão não existir ou estiver arquivada, `422 DEFAULT_CATEGORY_UNAVAILABLE`. Enviada, `category` é a chave de sistema
-         *     (`FOOD`) ou o nome sem diferenciar acento e caixa, entre as categorias ativas do próprio usuário. `method` é só do gasto e fica nulo se omitido; enviado numa entrada, é `400`. `date` omitida = hoje no fuso
+         *     com 1 ou 2 casas depois. Exemplos: `35`, `35,5`, `35,50`, `1.234,56`, `R$ 35,00`, `35.50` valem; `1.234`, `35.500` e `1.234.567` são `422 QUICK_AMOUNT_AMBIGUOUS`; `10,005`, `1234.567`, `1.2345`, `0`, `-5`, só espaços e
+         *     `abc` são `422 QUICK_AMOUNT_INVALID`. `amount` vazio (`""`) ou com mais de 40 caracteres é `400 VALIDATION_FAILED` (erro de configuração do Atalho, cortado na borda). `amount` também aceita **número JSON** (é o que o campo Número do Atalho envia, com ponto decimal e sem milhar, por exemplo `27.6`): o servidor lê o texto do número como decimal exato (nunca como ponto flutuante), com no máximo 2 casas e positivo; mais de 2 casas (`27.605`), zero, negativo ou notação científica (`1e3`) são `422 QUICK_AMOUNT_INVALID`, e os tetos são os mesmos do texto (zeros à direita não contam: `35.500` como número vale 35,50, enquanto o texto `"35.500"` é ambíguo). O hash de idempotência usa o valor como veio no corpo (texto cru). `category` é opcional: omitida (fluxo tipo, nome e valor), a movimentação recebe a categoria de sistema `OTHER_EXPENSE` (gasto) ou `OTHER_INCOME` (entrada), a mesma regra de `categoryId` ausente em `POST /v1/transactions` (2.11.0); nunca fica sem categoria, e a resposta traz a categoria aplicada. Se a categoria padrão não existir ou estiver arquivada, `422 DEFAULT_CATEGORY_UNAVAILABLE`. Enviada, `category` é a chave de sistema
+         *     (`FOOD`) ou o nome sem diferenciar acento e caixa, entre as categorias ativas do próprio usuário. `method` é só do gasto e vale `OTHER` se omitido (na entrada também volta `OTHER`); enviado numa entrada, é `400`. `date` omitida = hoje no fuso
          *     do usuário; aceita de hoje menos 366 dias até hoje; a hora não é gravada.
          *
          *     Tetos (ADR-034): valor por lançamento, quantidade de lançamentos por dia e valor total por dia (gasto e entrada separados), contando só lançamentos ativos criados no dia do fuso do usuário. São configuráveis
@@ -10049,7 +10049,7 @@ export interface components {
         QuickEntryInput: {
             kind: components["schemas"]["QuickEntryKind"];
             /**
-             * @description Valor em texto brasileiro (`35,50`, `1.234,56`, `R$ 35,00`; ver `POST /v1/quick-entries`) ou número JSON decimal exato (`27.6`), que o servidor lê pelo texto do número, nunca como ponto flutuante. Número com mais de 2 casas, zero, negativo ou em notação científica é `422 QUICK_AMOUNT_INVALID`.
+             * @description De 1 a 40 caracteres (vazio ou maior é `400`; só espaços é `422 QUICK_AMOUNT_INVALID`). Valor em texto brasileiro (`35,50`, `1.234,56`, `R$ 35,00`; ver `POST /v1/quick-entries`) ou número JSON decimal exato (`27.6`), que o servidor lê pelo texto do número, nunca como ponto flutuante. Número com mais de 2 casas, zero, negativo ou em notação científica é `422 QUICK_AMOUNT_INVALID`.
              * @example 35,50
              * @example 1.234,56
              * @example R$ 35,00
@@ -10079,7 +10079,8 @@ export interface components {
             /** @description Categoria aplicada. Nunca nula; sem `category` no pedido, é a categoria padrão de sistema. */
             category: components["schemas"]["CategoryRef"];
             account: components["schemas"]["AccountRef"];
-            method: components["schemas"]["PaymentMethod"] | null;
+            /** @description Como gravado; `OTHER` quando o pedido não trouxe `method`. */
+            method: components["schemas"]["PaymentMethod"];
             /** @enum {string} */
             source: "QUICK_SHORTCUT";
             /** @description Frase pronta para a notificação do Atalho, montada só com valor formatado e nomes já gravados (categoria e conta), nunca com a `description`. Por exemplo, `Gasto de R$ 35,50 em Alimentação (Carteira) registrado.` */
@@ -10722,7 +10723,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description `QUICK_ACCOUNT_NOT_ALLOWED`: a conta está arquivada ou é de tipo não permitido (só `CHECKING`, `SAVINGS` e `WALLET` servem; conta de investimento não). */
+            /** @description `QUICK_ACCOUNT_NOT_ALLOWED`: a conta está arquivada ou é de tipo não permitido (só `CHECKING`, `SAVINGS` e `WALLET` servem; conta de investimento não). `QUICK_TOKEN_VALIDITY_INVALID`: `expiresInDays` acima da validade máxima configurada no servidor (padrão 90); o `detail` diz o máximo. */
             422: {
                 headers: {
                     [name: string]: unknown;
@@ -10822,7 +10823,7 @@ export interface operations {
                     "application/json": components["schemas"]["QuickEntryResult"];
                 };
             };
-            /** @description `VALIDATION_FAILED`: campo desconhecido (inclusive `account`), `amount` que não é texto nem número, `kind` fora de `EXPENSE` e `INCOME`, `method` numa entrada, `date` fora do formato ou header `Idempotency-Key` ausente ou fora do formato. */
+            /** @description `VALIDATION_FAILED`: campo desconhecido (inclusive `account`), `amount` que não é texto nem número, `kind` fora de `EXPENSE` e `INCOME`, `method` numa entrada, `date` fora do formato, `amount` vazio ou com mais de 40 caracteres, ou header `Idempotency-Key` ausente ou fora do formato. */
             400: {
                 headers: {
                     [name: string]: unknown;
@@ -10831,7 +10832,7 @@ export interface operations {
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description `QUICK_TOKEN_INVALID`: token inexistente, expirado, revogado ou de usuário desativado. Mesmo status, corpo e cabeçalhos nos quatro casos. Um JWT de sessão nesta rota também cai aqui. */
+            /** @description `QUICK_TOKEN_INVALID`: token inexistente, expirado, revogado ou de usuário desativado. Mesmo status, corpo e cabeçalhos nos quatro casos. Um JWT de sessão em `POST /v1/quick-entries` também cai aqui; em outras grafias do caminho (barra final, `;`, codificação) o JWT autenticado é recusado com `403` e o anônimo com `401`, e nunca alcança o handler. */
             401: {
                 headers: {
                     [name: string]: unknown;
