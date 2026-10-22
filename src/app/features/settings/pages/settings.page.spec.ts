@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import userEvent from '@testing-library/user-event';
 import { of } from 'rxjs';
@@ -58,18 +58,10 @@ describe('SettingsPage', () => {
     expect(TestBed.inject(SettingsPage, null)).toBeNull();
   });
 
-  it('Dado a sessão, quando clico em "Sair", então chama o logout, descarta o token e vai para /login', async () => {
-    const { fixture, gateway } = await setup();
-    const session = TestBed.inject(SessionFacade);
-    session.login({ email: 'a@b.c', password: 'x' });
-    expect(session.token()).not.toBeNull();
+  it('Dado a página de ajustes, então não há botão de sair (ele fica na sidebar e no menu do avatar)', async () => {
+    await setup();
 
-    await userEvent.click(screen.getByTestId('settings-sign-out'));
-    await fixture.whenStable();
-
-    expect(gateway.logouts).toBe(1);
-    expect(session.token()).toBeNull();
-    expect(TestBed.inject(Router).url).toBe('/login');
+    expect(screen.queryByTestId('settings-sign-out')).toBeNull();
   });
 
   it('Dado a página, então "Seus dados" traz exportar e importar o vault, honesto sobre o armazenamento', async () => {

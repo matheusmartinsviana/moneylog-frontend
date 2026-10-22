@@ -1,15 +1,7 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  effect,
-  inject,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
-import { exhaustMap, finalize, Subject } from 'rxjs';
+import { RouterLink } from '@angular/router';
 
 import { DisclosureComponent } from '~/app/common/components/disclosure/disclosure.component';
 import {
@@ -58,8 +50,6 @@ export class SettingsPage {
   private readonly theme = inject(ThemeService);
   private readonly session = inject(SessionFacade);
   protected readonly isOwner = this.session.isOwner;
-  private readonly router = inject(Router);
-  private readonly signOuts = new Subject<void>();
 
   protected readonly t = this.i18n.t;
   protected readonly language = this.i18n.language;
@@ -86,8 +76,6 @@ export class SettingsPage {
   protected readonly languageControl = new FormControl<string | null>(this.language());
   protected readonly themeControl = new FormControl<string | null>(this.themePreference());
 
-  protected readonly signingOut = signal(false);
-
   protected readonly actions = computed<readonly EmptyStateAction[]>(() => [
     { id: 'connect-ai', label: this.t().emptyState.settings.connectAi, available: false },
   ]);
@@ -101,18 +89,5 @@ export class SettingsPage {
     this.themeControl.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       if (isThemePreference(value)) this.theme.set(value);
     });
-    this.signOuts
-      .pipe(
-        exhaustMap(() => {
-          this.signingOut.set(true);
-          return this.session.logout().pipe(finalize(() => this.signingOut.set(false)));
-        }),
-        takeUntilDestroyed(),
-      )
-      .subscribe(() => void this.router.navigate(['/login']));
-  }
-
-  protected signOut(): void {
-    this.signOuts.next();
   }
 }

@@ -901,7 +901,6 @@ export const en: AppI18n = {
       title: 'Session',
       description: 'End your session on this device.',
       signOut: 'Sign out',
-      signingOut: 'Signing out…',
     },
   },
 

@@ -907,7 +907,6 @@ export const pt: AppI18n = {
       title: 'Sessão',
       description: 'Encerre a sessão neste dispositivo.',
       signOut: 'Sair',
-      signingOut: 'Saindo…',
     },
   },
 

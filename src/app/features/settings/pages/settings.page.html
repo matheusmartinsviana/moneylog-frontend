@@ -71,17 +71,5 @@
         />
       </div>
     </app-disclosure>
-
-    <div class="quiet-actions span-12">
-      <button
-        type="button"
-        class="button"
-        data-cy="settings-sign-out"
-        [disabled]="signingOut()"
-        (click)="signOut()"
-      >
-        {{ signingOut() ? t().auth.session.signingOut : t().auth.session.signOut }}
-      </button>
-    </div>
   </div>
 </app-page-layout>

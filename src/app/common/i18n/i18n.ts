@@ -840,7 +840,6 @@ export abstract class AppI18n {
       readonly title: string;
       readonly description: string;
       readonly signOut: string;
-      readonly signingOut: string;
     };
   };
 

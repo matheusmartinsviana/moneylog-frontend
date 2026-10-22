@@ -31,7 +31,7 @@ test('login, F5, nova aba, logout e retorno com o cookie nativo do navegador', a
 
   await page.goto('/settings');
   await waitForApp(page);
-  await cy(page, 'settings-sign-out').click();
+  await cy(page, 'sidebar-signOut').click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto('/accounts');
   await expect(page).toHaveURL(/\/login\?returnUrl=%2Faccounts$/);
