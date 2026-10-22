@@ -353,7 +353,6 @@
   --page-gap: var(--space-4);
   --card-flat-bg: var(--glass-panel-solid);
   --page-header-height: 3.5rem;
-  --page-header-veil: color-mix(in srgb, var(--color-canvas) 90%, transparent);
   --page-header-line: color-mix(in srgb, var(--color-text) 8%, transparent);
   --page-header-shadow: 0 10px 18px -16px var(--color-shadow-strong);
   --section-gap: var(--space-4);
@@ -370,18 +369,6 @@
   --z-toast: 80;
   --z-skip: 100;
   --shadow-popover: 0 8px 28px var(--color-shadow-strong);
-  --gradient-header-veil: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--page-header-veil) 100%, transparent) 0,
-    color-mix(in srgb, var(--page-header-veil) 96%, transparent) 42%,
-    color-mix(in srgb, var(--page-header-veil) 84%, transparent) 52%,
-    color-mix(in srgb, var(--page-header-veil) 64%, transparent) 62%,
-    color-mix(in srgb, var(--page-header-veil) 44%, transparent) 72%,
-    color-mix(in srgb, var(--page-header-veil) 26%, transparent) 81%,
-    color-mix(in srgb, var(--page-header-veil) 12%, transparent) 89%,
-    color-mix(in srgb, var(--page-header-veil) 4%, transparent) 95%,
-    transparent 100%
-  );
   --mask-shell-fade-vertical: linear-gradient(
     to bottom,
     transparent 0,
@@ -439,8 +426,6 @@
 
 @media (width >= 768px) {
   :root {
-    --page-header-veil: color-mix(in srgb, var(--color-canvas) 55%, transparent);
-    --gradient-header-veil: linear-gradient(to bottom, var(--page-header-veil), transparent);
     --page-gutter: 1.5rem;
     --page-pad-top: var(--space-2);
     --page-pad-bottom: var(--space-8);
@@ -1000,4 +985,25 @@
     --duration-panel-enter: 0ms;
     --enter-distance: 0px;
   }
+}
+
+.page__description,
+.page__content {
+  --mask-under-header:
+    linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent var(--fade-solid),
+      rgb(0 0 0 / 8%) calc(var(--fade-solid) + var(--page-fade-ramp) * 0.2),
+      rgb(0 0 0 / 30%) calc(var(--fade-solid) + var(--page-fade-ramp) * 0.45),
+      rgb(0 0 0 / 66%) calc(var(--fade-solid) + var(--page-fade-ramp) * 0.72),
+      #000 calc(var(--fade-solid) + var(--page-fade-ramp))
+    ),
+    linear-gradient(#000, #000);
+}
+
+@property --page-scroll-offset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
 }

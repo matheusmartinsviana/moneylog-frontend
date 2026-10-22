@@ -1,4 +1,13 @@
-import { booleanAttribute, ChangeDetectionStrategy, Component, input } from '@angular/core';
+import {
+  afterNextRender,
+  booleanAttribute,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  inject,
+  input,
+} from '@angular/core';
 
 import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.directive';
 
@@ -60,33 +69,38 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       padding: var(--page-pad-top) var(--page-gutter);
     }
 
-    .page__header::before {
-      content: '';
-      position: absolute;
-      inset: 0 0 calc(var(--space-8) * -1);
-      z-index: -1;
-      background: var(--gradient-header-veil);
-      pointer-events: none;
+    :host(.under-header) .page__description,
+    :host(.under-header) .page__content {
+      --page-fade-ramp: 2.75rem;
+      mask-image: var(--mask-under-header);
+      mask-size:
+        100% calc(var(--fade-solid) + var(--page-fade-ramp)),
+        100% 100%;
+      mask-position:
+        0 var(--fade-top),
+        0 calc(var(--fade-top) + var(--fade-solid) + var(--page-fade-ramp));
+      mask-repeat: no-repeat;
     }
 
     @supports (animation-timeline: scroll()) {
-      .page__header::before {
-        opacity: 0;
-        animation: page-header-veil var(--duration-fast) linear both;
+      :host(.under-header) .page__description,
+      :host(.under-header) .page__content {
+        animation: page-scroll-offset var(--duration-fast) linear both;
         animation-timeline: scroll(nearest block);
-        animation-range: 0 1.5rem;
+        animation-range: 0px 100000px;
+        mask-position:
+          0 calc(var(--fade-base) + var(--page-scroll-offset)),
+          0
+            calc(
+              var(--fade-base) + var(--page-scroll-offset) + var(--fade-solid) +
+                var(--page-fade-ramp)
+            );
       }
     }
 
-    @keyframes page-header-veil {
+    @keyframes page-scroll-offset {
       to {
-        opacity: 1;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .page__header::before {
-        animation-duration: 1ms;
+        --page-scroll-offset: 100000px;
       }
     }
 
@@ -151,8 +165,57 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
   `,
 })
 export class PageLayoutComponent {
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   readonly heading = input.required<string>();
   readonly description = input<string>();
   readonly fit = input(false, { transform: booleanAttribute });
   readonly reading = input(false, { transform: booleanAttribute });
+
+  constructor() {
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const header = this.host.querySelector<HTMLElement>('.page__header');
+      const scroller = this.scrollParent();
+      if (!header || !scroller) return;
+      let frame = 0;
+      const update = () => {
+        frame = 0;
+        const bounds = header.getBoundingClientRect();
+        this.host.classList.toggle('under-header', scroller.scrollTop > 1);
+        for (const target of this.host.querySelectorAll<HTMLElement>(
+          '.page__description, .page__content',
+        )) {
+          target.style.setProperty(
+            '--fade-top',
+            `${bounds.top - target.getBoundingClientRect().top}px`,
+          );
+          target.style.setProperty('--fade-solid', `${bounds.height}px`);
+          target.style.setProperty(
+            '--fade-base',
+            `${bounds.top - target.getBoundingClientRect().top - scroller.scrollTop}px`,
+          );
+        }
+      };
+      const schedule = () => {
+        if (!frame) frame = requestAnimationFrame(update);
+      };
+      scroller.addEventListener('scroll', schedule, { passive: true });
+      const resize = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule);
+      resize?.observe(header);
+      update();
+      destroyRef.onDestroy(() => {
+        cancelAnimationFrame(frame);
+        scroller.removeEventListener('scroll', schedule);
+        resize?.disconnect();
+      });
+    });
+  }
+
+  private scrollParent(): HTMLElement | null {
+    for (let node = this.host.parentElement; node; node = node.parentElement) {
+      const overflowY = getComputedStyle(node).overflowY;
+      if (overflowY === 'auto' || overflowY === 'scroll') return node;
+    }
+    return null;
+  }
 }
