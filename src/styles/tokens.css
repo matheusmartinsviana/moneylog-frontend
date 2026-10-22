@@ -1001,3 +1001,9 @@
     ),
     linear-gradient(#000, #000);
 }
+
+@property --page-scroll-offset {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}

@@ -82,6 +82,28 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
       mask-repeat: no-repeat;
     }
 
+    @supports (animation-timeline: scroll()) {
+      :host(.under-header) .page__description,
+      :host(.under-header) .page__content {
+        animation: page-scroll-offset linear both;
+        animation-timeline: scroll(nearest block);
+        animation-range: 0px 100000px;
+        mask-position:
+          0 calc(var(--fade-base) + var(--page-scroll-offset)),
+          0
+            calc(
+              var(--fade-base) + var(--page-scroll-offset) + var(--fade-solid) +
+                var(--page-fade-ramp)
+            );
+      }
+    }
+
+    @keyframes page-scroll-offset {
+      to {
+        --page-scroll-offset: 100000px;
+      }
+    }
+
     .page__heading {
       display: grid;
       flex: 1 1 8rem;
@@ -168,6 +190,10 @@ export class PageLayoutComponent {
             `${bounds.top - target.getBoundingClientRect().top}px`,
           );
           target.style.setProperty('--fade-solid', `${bounds.height}px`);
+          target.style.setProperty(
+            '--fade-base',
+            `${bounds.top - target.getBoundingClientRect().top - scroller.scrollTop}px`,
+          );
         }
       };
       const schedule = () => {
