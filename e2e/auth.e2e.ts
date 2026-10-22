@@ -9,7 +9,7 @@ test.describe('autenticação no ambiente mock', () => {
 
     await page.goto('/settings');
     await waitForApp(page);
-    await page.locator('[data-cy="settings-sign-out"]').click();
+    await page.locator('[data-cy="sidebar-signOut"]').click();
     await expect(page).toHaveURL(/\/login$/);
     await expect(page.locator('[data-cy="login-page"]')).toBeVisible();
     await expect(page.locator('[data-cy="bottom-nav"]')).toHaveCount(0);

@@ -912,7 +912,6 @@ export const es: AppI18n = {
       title: 'Sesión',
       description: 'Cierra la sesión en este dispositivo.',
       signOut: 'Cerrar sesión',
-      signingOut: 'Cerrando sesión…',
     },
   },
 

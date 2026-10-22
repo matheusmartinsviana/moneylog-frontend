@@ -82,7 +82,7 @@ test('logout leva ao login e o refresh antigo deixa de valer', async ({
   expect(before!.path).toBe('/v1/auth');
   await evidence(page, 'e2e-22-configuracoes-sair');
 
-  await cy(page, 'settings-sign-out').click();
+  await cy(page, 'sidebar-signOut').click();
   await expect(page).toHaveURL(/\/login$/);
   expect((await page.context().cookies()).find((c) => c.name === 'ml_refresh')).toBeUndefined();
   expect(net.find('POST', '/v1/auth/logout').at(-1)?.status).toBe(204);

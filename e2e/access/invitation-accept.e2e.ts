@@ -201,7 +201,7 @@ test.describe('aceite do convite', () => {
       password: STRONG_PASSWORD,
     });
     await page.goto('/settings');
-    await expect(page.locator('[data-cy="settings-sign-out"]')).toBeVisible();
+    await expect(page.locator('[data-cy="sidebar-signOut"]')).toBeVisible();
     await expect(page.locator('[data-cy="settings-users-link"]')).toHaveCount(0);
     await page.goto('/users');
     await expect(page).toHaveURL(/\/$/);

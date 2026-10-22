@@ -98,7 +98,7 @@ test.describe('multiusuário com backend real', () => {
     await expect(member).toHaveURL(/\/$/);
 
     await open(member, '/settings');
-    await expect(cy(member, 'settings-sign-out')).toBeVisible();
+    await expect(cy(member, 'sidebar-signOut')).toBeVisible();
     await expect(cy(member, 'settings-users-link')).toHaveCount(0);
 
     await open(member, '/accounts');
