@@ -85,7 +85,7 @@ import { MotionStaggerDirective } from '~/app/common/motion/motion-stagger.direc
     @supports (animation-timeline: scroll()) {
       :host(.under-header) .page__description,
       :host(.under-header) .page__content {
-        animation: page-scroll-offset linear both;
+        animation: page-scroll-offset var(--duration-fast) linear both;
         animation-timeline: scroll(nearest block);
         animation-range: 0px 100000px;
         mask-position:
